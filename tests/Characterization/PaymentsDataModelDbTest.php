@@ -17,6 +17,12 @@ use BCOEM\Tests\Integration\MySqlTestCase;
  *   2. The only durable payment effect is brewing.brewPaid=1 +
  *      brewUpdated=NOW on each entry id from custom[1]; repeated IPNs are
  *      idempotent ON BREWING but there is no dedup surface at all.
+ *
+ * APPROVED DEVIATION (D2, spec P3.5a): the port designs a REAL payments
+ * ledger — migration 2026_08_24_000000_create_payments_table.php creates
+ * it. test_payments_table_exists_with_pinned_columns pins that the table
+ * now EXISTS (with the designed columns) wherever the port runs; see
+ * "Port decisions" in .scratch/bcoem-next/ledger/payments.md.
  */
 final class PaymentsDataModelDbTest extends MySqlTestCase
 {
@@ -30,13 +36,28 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
         }
     }
 
-    public function test_payments_table_is_absent_from_schema(): void
+    public function test_payments_table_exists_with_pinned_columns(): void
     {
-        $tables = array_column(
+        self::ensureMigrated();
+
+        // MysqliDb returns assoc rows (Tables_in_...), not indexed.
+        $tables = array_map(
+            static fn ($row): string => (string) reset($row),
             self::db()->rawQuery("SHOW TABLES LIKE '%payments'"),
-            0,
         );
-        self::assertSame([], $tables, 'payments table unexpectedly exists');
+        self::assertNotEmpty($tables, 'payments table missing after migrate');
+        // MysqliDb prefixes table names even in raw queries.
+        $columns = array_column(
+            self::db()->rawQuery('SHOW COLUMNS FROM `payments`'),
+            'Field',
+        );
+        foreach ([
+            'id', 'entrant_uid', 'entry_ids', 'amount', 'currency', 'method',
+            'provider_ref', 'event_id', 'status', 'note', 'admin_uid',
+            'created_at', 'updated_at',
+        ] as $column) {
+            self::assertContains($column, $columns);
+        }
     }
 
     public function test_ipn_entry_update_is_idempotent_on_brewing(): void
