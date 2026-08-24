@@ -116,11 +116,4 @@ final class LoginController extends Controller
 
         return redirect('/');
     }
-
-    private static function t(string $key): string
-    {
-        $value = trans($key);
-
-        return is_string($value) ? $value : (string) $key;
-    }
 }
