@@ -16,6 +16,8 @@ set -euo pipefail
 
 LEGACY_DIR="${LEGACY_DIR:?path to legacy checkout}"
 DUMP_SQL="${DUMP_SQL:?path to tenant dump .sql}"
+LEGACY_DIR="$(realpath "${LEGACY_DIR:?path to legacy checkout}")"
+DUMP_SQL="$(realpath "$DUMP_SQL")"
 PORT_LEGACY="${PORT_LEGACY:-8091}"
 PORT_NEW="${PORT_NEW:-8092}"
 DB_NAME="parity_$$"
