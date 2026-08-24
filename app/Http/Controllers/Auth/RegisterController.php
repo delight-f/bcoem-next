@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Support\Auth\CredentialNormalizer;
+use App\Support\Brewer\Clubs;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
@@ -229,27 +230,13 @@ final class RegisterController extends Controller
 
     /**
      * Clubs: known club → as-is; "Other" → the Other text; else blank.
+     * Semantics live in App\Support\Brewer\Clubs (shared with form 1).
      *
      * @param  array<string, mixed>  $data
      */
     private function clubsValue(array $data, TenantContext $ctx): string
     {
-        if (empty($data['brewerClubs'])) {
-            return '';
-        }
-
-        $clubs = $ctx->prefsStr('prefsClubs') ?? '';
-        $known = array_map('strtolower', array_filter(array_map('trim', explode(',', $clubs))));
-
-        if (in_array(strtolower($data['brewerClubs']), $known, true)) {
-            return $data['brewerClubs'];
-        }
-
-        if ($data['brewerClubs'] === 'Other' && ! empty($data['brewerClubsOther'])) {
-            return ucwords($data['brewerClubsOther']);
-        }
-
-        return '';
+        return Clubs::value($data, $ctx);
     }
 
     /**
