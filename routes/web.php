@@ -10,7 +10,11 @@ use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
 use App\Http\Controllers\EntriesController;
+use App\Http\Controllers\ManualPaymentController;
+use App\Http\Controllers\PayController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // Public read-only surface (Phase 2). Legacy served these as ?section=
@@ -88,3 +92,41 @@ Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')
 // missing-required-style-field rejection served back at the edit form).
 Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware('auth');
 Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware('auth');
+
+// Public pay page (P3.5d). Legacy served ?section=pay behind a login gate.
+// Success lands back on the page with the legacy confirmation alert
+// (msg=13); cancel renders msg=14 — legacy used section=list&msg=13/14,
+// the port keeps the post-payment state on /pay itself.
+Route::get('/pay', [PayController::class, 'show'])->name('pay')->middleware('auth');
+// Named alias for gateway cancel_url builders: renders the legacy
+// "payment cancelled" state (alerts.pub.php msg=14).
+Route::get('/pay/cancel', fn () => redirect()->to('/pay?msg=14'))->name('pay.cancel');
+Route::post('/pay/checkout', [PayController::class, 'checkout'])->name('pay.checkout')->middleware('auth');
+Route::get('/pay/callback', [PayController::class, 'callback'])->name('pay.callback')->middleware('auth');
+
+// Stripe webhook (P3.5b). No auth middleware — authenticity comes from
+// signature verification in the controller; 2xx acks verified deliveries,
+// invalid signatures get 4xx so Stripe retries.
+Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+
+// Stripe Connect onboarding (P3.5b). Admin-only: settings page, OAuth
+// start/callback against the organizer's own Stripe account, and pasting
+// the webhook endpoint's signing secret. Stored per competition in
+// preferences.prefsStripe.
+Route::get('/admin/stripe', [StripeConnectController::class, 'show'])
+    ->name('admin.stripe')->middleware('auth');
+Route::get('/admin/stripe/connect', [StripeConnectController::class, 'connect'])
+    ->name('admin.stripe.connect')->middleware('auth');
+Route::get('/admin/stripe/callback', [StripeConnectController::class, 'callback'])
+    ->name('admin.stripe.callback')->middleware('auth');
+Route::post('/admin/stripe/webhook-secret', [StripeConnectController::class, 'saveSecret'])
+    ->name('admin.stripe.secret')->middleware('auth');
+
+// Manual payment marking (P3.5c). Admin-only (userLevel<=1, gated in the
+// controller): minimal surface listing unpaid confirmed entries; marking
+// routes through ManualGateway + PaymentService so the rows converge with
+// any gateway path. The full admin entries view is P5.5 scope.
+Route::get('/admin/payments', [ManualPaymentController::class, 'show'])
+    ->name('admin.payments')->middleware('auth');
+Route::post('/admin/payments/mark-paid', [ManualPaymentController::class, 'markPaid'])
+    ->name('admin.payments.mark')->middleware('auth');

@@ -6,7 +6,7 @@
 > rows + flag lifecycle as the Stripe path (P3.5b) so downstream code is
 > transport-blind (adapter contract, P3.5a).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.5a (adapter + state machine)
 Consumes: ledger/payments.md, ledger/entry-lifecycle.md (#3, #12)
