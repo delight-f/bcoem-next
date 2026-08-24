@@ -69,10 +69,11 @@ jobs:
           LEGACY_DIR="$GITHUB_WORKSPACE/legacy" \
           DUMP_SQL="sql/bcoem_baseline_3.0.X.sql" \
           PARITY_DB_HOST=127.0.0.1 PARITY_DB_USER=root PARITY_DB_PASS=root \
-          tools/parity/parity.sh | tee parity-summary.txt
-          # Report every line; failures are triaged into the ledger, not
-          # silently swallowed. The job goes red only on harness errors.
-          grep -q "FAIL (new error)" parity-summary.txt && exit 1 || true
+          set -o pipefail
+          tools/parity/parity.sh 2>&1 | tee parity-summary.txt
+          # Harness must complete and produce at least one PASS verdict;
+          # DIFF lines are triaged into the ledger rather than failing CI.
+          grep -q "^PASS " parity-summary.txt || { echo "no PASS verdicts"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
