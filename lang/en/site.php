@@ -58,4 +58,3 @@ return [
     'best_brewer' => 'Best Brewer',
     'points' => 'pts',
 ];
-
