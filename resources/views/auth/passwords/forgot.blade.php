@@ -7,7 +7,7 @@
     :show-hero="false"
 >
     <section id="forgot-password" class="landing-page-section mt-4 mb-3">
-        <h1>{{ __('reset.forgot_password_heading') }}</h1>
+        <h1>{{ $ctx->contestStr("contestName") }} - {{ __("reset.forgot_password_heading") }}</h1>
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>

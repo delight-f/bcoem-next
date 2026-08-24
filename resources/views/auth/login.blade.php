@@ -7,7 +7,7 @@
     :show-hero="false"
 >
     <section id="login" class="landing-page-section mt-4 mb-3">
-        <h1>{{ __('site.log_in') }}</h1>
+        <h1>{{ $ctx->contestStr("contestName") }} - {{ __("site.log_in") }}</h1>
 
         @if ($errors->any())
             <div class="alert alert-danger">
@@ -40,7 +40,7 @@
 
         <p class="lead">
             {{ __('site.forgot_password') }}
-            <a href="{{ route('login') }}?go=password&amp;action=forgot">{{ __('site.reset_password') }}</a>.
+            <a href="{{ route('login') }}?go=password&amp;action=forgot">{{ __('site.reset_password') }}</a>
         </p>
     </section>
 </x-public-layout>

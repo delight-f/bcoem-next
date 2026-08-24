@@ -9,3 +9,11 @@
 index.php?section=past-winners&go=demoarchive|/past-winners/demoarchive
 # Account-gated list: both sides redirect anonymous requests.
 index.php?section=list|/list
+
+# --- Phase 3 slice B: anonymous-diffable auth surfaces ---
+# Login page (clean URL canonical; legacy ?section=login).
+index.php?section=login|/login
+# Registration page (entrant tab; legacy ?section=register&go=entrant).
+index.php?section=register&go=entrant|/register/entrant
+# Forgot-password form (legacy ?section=login&go=password&action=forgot).
+index.php?section=login&go=password&action=forgot|/forgot-password

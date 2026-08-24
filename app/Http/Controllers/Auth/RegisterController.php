@@ -68,9 +68,8 @@ final class RegisterController extends Controller
             'futureJudgingSessions' => $windows->futureJudgingSessions,
             'sponsorsVisible' => $ctx->prefsStr('prefsSponsors') === 'Y'
                 && (int) DB::table('sponsors')->count() > 0,
-            'salutation' => self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName') ?? '')
-                .' '.self::t('site.organized_by').' '.e($ctx->contestStr('contestHost') ?? '')
-                .(($ctx->contestStr('contestHostLocation') ?? '') !== '' ? ', '.e($ctx->contestStr('contestHostLocation') ?? '') : '').'.',
+            // Section pages render the contest name h1 as the salutation.
+            'salutation' => (string) ($ctx->contestStr('contestName') ?? ''),
         ]);
     }
 

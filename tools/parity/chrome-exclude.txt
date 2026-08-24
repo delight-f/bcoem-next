@@ -19,3 +19,11 @@ The token provided has expired. Please use the reset password function again to 
 Your password is required.
 Reset It
 Password
+
+# Phase 3 slice B: port renders login/reset forms inline; legacy strips the
+# equivalent modal fields (chrome, not content).
+Email
+Password
+Forgot
+Submit
+Back to

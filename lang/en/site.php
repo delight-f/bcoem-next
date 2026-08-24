@@ -83,7 +83,7 @@ return [
     'log_out' => 'Log Out',
     'admin_short' => 'Admin',
     'register' => 'Register',
-    'registration_closed' => 'Registration is closed for this competition.',
+    'registration_closed' => 'Registration has closed. Thank you for your interest.',
     'entrant' => 'Entrant',
     'judge' => 'Judge',
     'steward' => 'Steward',

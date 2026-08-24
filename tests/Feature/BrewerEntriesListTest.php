@@ -222,7 +222,16 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
 
     public function test_gating_closes_after_window_and_edit_deadline_pass(): void
     {
-        // Baseline dates are all past and no judging sessions exist.
+        // Force the entry window AND the edit deadline into the past
+        // (the baseline's contestEntryEditDeadline is in the future, which
+        // legitimately keeps editing open per legacy semantics).
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => 946684800,        // 2000-01-01
+            'contestEntryDeadline' => 978307200,    // 2001-01-01
+            'contestEntryEditDeadline' => 978307200,
+        ]);
+        DB::table('judging_locations')->delete();
+
         $id = $this->makeEntry();
 
         $this->login();

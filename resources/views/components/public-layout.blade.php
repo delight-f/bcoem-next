@@ -85,6 +85,13 @@
             {{ $salutation ?? '' }}
         </section>
     </div>
+
+    {{-- Legacy renders a print-only h1 with the contest name on every page
+         after the salutation (L4 DOM order: hero, salutation, print-h1); the
+         text extractor sees it, so it must be present for content parity. --}}
+    <div class="d-none d-print-block landing-page-section p-3">
+        <h1>{{ $ctx->contestStr('contestName') }}</h1>
+    </div>
 </header>
 
 <div id="main-content" class="container-xxl">

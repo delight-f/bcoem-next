@@ -6,10 +6,6 @@
          rules + entry-info sections while future sessions remain, volunteers
          before judging starts, then sponsors + contact. --}}
 
-    <div class="d-none d-print-block landing-page-section p-3">
-        <h1>{{ $ctx->contestStr('contestName') }}</h1>
-    </div>
-
     <section id="at-a-glance" class="landing-page-section pb-3">
         {{-- judge_closed.pub.php: shown once registration/entry are closed
              and no future judging session remains (any winner-display state). --}}

@@ -95,4 +95,13 @@ final class AuthNavTest extends PublicSurfaceTestCase
 
         $this->get('/list')->assertOk();
     }
+
+    protected function tearDown(): void
+    {
+        // test_entrant_does_not_see_admin_link mutates userLevel; restore so
+        // later test classes see the admin fixture (shared bcoem_test DB).
+        DB::table('users')->where('id', 1)->update(['userLevel' => '0']);
+
+        parent::tearDown();
+    }
 }

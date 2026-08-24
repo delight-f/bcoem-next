@@ -49,16 +49,14 @@ final class LoginController extends Controller
         $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
             && (int) DB::table('sponsors')->count() > 0;
 
-        $salutation = self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName') ?? '')
-            .' '.self::t('site.organized_by').' '.e($ctx->contestStr('contestHost') ?? '')
-            .(($ctx->contestStr('contestHostLocation') ?? '') !== '' ? ', '.e($ctx->contestStr('contestHostLocation') ?? '') : '').'.';
-
         return view('auth.login', [
             'ctx' => $ctx,
             'judgingStarted' => $judgingStarted,
             'futureJudgingSessions' => $windows->futureJudgingSessions,
             'sponsorsVisible' => $sponsorsVisible,
-            'salutation' => $salutation,
+            // Section pages (index.pub.php:106-110) render the contest name
+            // as the salutation — NOT the landing's thank-you text.
+            'salutation' => (string) ($ctx->contestStr('contestName') ?? ''),
         ]);
     }
 
