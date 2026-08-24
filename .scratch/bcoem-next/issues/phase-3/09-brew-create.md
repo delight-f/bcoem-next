@@ -6,7 +6,7 @@
 > (ledger/styles-system.md + StylesCategoryNormalizationTest) for the
 > category/subcategory pickers.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1d (auth), P3.2d (list shell), P1.8 styles ledger
 Consumes: ledger/entry-lifecycle.md (#1–#2, #5), ledger/styles-system.md, ledger/registration-rules.md (#1–#10 — caps gate creation)

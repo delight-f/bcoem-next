@@ -4,7 +4,7 @@
 > `includes/process_brewer.inc.php` (form-0 branch). First wizard step for
 > both registration (P3.1b) and the edit path (`/list` → Edit Account).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1a (auth), P3.1b (registration — reuse of the same step)
 Consumes: ledger/registration-rules.md (brewer row semantics)

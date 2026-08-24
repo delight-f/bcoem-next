@@ -4,7 +4,7 @@
 > `includes/process_brewer.inc.php` (form-2 branch + registration finish),
 > `pub/brewer_info.pub.php` (post-registration landing).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.2b (form 1)
 Consumes: ledger/registration-rules.md, ledger/contest-info.md (judge window)

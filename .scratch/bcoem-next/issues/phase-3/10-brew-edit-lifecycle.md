@@ -4,7 +4,7 @@
 > `includes/process_brewing.inc.php` (edit branch — gates at :61, admin
 > re-read at :269–279, style-reset at :531+).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.3a (brew create)
 Consumes: ledger/entry-lifecycle.md (#3, #4, #11, #12)

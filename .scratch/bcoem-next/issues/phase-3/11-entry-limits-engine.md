@@ -6,7 +6,7 @@
 > typed service and wires it into create/edit (P3.3a/b replace their inline
 > checks with this engine).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.3a (wiring target), P1.2 (registration-rules ledger done)
 Consumes: ledger/registration-rules.md, ledger/contest-info.md (window states)

@@ -3,7 +3,7 @@
 > Part of spec §5 P3.2. Legacy surface: `pub/brewer_form_1.pub.php`,
 > `includes/process_brewer.inc.php` (form-1 branch).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.2a (form 0)
 Consumes: ledger/styles-system.md (style-set context for BJCP fields)

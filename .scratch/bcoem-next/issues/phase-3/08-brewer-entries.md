@@ -5,7 +5,7 @@
 > (account page listing the user's entries), `includes/process.inc.php`
 > (delete branch).
 
-Status: not started
+Status: done (7911238)
 Phase: 3 (Slice B)
 Depends on: P3.1d (auth nav), P3.3a (brew create — the list shows created
 entries)
