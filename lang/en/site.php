@@ -46,4 +46,13 @@ return [
     'contacts_disabled' => 'Display of competition contacts has been disabled by the site administrators. Use other means to reach out to any competition official (social media, the organization\'s website, etc.).',
     'no_contacts' => 'No contacts have been listed for this competition.',
     'reach_officials' => 'To reach a competition official, choose from the following contacts:',
+    'judging' => 'Judging',
+    'judging_in_progress' => 'In progress',
+    'judging_concluded' => 'Concluded',
+    'judging_not_started' => 'Not started',
+    'awards' => 'Awards',
+    'start' => 'Start',
+    'end' => 'End',
+    'location' => 'Location',
+    'date_label' => 'Date',
 ];

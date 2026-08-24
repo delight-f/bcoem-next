@@ -37,6 +37,29 @@ final class Windows
         public readonly ?int $lastJudgingDate,
     ) {}
 
+    /**
+     * Legacy $judging_start tri-state over the session schedule:
+     * 0 = not started; 1 = in progress (a session runs until its last date
+     * + a 6-hour grace window); 2 = concluded.
+     */
+    public function judgingState(int $now, int|string|null $awardsEpoch): int
+    {
+        if ($this->firstJudgingDate === null || $now <= $this->firstJudgingDate) {
+            return 0;
+        }
+
+        if ($this->lastJudgingDate !== null) {
+            return $now < ($this->lastJudgingDate + 21600) ? 1 : 2;
+        }
+
+        if ($awardsEpoch !== null && $awardsEpoch !== 0) {
+            return $now < $awardsEpoch ? 1 : 2;
+        }
+
+        // No end data at all: assume a single session fits in six hours.
+        return $now < ($this->firstJudgingDate + 21600) ? 1 : 2;
+    }
+
     public static function derive(TenantContext $ctx, int $now): self
     {
         $registration = WindowStates::openOrClosed(
