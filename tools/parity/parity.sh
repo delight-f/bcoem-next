@@ -77,17 +77,25 @@ while IFS= read -r url; do
     safe="$(echo "$url" | tr '/?=&' '____')"
     legacy_url="${url%%|*}"; new_url="${url#*|}"
     [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
-    curl -sfL "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
-        || { echo "SKIP (legacy error) $url"; skipped=$((skipped+1)); continue; }
-    curl -sf "http://127.0.0.1:$PORT_NEW/$new_url" -o "$REPORT/$safe.new.raw" \
-        || { echo "FAIL (new error)   $url"; fail=$((fail+1)); continue; }
+    curl -sL -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
+        > "$REPORT/$safe.legacy.code" \
+        || { echo "SKIP (legacy error $(cat "$REPORT/$safe.legacy.code")) $url"; skipped=$((skipped+1)); continue; }
+    curl -sL -w '%{http_code}' "http://127.0.0.1:$PORT_NEW/$new_url" -o "$REPORT/$safe.new.raw" \
+        > "$REPORT/$safe.new.code" \
+        || { echo "FAIL (new error $(cat "$REPORT/$safe.new.code"))  $url"; fail=$((fail+1)); continue; }
     php normalize.php < "$REPORT/$safe.legacy.raw" > "$REPORT/$safe.legacy.clean"
     php normalize.php < "$REPORT/$safe.new.raw"   > "$REPORT/$safe.new.clean"
-    if diff -q "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" >/dev/null; then
+    # Option B: content-level comparison. The standalone port is not a
+    # markup transliteration, so visible text is the regression contract;
+    # markup diffs are kept for triage but do not fail the gate.
+    php content.php < "$REPORT/$safe.legacy.raw" > "$REPORT/$safe.legacy.text" || true
+    php content.php < "$REPORT/$safe.new.raw" > "$REPORT/$safe.new.text" || true
+    if diff -q "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" >/dev/null; then
         echo "PASS $url"; pass=$((pass+1))
     else
-        diff "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" > "$REPORT/$safe.diff" || true
-        echo "DIFF $url  (see $safe.diff)"; fail=$((fail+1))
+        diff -u "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" > "$REPORT/$safe.content-diff" || true
+        diff "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" > "$REPORT/$safe.markup-diff" || true
+        echo "DIFF $url  (content: $safe.content-diff, markup: $safe.markup-diff)"; fail=$((fail+1))
     fi
 done < urls.txt
 

@@ -7,7 +7,6 @@ declare(strict_types=1);
  * environment-provided database settings (artisan serve isolates its child
  * process env, which breaks the harness's throwaway-DB wiring).
  */
-
 $uri = urldecode((string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH));
 
 // Serve real static assets (css/js/images) straight from public/.

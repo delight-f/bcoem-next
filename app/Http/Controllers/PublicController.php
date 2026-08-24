@@ -38,6 +38,15 @@ final class PublicController extends Controller
             && $ctx->prefsStr('prefsDisplayWinners') === 'Y'
             && $now > (int) ($ctx->prefsStr('prefsWinnerDelay') ?: 0);
 
+        // Landing salutation flips once judging is over (index.pub.php).
+        $judgingOver = $windows->futureJudgingSessions === 0
+            && $windows->registration === WindowState::After;
+        $judgedEntries = (int) DB::table('judging_scores')->distinct()->count('eid');
+        $participants = (int) DB::table('brewer')->count();
+        $salutation = self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
+            .' '.self::t('site.organized_by').' '.e($ctx->contestStr('contestHost'))
+            .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '').'.';
+
         return view('public.home', [
             'ctx' => $ctx,
             'windows' => $windows,
@@ -45,7 +54,10 @@ final class PublicController extends Controller
             'resultsVisible' => $resultsVisible,
             'glance' => $this->glanceCards($ctx, $windows, $langLong),
             'heroImage' => self::heroImage($ctx),
-            'salutation' => null,
+            'salutation' => $salutation,
+            'salutationCounts' => $judgingOver
+                ? ['judged' => $judgedEntries, 'participants' => $participants]
+                : null,
             'archives' => ResultsRepository::archives(),
         ]);
     }
@@ -58,7 +70,11 @@ final class PublicController extends Controller
         $langLong = str_starts_with((string) $ctx->prefsStr('prefsLanguage'), 'en-');
         $clean = preg_replace('/[^a-zA-Z0-9]+/', '', $filter);
 
-        return view('public.past-winners', [
+        // Legacy renders the full landing for past-winners (default.sec.php
+        // serves both sections); results read the archive tables and come
+        // back empty when the suffix names no archived data.
+        return view('public.home', [
+            'resultsSuffix' => $clean === '' ? null : $clean,
             'ctx' => $ctx,
             'windows' => $windows,
             'longDates' => $langLong,
@@ -66,6 +82,7 @@ final class PublicController extends Controller
             'glance' => [],
             'heroImage' => null,
             'salutation' => self::t('site.past_winners').' &ndash; '.$clean,
+            'salutationCounts' => null,
             'suffix' => $clean === '' ? null : $clean,
             'archives' => ResultsRepository::archives(),
         ]);
@@ -74,7 +91,7 @@ final class PublicController extends Controller
     /** Account-gated in legacy: anonymous requests bounce to a login nudge. */
     public function list(): never
     {
-        redirect('/')->with('msg', 99)->send();
+        redirect('/?msg=99')->send();
         exit;
     }
 

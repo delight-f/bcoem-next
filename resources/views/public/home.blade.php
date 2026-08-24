@@ -1,50 +1,38 @@
 <x-public-layout :ctx="$ctx" :show-hero="true" :hero-image="$heroImage ?? null">
     @php($style = $longDates ? 'long' : 'short')
 
-    {{-- Landing page: at-a-glance cards, window/rules sections, contacts,
-         then the results block once judging is past and revealed. --}}
+    {{-- Legacy shows the login nudge after an account-gated redirect (msg=99
+         travels as a query param there; array sessions cannot flash). --}}
+    @if ((int) request('msg') === 99)
+        <p class="alert alert-warning">{{ __('site.please_log_in') }}</p>
+    @endif
 
-    <section id="at-a-glance" class="landing-page-section pb-3">
-        <header class="landing-page-section-header py-2"><h1>{{ __('site.at_a_glance') }}</h1></header>
-        @include('public.partials.glance', ['cards' => $glance])
+    {{-- Landing page: salutation, at-a-glance (pre-reveal only), info
+         sections, then the results block once judging is past. --}}
+
+    <div class="d-none d-print-block landing-page-section p-3">
+        <h1>{{ $ctx->contestStr('contestName') }}</h1>
+    </div>
+
+    <section id="identity">
+        <p>{!! $salutation !!}</p>
     </section>
 
-    <section id="rules" class="landing-page-section pb-3">
-        <header class="landing-page-section-header py-2"><h1>{{ __('site.rules') }}</h1></header>
-        <div class="reveal-element">
-            <h2>
-                {{ __('site.registration') }}
-                <span class="text-success">{{ $windows->registration === \App\Support\Tenant\WindowState::Open ? __('site.state_open') : '' }}</span>
-            </h2>
-            <p>
-                {{ __('site.window_opens') }}
-                {{ \App\Support\Tenant\DateFmt::dateTime($ctx->contestEpoch('contestRegistrationOpen'), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), $style) ?? __('site.not_set') }}.
-                {{ __('site.window_closes') }}
-                {{ \App\Support\Tenant\DateFmt::dateTime($ctx->contestEpoch('contestRegistrationDeadline'), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), $style) ?? __('site.not_set') }}.
-            </p>
-        </div>
-        <div class="reveal-element">
-            <h2>{{ __('site.comp_rules') }}</h2>
-            {!! \App\Support\Tenant\ContestRules::renderCompetitionRules($ctx->contestStr('contestRules')) !!}
-        </div>
-    </section>
+    @includeWhen(! $resultsVisible, 'public.partials.glance', ['cards' => $glance])
 
-    <section id="entry-info" class="landing-page-section pb-3">
-        <header class="landing-page-section-header py-2"><h1>{{ __('site.entry_info') }}</h1></header>
-        <div class="reveal-element">
-            <p>
-                {{ __('site.window_opens') }}
-                {{ \App\Support\Tenant\DateFmt::dateTime($ctx->contestEpoch('contestEntryOpen'), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), $style) ?? __('site.not_set') }}.
-                {{ __('site.window_closes') }}
-                {{ \App\Support\Tenant\DateFmt::dateTime($ctx->contestEpoch('contestEntryDeadline'), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), $style) ?? __('site.not_set') }}.
-            </p>
-        </div>
-    </section>
+    @includeWhen($resultsVisible, 'public.partials.results', [
+        'suffix' => $resultsSuffix ?? null,
+        'salutationCounts' => $salutationCounts,
+    ])
+
+    @includeWhen($windows->futureJudgingSessions > 0, 'public.partials.rules-section')
+    @includeWhen($windows->futureJudgingSessions > 0, 'public.partials.entry-info-section')
+
+    @includeUnless($windows->firstJudgingDate !== null && time() > $windows->firstJudgingDate, 'public.partials.volunteers')
 
     <section id="contact" class="landing-page-section pb-3 d-print-none">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>
         @include('public.partials.contacts')
     </section>
 
-    @includeWhen($resultsVisible, 'public.partials.results', ['suffix' => null])
 </x-public-layout>

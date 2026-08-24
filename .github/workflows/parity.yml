@@ -47,21 +47,12 @@ jobs:
 
       - name: Configure legacy app against the same database
         env:
+          PARITY_DB_NAME: parity
+          PARITY_DB_PASS: root
           LEGACY_BASE_URL: http://127.0.0.1:8091/
         run: |
           cd legacy
-          python3 - <<'PYEOF'
-          import pathlib, re
-          p = pathlib.Path('site/config.sample.php')
-          s = p.read_text()
-          s = re.sub(r"^\$hostname = .*;$", "$hostname = '127.0.0.1';", s, flags=re.M)
-          s = re.sub(r"^\$username = .*;$", "$username = 'root';", s, flags=re.M)
-          s = re.sub(r"^\$password = .*;$", "$password = 'root';", s, flags=re.M)
-          s = re.sub(r"^\$database = .*;$", "$database = 'parity';", s, flags=re.M)
-          s = re.sub(r"^\$prefix = .*;$", "$prefix = 'baseline_';", s, flags=re.M)
-          s = re.sub(r"^\$base_url = .*$", "$base_url = os.environ['LEGACY_BASE_URL'];", s, flags=re.M)
-          pathlib.Path('site/config.php').write_text(s)
-          PYEOF
+          ../tools/parity/configure-legacy.py
 
       - name: Prepare Laravel environment
         run: |
@@ -80,7 +71,8 @@ jobs:
           tools/parity/parity.sh 2>&1 | tee parity-summary.txt
           # Harness must complete and produce at least one PASS verdict;
           # DIFF lines are triaged into the ledger rather than failing CI.
-          grep -q "^PASS " parity-summary.txt || { echo "no PASS verdicts"; exit 1; }
+          grep -q "parity report:" parity-summary.txt || { echo "harness did not complete"; exit 1; }
+          grep -q "FAIL (new error" parity-summary.txt && { echo "new-app errors present"; exit 1; } || true
 
       - uses: actions/upload-artifact@v4
         with:

@@ -23,6 +23,11 @@
 <a name="top"></a>
 
 <header id="home" class="site-header">
+    <nav class="landing-nav d-print-none">
+        <a href="#rules">{{ __('site.rules') }}</a>
+        <a href="#volunteers">{{ __('site.volunteers') }}</a>
+        <a href="#contact">{{ __('site.contact') }}</a>
+    </nav>
     @if (isset($showHero) && $showHero)
         {{-- Hero: gradient overlay over a random style-type-appropriate image,
              mirroring the live hero band. --}}
@@ -55,12 +60,7 @@
 </div>
 
 <footer class="site-footer bg-dark text-light justify-content-center container-fluid fixed-bottom pt-3 d-print-none">
-    <p class="text-center">
-        {{ __('site.footer') }}
-        @if ($ctx->contestStr('contestHostWebsite'))
-            &middot; <a class="text-light" href="{{ $ctx->contestStr('contestHostWebsite') }}" target="_blank" rel="noopener">{{ $ctx->contestStr('contestHost') }}</a>
-        @endif
-    </p>
+    <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M 3.1.0 &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>

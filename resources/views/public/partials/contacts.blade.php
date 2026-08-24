@@ -10,10 +10,10 @@
     @if ($contacts->isEmpty())
         <p>{{ __('site.no_contacts') }}</p>
     @else
-        <p>{{ __('site.reach_officials') }}</p>
+        <p>{{ __('site.contact_intro') }}</p>
         <ul>
             @foreach ($contacts as $contact)
-                <li>{{ $contact->contactFirstName }} {{ $contact->contactLastName }} — {{ $contact->contactPosition }}</li>
+                <li>{{ $contact->contactFirstName }} {{ $contact->contactLastName }} &ndash; {{ $contact->contactPosition }}</li>
             @endforeach
         </ul>
     @endif
