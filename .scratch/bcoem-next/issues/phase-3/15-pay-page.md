@@ -6,7 +6,7 @@
 > the paid-state transitions; IPN/PayPal branches in process.inc.php are
 > D7-out-of-scope). Money flow: entrant → host (passthrough).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.5a (adapter), P3.2d (entries list), P3.5c or P3.5b (at least
 one concrete adapter for the E2E — manual first for deterministic tests)

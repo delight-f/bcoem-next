@@ -197,7 +197,7 @@ final class RegisterFlowTest extends PublicSurfaceTestCase
         ]);
 
         // Page renders the closed message.
-        $this->get('/register')->assertOk()->assertSee('Registration is closed');
+        $this->get('/register')->assertOk()->assertSee('Registration has closed');
 
         // POST bounces back without creating rows.
         $this->post('/register/entrant', $this->registerPayload('closed@example.com'))

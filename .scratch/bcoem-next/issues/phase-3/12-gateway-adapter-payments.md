@@ -16,7 +16,7 @@
 > migration that only creates `payments` (+ nothing else); document the
 > deviation in ledger/payments.md.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.3a (entries exist to pay for), P1.4 (payments ledger done)
 Consumes: ledger/payments.md (#1–#9), ledger/entry-lifecycle.md (#12)

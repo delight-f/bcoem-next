@@ -6,7 +6,7 @@
 > record (passthrough per owner decision 2026-08-24). Tested with Stripe
 > test mode + mocked events — NOT parity-diffed (external side effects).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.5a (adapter contract + state machine)
 Consumes: ledger/payments.md

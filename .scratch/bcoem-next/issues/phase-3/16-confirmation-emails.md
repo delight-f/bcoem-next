@@ -4,7 +4,7 @@
 > (mail templates + send conditions), lang `email_*` strings, the legacy
 > mailer config (SMTP). Transport = Laravel mailer (new); templates ported.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1b (registration), P3.5d (pay success), P3.1c (reset mail —
   can land first if the mailer ships here)

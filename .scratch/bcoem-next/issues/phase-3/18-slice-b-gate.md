@@ -4,7 +4,7 @@
 > entries on a staging copy of a real dump with zero console errors; parity
 > diffs explained or fixed.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B) — gate
 Depends on: P3.1a–d, P3.2a–d, P3.3a/b, P3.4, P3.5a/c (manual path for the
 deterministic E2E; Stripe mocked), P3.6, P3.7
