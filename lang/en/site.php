@@ -81,7 +81,7 @@ return [
     'forgot_password' => 'Forgot your password?',
     'reset_password' => 'Reset Password',
     'log_out' => 'Log Out',
-    'my_account' => 'My Account',
+    'admin_short' => 'Admin',
     'register' => 'Register',
     'registration_closed' => 'Registration is closed for this competition.',
     'entrant' => 'Entrant',

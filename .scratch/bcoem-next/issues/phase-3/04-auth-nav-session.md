@@ -7,7 +7,7 @@
 > shell). Completes the P2.1 layout promise: the same Blade chrome now has a
 > logged-in branch.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1a (auth), P2.1 (layout shell)
 Consumes: ledger/contest-info.md (session bootstrap parity)

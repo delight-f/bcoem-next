@@ -38,6 +38,19 @@
             <a href="#sponsors">{{ __('site.sponsors') }}</a>
         @endif
         <a href="#contact">{{ __('site.contact') }}</a>
+
+        @if(Auth::check())
+            @if (auth()->user()->isAdmin())
+                <a href="{{ url('/?section=admin') }}">{{ __('site.admin_short') }}</a>
+            @endif
+            <a href="{{ url('/list') }}">{{ __('site.my_account') }}</a>
+            <form method="post" action="{{ route('logout') }}" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-link nav-logout">{{ __('site.log_out') }}</button>
+            </form>
+        @else
+            <a href="{{ route('login') }}">{{ __('site.log_in') }}</a>
+        @endif
     </nav>
     {{-- Legacy renders section alerts (login nudge, archived-data notice)
          between the nav and the hero (headers.inc.php via alerts.pub.php). --}}

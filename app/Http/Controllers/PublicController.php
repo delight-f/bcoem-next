@@ -11,6 +11,7 @@ use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -130,10 +131,34 @@ final class PublicController extends Controller
         ]);
     }
 
-    /** Account-gated in legacy: anonymous requests bounce to a login nudge. */
-    public function list(): RedirectResponse
+    /**
+     * Account-gated in legacy: anonymous requests bounce to a login nudge;
+     * authenticated users see the account surface (ticket 08 fills this in).
+     */
+    public function list(): View|RedirectResponse
     {
-        return redirect('/?msg=99');
+        if (! Auth::check()) {
+            return redirect('/?msg=99');
+        }
+
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $langLong = str_starts_with((string) $ctx->prefsStr('prefsLanguage'), 'en-');
+
+        return view('public.home', [
+            'ctx' => $ctx,
+            'windows' => $windows,
+            'longDates' => $langLong,
+            'resultsVisible' => false,
+            'cardsVisible' => false,
+            'blurbCounts' => null,
+            'judgingStarted' => $windows->firstJudgingDate !== null && time() > $windows->firstJudgingDate,
+            'sponsorsVisible' => false,
+            'glance' => [],
+            'heroImage' => null,
+            'salutation' => __('site.my_account'),
+            'archives' => [],
+        ]);
     }
 
     /**
