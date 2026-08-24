@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Support\Payments;
 
+use App\Mail\PaymentConfirmMail;
+use App\Support\Tenant\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Payment state machine (spec D7): converts verified gateway events into
@@ -117,6 +120,11 @@ final class PaymentService
             return false;
         }
 
+        // Payment confirmation (P3.6): legacy ppv.php mailed the entrant
+        // on every verified success, provider-neutral in the port (no
+        // PayPal wording — ledger/payments.md D7).
+        $this->sendConfirmation($entries, $entrantUid, $amount);
+
         return true;
     }
 
@@ -185,6 +193,31 @@ final class PaymentService
         $cents = (int) $whole * 100 + (int) str_pad(substr($fraction.'00', 0, 2), 2, '0');
 
         return $negative ? -$cents : $cents;
+    }
+
+    /**
+     * Entrant confirmation mail for a settled batch (P3.6). Recipient and
+     * display name come from brewer; currency from prefs.
+     *
+     * @param  list<int>  $entries
+     */
+    private function sendConfirmation(array $entries, int $entrantUid, string $amount): void
+    {
+        $brewer = DB::table('brewer')
+            ->where('uid', $entrantUid)
+            ->first(['brewerFirstName', 'brewerEmail']);
+
+        if ($brewer === null || $brewer->brewerEmail === null) {
+            return;
+        }
+
+        Mail::to($brewer->brewerEmail)->send(new PaymentConfirmMail(
+            (string) $brewer->brewerFirstName,
+            (string) TenantContext::load()->contestStr('contestName'),
+            $entries,
+            $amount,
+            (string) (TenantContext::load()->prefsStr('prefsCurrency') ?? 'USD'),
+        ));
     }
 
     /**

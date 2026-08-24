@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\RegistrationConfirmMail;
 use App\Support\Auth\CredentialNormalizer;
 use App\Support\Brewer\Clubs;
 use App\Support\Tenant\TenantContext;
@@ -15,6 +16,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Public registration (P3.1b) — port of `pub/register.pub.php` +
@@ -220,12 +222,87 @@ final class RegisterController extends Controller
             ]);
         }
 
+        // Registration confirmation (P3.6): legacy sent it only when
+        // prefsEmailRegConfirm == 1 (and SMTP mode; the port's transport
+        // is env-configured). Content ported from
+        // process_users_register.inc.php:317-401.
+        if ((int) ($ctx->prefsStr('prefsEmailRegConfirm') ?? '0') === 1) {
+            Mail::to($username)->send(new RegistrationConfirmMail(
+                $data['brewerFirstName'],
+                (string) $ctx->contestStr('contestName'),
+                $this->confirmRows($data, $clubs, $brewerJudge, $brewerSteward, $brewerStaff),
+            ));
+        }
+
         // Auto-login (filter=default branch) + rotate CSRF, then redirect.
         $request->session()->regenerate();
         Auth::loginUsingId($userId);
         $request->session()->regenerateToken();
 
         return redirect('/?section=list&msg=7');
+    }
+
+    /**
+     * Confirmation-mail table rows, legacy order
+     * (process_users_register.inc.php:361-388). Entrant-only fields
+     * (club/AHA/MHP/roles/pro-am) appear only for non-brewery contacts.
+     *
+     * @param  array<string, mixed>  $data
+     * @return list<array{label: string, value: string}>
+     */
+    private function confirmRows(array $data, string $clubs, string $judge, string $steward, string $staff): array
+    {
+        $yesNo = fn (string $v): string => self::t($v === 'Y' ? 'mail.yes' : 'mail.no');
+        $row = fn (string $label, ?string $value): array => ['label' => self::t($label), 'value' => (string) $value];
+        $rows = [];
+
+        if ($data['brewerBreweryName'] ?? null) {
+            $rows[] = $row('mail.label_brewery', $data['brewerBreweryName']);
+        }
+        $rows[] = ['label' => self::t('mail.label_name'), 'value' => $data['brewerFirstName'].' '.$data['brewerLastName']];
+        $rows[] = ['label' => self::t('mail.label_username'), 'value' => $data['user_name']];
+        $rows[] = ['label' => self::t('mail.label_security_question'), 'value' => $data['userQuestion']];
+
+        $address = collect([$data['brewerAddress'] ?? null])->merge([
+            implode(', ', array_filter([
+                ($data['brewerCity'] ?? '').', '.($data['brewerState'] ?? ''),
+                $data['brewerZip'] ?? '',
+            ])),
+        ])->filter()->implode("\n");
+        if ($address !== '') {
+            $rows[] = ['label' => self::t('mail.label_address'), 'value' => $address];
+        }
+
+        if ($data['brewerPhone1'] ?? null) {
+            $rows[] = $row('mail.label_phone_primary', $data['brewerPhone1']);
+        }
+        if ($data['brewerPhone2'] ?? null) {
+            $rows[] = $row('mail.label_phone_secondary', $data['brewerPhone2']);
+        }
+
+        if (! isset($data['brewerBreweryName'])) {
+            if ($clubs !== '') {
+                $rows[] = $row('mail.label_club', $clubs);
+            }
+            if ($data['brewerAHA'] ?? null) {
+                $rows[] = $row('mail.label_aha_number', $data['brewerAHA']);
+            }
+            if ($data['brewerMHP'] ?? null) {
+                $rows[] = $row('mail.label_mhp_number', $data['brewerMHP']);
+            }
+            $rows[] = $row('mail.label_staff', $yesNo($staff));
+            $rows[] = $row('mail.label_judge', $yesNo($judge));
+            $rows[] = $row('mail.label_steward', $yesNo($steward));
+
+            $proAm = match ((string) ($data['brewerProAm'] ?? '0')) {
+                '1' => self::t('mail.yes'),
+                '2' => self::t('mail.opt_out'),
+                default => self::t('mail.no'),
+            };
+            $rows[] = $row('mail.label_pro_am', $proAm);
+        }
+
+        return $rows;
     }
 
     /**
