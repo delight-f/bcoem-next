@@ -1,34 +1,34 @@
-<x-public-layout :ctx="$ctx" :show-hero="true" :hero-image="$heroImage ?? null">
+<x-public-layout :ctx="$ctx" :show-hero="true" :hero-image="$heroImage ?? null" :salutation="$salutation" :judging-started="$judgingStarted" :future-judging-sessions="$windows->futureJudgingSessions" :sponsors-visible="$sponsorsVisible">
     @php($style = $longDates ? 'long' : 'short')
 
-    {{-- Legacy shows the login nudge after an account-gated redirect (msg=99
-         travels as a query param there; array sessions cannot flash). --}}
-    @if ((int) request('msg') === 99)
-        <p class="alert alert-warning">{{ __('site.please_log_in') }}</p>
-    @endif
-
-    {{-- Landing page: salutation, at-a-glance (pre-reveal only), info
-         sections, then the results block once judging is past. --}}
+    {{-- Legacy landing composition (index.pub.php): print-only heading, then
+         the at-a-glance section (blurb / results / cards per state), the
+         rules + entry-info sections while future sessions remain, volunteers
+         before judging starts, then sponsors + contact. --}}
 
     <div class="d-none d-print-block landing-page-section p-3">
         <h1>{{ $ctx->contestStr('contestName') }}</h1>
     </div>
 
-    <section id="identity">
-        <p>{!! $salutation !!}</p>
+    <section id="at-a-glance" class="landing-page-section pb-3">
+        {{-- judge_closed.pub.php: shown once registration/entry are closed
+             and no future judging session remains (any winner-display state). --}}
+        @if ($blurbCounts !== null)
+            <p class="lead mt-3">{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}.</p>
+            <p class="lead"><small>{{ __('site.there_were') }} <strong class="text-success">{{ $blurbCounts['received'] }}</strong> {{ __('site.entries_judged') }} {{ __('site.and') }} <strong class="text-success">{{ $blurbCounts['participants'] }}</strong> {{ __('site.registered_participants') }}.</small></p>
+        @endif
+
+        @includeWhen($resultsVisible, 'public.partials.results', [
+            'suffix' => $resultsSuffix ?? null,
+        ])
+
+        @includeWhen($cardsVisible, 'public.partials.glance', ['cards' => $glance])
     </section>
-
-    @includeWhen(! $resultsVisible, 'public.partials.glance', ['cards' => $glance])
-
-    @includeWhen($resultsVisible, 'public.partials.results', [
-        'suffix' => $resultsSuffix ?? null,
-        'salutationCounts' => $salutationCounts,
-    ])
 
     @includeWhen($windows->futureJudgingSessions > 0, 'public.partials.rules-section')
     @includeWhen($windows->futureJudgingSessions > 0, 'public.partials.entry-info-section')
 
-    @includeUnless($windows->firstJudgingDate !== null && time() > $windows->firstJudgingDate, 'public.partials.volunteers')
+    @includeUnless($judgingStarted, 'public.partials.volunteers')
 
     <section id="contact" class="landing-page-section pb-3 d-print-none">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>

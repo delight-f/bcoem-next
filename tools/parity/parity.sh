@@ -33,7 +33,24 @@ MYSQL=(mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u "${PARITY_DB_USER:-root}")
 
 "${MYSQL[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME; CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 "${MYSQL[@]}" "$DB_NAME" < "$DUMP_SQL"
-trap '"${MYSQL[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME;"' EXIT
+
+# Point the legacy oracle at THIS run's throwaway DB (its site/config.php
+# is regenerated every run; CI's static "parity" DB is not assumed).
+CONFIGURE_LEGACY="$(pwd)/configure-legacy.py"
+( cd "$LEGACY_DIR" && \
+    PARITY_DB_NAME="$DB_NAME" \
+    PARITY_DB_HOST="${PARITY_DB_HOST:-127.0.0.1}" \
+    PARITY_DB_USER="${PARITY_DB_USER:-root}" \
+    PARITY_DB_PASS="${PARITY_DB_PASS:-root}" \
+    PARITY_DB_PREFIX="${PARITY_DB_PREFIX-baseline_}" \
+    LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/" \
+    python3 "$CONFIGURE_LEGACY" >/dev/null )
+
+cleanup() {
+    "${MYSQL[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
+    kill "$LEGACY_PID" "$NEW_PID" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 # The port needs an app key (encrypted redirects/sessions); provision a
 # throwaway env if the checkout has none.
@@ -56,9 +73,10 @@ export DB_PASSWORD="${PARITY_DB_PASS:-}"
 export SESSION_DRIVER=array
 export CACHE_STORE=array
 export QUEUE_CONNECTION=sync
-# The baseline corpus ships with the CI prefix baked into table names; both
-# apps must resolve the same physical tables.
-export DB_TABLE_PREFIX="${PARITY_DB_PREFIX:-baseline_}"
+# apps must resolve the same physical tables. Set PARITY_DB_PREFIX to the
+# dump's table prefix; an empty value targets unprefixed tenant dumps
+# (real-dump corpus), which is why this is `${VAR-default}` not `:-`.
+export DB_TABLE_PREFIX="${PARITY_DB_PREFIX-baseline_}"
 # Legacy builds absolute URLs from $base_url in site/config.php; without the
 # port its redirects leave the harness server.
 export LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/"
@@ -68,15 +86,17 @@ LEGACY_PID=$!
 php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
     >"$REPORT/new-server.log" 2>&1 &
 NEW_PID=$!
-trap 'kill $LEGACY_PID $NEW_PID 2>/dev/null' EXIT
 sleep 2
 
 pass=0; fail=0; skipped=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
     safe="$(echo "$url" | tr '/?=&' '____')"
+    # URLs are joined onto the host with a leading "/", so drop any leading
+    # slash from the path itself — a doubled slash 404s on the port.
     legacy_url="${url%%|*}"; new_url="${url#*|}"
     [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
+    legacy_url="${legacy_url#/}"; new_url="${new_url#/}"
     curl -sL -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
         > "$REPORT/$safe.legacy.code" \
         || { echo "SKIP (legacy error $(cat "$REPORT/$safe.legacy.code")) $url"; skipped=$((skipped+1)); continue; }

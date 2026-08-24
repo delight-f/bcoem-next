@@ -107,6 +107,37 @@ final class ResultsRepository
     }
 
     /**
+     * Legacy archive-display gate (constants_post_lang.inc.php): a suffix
+     * is displayable only when the archive row exists with winners
+     * enabled and a style set, all three sibling tables exist, and the
+     * archived scores table holds at least one row. Anything else bounces
+     * to the landing's ?msg=8 alert.
+     */
+    public static function archiveDisplayable(string|int $rawFilter): bool
+    {
+        $suffix = preg_replace('/[^a-zA-Z0-9]+/', '', (string) $rawFilter);
+        if ($suffix === '') {
+            return false;
+        }
+
+        $archive = DB::table('archive')->where('archiveSuffix', (string) $rawFilter)->first();
+        if ($archive === null || ($archive->archiveDisplayWinners ?? '') !== 'Y') {
+            return false;
+        }
+        if (($archive->archiveStyleSet ?? '') === '') {
+            return false;
+        }
+
+        foreach (['brewer_'.$suffix, 'brewing_'.$suffix, 'judging_scores_'.$suffix] as $table) {
+            if (! self::tableExists($table)) {
+                return false;
+            }
+        }
+
+        return (int) DB::table('judging_scores_'.$suffix)->count() > 0;
+    }
+
+    /**
      * Archive rows flagged for public winner display. Suffixes become
      * table-name fragments downstream; re-sanitize defensively even though
      * legacy sanitized at write time.

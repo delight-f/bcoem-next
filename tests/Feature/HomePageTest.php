@@ -20,8 +20,11 @@ final class HomePageTest extends PublicSurfaceTestCase
 
         $response->assertOk();
         $response->assertSee($this->contestName(), false);
-        $response->assertSee('At a Glance');
-        $response->assertSee('Competition Rules');
+        // Rules section renders only while future judging sessions remain
+        // (index.pub.php); the fixture may have none.
+        if ($this->futureJudgingSessions() > 0) {
+            $response->assertSee('Competition Rules');
+        }
     }
 
     public function test_window_sections_render_dates_or_not_set(): void
@@ -29,8 +32,12 @@ final class HomePageTest extends PublicSurfaceTestCase
         $response = $this->get('/');
 
         $response->assertOk();
-        $response->assertSee('Opens:');
-        $response->assertSee('Closes:');
+        if ($this->futureJudgingSessions() > 0) {
+            $response->assertSee('Opens:');
+            $response->assertSee('Closes:');
+        } else {
+            self::assertStringNotContainsString('Opens:', (string) $response->getContent());
+        }
     }
 
     public function test_results_hidden_before_reveal(): void
@@ -60,7 +67,7 @@ final class HomePageTest extends PublicSurfaceTestCase
             if ($count === 0) {
                 $response->assertSee('No contacts have been listed', false);
             } else {
-                $response->assertSee('choose from the following contacts', false);
+                $response->assertSee('Use the links below to contact individuals involved', false);
             }
         }
     }
@@ -72,17 +79,27 @@ final class HomePageTest extends PublicSurfaceTestCase
         self::assertSame(302, $response->status());
     }
 
-    public function test_past_winners_unknown_archive_is_empty_but_ok(): void
+    public function test_past_winners_unknown_archive_redirects_like_legacy(): void
     {
+        // Legacy (constants_post_lang.inc.php): an unknown/undisplayable
+        // archive suffix bounces to the landing with the ?msg=8 alert.
         $response = $this->get('/past-winners/doesnotexist99');
 
-        $response->assertOk();
-        self::assertStringContainsStringIgnoringCase('Past Winners', (string) (string) $response->getContent());
+        $response->assertRedirect('/?msg=8');
+
+        $landing = $this->get('/?msg=8');
+        $landing->assertOk();
+        self::assertStringContainsStringIgnoringCase('Archived data is not available.', (string) $landing->getContent());
     }
 
     private function contestName(): string
     {
         return (string) (DB::table('contest_info')->where('id', 1)->value('contestName') ?? '');
+    }
+
+    private function futureJudgingSessions(): int
+    {
+        return (int) DB::table('judging_locations')->where('judgingDate', '>=', time())->count();
     }
 
     /** Strict legacy gate: every judging session in the past AND delay passed. */

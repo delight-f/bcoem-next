@@ -7,8 +7,6 @@
     : [])
 
 <section id="results" class="landing-page-section pb-3">
-    @php($counts = $salutationCounts ?? ['judged' => \Illuminate\Support\Facades\DB::table('judging_scores')->distinct()->count('eid'), 'participants' => \Illuminate\Support\Facades\DB::table('brewer')->count()])
-    <p>{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}. {{ __('site.there_were') }} {{ $counts['judged'] }} {{ __('site.entries_judged') }} {{ __('site.and') }} {{ $counts['participants'] }} {{ __('site.registered_participants') }}.</p>
     <header class="landing-page-section-header py-2"><h1>{{ __('site.results') }}</h1></header>
 
     <div class="mt-4 reveal-element">

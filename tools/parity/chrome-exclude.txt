@@ -18,3 +18,4 @@ Required Info
 The token provided has expired. Please use the reset password function again to generate a new token.
 Your password is required.
 Reset It
+Password

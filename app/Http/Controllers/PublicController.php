@@ -10,6 +10,7 @@ use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,18 +32,27 @@ final class PublicController extends Controller
 
         $langLong = str_starts_with((string) $ctx->prefsStr('prefsLanguage'), 'en-');
 
-        // Results gate: every judging session in the past, winners enabled,
-        // reveal delay strictly passed (ledger #4).
-        $resultsVisible = $windows->futureJudgingSessions === 0
+        // Landing state machine (index.pub.php + default.pub.php): once every
+        // judging session is past AND registration/entry are closed, legacy
+        // always shows the "thanks to all who participated" blurb; winners
+        // replace the at-a-glance cards only when enabled AND the reveal
+        // delay has strictly passed (winners-display ledger #4).
+        $allClosed = $windows->futureJudgingSessions === 0
             && $windows->registration === WindowState::After
-            && $ctx->prefsStr('prefsDisplayWinners') === 'Y'
-            && $now > (int) ($ctx->prefsStr('prefsWinnerDelay') ?: 0);
+            && $windows->entry === WindowState::After;
+        $displayWinners = $ctx->prefsStr('prefsDisplayWinners') === 'Y';
+        $delayPassed = $now > (int) ($ctx->prefsStr('prefsWinnerDelay') ?: 0);
 
-        // Landing salutation flips once judging is over (index.pub.php).
-        $judgingOver = $windows->futureJudgingSessions === 0
-            && $windows->registration === WindowState::After;
-        $judgedEntries = (int) DB::table('judging_scores')->distinct()->count('eid');
-        $participants = (int) DB::table('brewer')->count();
+        $resultsVisible = $allClosed && $displayWinners && $delayPassed;
+        $cardsVisible = ! $allClosed || ($displayWinners && ! $delayPassed);
+
+        // Legacy nav hides Rules/Volunteers once judging has started
+        // (nav.pub.php), and shows Entry Info only while future sessions
+        // remain; the sponsors link mirrors the section gate.
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
+            && (int) DB::table('sponsors')->count() > 0;
+
         $salutation = self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
             .' '.self::t('site.organized_by').' '.e($ctx->contestStr('contestHost'))
             .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '').'.';
@@ -52,47 +62,63 @@ final class PublicController extends Controller
             'windows' => $windows,
             'longDates' => $langLong,
             'resultsVisible' => $resultsVisible,
+            'cardsVisible' => $cardsVisible,
+            // judge_closed.pub.php: received entries + registered participants.
+            'blurbCounts' => $allClosed
+                ? [
+                    'received' => (int) DB::table('brewing')->where('brewReceived', 1)->count(),
+                    'participants' => (int) DB::table('brewer')->count(),
+                ]
+                : null,
+            'judgingStarted' => $judgingStarted,
+            'sponsorsVisible' => $sponsorsVisible,
             'glance' => $this->glanceCards($ctx, $windows, $langLong),
             'heroImage' => self::heroImage($ctx),
             'salutation' => $salutation,
-            'salutationCounts' => $judgingOver
-                ? ['judged' => $judgedEntries, 'participants' => $participants]
-                : null,
             'archives' => ResultsRepository::archives(),
         ]);
     }
 
-    public function pastWinners(string $filter): View
+    public function pastWinners(string $filter): View|RedirectResponse
     {
+        // Legacy (constants_post_lang.inc.php): a suffix with no
+        // displayable archive (missing row, winners disabled, absent
+        // sibling tables, or zero archived scores) bounces to ?msg=8 —
+        // the landing with "Archived data is not available."
+        if (! ResultsRepository::archiveDisplayable($filter)) {
+            return redirect('/?msg=8');
+        }
+
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
         $langLong = str_starts_with((string) $ctx->prefsStr('prefsLanguage'), 'en-');
         $clean = preg_replace('/[^a-zA-Z0-9]+/', '', $filter);
 
-        // Legacy renders the full landing for past-winners (default.sec.php
-        // serves both sections); results read the archive tables and come
-        // back empty when the suffix names no archived data.
+        // Displayable archive: legacy renders the past-winners section
+        // reading the archived sibling tables.
         return view('public.home', [
             'resultsSuffix' => $clean === '' ? null : $clean,
             'ctx' => $ctx,
             'windows' => $windows,
             'longDates' => $langLong,
             'resultsVisible' => true,
+            'cardsVisible' => false,
+            'blurbCounts' => null,
+            'judgingStarted' => false,
+            'sponsorsVisible' => false,
             'glance' => [],
             'heroImage' => null,
             'salutation' => self::t('site.past_winners').' &ndash; '.$clean,
-            'salutationCounts' => null,
             'suffix' => $clean === '' ? null : $clean,
             'archives' => ResultsRepository::archives(),
         ]);
     }
 
     /** Account-gated in legacy: anonymous requests bounce to a login nudge. */
-    public function list(): never
+    public function list(): RedirectResponse
     {
-        redirect('/?msg=99')->send();
-        exit;
+        return redirect('/?msg=99');
     }
 
     /**

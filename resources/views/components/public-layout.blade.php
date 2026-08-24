@@ -24,10 +24,28 @@
 
 <header id="home" class="site-header">
     <nav class="landing-nav d-print-none">
-        <a href="#rules">{{ __('site.rules') }}</a>
-        <a href="#volunteers">{{ __('site.volunteers') }}</a>
+        {{-- Legacy nav (nav.pub.php): Rules/Volunteers only before judging
+             starts, Entry Info while future sessions remain, sponsors when
+             enabled, Contact always. --}}
+        @if (! ($judgingStarted ?? false))
+            <a href="#rules">{{ __('site.rules') }}</a>
+            <a href="#volunteers">{{ __('site.volunteers') }}</a>
+        @endif
+        @if (($futureJudgingSessions ?? 0) > 0)
+            <a href="#entry-info">{{ __('site.entry_info') }}</a>
+        @endif
+        @if ($sponsorsVisible ?? false)
+            <a href="#sponsors">{{ __('site.sponsors') }}</a>
+        @endif
         <a href="#contact">{{ __('site.contact') }}</a>
     </nav>
+    {{-- Legacy renders section alerts (login nudge, archived-data notice)
+         between the nav and the hero (headers.inc.php via alerts.pub.php). --}}
+    @if ((int) request('msg') === 99)
+        <p class="alert alert-warning"><strong>{{ __('site.please_log_in') }}</strong></p>
+    @elseif ((int) request('msg') === 8)
+        <p class="alert alert-warning"><strong>{{ __('site.archived_not_available') }}</strong></p>
+    @endif
     @if (isset($showHero) && $showHero)
         {{-- Hero: gradient overlay over a random style-type-appropriate image,
              mirroring the live hero band. --}}

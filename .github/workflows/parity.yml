@@ -69,8 +69,9 @@ jobs:
           export PARITY_DB_HOST=127.0.0.1 PARITY_DB_USER=root PARITY_DB_PASS=root
           set -o pipefail
           tools/parity/parity.sh 2>&1 | tee parity-summary.txt
-          # Harness must complete and produce at least one PASS verdict;
-          # DIFF lines are triaged into the ledger rather than failing CI.
+          # Content gate: parity.sh exits non-zero on ANY diff, so a
+          # divergence fails the job. The greps below are a safety net
+          # against a harness that crashed or silently truncated.
           grep -q "parity report:" parity-summary.txt || { echo "harness did not complete"; exit 1; }
           grep -q "FAIL (new error" parity-summary.txt && { echo "new-app errors present"; exit 1; } || true
 
