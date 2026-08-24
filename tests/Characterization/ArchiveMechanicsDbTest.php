@@ -33,6 +33,7 @@ final class ArchiveMechanicsDbTest extends MySqlTestCase
             self::db()->rawQuery("DROP TABLE IF EXISTS {$t}");
         }
     }
+
     public function test_rename_recreate_preserves_history_and_resets_live(): void
     {
         self::db()->rawQuery('CREATE TABLE bcoem_arch_probe (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, label VARCHAR(32))');
