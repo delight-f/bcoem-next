@@ -44,6 +44,7 @@
                 <a href="{{ url('/?section=admin') }}">{{ __('site.admin_short') }}</a>
             @endif
             <a href="{{ url('/list') }}">{{ __('site.my_account') }}</a>
+            <a href="{{ url('/list/edit-account') }}">{{ __('site.edit_account') }}</a>
             <form method="post" action="{{ route('logout') }}" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-link nav-logout">{{ __('site.log_out') }}</button>
