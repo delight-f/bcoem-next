@@ -86,7 +86,7 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         $id = $this->makeEntry();
 
         $row = $this->entry($id);
-        self::assertSame('1', $row->brewConfirmed);
+        self::assertSame('1', (string) $row->brewConfirmed);
         self::assertSame(0, (int) $row->brewPaid);
         self::assertSame(0, (int) $row->brewReceived);
         self::assertNull($row->brewJudgingNumber);
@@ -102,8 +102,8 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         $zeroId = $this->makeEntry(['brewConfirmed' => '0', 'brewName' => 'Unconfirmed Check Zero']);
         $twoId = $this->makeEntry(['brewConfirmed' => '2', 'brewName' => 'Unconfirmed Check Two']);
 
-        self::assertSame('0', $this->entry($zeroId)->brewConfirmed);
-        self::assertSame('2', $this->entry($twoId)->brewConfirmed);
+        self::assertSame('0', (string) $this->entry($zeroId)->brewConfirmed);
+        self::assertSame('2', (string) $this->entry($twoId)->brewConfirmed);
 
         foreach ($this->repo->where('brewConfirmed', '0') as $row) {
             self::assertSame('Unconfirmed Check Zero', $row->brewName);

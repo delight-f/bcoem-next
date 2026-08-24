@@ -18,60 +18,38 @@ use BCOEM\Tests\Integration\MySqlTestCase;
  * This test exercises that exact two-step pattern on a THROWAWAY probe
  * table so CI proves the semantics without touching baseline fixtures or
  * any real competition data.
+ *
+ * Prefix note: this class clears MysqliDb's table prefix for the duration
+ * of the test so plain probe-table names resolve consistently across DDL
+ * (which the naive rawAddPrefix never touches) and DML (which it prefixes
+ * on the first token only). The suite-wide prefix is restored on teardown.
  */
 final class ArchiveMechanicsDbTest extends MySqlTestCase
 {
-    /**
-     * rawQuery auto-prefixes only the FIRST table token (vendored
-     * MysqliDb::rawAddPrefix uses $table[0], a scalar). For multi-table or
-     * DDL statements we clear the prefix and write full names explicitly.
-     *
-     * @param  list<mixed>  $params
-     * @return list<array<string, mixed>>
-     */
-    private static function unprefixedQuery(string $sql, array $params = []): array
-    {
-        $db = self::db();
-        $db->setPrefix('');
-        try {
-            $rows = $db->rawQuery($sql, $params);
-            self::assertIsArray($rows);
-
-            return array_values(array_map(fn ($row): array => (array) $row, $rows));
-        } finally {
-            $db->setPrefix('baseline_');
-        }
-    }
-
     private const SUFFIX = 'p1char';
 
-    /**
-     * @param  list<mixed>  $params
-     */
-    private static function unprefixedRaw(string $sql, array $params = []): void
+    protected function setUp(): void
     {
-        self::unprefixedQuery($sql, $params);
+        parent::setUp();
+        self::db()->setPrefix('');
     }
 
     protected function tearDown(): void
     {
-        if (! self::databaseAvailable()) {
-            return; // skipped run: no connection to clean up
-        }
-
         foreach (['bcoem_arch_probe', 'bcoem_arch_probe_'.self::SUFFIX] as $t) {
-            self::unprefixedRaw("DROP TABLE IF EXISTS {$t}");
+            self::db()->rawQuery("DROP TABLE IF EXISTS {$t}");
         }
+        self::db()->setPrefix('baseline_');
     }
 
     public function test_rename_recreate_preserves_history_and_resets_live(): void
     {
-        self::unprefixedRaw('CREATE TABLE bcoem_arch_probe (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, label VARCHAR(32))');
-        self::unprefixedRaw("INSERT INTO bcoem_arch_probe (label) VALUES ('history-row')");
+        self::db()->rawQuery('CREATE TABLE bcoem_arch_probe (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, label VARCHAR(32))');
+        self::db()->rawQuery("INSERT INTO bcoem_arch_probe (label) VALUES ('history-row')");
 
         // The legacy two-step.
-        self::unprefixedRaw('RENAME TABLE bcoem_arch_probe TO bcoem_arch_probe_'.self::SUFFIX);
-        self::unprefixedRaw('CREATE TABLE bcoem_arch_probe LIKE bcoem_arch_probe_'.self::SUFFIX);
+        self::db()->rawQuery('RENAME TABLE bcoem_arch_probe TO bcoem_arch_probe_'.self::SUFFIX);
+        self::db()->rawQuery('CREATE TABLE bcoem_arch_probe LIKE bcoem_arch_probe_'.self::SUFFIX);
 
         $history = self::db()->rawQueryOne('SELECT COUNT(*) AS c FROM bcoem_arch_probe_'.self::SUFFIX);
         $live = self::db()->rawQueryOne('SELECT COUNT(*) AS c FROM bcoem_arch_probe');
@@ -81,13 +59,13 @@ final class ArchiveMechanicsDbTest extends MySqlTestCase
         self::assertSame(0, (int) $live['c'], 'live table is recreated empty');
 
         // Fresh live table accepts inserts starting from id 1 again.
-        self::unprefixedRaw("INSERT INTO bcoem_arch_probe (label) VALUES ('new-season')");
+        self::db()->rawQuery("INSERT INTO bcoem_arch_probe (label) VALUES ('new-season')");
         $newRow = self::db()->rawQueryOne("SELECT id FROM bcoem_arch_probe WHERE label = 'new-season'");
         self::assertIsArray($newRow);
         self::assertSame(1, (int) $newRow['id'], 'AUTO_INCREMENT restarts in the recreated live table');
 
         // History and live are independent: purging live never touches the archive.
-        self::unprefixedRaw('TRUNCATE bcoem_arch_probe');
+        self::db()->rawQuery('TRUNCATE bcoem_arch_probe');
         $stillThere = self::db()->rawQueryOne('SELECT COUNT(*) AS c FROM bcoem_arch_probe_'.self::SUFFIX);
         self::assertIsArray($stillThere);
         self::assertSame(1, (int) $stillThere['c']);
