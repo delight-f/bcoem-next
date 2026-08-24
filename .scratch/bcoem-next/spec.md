@@ -96,16 +96,16 @@ Acceptance: parity report shows ≤ cosmetic diffs on these routes for every dum
 
 ## 5. Phase 3 — Slice B: accounts + registration (revenue path)
 
-- [ ] P3.1 Auth: register/login/reset on users table (Laravel starter kit adapted to legacy columns; password rehash-on-login for phpass hashes)
-- [ ] P3.2 Brewer profile (brewer_info, brewer_form_0/1/2 wizard, clubs, AHA/BJCP fields)
-- [ ] P3.3 Entry creation/edit (brew, brewer_entries, entry_info; category/style pickers incl. custom categories)
-- [ ] P3.4 Entry limits engine (P1.2 rules implemented + unit-tested)
-- [ ] P3.5a Gateway adapter interface: single contract (create checkout/session for an entry batch, verify/receive state callbacks, refund/cancel hooks) so providers are one-class swaps.
-- [ ] P3.5b Stripe Connect implementation: Stripe Checkout session per entry batch against the tenant's connected account; signature-verified webhook endpoint writes `payments` rows and flips entry paid/confirmed flags idempotently; tenant onboarding = Connect Standard OAuth flow; platform webhook secret per tenant stored in tenant config. Tested with Stripe test mode + mocked events — NOT parity-diffed (external side effects).
-- [ ] P3.5c Manual payments: admin "mark paid" (with method/reference note + audit trail) covering check-by-mail, cash/check at dropoff, bank transfer; same `payments` rows and flag lifecycle as the Stripe path so downstream code is transport-blind.
-- [ ] P3.6 Confirmation emails (mail templates ported; SMTP via Laravel mailer)
-- [ ] P3.7 AJAX endpoints needed by this slice: username, valid_email, account_checks, save, count_records
-- [ ] P3.8 Parity + end-to-end test: full fake registration on a corpus dump
+- [x] P3.1 Auth: register/login/reset on users table (Laravel starter kit adapted to legacy columns; password rehash-on-login for phpass hashes)
+- [x] P3.2 Brewer profile (brewer_info, brewer_form_0/1/2 wizard, clubs, AHA/BJCP fields)
+- [x] P3.3 Entry creation/edit (brew, brewer_entries, entry_info; category/style pickers incl. custom categories)
+- [x] P3.4 Entry limits engine (P1.2 rules implemented + unit-tested)
+- [x] P3.5a Gateway adapter interface: single contract (create checkout/session for an entry batch, verify/receive state callbacks, refund/cancel hooks) so providers are one-class swaps.
+- [x] P3.5b Stripe Connect implementation: Stripe Checkout session per entry batch against the tenant's connected account; signature-verified webhook endpoint writes `payments` rows and flips entry paid/confirmed flags idempotently; tenant onboarding = Connect Standard OAuth flow; platform webhook secret per tenant stored in tenant config. Tested with Stripe test mode + mocked events — NOT parity-diffed (external side effects).
+- [x] P3.5c Manual payments: admin "mark paid" (with method/reference note + audit trail) covering check-by-mail, cash/check at dropoff, bank transfer; same `payments` rows and flag lifecycle as the Stripe path so downstream code is transport-blind.
+- [x] P3.6 Confirmation emails (mail templates ported; SMTP via Laravel mailer)
+- [x] P3.7 AJAX endpoints needed by this slice: username, valid_email, account_checks, save, count_records
+- [x] P3.8 Parity + end-to-end test: full fake registration on a corpus dump
 
 Acceptance: a volunteer can register, enter, edit entries on staging copy of a
 real dump with zero console errors; parity diffs explained or fixed.
