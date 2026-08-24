@@ -36,6 +36,10 @@ final class ArchiveMechanicsDbTest extends MySqlTestCase
 
     protected function tearDown(): void
     {
+        if (! self::databaseAvailable()) {
+            return; // skipped run: no connection to clean up
+        }
+
         foreach (['bcoem_arch_probe', 'bcoem_arch_probe_'.self::SUFFIX] as $t) {
             self::db()->rawQuery("DROP TABLE IF EXISTS {$t}");
         }
