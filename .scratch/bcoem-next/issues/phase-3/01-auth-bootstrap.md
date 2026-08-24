@@ -21,13 +21,19 @@ security questions, `userFailedLogins`/`userFailedLoginTime` lockout fields).
 
 ## Scope
 
-- **Starter kit decision**: spec D5 says starter kit. Evaluate Breeze vs a
-  minimal hand-rolled auth. The legacy table has NO `email`/`remember_token`/
-  `email_verified_at` columns and login is by `user_name`; if the kit's
-  assumptions fight the verbatim-schema constraint, the minimum viable
-  adaptation wins — document the choice in the ledger. Recommended default:
-  hand-rolled LoginController + session guard against `users` (no migrations,
-  no new tables).
+- **Starter kit (locked, D5)**: use a Laravel starter kit — install **Breeze**
+  (Blade + classic auth). Do NOT hand-roll login. The kit is ADAPTED to the
+  verbatim legacy `users` table (D2) via a custom `User` provider + a custom
+  `Hasher`/password broker; no migrations, no new tables:
+  - `users` login is by `user_name` (email address) — map the credential
+    field; the kit's `email`/`remember_token` columns are NOT added (the
+    legacy table lacks them; omit remember-me or store via the legacy
+    `userToken` column — decide + document).
+  - Guard: `web` guard with a provider pointed at `App\Models\User`
+    (remapped to legacy columns, `userLevel` exposed).
+  - Breeze's auth scaffolding (login/logout views + controllers) is kept and
+    styled to the legacy chrome; the session/tenant composition below still
+    applies.
 - **Password hashing**: legacy hashes are phpass portable (`$P$…`) — verify
   them on login, then rehash to bcrypt on success (D5 "rehash-on-login").
   Vendor a phpass *verifier* under `legacy/` (verification-only; phpass is
@@ -49,7 +55,8 @@ security questions, `userFailedLogins`/`userFailedLoginTime` lockout fields).
 ## Deliverables
 
 1. `App\Models\User` remapped to legacy columns; guard + provider wiring.
-2. LoginController (+ logout) with phpass-verify → bcrypt rehash; lockout.
+2. Breeze login/logout (kit scaffolding) wired to a custom `Hasher` that
+   phpass-verifies legacy rows then rehashes to bcrypt; lockout.
 3. Feature tests (DB-gated, `tests/Feature`, registered testsuite — already
    in phpunit.xml): valid login, wrong password, phpass-hash login rehashes,
    lockout, logout, `userLevel` surfaced.
