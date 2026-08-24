@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BrewController;
 use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
@@ -73,3 +74,9 @@ Route::post('/list/edit-judging', [BrewerForm2Controller::class, 'store'])
 // clean /list/edit-clubs is canonical.
 Route::get('/list/edit-clubs', [BrewerForm1Controller::class, 'show'])->name('brewer.clubs')->middleware('auth');
 Route::post('/list/edit-clubs', [BrewerForm1Controller::class, 'store'])->name('brewer.clubs.store')->middleware('auth');
+
+// Entry creation (P3.3a). Legacy: ?section=brew&action=add behind a login
+// gate; clean /brew is canonical. Save lands on /list?msg=1 (legacy msg
+// codes; msg=8/9 are the user/subcategory cap rejections).
+Route::get('/brew', [BrewController::class, 'showCreate'])->name('brew.create')->middleware('auth');
+Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')->middleware('auth');
