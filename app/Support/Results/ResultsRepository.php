@@ -132,6 +132,76 @@ final class ResultsRepository
         return array_values($rows->values()->all());
     }
 
+    /**
+     * Per-brewer best-brewer standings over placed entries.
+     *
+     * Aggregates win counts per brewer, sizes the CoA pool by the winner
+     * distribution setting (prefsWinnerMethod: 1 = category pool,
+     * 2 = subcategory pool, else table-ish flat pool approximated here by
+     * the full received-entry count), and scores via BestBrewerPoints.
+     * Gated upstream: callers only render when prefsShowBestBrewer /
+     * prefsShowBestClub are enabled and at least one entry is scored.
+     *
+     * @param  list<float>  $placePointPrefs  method-0 prefs (ignored by the CoA method)
+     * @return list<object{name: string, club: string|null, points: float}> brewers ordered by points desc
+     */
+    public function bestBrewers(string $pointsMethod, string $poolDistribution, array $placePointPrefs = []): array
+    {
+        $winners = $this->winners();
+
+        if ($winners === []) {
+            return [];
+        }
+
+        $receivedTotal = (int) DB::table($this->name('brewing'))->where('brewReceived', 1)->count('id');
+
+        $byBrewer = [];
+        foreach ($winners as $w) {
+            /** @var array{entryId: int|string, brewerFirstName: string, brewerLastName: string, brewerClubs: string|null, scorePlace: int|string, brewCategorySort: string|null, brewSubCategory: string|null} $row */
+            $row = (array) $w;
+            $brewerKey = $row['brewerFirstName'].' '.$row['brewerLastName'];
+            if (! isset($byBrewer[$brewerKey])) {
+                $byBrewer[$brewerKey] = ['name' => $brewerKey, 'club' => $row['brewerClubs'], 'places' => [0, 0, 0, 0, 0], 'pool' => []];
+            }
+
+            $idx = min(4, max(0, ((int) $row['scorePlace']) - 1));
+            $byBrewer[$brewerKey]['places'][$idx]++;
+
+            $pool = match ($poolDistribution) {
+                'category' => self::countReceived($this, $row['brewCategorySort'], null),
+                'subcategory' => self::countReceived($this, $row['brewCategorySort'], $row['brewSubCategory']),
+                default => $receivedTotal,
+            };
+            $byBrewer[$brewerKey]['pool'][] = $pool;
+        }
+
+        $standings = [];
+        foreach ($byBrewer as $b) {
+            $standings[] = [
+                'name' => $b['name'],
+                'club' => $b['club'],
+                'points' => BestBrewerPoints::calculate($b['places'], [0], array_map('floatval', $b['pool']), [], $pointsMethod),
+            ];
+        }
+        usort($standings, fn ($a, $b) => $b['points'] <=> $a['points']);
+
+        /** @var list<object{name: string, club: string|null, points: float}> */
+        return array_map(fn (array $b) => (object) $b, $standings);
+    }
+
+    private static function countReceived(self $self, ?string $categorySort, ?string $subCategory): int
+    {
+        $query = DB::table($self->name('brewing'))->where('brewReceived', 1);
+        if ($categorySort !== null) {
+            $query->where('brewCategorySort', $categorySort);
+        }
+        if ($subCategory !== null) {
+            $query->where('brewSubCategory', $subCategory);
+        }
+
+        return (int) $query->count('id');
+    }
+
     private function name(string $base): string
     {
         return $this->suffix === null ? $base : $base.'_'.$this->suffix;

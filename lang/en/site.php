@@ -55,4 +55,7 @@ return [
     'end' => 'End',
     'location' => 'Location',
     'date_label' => 'Date',
+    'best_brewer' => 'Best Brewer',
+    'points' => 'pts',
 ];
+
