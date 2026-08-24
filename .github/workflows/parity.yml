@@ -46,6 +46,8 @@ jobs:
         run: mysql -h 127.0.0.1 -uroot -proot parity < sql/bcoem_baseline_3.0.X.sql
 
       - name: Configure legacy app against the same database
+        env:
+          LEGACY_BASE_URL: http://127.0.0.1:8091/
         run: |
           cd legacy
           python3 - <<'PYEOF'
@@ -56,6 +58,8 @@ jobs:
           s = re.sub(r"^\$username = .*;$", "$username = 'root';", s, flags=re.M)
           s = re.sub(r"^\$password = .*;$", "$password = 'root';", s, flags=re.M)
           s = re.sub(r"^\$database = .*;$", "$database = 'parity';", s, flags=re.M)
+          s = re.sub(r"^\$prefix = .*;$", "$prefix = 'baseline_';", s, flags=re.M)
+          s = re.sub(r"^\$base_url = .*$", "$base_url = os.environ['LEGACY_BASE_URL'];", s, flags=re.M)
           pathlib.Path('site/config.php').write_text(s)
           PYEOF
 

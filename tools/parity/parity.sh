@@ -35,6 +35,13 @@ MYSQL=(mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u "${PARITY_DB_USER:-root}")
 "${MYSQL[@]}" "$DB_NAME" < "$DUMP_SQL"
 trap '"${MYSQL[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME;"' EXIT
 
+# The port needs an app key (encrypted redirects/sessions); provision a
+# throwaway env if the checkout has none.
+if [ ! -f "$NEW_DIR/.env" ]; then
+    cp "$NEW_DIR/.env.example" "$NEW_DIR/.env"
+    php "$NEW_DIR/artisan" key:generate --force >/dev/null
+fi
+
 echo "== booting servers =="
 
 # The Laravel side reads its connection from env; point it at the parity DB.
@@ -44,13 +51,24 @@ export DB_PORT=3306
 export DB_DATABASE="$DB_NAME"
 export DB_USERNAME="${PARITY_DB_USER:-root}"
 export DB_PASSWORD="${PARITY_DB_PASS:-}"
+# Anonymous slice needs no persistence; avoid requiring framework tables
+# inside the tenant schema.
+export SESSION_DRIVER=array
+export CACHE_STORE=array
+export QUEUE_CONNECTION=sync
+# The baseline corpus ships with the CI prefix baked into table names; both
+# apps must resolve the same physical tables.
+export DB_TABLE_PREFIX="${PARITY_DB_PREFIX:-baseline_}"
+# Legacy builds absolute URLs from $base_url in site/config.php; without the
+# port its redirects leave the harness server.
+export LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/"
 php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" "$LEGACY_DIR/index.php" \
     >"$REPORT/legacy-server.log" 2>&1 &
 LEGACY_PID=$!
-php "$NEW_DIR/artisan" serve --host=127.0.0.1 --port="$PORT_NEW" \
+php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
     >"$REPORT/new-server.log" 2>&1 &
 NEW_PID=$!
-trap 'kill $LEGACY_PID $NEW_PID 2>/dev/null; mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u root -e "DROP DATABASE IF EXISTS $DB_NAME;"' EXIT
+trap 'kill $LEGACY_PID $NEW_PID 2>/dev/null' EXIT
 sleep 2
 
 pass=0; fail=0; skipped=0
