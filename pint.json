@@ -1,4 +1,7 @@
 {
+    "exclude": [
+        "legacy"
+    ],
     "rules": {
         "php_unit_method_casing": {"case": "snake_case"}
     }
