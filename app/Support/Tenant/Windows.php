@@ -35,6 +35,8 @@ final class Windows
         public readonly int $futureJudgingSessions,
         public readonly ?int $firstJudgingDate,
         public readonly ?int $lastJudgingDate,
+        /** prefsEntryLimitPaid specifically (legacy $comp_paid_entry_limit). */
+        public readonly bool $compPaidEntryLimitReached = false,
     ) {}
 
     /**
@@ -155,6 +157,7 @@ final class Windows
             judgeCapReached: $judgeCap,
             stewardCapReached: $stewardCap,
             compEntryLimitReached: $entryLimitReached || $paidLimitReached,
+            compPaidEntryLimitReached: $paidLimitReached,
             futureJudgingSessions: self::futureSessions($now),
             firstJudgingDate: $first,
             lastJudgingDate: $last,
