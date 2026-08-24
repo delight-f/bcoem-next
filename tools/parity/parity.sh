@@ -44,9 +44,11 @@ pass=0; fail=0; skipped=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
     safe="$(echo "$url" | tr '/?=&' '____')"
-    curl -sf "http://127.0.0.1:$PORT_LEGACY/$url" -o "$REPORT/$safe.legacy.raw" \
+    legacy_url="${url%%|*}"; new_url="${url#*|}"
+    [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
+    curl -sfL "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
         || { echo "SKIP (legacy error) $url"; skipped=$((skipped+1)); continue; }
-    curl -sf "http://127.0.0.1:$PORT_NEW/$url" -o "$REPORT/$safe.new.raw" \
+    curl -sf "http://127.0.0.1:$PORT_NEW/$new_url" -o "$REPORT/$safe.new.raw" \
         || { echo "FAIL (new error)   $url"; fail=$((fail+1)); continue; }
     php normalize.php < "$REPORT/$safe.legacy.raw" > "$REPORT/$safe.legacy.clean"
     php normalize.php < "$REPORT/$safe.new.raw"   > "$REPORT/$safe.new.clean"

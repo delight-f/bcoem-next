@@ -1,12 +1,11 @@
-# Parity URL inventory — Phase 2 slice (public, no auth, no session state).
-# Lines starting with # are skipped. Authenticated routes get added per-slice
-# with a session-seeding step in parity.sh (not yet implemented).
-
-rules
-contact
-sponsors
-alerts
-list
-at-a-glance
-past_winners
-winners
+# Parity URL inventory — Phase 2 slice A (public surface, anonymous).
+# One entry per line; optionally "legacy_path|new_path" when the two apps
+# route the same page differently (legacy ?section= vs clean port URLs).
+#
+# Landing page carries: at-a-glance cards, rules/entry-window sections,
+# contacts, and (post-reveal) BOS + winning-entries results.
+/
+# Past winners over archive sibling tables.
+index.php?section=past-winners&go=demoarchive|/past-winners/demoarchive
+# Account-gated list: both sides redirect anonymous requests.
+index.php?section=list|/list

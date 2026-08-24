@@ -6,8 +6,6 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
 
-use Illuminate\Testing\TestResponse;
-
 /**
  * Landing-page feature coverage against the CI baseline schema (anon-base
  * fixture data). Pins the Slice A observable contract: identity, window
@@ -95,5 +93,4 @@ final class HomePageTest extends PublicSurfaceTestCase
 
         return $future === 0 && time() > $delay;
     }
-
 }
