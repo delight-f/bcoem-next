@@ -1,0 +1,12 @@
+# Parity URL inventory — Phase 2 slice (public, no auth, no session state).
+# Lines starting with # are skipped. Authenticated routes get added per-slice
+# with a session-seeding step in parity.sh (not yet implemented).
+
+rules
+contact
+sponsors
+alerts
+list
+at-a-glance
+past_winners
+winners

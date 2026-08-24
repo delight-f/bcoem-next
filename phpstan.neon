@@ -1,0 +1,15 @@
+parameters:
+    level: 8
+    paths:
+        - app/
+        - src/
+        - tests/
+    excludePaths:
+        - legacy/
+    scanFiles:
+        - legacy/MysqliDb.php
+        - legacy/sanitize.lib.php
+        - legacy/date_time.lib.php
+        - legacy/common.lib.php
+        - legacy/update.lib.php
+    treatPhpDocTypesAsCertain: false
