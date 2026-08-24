@@ -204,28 +204,36 @@ final class EntryLimitsTest extends TestCase
         );
     }
 
-    // ---- #9: comp-level disabled flags always allow ----
+    // ---- #9: comp-limit flags only clear the 403 gate, NOT cap checks ----
+    // (legacy: msg=8/msg=9 redirects run before $process_allowed_entries)
 
-    public function test_disabled_entry_limit_flag_allows_over_every_cap(): void
+    public function test_disabled_entry_limit_flag_does_not_bypass_caps(): void
     {
         $result = self::check([
             'entryLimitEnabled' => false,
-            'userEntryCount' => 99,
-            'subCatLimit' => '1',
-            'subCategoryCount' => 99,
+            'userEntryLimit' => '10',
+            'userEntryCount' => 10,
         ]);
 
-        self::assertTrue($result->allowed);
+        self::assertFalse($result->allowed);
+        self::assertSame(EntryLimits::REASON_USER_CAP, $result->reason);
     }
 
-    public function test_disabled_paid_limit_flag_allows_over_every_cap(): void
+    public function test_disabled_paid_limit_flag_does_not_bypass_subcat_cap(): void
     {
         $result = self::check([
             'paidLimitEnabled' => false,
-            'userEntryCount' => 99,
             'subCatLimit' => '1',
             'subCategoryCount' => 99,
         ]);
+
+        self::assertFalse($result->allowed);
+        self::assertSame(EntryLimits::REASON_SUBCATEGORY_CAP, $result->reason);
+    }
+
+    public function test_disabled_flag_allows_non_owner_past_403_gate(): void
+    {
+        $result = self::check(['ownsEntry' => false, 'entryLimitEnabled' => false]);
 
         self::assertTrue($result->allowed);
     }
@@ -254,5 +262,19 @@ final class EntryLimitsTest extends TestCase
 
         self::assertFalse($result->allowed);
         self::assertSame(EntryLimits::REASON_NOT_OWNER, $result->reason);
+    }
+
+    public function test_user_cap_redirect_wins_over_non_owner_403(): void
+    {
+        // Legacy runs the msg=8 redirect before the 403 kill switch, so an
+        // over-cap non-owner sees msg=8, not the session-destroying 403.
+        $result = self::check([
+            'ownsEntry' => false,
+            'userEntryLimit' => '10',
+            'userEntryCount' => 10,
+        ]);
+
+        self::assertFalse($result->allowed);
+        self::assertSame(EntryLimits::REASON_USER_CAP, $result->reason);
     }
 }

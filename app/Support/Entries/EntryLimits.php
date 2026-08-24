@@ -24,8 +24,10 @@ namespace App\Support\Entries;
  *      unanchored — preserved verbatim, do NOT "fix" without a ledger entry.
  *   #8 decision table: reached = count >= limit; excepted styles swap in the
  *      exception limit; EMPTY exception limit = unlimited.
- *   #9 comp-level limits disabled ⇒ processing always allowed.
- *   #10 admins (userLevel <= 1) bypass all caps; non-owner entrants denied.
+ *   #9 comp-limit flags only clear the final $process_allowed_entries 403
+ *      gate — the msg=8/msg=9 cap redirects run BEFORE it, unconditionally.
+ *   #10 admins (userLevel <= 1) bypass all caps; non-owner entrants denied
+ *      at the same 403 gate (after the cap checks).
  *
  * Deliberately DB-free: counts and prefs are passed in so the decision table
  * is unit-testable (the wiring supplies values from preferences/brewing).
@@ -72,47 +74,45 @@ final class EntryLimits
         int|string|null $styleId,
         int $subCategoryCount,
     ): EntryLimitResult {
-        // #10: non-admins may only submit under their own brewer ID.
-        if ($userLevel > 1 && ! $ownsEntry) {
-            return new EntryLimitResult(false, self::REASON_NOT_OWNER);
-        }
+        // Legacy order (process_brewing.inc.php:42-84): the msg=8/msg=9
+        // cap redirects run BEFORE the $process_allowed_entries 403 gate —
+        // the comp-limit flags (#9) do NOT bypass cap enforcement, they only
+        // clear the final ownership/admin kill switch.
 
-        // #9: either comp-level cap disabled ⇒ always allowed.
-        if (! $entryLimitEnabled || ! $paidLimitEnabled) {
-            return new EntryLimitResult(true, '');
-        }
-
-        // #10: admins bypass all caps.
-        if ($userLevel <= 1) {
-            return new EntryLimitResult(true, '');
-        }
-
-        // #1/#2: per-user total cap on add ⇒ msg=8.
-        if (
-            $action === 'add'
-            && $userLevel === 2
-            && $userEntryLimit !== null && $userEntryLimit !== ''
-            && $userEntryCount >= (int) $userEntryLimit
-        ) {
-            return new EntryLimitResult(false, self::REASON_USER_CAP);
-        }
-
-        // #3–#5/#8: subcategory limit ⇒ msg=9. On edit only when the window
-        // is open AND the style actually changed.
-        if ($subCatLimit !== null && $subCatLimit !== '') {
-            $styleChanged = $action === 'add'
-                || $previousStyle === null
-                || $style !== $previousStyle;
-
-            if (($action === 'add' || ($action === 'edit' && $editWindowOpen && $styleChanged))
-                && $userLevel === 2
-                && self::subcategoryReached($style, $subCatLimit, $exceptionSubNum, $exceptionSubList, $styleId, $subCategoryCount)
+        if ($userLevel === 2) {
+            // #1/#2: per-user total cap on add ⇒ msg=8.
+            if (
+                $action === 'add'
+                && $userEntryLimit !== null && $userEntryLimit !== ''
+                && $userEntryCount >= (int) $userEntryLimit
             ) {
-                return new EntryLimitResult(false, self::REASON_SUBCATEGORY_CAP);
+                return new EntryLimitResult(false, self::REASON_USER_CAP);
+            }
+
+            // #3–#5/#8: subcategory limit ⇒ msg=9. On edit only when the
+            // window is open AND the style actually changed.
+            if ($subCatLimit !== null && $subCatLimit !== '') {
+                $styleChanged = $action === 'add'
+                    || $previousStyle === null
+                    || $style !== $previousStyle;
+
+                if (($action === 'add' || ($action === 'edit' && $editWindowOpen && $styleChanged))
+                    && self::subcategoryReached($style, $subCatLimit, $exceptionSubNum, $exceptionSubList, $styleId, $subCategoryCount)
+                ) {
+                    return new EntryLimitResult(false, self::REASON_SUBCATEGORY_CAP);
+                }
             }
         }
 
-        return new EntryLimitResult(true, '');
+        // #9/#10: final 403 gate. Allowed when admin, or a comp-level limit
+        // flag is disabled, or the entrant submitted under their own ID;
+        // otherwise legacy destroys the session and bounces to 403.
+        $allowed = $userLevel <= 1
+            || ! $entryLimitEnabled
+            || ! $paidLimitEnabled
+            || $ownsEntry;
+
+        return new EntryLimitResult($allowed, $allowed ? '' : self::REASON_NOT_OWNER);
     }
 
     /**
