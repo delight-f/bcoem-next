@@ -1,0 +1,80 @@
+name: Parity
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  parity:
+    name: Slice A parity — port vs modernization-branch legacy
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: parity
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check out legacy fork (parity oracle, modernization branch)
+        uses: actions/checkout@v5
+        with:
+          repository: delight-f/brewcompetitiononlineentry
+          ref: modernization
+          path: legacy
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mysqli, mbstring, intl, gd, sqlite3
+          coverage: none
+
+      - name: Install dependencies (port)
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Load baseline schema into MySQL
+        run: mysql -h 127.0.0.1 -uroot -proot parity < sql/bcoem_baseline_3.0.X.sql
+
+      - name: Configure legacy app against the same database
+        run: |
+          cd legacy
+          python3 - <<'PYEOF'
+          import pathlib, re
+          p = pathlib.Path('site/config.sample.php')
+          s = p.read_text()
+          s = re.sub(r"^\$hostname = .*;$", "$hostname = '127.0.0.1';", s, flags=re.M)
+          s = re.sub(r"^\$username = .*;$", "$username = 'root';", s, flags=re.M)
+          s = re.sub(r"^\$password = .*;$", "$password = 'root';", s, flags=re.M)
+          s = re.sub(r"^\$database = .*;$", "$database = 'parity';", s, flags=re.M)
+          pathlib.Path('site/config.php').write_text(s)
+          PYEOF
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run parity harness over the slice A URL set
+        run: |
+          LEGACY_DIR="$GITHUB_WORKSPACE/legacy" \
+          DUMP_SQL="sql/bcoem_baseline_3.0.X.sql" \
+          PARITY_DB_HOST=127.0.0.1 PARITY_DB_USER=root PARITY_DB_PASS=root \
+          tools/parity/parity.sh | tee parity-summary.txt
+          # Report every line; failures are triaged into the ledger, not
+          # silently swallowed. The job goes red only on harness errors.
+          grep -q "FAIL (new error)" parity-summary.txt && exit 1 || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parity-report
+          path: tools/parity/reports/

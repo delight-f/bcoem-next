@@ -26,9 +26,12 @@ REPORT="$NEW_DIR/tools/parity/reports/run-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$REPORT"
 
 echo "== loading dump into $DB_NAME =="
-mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u root -e "DROP DATABASE IF EXISTS $DB_NAME; CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u root "$DB_NAME" < "$DUMP_SQL"
-trap 'mysql -h "${PARITY_DB_HOST:-127.0.0.1}" -u root -e "DROP DATABASE IF EXISTS $DB_NAME;"' EXIT
+DB_ARGS=(-h "${PARITY_DB_HOST:-127.0.0.1}" -u "${PARITY_DB_USER:-root}")
+[ -n "${PARITY_DB_PASS:-}" ] && DB_ARGS+=(-p"$PARITY_DB_PASS")
+
+"${DB_ARGS[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME; CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+"${DB_ARGS[@]}" "$DB_NAME" < "$DUMP_SQL"
+trap '"${DB_ARGS[@]}" -e "DROP DATABASE IF EXISTS $DB_NAME;"' EXIT
 
 echo "== booting servers =="
 php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" "$LEGACY_DIR/index.php" \
