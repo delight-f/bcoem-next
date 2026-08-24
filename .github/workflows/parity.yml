@@ -69,6 +69,9 @@ jobs:
           LEGACY_DIR="$GITHUB_WORKSPACE/legacy" \
           DUMP_SQL="sql/bcoem_baseline_3.0.X.sql" \
           PARITY_DB_HOST=127.0.0.1 PARITY_DB_USER=root PARITY_DB_PASS=root \
+          export LEGACY_DIR="$GITHUB_WORKSPACE/legacy"
+          export DUMP_SQL="sql/bcoem_baseline_3.0.X.sql"
+          export PARITY_DB_HOST=127.0.0.1 PARITY_DB_USER=root PARITY_DB_PASS=root
           set -o pipefail
           tools/parity/parity.sh 2>&1 | tee parity-summary.txt
           # Harness must complete and produce at least one PASS verdict;
