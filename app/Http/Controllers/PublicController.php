@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Entries\EntryGates;
 use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
@@ -133,7 +134,9 @@ final class PublicController extends Controller
 
     /**
      * Account-gated in legacy: anonymous requests bounce to a login nudge;
-     * authenticated users see the account surface (ticket 08 fills this in).
+     * authenticated users get the account surface (legacy
+     * list.pub.php): brewer info block, at-a-glance sidebar, and the
+     * entries table with edit/delete gating (ticket 08).
      */
     public function list(): View|RedirectResponse
     {
@@ -143,22 +146,115 @@ final class PublicController extends Controller
 
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
+        $now = time();
         $langLong = str_starts_with((string) $ctx->prefsStr('prefsLanguage'), 'en-');
 
-        return view('public.home', [
+        $entryWindowOpen = $windows->entry === WindowState::Open;
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $editDeadline = Windows::entryEditDeadline($ctx);
+        $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
+
+        $rows = [];
+
+        foreach (DB::table('brewing')
+            ->where('brewBrewerID', (int) Auth::id())
+            ->orderBy('brewCategorySort')
+            ->orderBy('brewSubCategory')
+            ->get() as $entry) {
+            $rows[] = [
+                'entry' => $entry,
+                'canEdit' => EntryGates::edit((int) $entry->brewReceived, $entryWindowOpen, $editDeadline, $now, $judgingStarted),
+                'canDelete' => EntryGates::delete((int) $entry->brewReceived, (int) $entry->brewPaid, $entryWindowOpen, $editDeadline, $now, $judgingStarted, $fee),
+            ];
+        }
+
+        $brewer = DB::table('brewer')->where('uid', (int) Auth::id())->first();
+
+        return view('public.account', [
             'ctx' => $ctx,
             'windows' => $windows,
-            'longDates' => $langLong,
-            'resultsVisible' => false,
-            'cardsVisible' => false,
-            'blurbCounts' => null,
-            'judgingStarted' => $windows->firstJudgingDate !== null && time() > $windows->firstJudgingDate,
-            'sponsorsVisible' => false,
-            'glance' => [],
-            'heroImage' => null,
-            'salutation' => __('site.my_account'),
-            'archives' => [],
+            'judgingStarted' => $judgingStarted,
+            'info' => BrewerForm2Controller::infoData($ctx),
+            'glance' => $this->listGlanceCards($ctx, $windows, $langLong, $brewer),
+            'rows' => $rows,
         ]);
+    }
+
+    /**
+     * At-a-glance deck for the account page — the legacy `section == list`
+     * branch of at-a-glance.pub.php:505-511: judging card only for
+     * judge/steward volunteers; entry-registration, drop-off and shipping
+     * cards gated by $at_a_glance_entry_info (FALSE only for pro-edition
+     * judges/stewards).
+     *
+     * @return list<array{id: string, title: string, pill: string, body: string}>
+     */
+    private function listGlanceCards(TenantContext $ctx, Windows $w, bool $longDates, ?object $brewer): array
+    {
+        $isVolunteer = $brewer !== null
+            && (($brewer->brewerJudge ?? '') === 'Y' || ($brewer->brewerSteward ?? '') === 'Y');
+        $entryInfo = ! ((int) $ctx->prefsStr('prefsProEdition') === 1 && $isVolunteer);
+
+        $cards = [];
+
+        if ($isVolunteer) {
+            $state = $w->judgingState(time(), $ctx->contestEpoch('contestAwardsLocDate'));
+            $tz = $ctx->prefsStr('prefsTimeZone');
+            $df = $ctx->prefsStr('prefsDateFormat');
+            $tf = $ctx->prefsStr('prefsTimeFormat');
+            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $longDates ? 'long' : 'short') ?? self::t('site.not_set');
+
+            $body = '<ul class="list-unstyled"><li><strong>'.self::t('site.start').'</strong> &ndash; '.$fmt($w->firstJudgingDate).'</li>';
+            if ($w->lastJudgingDate !== null) {
+                $body .= '<li><strong>'.self::t('site.end').'</strong> &ndash; '.$fmt($w->lastJudgingDate).'</li>';
+            }
+            $body .= '</ul>';
+
+            $cards[] = [
+                'id' => 'judging',
+                'title' => self::t('site.judging'),
+                'pill' => match ($state) {
+                    1 => self::t('site.judging_in_progress'),
+                    2 => self::t('site.judging_concluded'),
+                    default => self::t('site.judging_not_started'),
+                },
+                'body' => $body,
+            ];
+        }
+
+        if ($entryInfo) {
+            $windowCard = function (string $id, string $title, WindowState $state, ?string $openAt, ?string $closeAt): array {
+                $body = '<ul class="list-unstyled">'
+                    .'<li><strong>'.self::t('site.open_label').'</strong> &ndash; '.($openAt ?? self::t('site.not_set')).'</li>'
+                    .'<li><strong>'.self::t('site.close_label').'</strong> &ndash; '.($closeAt ?? self::t('site.not_set')).'</li>'
+                    .'</ul>';
+                $pill = match ($state) {
+                    WindowState::Open => self::t('site.state_open'),
+                    WindowState::After => self::t('site.state_closed'),
+                    default => self::t('site.state_before'),
+                };
+
+                return compact('id', 'title', 'pill', 'body');
+            };
+
+            $tz = $ctx->prefsStr('prefsTimeZone');
+            $df = $ctx->prefsStr('prefsDateFormat');
+            $tf = $ctx->prefsStr('prefsTimeFormat');
+            $style = $longDates ? 'long' : 'short';
+            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
+
+            $cards[] = $windowCard('entry-registration', self::t('site.entries_registration'), $w->entry,
+                $fmt($ctx->contestEpoch('contestEntryOpen')), $fmt($ctx->contestEpoch('contestEntryDeadline')));
+            $cards[] = $windowCard('drop-off', self::t('site.drop_off'), $w->dropoff,
+                $fmt($ctx->contestEpoch('contestDropoffOpen')), $fmt($ctx->contestEpoch('contestDropoffDeadline')));
+
+            if ((int) $ctx->prefsStr('prefsShipping') === 1 && $ctx->contestStr('contestShippingAddress')) {
+                $cards[] = $windowCard('shipping', self::t('site.shipping'), $w->shipping,
+                    $fmt($ctx->contestEpoch('contestShippingOpen')), $fmt($ctx->contestEpoch('contestShippingDeadline')));
+            }
+        }
+
+        return $cards;
     }
 
     /**

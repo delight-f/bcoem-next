@@ -175,4 +175,31 @@ final class Windows
             && $this->entry === WindowState::After
             && $this->pay === WindowState::After;
     }
+
+    /**
+     * Latest date users may edit/delete their entries (constants.inc.php:741).
+     * The entry-edit deadline is contestEntryEditDeadline only when it falls
+     * before the earliest drop-off/shipping close ("drop-ship deadline");
+     * otherwise the drop-ship deadline itself, defaulting to the entry
+     * deadline when neither is set.
+     */
+    public static function entryEditDeadline(TenantContext $ctx): ?int
+    {
+        $dropShipDates = array_filter([
+            $ctx->contestEpoch('contestDropoffDeadline'),
+            $ctx->contestEpoch('contestShippingDeadline'),
+        ], fn (?int $e): bool => $e !== null);
+
+        $deadline = $dropShipDates === []
+            ? $ctx->contestEpoch('contestEntryDeadline')
+            : min($dropShipDates);
+
+        $edit = $ctx->contestEpoch('contestEntryEditDeadline');
+
+        if ($edit !== null && ($deadline === null || $edit < $deadline)) {
+            return $edit;
+        }
+
+        return $deadline;
+    }
 }

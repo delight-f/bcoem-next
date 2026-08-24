@@ -103,7 +103,6 @@ return [
     'email_taken' => 'That email address is already registered to another account.',
     'save' => 'Save',
     'phone2' => 'Phone 2',
-    'club' => 'Homebrew Club',
     'club_other' => 'Other Club (specify)',
     'club_other_hint' => 'Select a club, or choose "Other" and type it below',
     'aha_number' => 'AHA Number',
@@ -164,6 +163,5 @@ return [
     'none_entered' => 'None Entered',
     'no_profile_yet' => 'Your participant profile has not been created yet.',
     'rank_non_bjcp' => 'Non-BJCP',
-    'edit_account' => 'Edit Account',
     'edit_judging_prefs' => 'Edit Judge / Steward Preferences',
 ];
