@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PublicController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,3 +26,9 @@ Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+
+// Registration (P3.1b). Legacy: ?section=register&go={entrant|judge|steward};
+// clean /register is the canonical URL.
+Route::get('/register', [RegisterController::class, 'show'])->name('register');
+Route::get('/register/{go}', [RegisterController::class, 'show'])->name('register.go');
+Route::post('/register/{go?}', [RegisterController::class, 'store'])->name('register.store');

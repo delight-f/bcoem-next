@@ -28,9 +28,11 @@ use Illuminate\Notifications\Notifiable;
  * bcrypt (`$2y$`, or legacy `$2a$` over md5(plaintext)), and `userLevel`
  * is a char: '1' admin / '2' entrant / '3' participant.
  *
- * Laravel's auth machinery expects `getAuthIdentifierName()` to return the
- * primary key and `getAuthPassword()` the password hash; we remap the
- * credential lookup through `getAuthIdentifierName()` -> `user_name`.
+ * Login by `user_name` is achieved through the credentials array passed to
+ * `Auth::attempt(['user_name' => ..., 'password' => ...])` —
+ * `retrieveByCredentials()` builds the WHERE from the credential keys.
+ * `getAuthIdentifierName()` stays `id` (the PK) so `retrieveById()`
+ * (loginUsingId, session guards) queries the right column.
  */
 class User extends Authenticatable
 {
@@ -65,16 +67,6 @@ class User extends Authenticatable
         'userToken',
         'userTokenTime',
     ];
-
-    /**
-     * Login credential field. The legacy table stores the email address in
-     * `user_name`; Eloquent's `retrieveByCredentials()` uses this to build
-     * the WHERE clause, so we map it here.
-     */
-    public function getAuthIdentifierName(): string
-    {
-        return 'user_name';
-    }
 
     public function isAdmin(): bool
     {

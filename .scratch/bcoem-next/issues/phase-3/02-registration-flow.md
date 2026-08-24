@@ -7,7 +7,7 @@
 > `reg_open`/`judge_window_open` contract from ledger/contest-info.md.
 > PayPal/IPN out of scope (D7).
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1a (auth bootstrap), P2.5 (window states)
 Consumes: ledger/contest-info.md (window machine), ledger/registration-rules.md

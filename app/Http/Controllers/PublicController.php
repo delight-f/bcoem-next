@@ -33,6 +33,14 @@ final class PublicController extends Controller
             return redirect('/login');
         }
 
+        // Legacy served registration as ?section=register&go={entrant|judge|
+        // steward}; the clean /register URL is canonical.
+        if (request('section') === 'register') {
+            $go = (string) (request('go') ?: 'entrant');
+
+            return redirect('/register/'.$go);
+        }
+
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
