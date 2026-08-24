@@ -1,0 +1,6 @@
+    'reset_greeting' => 'Hello :name,',
+    'reset_body_1' => 'A request was made to reset the password for your :contest account.',
+    'reset_body_2' => 'Click the button below to choose a new password. This link expires in 24 hours.',
+    'reset_button' => 'Reset Password',
+    'reset_fallback' => 'If the button does not work, copy and paste this URL into your browser:',
+    'reset_sig' => 'The :contest Competition Server',

@@ -4,7 +4,7 @@
 > reset-token modes), `includes/process_forgot_password.inc.php`,
 > `users.userToken`/`userTokenTime` columns. No new schema.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B)
 Depends on: P3.1a (auth bootstrap), P3.6 (email delivery — or mailer stub
 first; the reset email must send, so wire the mailer here if P3.6 is not done)

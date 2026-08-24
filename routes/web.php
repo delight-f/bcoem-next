@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PublicController;
@@ -32,3 +33,12 @@ Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->mid
 Route::get('/register', [RegisterController::class, 'show'])->name('register');
 Route::get('/register/{go}', [RegisterController::class, 'show'])->name('register.go');
 Route::post('/register/{go?}', [RegisterController::class, 'store'])->name('register.store');
+
+// Password reset (P3.1c). Legacy: ?section=login&go=password&action=
+// forgot|verify|reset-password; clean URLs are canonical.
+Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.forgot');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgot'])->name('password.forgot.post');
+Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'verifyForm'])->name('password.verify');
+Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verify'])->name('password.verify.post');
+Route::get('/reset-password', [ForgotPasswordController::class, 'resetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset.post');
