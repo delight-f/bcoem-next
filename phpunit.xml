@@ -11,6 +11,9 @@
         <testsuite name="Integration">
             <directory>tests/Integration</directory>
         </testsuite>
+        <testsuite name="Characterization">
+            <directory>tests/Characterization</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>
