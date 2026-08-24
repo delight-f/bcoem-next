@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Entries\EntryGates;
 use App\Support\Entries\EntryLimits;
 use App\Support\Entries\JudgingNumber;
 use App\Support\Tenant\TenantContext;
+use App\Support\Tenant\Windows;
+use App\Support\Tenant\WindowState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,8 +18,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Entry creation (P3.3a) — port of `pub/brew.pub.php` (add mode) plus the
- * add branch of `includes/process/process_brewing.inc.php`.
+ * Entry creation + edit (P3.3a/P3.3b) — port of `pub/brew.pub.php` (add +
+ * edit modes) plus the matching branches of `includes/process/
+ * process_brewing.inc.php`.
  *
  * The legacy form posts hidden brewBrewerID/name fields; the port derives
  * them from the session (process_brewing.inc.php:33 only lets non-admins
@@ -30,6 +34,7 @@ use Illuminate\Support\Facades\DB;
  * codes (`section=list&msg=8` user cap, `msg=9` subcat).
  * Free comp forces paid (entry-lifecycle #2): contestEntryFee==0 ⇒
  * brewPaid=1 at insert. Fee-snapshot for the pay page is P3.5d scope.
+ * Edit gating runs through EntryGates (ticket 10).
  */
 final class BrewController extends Controller
 {
@@ -214,6 +219,227 @@ final class BrewController extends Controller
 
         // Legacy success landing: ?section=list&msg=1.
         return redirect('/list?msg=1');
+    }
+
+    /**
+     * Edit form (P3.3b) — pub/brew.pub.php's edit mode. Ownership is
+     * brewBrewerID = Auth::id() (brew.pub.php:85-99 checks the entrant's
+     * own entry ids; the port redirects instead of rendering a disabled
+     * form), and the same lifecycle gate as the /list edit link applies
+     * (EntryGates::edit — unreceived, judging not started, window open or
+     * before the edit deadline).
+     */
+    public function showEdit(int $entry): View|RedirectResponse
+    {
+        $row = DB::table('brewing')
+            ->where('id', $entry)
+            ->where('brewBrewerID', (string) Auth::id())
+            ->first();
+
+        if ($row === null || ! self::editable($row)) {
+            return redirect('/list');
+        }
+
+        $ctx = TenantContext::load();
+        $code = ltrim((string) $row->brewCategorySort, '0').'-'.$row->brewSubCategory;
+
+        return view('brew.edit', [
+            'ctx' => $ctx,
+            'entry' => $row,
+            'styles' => self::activeStyles($ctx),
+            // Variant fieldsets render for the entry's stored style unless
+            // a failed validation reposted another one.
+            'variantFlags' => self::styleFlags(
+                is_string($reposted = old('brewStyle')) ? $reposted : $code,
+                $ctx,
+            ),
+        ]);
+    }
+
+    /**
+     * Edit save (P3.3b) — process_brewing.inc.php's edit branch.
+     *
+     * Paid/received are admin-writable only; entrant POSTs re-read both
+     * flags from the row loaded this request (:269-279). Style/category
+     * fields freeze once the entry window closes (ledger #4). The judging
+     * number is never reallocated (absent from the update map), and
+     * brewUpdated is stamped on every save (:745). Missing required style
+     * fields reset brewConfirmed='0' and serve the edit form back with the
+     * legacy msg=1-<style> code (:776-902).
+     */
+    public function storeEdit(Request $request, int $entry): RedirectResponse
+    {
+        $userId = (int) Auth::id();
+
+        $row = DB::table('brewing')
+            ->where('id', $entry)
+            ->where('brewBrewerID', (string) $userId)
+            ->first();
+
+        if ($row === null || ! self::editable($row)) {
+            return redirect('/list');
+        }
+
+        $ctx = TenantContext::load();
+        /** @var array<string, mixed> $data */
+        $data = $request->validate(self::RULES + [
+            'brewPaid' => ['nullable', 'in:0,1'],
+            'brewReceived' => ['nullable', 'in:0,1'],
+        ]);
+
+        // Style/category fields are only editable while the window is open;
+        // afterwards a tampered code is ignored and the stored values win.
+        $windowOpen = Windows::derive($ctx, time())->entry === WindowState::Open;
+        $code = $windowOpen
+            ? (string) $data['brewStyle']
+            : ltrim((string) $row->brewCategorySort, '0').'-'.$row->brewSubCategory;
+        $sort = self::styleSort($code);
+        $sub = self::styleSub($code);
+        $styleRow = self::styleFlags($code, $ctx);
+
+        $isAdmin = (bool) ($request->user()?->isAdmin() ?? false);
+        $paid = $isAdmin && isset($data['brewPaid']) ? (int) $data['brewPaid'] : (int) $row->brewPaid;
+        $received = $isAdmin && isset($data['brewReceived']) ? (int) $data['brewReceived'] : (int) $row->brewReceived;
+
+        // Variant values survive only when the style row asks for them;
+        // the edit branch writes '' otherwise (:730-732 vs :390-397).
+        $mead1 = $mead2 = $mead3 = '';
+        if ($styleRow !== null) {
+            if (($data['brewMead1'] ?? '') !== '' && (int) $styleRow->brewStyleCarb === 1) {
+                $mead1 = (string) $data['brewMead1'];
+            }
+            if ((int) $styleRow->brewStyleSweet === 1 && (int) $styleRow->brewStyleType === 2
+                && ($data['brewMead2-cider'] ?? '') !== '') {
+                $mead2 = (string) $data['brewMead2-cider'];
+            }
+            if ((int) $styleRow->brewStyleSweet === 1 && (int) $styleRow->brewStyleType === 3
+                && ($data['brewMead2-mead'] ?? '') !== '') {
+                $mead2 = (string) $data['brewMead2-mead'];
+            }
+            if (($data['brewMead3'] ?? '') !== '' && (int) $styleRow->brewStyleStrength === 1) {
+                $mead3 = (string) $data['brewMead3'];
+            }
+        }
+
+        $info = (string) ($data['brewInfo'] ?? '');
+
+        // Required style fields: special ingredients/classic-style info,
+        // carbonation, sweetness, strength (:776-902). Any miss unconfirms
+        // the row and serves the form back with msg=1-<style>.
+        $confirmed = (string) ($data['brewConfirmed'] ?? '1');
+        $missing =
+            (self::requiresSpecInfo($code, $styleRow, $ctx) && $info === '')
+            || ((int) ($styleRow->brewStyleCarb ?? 0) === 1 && $mead1 === '')
+            || ((int) ($styleRow->brewStyleSweet ?? 0) === 1 && $mead2 === '')
+            || ((int) ($styleRow->brewStyleStrength ?? 0) === 1 && $mead3 === '');
+        if ($missing) {
+            $confirmed = '0';
+        }
+
+        // OG/FG readings become a JSON sweetness level (shared with add);
+        // juice source and pouring instructions keep legacy's JSON shapes.
+        $sweetness = null;
+        if (($data['brewOriginalGravity'] ?? null) !== null || ($data['brewFinalGravity'] ?? null) !== null) {
+            $sweetness = json_encode([
+                'OG' => number_format((float) ($data['brewOriginalGravity'] ?? 0), 3, '.', ''),
+                'FG' => number_format((float) ($data['brewFinalGravity'] ?? 0), 3, '.', ''),
+            ]);
+        } elseif (($data['brewSweetnessLevel'] ?? '') !== '') {
+            $sweetness = number_format((float) $data['brewSweetnessLevel'], 3, '.', '');
+        }
+
+        $juice = [];
+        if (isset($data['brewJuiceSource'])) {
+            $juice['juice_src'] = array_values((array) $data['brewJuiceSource']);
+        }
+        if (isset($data['brewJuiceSourceOther'])) {
+            $juice['juice_src_other'] = array_values((array) $data['brewJuiceSourceOther']);
+        }
+
+        $pouring = [];
+        if (($data['brewPouringInst'] ?? '') !== '') {
+            $pouring['pouring'] = $data['brewPouringInst'];
+        }
+        if (($data['brewPouringRouse'] ?? '') !== '') {
+            $pouring['pouring_rouse'] = $data['brewPouringRouse'];
+        }
+        if (($data['brewPouringNotes'] ?? '') !== '') {
+            $pouring['pouring_notes'] = $data['brewPouringNotes'];
+        }
+
+        DB::table('brewing')->where('id', $entry)->update([
+            'brewName' => (string) $data['brewName'],
+            'brewStyle' => $styleRow->brewStyle ?? '',
+            'brewCategory' => ltrim($sort, '0'),
+            'brewCategorySort' => $sort,
+            'brewSubCategory' => $sub,
+            'brewInfo' => $info,
+            'brewMead1' => $mead1,
+            'brewMead2' => $mead2,
+            'brewMead3' => $mead3,
+            'brewComments' => (string) ($data['brewComments'] ?? ''),
+            'brewPaid' => $paid,
+            'brewInfoOptional' => (string) ($data['brewInfoOptional'] ?? ''),
+            'brewPossAllergens' => (string) ($data['brewPossAllergens'] ?? ''),
+            'brewCoBrewer' => (string) ($data['brewCoBrewer'] ?? ''),
+            'brewReceived' => $received,
+            'brewUpdated' => now()->format('Y-m-d H:i:s'),
+            'brewConfirmed' => $confirmed,
+            'brewABV' => self::blankToNull((string) ($data['brewABV'] ?? '')),
+            'brewJuiceSource' => $juice === [] ? null : json_encode($juice),
+            'brewSweetnessLevel' => self::blankToNull(is_string($sweetness) ? $sweetness : null),
+            'brewPouring' => self::blankToNull(json_encode($pouring) ?: null),
+            'brewStyleType' => $styleRow->brewStyleType ?? null,
+            'brewPackaging' => self::blankToNull((string) ($data['brewPackaging'] ?? '')),
+        ]);
+
+        if ($confirmed === '0') {
+            // Legacy non-admin landing for a missing required field:
+            // back to the edit form with msg=1-<styleReturn> (:817).
+            $index = ctype_digit(explode('-', $code)[0])
+                ? sprintf('%02d', (int) explode('-', $code)[0])
+                : explode('-', $code)[0];
+
+            return redirect('/brew/'.$entry.'/edit?msg=1-'.$index.'-'.$sub);
+        }
+
+        // Legacy success landing: ?section=list&msg=2 (:778).
+        return redirect('/list?msg=2');
+    }
+
+    /**
+     * EntryGates::edit over the tenant windows — the same rule the /list
+     * edit link renders (brewer_entries.pub.php:501/567): unreceived,
+     * judging not started, and the window open or before its edit deadline.
+     */
+    private static function editable(\stdClass $row): bool
+    {
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $now = time();
+
+        return EntryGates::edit(
+            (int) $row->brewReceived,
+            $windows->entry === WindowState::Open,
+            Windows::entryEditDeadline($ctx),
+            $now,
+            $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate,
+        );
+    }
+
+    /**
+     * check_special_ingredients() (common.lib.php:2907): the style demands
+     * special-ingredient info when brewStyleReqSpec=1, except three BJCP2025
+     * cider styles explicitly exempted there.
+     */
+    private static function requiresSpecInfo(string $code, ?\stdClass $styleRow, TenantContext $ctx): bool
+    {
+        if ($styleRow === null || (int) $styleRow->brewStyleReqSpec !== 1) {
+            return false;
+        }
+
+        return ! ($ctx->prefsStr('prefsStyleSet') === 'BJCP2025'
+            && in_array(self::styleSort($code).'-'.self::styleSub($code), ['C2-C', 'C2-D', 'C4-C'], true));
     }
 
     /**

@@ -80,3 +80,11 @@ Route::post('/list/edit-clubs', [BrewerForm1Controller::class, 'store'])->name('
 // codes; msg=8/9 are the user/subcategory cap rejections).
 Route::get('/brew', [BrewController::class, 'showCreate'])->name('brew.create')->middleware('auth');
 Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')->middleware('auth');
+
+// Entry edit (P3.3b). Legacy: ?section=brew&action=edit&id=N — the same
+// brew form in edit mode, posted back to its own URL; clean
+// /brew/{id}/edit is canonical and matches the /list edit links.
+// Save lands on /list?msg=2 (legacy msg codes; msg=1-<style> is the
+// missing-required-style-field rejection served back at the edit form).
+Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware('auth');
+Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware('auth');
