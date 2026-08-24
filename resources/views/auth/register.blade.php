@@ -47,7 +47,16 @@
                     <label for="user_name" class="col-sm-3 col-form-label">{{ __('site.email') }} *</label>
                     <div class="col-sm-9">
                         <input class="form-control" id="user_name" name="user_name" type="email" required
-                               value="{{ old('user_name') }}">
+                               value="{{ old('user_name') }}" autocomplete="off">
+                    </div>
+                </div>
+                {{-- Live checks (P3.7): legacy injected these fragments from
+                     username.ajax.php / valid_email.ajax.php; the port keeps
+                     the same element ids and fragment markup. --}}
+                <div class="mb-3 row">
+                    <div class="col-sm-9 offset-sm-3">
+                        <div id="msg_email"></div>
+                        <div id="username-status"></div>
                     </div>
                 </div>
 
@@ -203,4 +212,35 @@
             </form>
         @endif
     </section>
+
+    <script>
+        // Live username availability + email format checks (P3.7), replacing
+        // legacy checkAvailability()/AjaxFunction(). CSRF-protected POSTs.
+        (function () {
+            var input = document.getElementById('user_name');
+            var csrf = document.querySelector('input[name="_token"]');
+            if (! input || ! csrf) return;
+
+            var token = csrf.value;
+
+            function check(url, body, target) {
+                var params = new URLSearchParams(body);
+                fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': token },
+                    body: params.toString(),
+                }).then(function (r) { return r.json(); }).then(function (d) {
+                    document.getElementById(target).innerHTML = d.message || '';
+                }).catch(function () {});
+            }
+
+            input.addEventListener('blur', function () {
+                check('{{ url('/ajax/username') }}', { user_name: input.value }, 'username-status');
+            });
+            input.addEventListener('change', function () {
+                check('{{ url('/ajax/valid-email') }}', { email: input.value }, 'msg_email');
+            });
+        })();
+    </script>
 </x-public-layout>

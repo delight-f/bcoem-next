@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -130,3 +131,16 @@ Route::get('/admin/payments', [ManualPaymentController::class, 'show'])
     ->name('admin.payments')->middleware('auth');
 Route::post('/admin/payments/mark-paid', [ManualPaymentController::class, 'markPaid'])
     ->name('admin.payments.mark')->middleware('auth');
+
+// AJAX endpoints (P3.7). Port the legacy ajax/*.ajax.php files; response
+// envelopes carry the legacy HTML fragments verbatim (see AjaxController).
+// CSRF-protected POSTs are port hardening — legacy sent these as bare
+// GET/POST with no token. Only save required a real login in legacy (the
+// other files checked the always-bootstrapped session flag), so its
+// session/userLevel gates live in the controller to keep the legacy
+// status=9 envelope instead of an auth redirect.
+Route::post('/ajax/username', [AjaxController::class, 'username'])->name('ajax.username');
+Route::post('/ajax/valid-email', [AjaxController::class, 'validEmail'])->name('ajax.valid_email');
+Route::post('/ajax/account-checks', [AjaxController::class, 'accountChecks'])->name('ajax.account_checks');
+Route::post('/ajax/save', [AjaxController::class, 'save'])->name('ajax.save');
+Route::post('/ajax/count-records', [AjaxController::class, 'countRecords'])->name('ajax.count_records');

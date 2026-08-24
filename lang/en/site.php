@@ -204,4 +204,10 @@ return [
     'contact_officials' => 'Contact a competition official if you have any questions.',
     'payment_received' => 'Your online payment has been received and the transaction has been completed. Please note that you may need to wait a few minutes for the payment status to be updated here - be sure to refresh this page or access your entries list. You will receive a payment receipt via email. Please make sure to print the receipt and attach it to one of your entries as proof of payment.',
     'payment_cancelled' => 'Your online payment has been cancelled.',
+    // AJAX endpoints (P3.7): legacy message strings, byte-for-byte parity
+    // surface (en-US variants from en-US.lang.php).
+    'alert_email_valid' => 'Email format is valid.',
+    'alert_email_not_valid' => 'Email format is not valid.',
+    'alert_email_in_use' => 'The email address you entered is already in use &ndash; you will not be able to complete registration. <strong>Perhaps you already registered using this email address?</strong> If so, please log in.',
+    'alert_email_not_in_use' => 'Congratulations! The email address you entered is not in use.',
 ];
