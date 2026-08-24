@@ -24,8 +24,15 @@ use Illuminate\Support\Facades\DB;
  */
 final class PublicController extends Controller
 {
-    public function home(): View
+    public function home(): View|RedirectResponse
     {
+        // Legacy served login as ?section=login (plus the reset flow via
+        // go=password&action=forgot|reset-password); the standalone build
+        // uses the clean /login URL — legacy query shapes redirect there.
+        if (request('section') === 'login') {
+            return redirect('/login');
+        }
+
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);

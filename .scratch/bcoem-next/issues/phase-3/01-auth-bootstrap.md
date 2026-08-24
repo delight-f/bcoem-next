@@ -7,7 +7,7 @@
 > PayPal/IPN is out of scope (D7) — ignore legacy `ppv.php`/`includes/process.inc.php`
 > PayPal branches entirely.
 
-Status: not started
+Status: done
 Phase: 3 (Slice B — accounts + registration)
 Depends on: P2.6 (parity gate), Phase 1 ledgers (contest-info)
 Consumes: ledger/contest-info.md (session bootstrap), ledger/registration-rules.md (userLevel)

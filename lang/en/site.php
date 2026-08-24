@@ -75,4 +75,11 @@ return [
     'contact_intro' => 'Use the links below to contact individuals involved with coordinating this competition:',
     'edition_amateur' => 'Amateur Competition Edition',
     'edition_pro' => 'Pro Competition Edition',
+    'log_in' => 'Log In',
+    'email' => 'Email',
+    'password' => 'Password',
+    'forgot_password' => 'Forgot your password?',
+    'reset_password' => 'Reset Password',
+    'log_out' => 'Log Out',
+    'my_account' => 'My Account',
 ];
