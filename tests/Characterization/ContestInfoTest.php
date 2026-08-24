@@ -41,6 +41,9 @@ final class ContestInfoTest extends MySqlTestCase
     {
         // common.lib.php is definitions-only (no top-level side effects);
         // safe to load once per process for the pure tests below.
+        if (! defined('LIB')) {
+            define('LIB', dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'legacy'.DIRECTORY_SEPARATOR);
+        }
         if (! function_exists('open_or_closed')) {
             require_once LIB.'common.lib.php';
         }
@@ -364,9 +367,9 @@ final class ContestInfoTest extends MySqlTestCase
     private static function deleteFixtureRows(int ...$uids): void
     {
         $in = implode(',', $uids);
-        self::db()->rawQuery('DELETE FROM baseline_brewing WHERE brewBrewerID IN ('.$in.')');
-        self::db()->rawQuery('DELETE FROM baseline_brewer WHERE uid IN ('.$in.')');
-        self::db()->rawQuery('DELETE FROM baseline_users WHERE id IN ('.$in.')');
+        self::db()->rawQuery('DELETE FROM brewing WHERE brewBrewerID IN ('.$in.')');
+        self::db()->rawQuery('DELETE FROM brewer WHERE uid IN ('.$in.')');
+        self::db()->rawQuery('DELETE FROM users WHERE id IN ('.$in.')');
     }
 
     private function beginFeeTest(): void
@@ -376,6 +379,9 @@ final class ContestInfoTest extends MySqlTestCase
         }
         self::$dbTestActive = true;
         $this->writeTestConfig();
+        if (! defined('LIB')) {
+            define('LIB', dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'legacy'.DIRECTORY_SEPARATOR);
+        }
         if (! function_exists('total_fees')) {
             require_once LIB.'common.lib.php';
         }

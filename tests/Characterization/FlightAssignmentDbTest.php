@@ -22,6 +22,28 @@ use BCOEM\Tests\Integration\MySqlTestCase;
  */
 final class FlightAssignmentDbTest extends MySqlTestCase
 {
+    /**
+     * rawQuery auto-prefixes only the FIRST table token (vendored
+     * MysqliDb::rawAddPrefix uses $table[0], a scalar). For multi-table or
+     * DDL statements we clear the prefix and write full names explicitly.
+     *
+     * @param  list<mixed>  $params
+     * @return list<array<string, mixed>>
+     */
+    private static function unprefixedQuery(string $sql, array $params = []): array
+    {
+        $db = self::db();
+        $db->setPrefix('');
+        try {
+            $rows = $db->rawQuery($sql, $params);
+            self::assertIsArray($rows);
+
+            return array_values(array_map(fn ($row): array => (array) $row, $rows));
+        } finally {
+            $db->setPrefix('baseline_');
+        }
+    }
+
     /** @var list<int> */
     private array $entries = [];
 
@@ -97,9 +119,9 @@ final class FlightAssignmentDbTest extends MySqlTestCase
         self::db()->where('flightEntryID', $e1)->update('judging_flights', ['flightEntryOrder' => 2]);
         self::db()->where('flightEntryID', $e2)->update('judging_flights', ['flightEntryOrder' => 1]);
 
-        $rows = self::db()->rawQuery(
-            'SELECT b.id FROM judging_flights f JOIN brewing b ON f.flightEntryID = b.id '
-            .'WHERE f.flightTable = ? AND f.flightNumber = ? '
+        $rows = self::unprefixedQuery(
+            'SELECT b.id FROM baseline_judging_flights f JOIN baseline_brewing b '
+            .'ON f.flightEntryID = b.id WHERE f.flightTable = ? AND f.flightNumber = ? '
             .'ORDER BY f.flightEntryOrder IS NULL ASC, f.flightEntryOrder ASC, '
             .'b.brewCategorySort, b.brewSubCategory, b.brewJudgingNumber ASC',
             [7, 1],

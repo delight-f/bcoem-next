@@ -10,11 +10,11 @@ use BCOEM\Tests\Integration\MySqlTestCase;
  * Characterization: winners selection semantics against the baseline schema
  * (P1.7). The place filter is copied from includes/db/winners.db.php:43:
  *
- *   scorePlace IN ('1','2','3','4','5')   -- literal 'HM' is NOT included
+ *   scorePlace IN ('1','2','3','4','5')
  *
- * Combined with the scoring-ledger finding that both '5' and 'HM' mean
- * Honorable Mention, this pins a real trap: entries with 'HM' written by
- * newer flows vanish from winners pages in legacy.
+ * Schema truth surfaced here: judging_scores.scorePlace is FLOAT, so string
+ * codes like 'HM' cannot exist in this table at all (only judging_scores_bos
+ * .scorePlace is varchar(3)).
  */
 final class WinnersDisplayDbTest extends MySqlTestCase
 {
@@ -81,7 +81,9 @@ final class WinnersDisplayDbTest extends MySqlTestCase
         $filter = "(scorePlace='1' OR scorePlace='2' OR scorePlace='3' "
             ."OR scorePlace='4' OR scorePlace='5')";
 
-        $places = ['1', '2', '3', '4', '5', 'HM', null, '6'];
+        // scorePlace is FLOAT: numeric places only; NULL means unscored.
+        // ('HM' cannot be stored here - only judging_scores_bos.scorePlace is varchar(3).)
+        $places = ['1', '2', '3', '4', '5', null, '6'];
         foreach ($places as $p) {
             $eid = $this->makeEntry(['brewJudgingNumber' => sprintf('%06d', count($this->entries) + 100)]);
             $this->makeScore($eid, $p);
@@ -90,9 +92,9 @@ final class WinnersDisplayDbTest extends MySqlTestCase
         $rows = self::db()->rawQuery(
             "SELECT scorePlace FROM judging_scores WHERE {$filter}",
         );
-        $got = array_column($rows, 'scorePlace');
+        $got = array_map(floatval(...), array_column($rows, 'scorePlace'));
         sort($got);
 
-        self::assertSame(['1', '2', '3', '4', '5'], $got);
+        self::assertSame([1.0, 2.0, 3.0, 4.0, 5.0], $got);
     }
 }

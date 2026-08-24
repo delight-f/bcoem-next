@@ -87,8 +87,8 @@ final class EntryLifecycleDbTest extends MySqlTestCase
 
         $row = $this->entry($id);
         self::assertSame('1', $row->brewConfirmed);
-        self::assertSame(0, $row->brewPaid);
-        self::assertSame(0, $row->brewReceived);
+        self::assertSame(0, (int) $row->brewPaid);
+        self::assertSame(0, (int) $row->brewReceived);
         self::assertNull($row->brewJudgingNumber);
     }
 
@@ -133,11 +133,11 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         $id = $this->makeEntry();
 
         self::db()->where('id', $id)->update('brewing', ['brewPaid' => 1]);
-        self::assertSame(1, $this->entry($id)->brewPaid);
+        self::assertSame(1, (int) $this->entry($id)->brewPaid);
 
         self::db()->where('id', $id)->update('brewing', ['brewReceived' => 1]);
         $row = $this->entry($id);
-        self::assertSame(1, $row->brewReceived);
-        self::assertSame(1, $row->brewPaid); // independent flags
+        self::assertSame(1, (int) $row->brewReceived);
+        self::assertSame(1, (int) $row->brewPaid); // independent flags
     }
 }

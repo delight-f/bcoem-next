@@ -33,7 +33,7 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
     public function test_payments_table_is_absent_from_schema(): void
     {
         $tables = array_column(
-            self::db()->rawQuery("SHOW TABLES LIKE 'payments'"),
+            self::db()->rawQuery("SHOW TABLES LIKE '%payments'"),
             0,
         );
         self::assertSame([], $tables, 'payments table unexpectedly exists');
