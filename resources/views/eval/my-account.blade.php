@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Judging</h1>
 
         @if ($judgeDashboard)

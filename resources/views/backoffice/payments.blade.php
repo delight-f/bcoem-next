@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Payments</h1>
 
         @if (request('msg') === 'deleted')
@@ -15,7 +15,7 @@
         @if ($payments->isEmpty())
             <p>No payments have been recorded in the database.</p>
         @else
-            <table class="table table-responsive table-striped table-bordered">
+            <table class="table table-responsive table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>Payer Name</th>

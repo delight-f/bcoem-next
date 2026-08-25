@@ -2,11 +2,11 @@
      "thank you / next steps" lead + contact + volunteer summary.
      Contract: @include('brewer.info', ['brewer' => row-or-null,
      'email' => users.user_name, 'updated' => formatted datetime|null]). --}}
-<section id="account-info" class="mb-4">
+<section id="account-info" class="mb-6">
     @if ($brewer === null)
-        <p class="lead">{{ __('site.no_profile_yet') }}</p>
+        <p class="text-xl font-light">{{ __('site.no_profile_yet') }}</p>
     @else
-        <p class="lead">
+        <p class="text-xl font-light">
             {{ __('site.thanks_for_participating') }} {{ App\Support\Tenant\TenantContext::load()->contestStr('contestName') }}, {{ $brewer->brewerFirstName }}.
             <small class="text-muted">{{ __('site.account_last_updated') }} {{ $updated ?? '—' }}.</small>
         </p>
@@ -36,7 +36,7 @@
             <div class="col-12 col-md-8">{{ $brewer->brewerSteward === 'Y' ? __('site.yes') : __('site.no') }}</div>
         </div>
 
-        <a href="{{ url('/list/edit-account') }}" class="btn btn-outline-primary mt-2">{{ __('site.edit_account') }}</a>
-        <a href="{{ url('/list/edit-judging') }}" class="btn btn-outline-primary mt-2">{{ __('site.edit_judging_prefs') }}</a>
+        <a href="{{ url('/list/edit-account') }}" class="btn btn-outline btn-primary mt-2">{{ __('site.edit_account') }}</a>
+        <a href="{{ url('/list/edit-judging') }}" class="btn btn-outline btn-primary mt-2">{{ __('site.edit_judging_prefs') }}</a>
     @endif
 </section>

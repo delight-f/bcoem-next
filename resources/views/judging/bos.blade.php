@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Best of Show (BOS) Entries and Places</h1>
 
         <p><a href="{{ route('admin.judging.scores.index') }}">&larr; All Scores</a></p>
@@ -11,7 +11,7 @@
             @if (count($rows) === 0)
                 <p>No entries are eligible.</p>
             @else
-                <table class="table table-striped table-bordered">
+                <table class="table table-zebra table-bordered">
                     <thead>
                         <tr>
                             <th>Entry</th>

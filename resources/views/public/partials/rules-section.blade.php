@@ -1,4 +1,4 @@
-<section id="rules" class="landing-page-section pb-3">
+<section id="rules" class="landing-page-section pb-4">
     <header class="landing-page-section-header py-2"><h1>{{ __('site.rules') }}</h1></header>
     <div class="reveal-element">
         <h2>

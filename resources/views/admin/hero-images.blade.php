@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Banner Images</h1>
 
         @if (request('msg') === 'saved')
@@ -10,25 +10,25 @@
             <div class="alert alert-success">Banner image deleted successfully.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         <p>Select which banner images are displayed on the homepage. Images are randomly selected based on your competition's accepted style types.</p>
 
-        <div class="border rounded p-3 mb-3">
+        <div class="border rounded p-4 mb-4">
             <strong>How it works:</strong> Banner images appear as a large background strip at the top of the competition
             homepage. One image is picked at random each time a visitor loads the page. Miscellaneous images can appear at
             any time; Beer, Cider, and Mead images only appear when your competition accepts entries in those categories.
         </div>
 
         {{-- Upload --}}
-        <form method="post" action="{{ url('/admin/hero-images/upload') }}" enctype="multipart/form-data" class="border rounded p-3 mb-3">
+        <form method="post" action="{{ url('/admin/hero-images/upload') }}" enctype="multipart/form-data" class="border rounded p-4 mb-4">
             @csrf
             <h4>Upload New Banner Image</h4>
-            <div class="row g-2 align-items-end">
+            <div class="row g-2 items-end">
                 <div class="col-auto">
                     <label for="hero_image_category" class="form-label">Category</label>
-                    <select class="form-select" id="hero_image_category" name="hero_image_category" required>
+                    <select class="select select-bordered" id="hero_image_category" name="hero_image_category" required>
                         <option value="">Select a category...</option>
                         <option value="0">Miscellaneous</option>
                         <option value="1">Beer</option>
@@ -38,7 +38,7 @@
                 </div>
                 <div class="col-auto">
                     <label for="hero_image_file" class="form-label">Image File</label>
-                    <input type="file" class="form-control" id="hero_image_file" name="hero_image_file" accept=".jpg,.jpeg,.png,.gif,.webp" required>
+                    <input type="file" class="input input-bordered" id="hero_image_file" name="hero_image_file" accept=".jpg,.jpeg,.png,.gif,.webp" required>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-success">Upload Image</button>
@@ -53,14 +53,14 @@
         <form method="post" action="{{ url('/admin/hero-images/save') }}">
             @csrf
             @foreach ($imagesByCategory as $categoryId => $images)
-                <fieldset class="mb-3 border rounded p-3">
-                    <legend class="small">{{ $categories[$categoryId] }}
+                <fieldset class="mb-4 border rounded p-4">
+                    <legend class="text-sm">{{ $categories[$categoryId] }}
                         @if ($categoryId === '0')<span class="text-muted">(shown on all pages)</span>@endif
                     </legend>
                     @forelse ($images as $image)
                         @php $field = 'hero_image_'.preg_replace('/[^a-zA-Z0-9_]/', '_', $image); @endphp
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" id="{{ $field }}" name="{{ $field }}" value="1"
+                            <input class="checkbox" type="checkbox" id="{{ $field }}" name="{{ $field }}" value="1"
                                 @checked($prefs[$image] ?? true)>
                             <label class="form-check-label" for="{{ $field }}">{{ $image }}</label>
                         </div>
@@ -78,18 +78,18 @@
 
         {{-- Delete --}}
         @if ($allKnown !== [])
-            <form method="post" action="{{ url('/admin/hero-images/delete') }}" class="mt-3">
+            <form method="post" action="{{ url('/admin/hero-images/delete') }}" class="mt-4">
                 @csrf
-                <div class="row g-2 align-items-end">
+                <div class="row g-2 items-end">
                     <div class="col-auto">
                         <label for="hero_image_delete" class="form-label">Delete an image</label>
-                        <select class="form-select" id="hero_image_delete" name="hero_image_delete" required>
+                        <select class="select select-bordered" id="hero_image_delete" name="hero_image_delete" required>
                             @foreach ($allKnown as $image)
                                 <option value="{{ $image }}">{{ $image }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-auto"><button type="submit" class="btn btn-danger">Delete Image</button></div>
+                    <div class="col-auto"><button type="submit" class="btn btn-error">Delete Image</button></div>
                 </div>
             </form>
         @endif

@@ -1,4 +1,4 @@
-<section id="volunteers" class="landing-page-section pb-3">
+<section id="volunteers" class="landing-page-section pb-4">
     <header class="landing-page-section-header py-2"><h1>{{ __('site.volunteers') }}</h1></header>
     <h2>{{ __('site.judges_and_stewards') }}</h2>
     <p>{{ __('site.volunteer_judge_blurb') }}</p>

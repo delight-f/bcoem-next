@@ -1,4 +1,4 @@
-<div class="mt-4 reveal-element">
+<div class="mt-6 reveal-element">
     <h2>{{ $ctx->prefsStr('prefsBestBrewerTitle') ?: __('site.best_brewer') }}</h2>
     <ol>
         @foreach ($rows as $row)

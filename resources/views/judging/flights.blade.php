@@ -1,11 +1,11 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Define/Edit Flights</h1>
 
         @if ($tables->isEmpty())
             <p>No tables have been defined. Tables must be defined before flights can be assigned to them.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>#</th>

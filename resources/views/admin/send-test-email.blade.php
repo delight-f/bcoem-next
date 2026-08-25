@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Test Email</h1>
         <p>Sending a test email to {{ $email }}</p>
 
@@ -14,7 +14,7 @@
         @if ($sent === true)
             <div class="alert alert-success">Test email sent. If it does not arrive, close this window and check your settings, especially your password.</div>
         @elseif ($sent === false)
-            <div class="alert alert-danger">
+            <div class="alert alert-error">
                 Message could not be sent. Mailer Error:
                 <pre>{{ $error }}</pre>
             </div>

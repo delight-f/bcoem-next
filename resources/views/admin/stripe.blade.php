@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :salutation="$salutation" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Stripe Connect</h1>
 
         @if (session('status'))
@@ -8,7 +8,7 @@
             </div>
         @endif
         @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-error">{{ session('error') }}</div>
         @endif
 
         <p>
@@ -22,7 +22,7 @@
                 @if ($accountId)
                     <code>{{ $accountId }}</code>
                 @else
-                    <strong class="text-danger">not connected</strong>
+                    <strong class="text-error">not connected</strong>
                 @endif
             </li>
             <li>Platform secret key: {{ $secretKeySet ? 'configured' : 'MISSING (set STRIPE_SECRET)' }}</li>
@@ -36,7 +36,7 @@
             <p class="text-muted">Set STRIPE_CLIENT_ID and STRIPE_SECRET to enable connecting.</p>
         @endif
 
-        <h2 class="mt-4">Webhook endpoint</h2>
+        <h2 class="mt-6">Webhook endpoint</h2>
         <p>
             Create a webhook endpoint in your Stripe dashboard pointing at
             <code>{{ url('/webhooks/stripe') }}</code>, subscribed to
@@ -47,7 +47,7 @@
         <form method="post" action="{{ route('admin.stripe.secret') }}" class="row g-2">
             @csrf
             <div class="col-auto">
-                <input type="text" name="webhook_secret" class="form-control"
+                <input type="text" name="webhook_secret" class="input input-bordered"
                        placeholder="whsec_..." value="" aria-label="Webhook signing secret">
             </div>
             <div class="col-auto">

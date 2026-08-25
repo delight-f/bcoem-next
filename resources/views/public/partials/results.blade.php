@@ -6,10 +6,10 @@
     ? $repo->bestBrewers((string) $ctx->prefsStr('prefsBestBrewerPointsMethod'), 'flat')
     : [])
 
-<section id="results" class="landing-page-section pb-3">
+<section id="results" class="landing-page-section pb-4">
     <header class="landing-page-section-header py-2"><h1>{{ __('site.results') }}</h1></header>
 
-    <div class="mt-4 reveal-element">
+    <div class="mt-6 reveal-element">
         <h2>{{ __('site.bos_winners') }}</h2>
         @if ($bosRows === [])
             <p>{{ __('site.no_bos_yet') }}</p>
@@ -28,7 +28,7 @@
 
     @includeWhen($bestBrewers !== [], 'public.partials.bestbrewer', ['rows' => $bestBrewers])
 
-    <div class="mt-4 reveal-element">
+    <div class="mt-6 reveal-element">
         <h2>{{ __('site.winning_entries') }}</h2>
         @if ($winners === [])
             <p>{{ __('site.no_winners_yet') }}</p>

@@ -2,7 +2,7 @@
     :ctx="$ctx"
     :show-hero="false"
 >
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Mark entries paid</h1>
 
         @if (request('msg') === 'marked')
@@ -12,7 +12,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-error">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -53,27 +53,27 @@
 
                 <p>{{ count($unpaid) }} unpaid × {{ $fee }} per entry (total computed on save).</p>
 
-                <div class="mb-3 row">
-                    <label for="pay_method" class="col-sm-3 col-form-label">Method</label>
+                <div class="mb-4 row">
+                    <label for="pay_method" class="col-sm-4 col-form-label">Method</label>
                     <div class="col-sm-9">
-                        <select id="pay_method" name="pay_method" class="form-select">
+                        <select id="pay_method" name="pay_method" class="select select-bordered">
                             @foreach ($payMethods as $m)
                                 <option value="{{ $m }}">{{ $m }}</option>
                             @endforeach
                         </select>
                     </div>
                 </div>
-                <div class="mb-3 row">
-                    <label for="reference" class="col-sm-3 col-form-label">Reference</label>
+                <div class="mb-4 row">
+                    <label for="reference" class="col-sm-4 col-form-label">Reference</label>
                     <div class="col-sm-9">
-                        <input class="form-control" id="reference" name="reference" type="text"
+                        <input class="input input-bordered" id="reference" name="reference" type="text"
                                placeholder="check number / transfer id">
                     </div>
                 </div>
-                <div class="mb-3 row">
-                    <label for="note" class="col-sm-3 col-form-label">Note</label>
+                <div class="mb-4 row">
+                    <label for="note" class="col-sm-4 col-form-label">Note</label>
                     <div class="col-sm-9">
-                        <input class="form-control" id="note" name="note" type="text">
+                        <input class="input input-bordered" id="note" name="note" type="text">
                     </div>
                 </div>
 

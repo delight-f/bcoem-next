@@ -3,11 +3,11 @@
     :salutation="$salutation"
     :show-hero="false"
 >
-    <section id="add-entry" class="landing-page-section mt-4 mb-3">
+    <section id="add-entry" class="landing-page-section mt-6 mb-4">
         <h1>{{ __('site.add_entry') }}</h1>
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-error">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

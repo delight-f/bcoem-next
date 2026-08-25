@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>{{ $type->styleTypeName }} — BOS Places</h1>
 
         <p><a href="{{ route('admin.judging.bos.index') }}">&larr; All BOS Entries and Places</a></p>
@@ -11,7 +11,7 @@
                 @csrf
                 @method('PUT')
 
-                <table class="table table-striped table-bordered">
+                <table class="table table-zebra table-bordered">
                     <thead>
                         <tr>
                             <th>Entry</th>
@@ -37,7 +37,7 @@
                                 <td>{{ $row->brewCategorySort }}{{ $row->brewSubCategory }} {{ $row->brewName }}</td>
                                 <td>{{ $row->scoreEntry }}</td>
                                 <td>
-                                    <select class="form-select" name="scorePlace{{ $row->eid }}">
+                                    <select class="select select-bordered" name="scorePlace{{ $row->eid }}">
                                         <option value=""></option>
                                         @for ($i = 1; $i <= $maxBos; $i++)
                                             <option value="{{ $i }}"

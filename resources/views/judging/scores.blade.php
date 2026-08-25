@@ -1,11 +1,11 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Scores</h1>
 
         @if ($scores->isEmpty())
             <p>No scores have been entered. Use the tables screen to define tables, then add scores per table.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>Entry</th>
@@ -29,9 +29,9 @@
                             {{-- '5' is the stored HM code (scoring ledger #1). --}}
                             <td>{{ \App\Support\Results\Place::label($score->scorePlace) }}</td>
                             <td>@if ((int) $score->scoreMiniBOS === 1)<span class="text-success">&#10003;</span>@endif</td>
-                            <td class="d-print-none">
+                            <td class="print:hidden">
                                 <a href="{{ route('admin.judging.scores.edit', ['table' => $score->scoreTable]) }}">Edit</a>
-                                <form method="post" action="{{ route('admin.judging.scores.destroy', ['id' => $score->id]) }}" class="d-inline"
+                                <form method="post" action="{{ route('admin.judging.scores.destroy', ['id' => $score->id]) }}" class="inline"
                                       onsubmit="return confirm('Delete this score? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

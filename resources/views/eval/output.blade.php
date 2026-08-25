@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Scoresheet Output</h1>
 
         @include('eval.partials.scoresheet-head', ['style' => $style])
@@ -9,8 +9,8 @@
         @endif
 
         @foreach ($evaluations as $evaluation)
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between">
+            <div class="card mb-4">
+                <div class="card-header flex justify-between">
                     <span>Evaluation #{{ $evaluation->id }} by judge uid {{ $evaluation->evalJudgeInfo }}</span>
                     <span>
                         Final score: <strong>{{ $evaluation->evalFinalScore }}</strong>
@@ -20,7 +20,7 @@
                     </span>
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm mb-3">
+                    <table class="table table-sm mb-4">
                         <thead><tr><th>Section</th><th>Score</th><th>Max</th></tr></thead>
                         <tbody>
                             @foreach (['aroma', 'appearance', 'flavor', 'mouthfeel'] as $section)
@@ -52,15 +52,15 @@
                     @endforeach
 
                     @if (! empty($evaluation->evalFlaws))
-                        <p class="small"><strong>Flaws:</strong> {{ $evaluation->evalFlaws }}</p>
+                        <p class="text-sm"><strong>Flaws:</strong> {{ $evaluation->evalFlaws }}</p>
                     @endif
                     @if (! empty($evaluation->evalDescriptors))
-                        <p class="small"><strong>Descriptors:</strong> {{ $evaluation->evalDescriptors }}</p>
+                        <p class="text-sm"><strong>Descriptors:</strong> {{ $evaluation->evalDescriptors }}</p>
                     @endif
                 </div>
             </div>
         @endforeach
 
-        <a class="btn btn-outline-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
+        <a class="btn btn-outline btn-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
     </section>
 </x-public-layout>

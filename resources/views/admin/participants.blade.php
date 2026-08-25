@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Participants</h1>
 
         @if (request('msg') === 'deleted')
@@ -13,7 +13,7 @@
         @endif
 
         {{-- Legacy filters: default / judges / stewards / with_entries --}}
-        <ul class="nav nav-pills mb-3">
+        <ul class="nav nav-pills mb-4">
             @foreach ([['default', 'All'], ['judges', 'Available Judges'], ['stewards', 'Available Stewards'], ['with_entries', 'Participants with Entries']] as [$f, $label])
                 <li class="nav-item">
                     <a class="nav-link {{ $filter === $f ? 'active' : '' }}"
@@ -22,19 +22,19 @@
             @endforeach
         </ul>
 
-        <form method="get" action="{{ url('/backoffice/participants') }}" class="row row-cols-auto g-2 mb-3">
+        <form method="get" action="{{ url('/backoffice/participants') }}" class="row row-cols-auto g-2 mb-4">
             @if ($filter !== 'default')
                 <input type="hidden" name="filter" value="{{ $filter }}">
             @endif
             <input type="hidden" name="q" value="{{ $q }}">
-            <input class="form-control" name="q" placeholder="Search participants…"
+            <input class="input input-bordered" name="q" placeholder="Search participants…"
                    value="{{ $q }}">
-            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            <button type="submit" class="btn btn-outline btn-secondary">Search</button>
 </form>
         @if ($participants->isEmpty())
             <p>No participants found.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -43,7 +43,7 @@
                         <th>Steward?</th>
                         <th>Judge?</th>
                         <th>@if ($filter === 'with_entries') Entries @else Assigned As @endif</th>
-                        <th class="d-print-none">Actions</th>
+                        <th class="print:hidden">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,10 +61,10 @@
                                     {{ $p->brewerAssignment }}
                                 @endif
                             </td>
-                            <td class="d-print-none">
+                            <td class="print:hidden">
                                 <a href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}">Edit</a>
                                 <a href="{{ url('/backoffice/entries', ['bid' => $p->uid]) }}">Entries</a>
-                                <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="d-inline"
+                                <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="inline"
                                       onsubmit="return confirm('Delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-4 mb-3">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Judging Dashboard</h1>
 
         @if ((int) request('msg') === 3)
@@ -15,14 +15,14 @@
         {{-- warnings.eval.php port: countdown timers to judging close --}}
         @include('eval.partials.warnings')
 
-        <p class="lead">Evaluations are not official until an administrator imports
+        <p class="text-xl font-light">Evaluations are not official until an administrator imports
         matching consensus scores entered by two or more judges.</p>
 
         @if ($admin !== null)
             {{-- Admin panel: judging_dashboard/judging_admin folded in
                  (ledger port verdict). Import button posts to the
                  consensus importer; singles cannot be imported. --}}
-            <div class="card border-secondary mb-4">
+            <div class="card border-secondary mb-6">
                 <div class="card-header"><strong>Admin — Consensus Scoring</strong></div>
                 <div class="card-body">
                     <p>
@@ -51,11 +51,11 @@
             if you expected an assignment.</p>
         @else
             @foreach ($tables as $row)
-                <h2 class="mt-4">Table {{ $row['table']->tableNumber }} — {{ $row['table']->tableName }}</h2>
+                <h2 class="mt-6">Table {{ $row['table']->tableNumber }} — {{ $row['table']->tableName }}</h2>
                 @if ($row['entries'] === [])
                     <p>No entries flighted to this table.</p>
                 @else
-                    <table class="table table-striped table-sm align-middle">
+                    <table class="table table-zebra table-sm align-middle">
                         <thead>
                             <tr><th>#</th><th>Entry</th><th>Style</th><th></th></tr>
                         </thead>
@@ -70,7 +70,7 @@
                                            href="{{ route('eval.scoresheet', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">
                                             Evaluate ({{ $variant }})
                                         </a>
-                                        <a class="btn btn-sm btn-outline-secondary"
+                                        <a class="btn btn-sm btn-outline btn-secondary"
                                            href="{{ route('eval.output', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">
                                             View output
                                         </a>

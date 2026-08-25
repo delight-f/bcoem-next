@@ -1,15 +1,15 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Custom Categories</h1>
 
-        <p class="d-print-none">
+        <p class="print:hidden">
             <a class="btn btn-primary" href="{{ route('admin.specialbest.create') }}">Add a Custom Category</a>
         </p>
 
         @if ($categories->isEmpty())
             <p>No custom categories were found in the database.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -27,11 +27,11 @@
                             <td>{{ $category->sbi_description }}</td>
                             <td>{{ $category->sbi_places }}</td>
                             <td>{{ $category->sbi_rank }}</td>
-                            <td class="d-print-none">
+                            <td class="print:hidden">
                                 <a href="{{ route('admin.specialbest.edit', ['id' => $category->id]) }}">Edit</a>
                                 &middot;
                                 <a href="{{ route($dataCount > 0 ? 'admin.specialbest.data.edit' : 'admin.specialbest.data.edit', ['id' => $category->id]) }}">Entries</a>
-                                <form method="post" action="{{ route('admin.specialbest.destroy', ['id' => $category->id]) }}" class="d-inline"
+                                <form method="post" action="{{ route('admin.specialbest.destroy', ['id' => $category->id]) }}" class="inline"
                                       onsubmit="return confirm('Delete {{ $category->sbi_name }}? All associated data will be deleted as well.');">
                                     @csrf
                                     @method('DELETE')

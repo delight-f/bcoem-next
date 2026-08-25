@@ -1,15 +1,15 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Judging Tables</h1>
 
-        <p class="d-print-none">
+        <p class="print:hidden">
             <a class="btn btn-primary" href="{{ route('admin.judging.tables.create') }}">Add a Table</a>
         </p>
 
         @if ($tables->isEmpty())
             <p>No tables have been defined.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -28,9 +28,9 @@
                             <td>{{ $table->tableStyles }}</td>
                             <td>{{ $table->tableLocation }}</td>
                             <td>{{ $table->tableEntryLimit ?? '' }}</td>
-                            <td class="d-print-none">
+                            <td class="print:hidden">
                                 <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}">Edit</a>
-                                <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="d-inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
+                                <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link btn-sm p-0">Delete</button>

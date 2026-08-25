@@ -1,12 +1,12 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Purge / Reset Data</h1>
 
         @if (session('status'))
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
         @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <div class="alert alert-error">{{ session('error') }}</div>
         @endif
 
         <div class="alert alert-warning">

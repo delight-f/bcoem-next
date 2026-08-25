@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>{{ $planning ? 'Planning Mode' : 'Define Flights' }} for Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}</h1>
 
         <p><a href="{{ route('admin.judging.flights.index') }}">&larr; All Tables</a></p>
@@ -15,7 +15,7 @@
 
             <form method="post" action="{{ route('admin.judging.flights.store', ['id' => $table->id]) }}">
                 @csrf
-                <table class="table table-striped table-bordered">
+                <table class="table table-zebra table-bordered">
                     <thead>
                         <tr>
                             <th>Judging #</th>

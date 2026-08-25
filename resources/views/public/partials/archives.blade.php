@@ -1,5 +1,5 @@
 @if ($archives !== [])
-    <div class="mt-4 reveal-element">
+    <div class="mt-6 reveal-element">
         <h2>{{ __('site.past_winners') }}</h2>
         <ul class="navbar-nav">
             @foreach ($archives as $archive)

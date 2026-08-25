@@ -2,11 +2,11 @@
     :ctx="$ctx"
     :show-hero="false"
 >
-    <section id="edit-clubs" class="landing-page-section mt-4 mb-3">
+    <section id="edit-clubs" class="landing-page-section mt-6 mb-4">
         <h1>{{ __('site.club') }} / {{ __('site.aha_number') }}</h1>
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-error">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -23,29 +23,29 @@
         <form method="post" action="{{ url('/list/edit-clubs') }}">
             @csrf
 
-            <section id="participant-clubs" class="mb-4">
-                <div class="mb-3 row">
+            <section id="participant-clubs" class="mb-6">
+                <div class="mb-4 row">
                     <label for="brewerClubs" class="col-sm-3 col-form-label"><strong>{{ __('site.club') }}</strong></label>
                     <div class="col-sm-9">
-                        <input class="form-control" id="brewerClubs" name="brewerClubs" type="text"
+                        <input class="input input-bordered" id="brewerClubs" name="brewerClubs" type="text"
                                value="{{ old('brewerClubs', $brewer->brewerClubs === 'Other' ? '' : $brewer->brewerClubs) }}">
                         <div class="form-text">{{ __('site.club_other_hint') }}</div>
                     </div>
                 </div>
-                <div class="mb-3 row">
+                <div class="mb-4 row">
                     <label for="brewerClubsOther" class="col-sm-3 col-form-label"><strong>{{ __('site.club_other') }}</strong></label>
                     <div class="col-sm-9">
-                        <input class="form-control" id="brewerClubsOther" name="brewerClubsOther" type="text"
+                        <input class="input input-bordered" id="brewerClubsOther" name="brewerClubsOther" type="text"
                                value="{{ old('brewerClubsOther', $brewer->brewerClubs === 'Other' ? $brewer->brewerClubs : '') }}">
                     </div>
                 </div>
             </section>
 
-            <section id="proAm" class="mb-4">
-                <div class="mb-3 row">
+            <section id="proAm" class="mb-6">
+                <div class="mb-4 row">
                     <label for="brewerProAm" class="col-sm-3 col-form-label"><strong>{{ __('site.pro_am') }}</strong></label>
                     <div class="col-sm-9">
-                        <select class="form-select" id="brewerProAm" name="brewerProAm">
+                        <select class="select select-bordered" id="brewerProAm" name="brewerProAm">
                             <option value="0" @selected(old('brewerProAm', $brewer->brewerProAm ?? '0') === '0')>No</option>
                             <option value="1" @selected(old('brewerProAm', $brewer->brewerProAm) === '1')>Yes</option>
                             <option value="2" @selected(old('brewerProAm', $brewer->brewerProAm) === '2')>Opt out</option>
@@ -54,22 +54,22 @@
                 </div>
             </section>
 
-            <section id="aha-number" class="mb-4">
-                <div class="mb-3 row">
+            <section id="aha-number" class="mb-6">
+                <div class="mb-4 row">
                     <label for="brewerAHA" class="col-sm-3 col-form-label"><strong>{{ __('site.aha_number') }}</strong></label>
                     <div class="col-sm-9">
-                        <input class="form-control" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
+                        <input class="input input-bordered" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
                                value="{{ old('brewerAHA', $brewer->brewerAHA) }}">
                     </div>
                 </div>
             </section>
 
             @if ($mhpDisplay)
-                <section id="mhp-number" class="mb-4">
-                    <div class="mb-3 row">
+                <section id="mhp-number" class="mb-6">
+                    <div class="mb-4 row">
                         <label for="brewerMHP" class="col-sm-3 col-form-label"><strong>{{ __('site.mhp_number') }}</strong></label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
+                            <input class="input input-bordered" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
                                    value="{{ old('brewerMHP', $brewer->brewerMHP) }}">
                         </div>
                     </div>

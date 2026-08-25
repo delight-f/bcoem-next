@@ -6,12 +6,12 @@
          rules + entry-info sections while future sessions remain, volunteers
          before judging starts, then sponsors + contact. --}}
 
-    <section id="at-a-glance" class="landing-page-section pb-3">
+    <section id="at-a-glance" class="landing-page-section pb-4">
         {{-- judge_closed.pub.php: shown once registration/entry are closed
              and no future judging session remains (any winner-display state). --}}
         @if ($blurbCounts !== null)
-            <p class="lead mt-3">{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}.</p>
-            <p class="lead"><small>{{ __('site.there_were') }} <strong class="text-success">{{ $blurbCounts['received'] }}</strong> {{ __('site.entries_judged') }} {{ __('site.and') }} <strong class="text-success">{{ $blurbCounts['participants'] }}</strong> {{ __('site.registered_participants') }}.</small></p>
+            <p class="text-xl font-light mt-4">{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}.</p>
+            <p class="text-xl font-light"><small>{{ __('site.there_were') }} <strong class="text-success">{{ $blurbCounts['received'] }}</strong> {{ __('site.entries_judged') }} {{ __('site.and') }} <strong class="text-success">{{ $blurbCounts['participants'] }}</strong> {{ __('site.registered_participants') }}.</small></p>
         @endif
 
         @includeWhen($resultsVisible, 'public.partials.results', [
@@ -26,7 +26,7 @@
 
     @includeUnless($judgingStarted, 'public.partials.volunteers')
 
-    <section id="contact" class="landing-page-section pb-3 d-print-none">
+    <section id="contact" class="landing-page-section pb-4 print:hidden">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>
         @include('public.partials.contacts')
     </section>

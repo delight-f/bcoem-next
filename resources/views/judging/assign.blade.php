@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Assign {{ ucfirst($role) }} to Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}</h1>
 
         <p>
@@ -14,7 +14,7 @@
         @else
             <form method="post" action="{{ route('admin.judging.assign.store', ['id' => $table->id, 'role' => $role]) }}">
                 @csrf
-                <table class="table table-striped table-bordered">
+                <table class="table table-zebra table-bordered">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -38,7 +38,7 @@
                                             <input type="hidden" name="{{ $name }}" value="0">
                                             &mdash;
                                         @else
-                                            <select name="{{ $name }}" class="form-control form-control-sm">
+                                            <select name="{{ $name }}" class="select select-bordered select-sm">
                                                 <option value="0">Do Not Assign</option>
                                                 @foreach ($flights as $choice)
                                                     <option value="{{ $choice->flightNumber }}"
@@ -50,13 +50,13 @@
                                         @endif
 
                                         @if ($cell['status'] === 'assigned')
-                                            <span class="text-warning d-block"><strong>Assigned.</strong></span>
+                                            <span class="text-warning block"><strong>Assigned.</strong></span>
                                         @elseif ($cell['status'] === 'busy')
-                                            <span class="text-primary d-block">Assigned to another table in this round.</span>
+                                            <span class="text-primary block">Assigned to another table in this round.</span>
                                         @elseif ($cell['status'] === 'preferred')
-                                            <span class="text-success d-block">Available and Preferred Style(s).</span>
+                                            <span class="text-success block">Available and Preferred Style(s).</span>
                                         @elseif ($cell['status'] === 'non-preferred')
-                                            <span class="text-danger d-block">Available but Non-Preferred Style(s).</span>
+                                            <span class="text-error block">Available but Non-Preferred Style(s).</span>
                                         @endif
                                     </td>
                                 @endforeach

@@ -1,11 +1,11 @@
 @php($isEdit = $table !== null)
 @php($selectedStyles = $isEdit ? array_filter(explode(',', (string) $table->tableStyles), fn ($v) => $v !== '') : old('tableStyles', []))
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>Judging Tables: {{ $isEdit ? 'Edit' : 'Add' }} a Table</h1>
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-error">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -20,17 +20,17 @@
                 @method('PUT')
             @endif
 
-            <div class="mb-3 row">
+            <div class="mb-4 row">
                 <label for="tableName" class="col-sm-3 col-form-label">Table Name</label>
                 <div class="col-sm-6">
-                    <input class="form-control" id="tableName" name="tableName" type="text" required value="{{ old('tableName', $table->tableName ?? '') }}">
+                    <input class="input input-bordered" id="tableName" name="tableName" type="text" required value="{{ old('tableName', $table->tableName ?? '') }}">
                 </div>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-4 row">
                 <label for="tableNumber" class="col-sm-3 col-form-label">Table Number</label>
                 <div class="col-sm-6">
-                    <select class="form-select" id="tableNumber" name="tableNumber" required>
+                    <select class="select select-bordered" id="tableNumber" name="tableNumber" required>
                         @foreach (range(1, 100) as $n)
                             <option value="{{ $n }}"
                                 @if ((string) old('tableNumber', $table->tableNumber ?? ($nextTableNumber ?? '')) === (string) $n) selected @endif
@@ -40,10 +40,10 @@
                 </div>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-4 row">
                 <label for="tableLocation" class="col-sm-3 col-form-label">Judging Session</label>
                 <div class="col-sm-6">
-                    <select class="form-select" id="tableLocation" name="tableLocation" required>
+                    <select class="select select-bordered" id="tableLocation" name="tableLocation" required>
                         @foreach ($locations as $loc)
                             <option value="{{ $loc->id }}" @selected((string) old('tableLocation', $table->tableLocation ?? '') === (string) $loc->id)>{{ $loc->judgingLocName }}</option>
                         @endforeach
@@ -51,20 +51,20 @@
                 </div>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-4 row">
                 <label for="tableEntryLimit" class="col-sm-3 col-form-label">Entry Limit</label>
                 <div class="col-sm-6">
-                    <input class="form-control" id="tableEntryLimit" name="tableEntryLimit" type="number" min="1" value="{{ old('tableEntryLimit', $table->tableEntryLimit ?? '') }}">
+                    <input class="input input-bordered" id="tableEntryLimit" name="tableEntryLimit" type="number" min="1" value="{{ old('tableEntryLimit', $table->tableEntryLimit ?? '') }}">
                     <div class="form-text">Overall entry limit for this table/medal group. Leave blank for no limit.</div>
                 </div>
             </div>
 
-            <div class="mb-3 row">
+            <div class="mb-4 row">
                 <span class="col-sm-3 col-form-label">Styles at This Table</span>
                 <div class="col-sm-6">
                     @forelse ($styles as $style)
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="tableStyles[]" id="style_{{ $style->id }}" value="{{ $style->id }}" @checked(in_array((string) $style->id, (array) $selectedStyles, true) || in_array((int) $style->id, (array) $selectedStyles, true))>
+                            <input class="checkbox" type="checkbox" name="tableStyles[]" id="style_{{ $style->id }}" value="{{ $style->id }}" @checked(in_array((string) $style->id, (array) $selectedStyles, true) || in_array((int) $style->id, (array) $selectedStyles, true))>
                             <label class="form-check-label" for="style_{{ $style->id }}">{{ ltrim((string) $style->brewStyleGroup, '0') }}{{ $style->brewStyleNum }}: {{ $style->brewStyle }}</label>
                         </div>
                     @empty

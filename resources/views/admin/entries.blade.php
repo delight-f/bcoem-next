@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-4 mb-3">
+    <section class="container mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}:
             @if ($view === 'paid') Paid @elseif ($view === 'unpaid') Unpaid @else All @endif
             Entries</h1>
@@ -11,10 +11,10 @@
         @endif
 
         {{-- Legacy filters: paid/unpaid view + category + participant --}}
-        <form method="get" action="{{ url('/backoffice/entries') }}" class="row row-cols-auto g-2 align-items-end mb-3">
+        <form method="get" action="{{ url('/backoffice/entries') }}" class="row row-cols-auto g-2 items-end mb-4">
             <div>
                 <label class="form-label" for="f-view">View</label>
-                <select id="f-view" name="view" class="form-select">
+                <select id="f-view" name="view" class="select select-bordered">
                     @foreach ([['default', 'All'], ['paid', 'Paid'], ['unpaid', 'Unpaid']] as [$v, $label])
                         <option value="{{ $v }}" @selected($view === $v)>{{ $label }}</option>
                     @endforeach
@@ -22,21 +22,21 @@
             </div>
             <div>
                 <label class="form-label" for="f-filter">Category</label>
-                <input id="f-filter" name="filter" class="form-control" placeholder="e.g. 01 or C1"
+                <input id="f-filter" name="filter" class="input input-bordered" placeholder="e.g. 01 or C1"
                        value="{{ $filter !== 'default' ? $filter : '' }}">
             </div>
             <div>
                 <label class="form-label" for="f-bid">Participant uid</label>
-                <input id="f-bid" name="bid" class="form-control" placeholder="all"
+                <input id="f-bid" name="bid" class="input input-bordered" placeholder="all"
                        value="{{ $bid !== 'default' ? $bid : '' }}">
             </div>
-            <button type="submit" class="btn btn-outline-secondary">Filter</button>
+            <button type="submit" class="btn btn-outline btn-secondary">Filter</button>
         </form>
 
         @if ($entries->isEmpty())
             <p>No entries found.</p>
         @else
-            <table class="table table-striped table-bordered">
+            <table class="table table-zebra table-bordered">
                 <thead>
                     <tr>
                         <th>Entry</th>
@@ -49,7 +49,7 @@
                         <th>Admin Notes</th>
                         <th>Staff Notes</th>
                         <th>Loc/Box</th>
-                        <th class="d-print-none">Actions</th>
+                        <th class="print:hidden">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,9 +66,9 @@
                             <td>{{ $entry->brewAdminNotes }}</td>
                             <td>{{ $entry->brewStaffNotes }}</td>
                             <td>{{ $entry->brewBoxNum }}</td>
-                            <td class="d-print-none">
+                            <td class="print:hidden">
                                 <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}">Edit</a>
-                                <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-inline"
+                                <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="inline"
                                       onsubmit="return confirm('Delete this entry? Its scores are removed as well. This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
