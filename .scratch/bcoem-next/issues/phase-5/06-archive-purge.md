@@ -4,7 +4,7 @@
 > includes/process/process_archive.inc.php, includes/data_cleanup.inc.php.
 > Ledger: ledger/archive-purge.md — **HIGHEST DATA-LOSS-RISK module.**
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: P5.4/P5.5 admin shell; signed retention statement
 Consumes: ledger/archive-purge.md (pins 1–8 + disposition matrix — REQUIRED)

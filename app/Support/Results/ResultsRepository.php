@@ -53,7 +53,7 @@ final class ResultsRepository
 
         $rows = DB::table($this->name('judging_scores').' as js')
             ->join($this->name('brewing').' as b', 'js.eid', '=', 'b.id')
-            ->join($this->name('brewer').' as br', 'b.brewBrewerID', '=', 'br.id')
+            ->join($this->name('brewer').' as br', 'b.brewBrewerID', '=', 'br.uid')
             ->whereIn('js.scorePlace', self::PLACES)
             ->where('b.brewReceived', 1)
             ->orderBy('b.brewCategorySort')
@@ -89,7 +89,7 @@ final class ResultsRepository
 
         $rows = DB::table($this->name('judging_scores_bos').' as jsb')
             ->join($this->name('brewing').' as b', 'jsb.eid', '=', 'b.id')
-            ->join($this->name('brewer').' as br', 'b.brewBrewerID', '=', 'br.id')
+            ->join($this->name('brewer').' as br', 'b.brewBrewerID', '=', 'br.uid')
             ->whereIn('jsb.scorePlace', self::PLACES)
             ->where('b.brewReceived', 1)
             ->orderByRaw('CAST(jsb.scorePlace AS UNSIGNED)')

@@ -151,3 +151,8 @@ require __DIR__.'/eval.php';
 require __DIR__.'/judging-scores.php';
 
 require __DIR__.'/judging-ajax.php';
+
+require __DIR__.'/outputs.php';
+require __DIR__.'/admin.php';
+require __DIR__.'/backoffice.php';
+require __DIR__.'/archive.php';

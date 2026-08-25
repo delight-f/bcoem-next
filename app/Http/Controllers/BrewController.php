@@ -540,7 +540,9 @@ final class BrewController extends Controller
      */
     private static function styleSort(string $code): string
     {
-        $cat = explode('-', $code)[0];
+        // ltrim first so already-padded input ('01') canonicalizes instead
+        // of re-padding to an unresolvable '001' (styles ledger #2/#4).
+        $cat = ltrim(explode('-', $code)[0], '0');
 
         return ctype_digit($cat) && (int) $cat < 10 ? '0'.$cat : $cat;
     }

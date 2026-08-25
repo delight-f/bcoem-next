@@ -175,9 +175,11 @@ final class JudgingFlightsTest extends PublicSurfaceTestCase
         $response->assertOk();
 
         $html = $response->getContent() ?: '';
-        self::assertStringContainsString('301', $html);
-        self::assertStringContainsString('302', $html);
-        self::assertStringNotContainsString('303', $html);
+        self::assertStringContainsString('<td>301</td>', $html);
+        self::assertStringContainsString('<td>302</td>', $html);
+        // Unreceived entries never reach the grid (ledger #2); assert on
+        // the row cell, not the bare number (collides with CDN hashes).
+        self::assertStringNotContainsString('<td>303</td>', $html);
 
         self::assertTrue(DB::table('judging_flights')->where('flightEntryID', (string) $received)->doesntExist());
         self::assertTrue(DB::table('judging_flights')->where('flightEntryID', (string) $unreceived)->doesntExist());

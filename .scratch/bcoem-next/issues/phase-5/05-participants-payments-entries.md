@@ -5,7 +5,7 @@
 > entries_by_substyle.admin.php, plus upload/upload_scoresheets admin if not
 > already covered by Slice B.
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: Slice B registration/payments data model
 Consumes: —

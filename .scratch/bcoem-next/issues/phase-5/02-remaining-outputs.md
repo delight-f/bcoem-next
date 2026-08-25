@@ -7,7 +7,7 @@
 > staff_points, styles, maps, dropoff, print, results, bos_mat,
 > scoresheets.
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: P5.1 (pipeline locked), P4.4 (scores/BOS data)
 Consumes: ledger/scoring.md, App\Support\Results\ResultsRepository (best-brewer points already live — display only)

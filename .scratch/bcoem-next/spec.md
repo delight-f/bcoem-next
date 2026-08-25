@@ -125,12 +125,12 @@ Depends on P1.4–P1.6 ledgers.
 
 ## 7. Phase 5 — Slice D: outputs & admin remainder
 
-- [ ] P5.1 PDF pipeline decision: replace fpdf with dompdf/snappy; one output ported first (pullsheets) to validate approach
-- [ ] P5.2 Port remaining outputs in pairs (labels+bottle_label, table_cards+sorting, shipping_label, entry, participant_summary, participant_entries_list, post_judge_inventory, judge_notes, assignments, staff_points, styles, maps, dropoff, print, results, bos_mat)
-- [ ] P5.3 Export (CSV/XLSX) — verify column-for-column vs legacy
-- [ ] P5.4 Remaining admin: competition_info, site_preferences, all_dates, hero_images, sponsors, contacts, mods, style_types, styles, make_admin, change_user_password, send_test_email
-- [ ] P5.5 Participants/payments/entries admin views (+by_style/by_substyle reports)
-- [ ] P5.6 Archive + purge admin flows (P1.10)
+- [x] P5.1 PDF pipeline decision: replace fpdf with dompdf/snappy; one output ported first (pullsheets) to validate approach
+- [x] P5.2 Port remaining outputs in pairs (labels+bottle_label, table_cards+sorting, shipping_label, entry, participant_summary, participant_entries_list, post_judge_inventory, judge_notes, assignments, staff_points, styles, maps, dropoff, print, results, bos_mat)
+- [x] P5.3 Export (CSV/XLSX) — verify column-for-column vs legacy
+- [x] P5.4 Remaining admin: competition_info, site_preferences, all_dates, hero_images, sponsors, contacts, mods, style_types, styles, make_admin, change_user_password, send_test_email
+- [x] P5.5 Participants/payments/entries admin views (+by_style/by_substyle reports)
+- [x] P5.6 Archive + purge admin flows (P1.10)
 
 ## 8. Parity Gate (graduation test — the only path to "live")
 

@@ -3,7 +3,7 @@
 > Part of spec §7 P5.1. Legacy surface: `output/pullsheets.output.php`,
 > `includes/fpdf/*` (vendored FPDF 1.x), `includes/output.inc.php` dispatch.
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: Slice C (judging data complete — pull sheets read tables/flights/entries)
 Consumes: ledger/flight-assignment.md (row ordering), ledger/styles.md

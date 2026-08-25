@@ -2,7 +2,7 @@
 
 > Part of spec §7 P5.3. Legacy surface: `output/export.output.php`.
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: P5.2 (entry/score data shapes settled)
 Consumes: —

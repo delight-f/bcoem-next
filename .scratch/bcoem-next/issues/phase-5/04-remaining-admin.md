@@ -4,7 +4,7 @@
 > all_dates, hero_images, sponsors, contacts, mods, style_types, styles,
 > make_admin, change_user_password, send_test_email (.admin.php each).
 
-Status: pending
+Status: done
 Phase: 5 (Slice D)
 Depends on: Slice B admin shell
 Consumes: ledger/styles.md (styles/style_types/mods semantics — REQUIRED reading)
