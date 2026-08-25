@@ -210,4 +210,12 @@ return [
     'alert_email_not_valid' => 'Email format is not valid.',
     'alert_email_in_use' => 'The email address you entered is already in use &ndash; you will not be able to complete registration. <strong>Perhaps you already registered using this email address?</strong> If so, please log in.',
     'alert_email_not_in_use' => 'Congratulations! The email address you entered is not in use.',
+    // Judging AJAX (P4.7): practice-session labels (legacy $label_practice_*,
+    // $label_scoresheet_practice from en-US.lang.php).
+    'practice_session' => 'Practice Session',
+    'practice_beer' => 'Practice Beer',
+    'practice_cider' => 'Practice Cider',
+    'practice_mead' => 'Practice Mead',
+    'practice_entry' => 'Practice Entry',
+    'scoresheet_practice' => 'Scoresheet Practice',
 ];

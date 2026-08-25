@@ -24,4 +24,21 @@ final class Place
             default => 'N/A',
         };
     }
+
+    /**
+     * Ledger #3: BOS eligibility per styleTypeBOSMethod — 1→1st only,
+     * 2→top two, 3→top three. Explicit value list, NEVER string >=
+     * comparisons (legacy's common.lib.php:2771 worked only because 'HM'
+     * sorts above digits by accident).
+     *
+     * @return list<string>
+     */
+    public static function bosEligiblePlaces(int $bosMethod): array
+    {
+        return match ($bosMethod) {
+            2 => ['1', '2'],
+            3 => ['1', '2', '3'],
+            default => ['1'],
+        };
+    }
 }

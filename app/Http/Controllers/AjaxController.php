@@ -405,7 +405,7 @@ final class AjaxController extends Controller
      * tags, collapse slashes, re-add. Kept verbatim so stored ajax input
      * matches what the legacy pipeline would have written.
      */
-    private static function sterilize(string $value): string
+    public static function sterilize(string $value): string
     {
         if ($value === '') {
             return '';

@@ -1,0 +1,66 @@
+<x-public-layout :ctx="$ctx" :show-hero="false">
+    <section class="landing-page-section mt-4 mb-3">
+        <h1>Scoresheet Output</h1>
+
+        @include('eval.partials.scoresheet-head', ['style' => $style])
+
+        @if ($evaluations === [])
+            <p>No evaluations recorded for this entry yet.</p>
+        @endif
+
+        @foreach ($evaluations as $evaluation)
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Evaluation #{{ $evaluation->id }} by judge uid {{ $evaluation->evalJudgeInfo }}</span>
+                    <span>
+                        Final score: <strong>{{ $evaluation->evalFinalScore }}</strong>
+                        @if ((int) ($evaluation->evalMiniBOS ?? 0) === 1)
+                            &middot; Mini-BOS
+                        @endif
+                    </span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-3">
+                        <thead><tr><th>Section</th><th>Score</th><th>Max</th></tr></thead>
+                        <tbody>
+                            @foreach (['aroma', 'appearance', 'flavor', 'mouthfeel'] as $section)
+                                @php($score = $evaluation?->{'eval'.ucfirst($section).'Score'})
+                                @if ($score !== null)
+                                    <tr>
+                                        <td>{{ ucfirst($section) }}</td>
+                                        <td>{{ $score }}</td>
+                                        <td>{{ $points[$section] }}</td>
+                                    </tr>
+                                @endif
+                            @endforeach
+                            <tr><td>Overall</td><td>{{ $evaluation->evalOverallScore }}</td><td>{{ $points['overall'] }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    @foreach ([
+                        'aroma' => 'Aroma',
+                        'appearance' => 'Appearance',
+                        'flavor' => 'Flavor',
+                        'mouthfeel' => 'Mouthfeel',
+                        'overall' => 'Overall Impression',
+                    ] as $section => $label)
+                        @php($comments = $evaluation?->{'eval'.ucfirst($section).'Comments'})
+                        @if (! empty($comments))
+                            <h3 class="h6">{{ $label }}</h3>
+                            <p>{{ $comments }}</p>
+                        @endif
+                    @endforeach
+
+                    @if (! empty($evaluation->evalFlaws))
+                        <p class="small"><strong>Flaws:</strong> {{ $evaluation->evalFlaws }}</p>
+                    @endif
+                    @if (! empty($evaluation->evalDescriptors))
+                        <p class="small"><strong>Descriptors:</strong> {{ $evaluation->evalDescriptors }}</p>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+
+        <a class="btn btn-outline-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
+    </section>
+</x-public-layout>

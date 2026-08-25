@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Characterization;
 
+use App\Support\Judging\FlightAssignment;
 use BCOEM\Tests\Integration\MySqlTestCase;
 
 /**
  * Characterization: flight reorder ordering + assignment row shape (P1.5),
  * executed against the baseline schema in CI.
  *
- * The ORDER BY below is copied verbatim from
+ * The ORDER BY is supplied verbatim by
+ * App\Support\Judging\FlightAssignment::reorderOrderBy(), matching legacy
  * includes/db/admin_judging_flights.db.php (reorder view):
  *
  *   ORDER BY f.flightEntryOrder IS NULL ASC,   -- manual order first,
@@ -88,12 +90,7 @@ final class FlightAssignmentDbTest extends MySqlTestCase
 
     private function makeFlight(int $tableId, int $number, int $entryId): int
     {
-        self::db()->insert('judging_flights', [
-            'flightTable' => $tableId,
-            'flightNumber' => $number,
-            'flightEntryID' => $entryId,
-            'flightRound' => 1,
-        ]);
+        self::db()->insert('judging_flights', FlightAssignment::flightRow($tableId, $number, $entryId));
         $id = self::db()->getInsertId();
         if (! is_int($id)) {
             self::fail('insert failed');
@@ -122,8 +119,7 @@ final class FlightAssignmentDbTest extends MySqlTestCase
         $rows = self::unprefixedQuery(
             'SELECT b.id FROM baseline_judging_flights f JOIN baseline_brewing b '
             .'ON f.flightEntryID = b.id WHERE f.flightTable = ? AND f.flightNumber = ? '
-            .'ORDER BY f.flightEntryOrder IS NULL ASC, f.flightEntryOrder ASC, '
-            .'b.brewCategorySort, b.brewSubCategory, b.brewJudgingNumber ASC',
+            .'ORDER BY '.FlightAssignment::reorderOrderBy(),
             [7, 1],
         );
 

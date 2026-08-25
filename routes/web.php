@@ -144,3 +144,10 @@ Route::post('/ajax/valid-email', [AjaxController::class, 'validEmail'])->name('a
 Route::post('/ajax/account-checks', [AjaxController::class, 'accountChecks'])->name('ajax.account_checks');
 Route::post('/ajax/save', [AjaxController::class, 'save'])->name('ajax.save');
 Route::post('/ajax/count-records', [AjaxController::class, 'countRecords'])->name('ajax.count_records');
+
+require __DIR__.'/judging.php';
+require __DIR__.'/eval.php';
+
+require __DIR__.'/judging-scores.php';
+
+require __DIR__.'/judging-ajax.php';

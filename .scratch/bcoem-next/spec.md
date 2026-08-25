@@ -114,14 +114,14 @@ real dump with zero console errors; parity diffs explained or fixed.
 
 Depends on P1.4–P1.6 ledgers.
 
-- [ ] P4.1 Admin judging config: locations, non-judging locations, dropoff, tables, flights, preferences
-- [ ] P4.2 Flight/table assignment engine (port algorithm behind its tests)
-- [ ] P4.3 Judging assignments UI (judge/steward assignment, availability)
-- [ ] P4.4 Score entry (judging_scores) + BOS (judging_scores_bos) + special_best
-- [ ] P4.5 Barcode check-in flow
-- [ ] P4.6 Eval sub-app under `/eval` route prefix (scoresheet variants, checklist, import_scores, practice_session)
-- [ ] P4.7 AJAX: tables_mode, import_scores, practice_session, custom_style
-- [ ] P4.8 Parity + scripted season simulation (assign → score → BOS on corpus dump)
+- [x] P4.1 Admin judging config: locations, non-judging locations, dropoff, tables, flights, preferences
+- [x] P4.2 Flight/table assignment engine (port algorithm behind its tests)
+- [x] P4.3 Judging assignments UI (judge/steward assignment, availability)
+- [x] P4.4 Score entry (judging_scores) + BOS (judging_scores_bos) + special_best
+- [x] P4.5 Barcode check-in flow
+- [x] P4.6 Eval sub-app under `/eval` route prefix (scoresheet variants, checklist, import_scores, practice_session)
+- [x] P4.7 AJAX: tables_mode, import_scores, practice_session, custom_style
+- [x] P4.8 Parity + scripted season simulation (assign → score → BOS on corpus dump)
 
 ## 7. Phase 5 — Slice D: outputs & admin remainder
 

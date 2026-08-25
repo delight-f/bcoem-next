@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Characterization;
 
+use App\Support\Judging\FlightAssignment;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -21,14 +22,15 @@ use PHPUnit\Framework\TestCase;
  *     filtered to brewReceived='1' when not in table-planning mode.
  *
  * The full reorder-ordering contract is pinned end-to-end against real SQL
- * in FlightAssignmentDbTest (CI).
+ * in FlightAssignmentDbTest (CI). Since P4.2 both files exercise the ported
+ * engine App\Support\Judging\FlightAssignment; expectations are unchanged.
  */
 final class FlightAssignmentMathTest extends TestCase
 {
     #[DataProvider('provideFlightSizing')]
     public function test_flight_count_is_ceiling_of_entries_over_pref(int $entries, int $perFlight, int $expected): void
     {
-        self::assertSame($expected, (int) ceil($entries / $perFlight));
+        self::assertSame($expected, FlightAssignment::flightCount($entries, $perFlight));
     }
 
     /** @return iterable<string, array{int, int, int}> */
@@ -46,9 +48,6 @@ final class FlightAssignmentMathTest extends TestCase
     {
         // admin_judging_tables.db.php: last number DESC LIMIT 1, new = +1.
         // Deleted tables leave gaps; numbering never reuses or compacts.
-        $existing = [1, 2, 5];
-        $next = ((int) max($existing)) + 1;
-
-        self::assertSame(6, $next);
+        self::assertSame(6, FlightAssignment::nextTableNumber([1, 2, 5]));
     }
 }
