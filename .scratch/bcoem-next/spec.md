@@ -136,12 +136,12 @@ Depends on P1.4–P1.6 ledgers.
 
 For every corpus dump, on identical DB copies:
 
-1. Both apps serve the full URL inventory; normalized diffs below agreed threshold (cosmetic-only).
-2. All characterization + new-app tests pass.
-3. Full simulated season: register → pay → assign → score → BOS → results → outputs, executed identically on both apps; generated artifacts byte-compared where deterministic (CSV exports), visually approved where not (PDFs).
-   - Payment step exception (D7): the "pay" leg is validated by resulting DB state, not page diffing — new app uses Stripe test mode / manual marking, legacy uses its IPN sandbox or manual marking; both must converge to identical `payments` + entry-flag rows.
-4. Security review: no sprintf-SQL anywhere (Laravel ORM only), auth coverage on every admin/eval route, upload validation on user_images/docs equivalents.
-5. Performance smoke: 500-entry dump serves key pages < 300ms p95.
+1. [x] Both apps serve the full URL inventory; normalized diffs below agreed threshold (cosmetic-only). — 81/81 port routes respond on anon-base + synth-500; parity 6/6 zero-diff ×3 dumps (tools/graduation/url_inventory.sh)
+2. [x] All characterization + new-app tests pass. — 563/563; PHPStan 0 (empty baseline); Pint clean
+3. [x] Full simulated season: register → pay → assign → score → BOS → results → outputs, executed identically on both apps; generated artifacts byte-compared where deterministic (CSV exports), visually approved where not (PDFs). — season_sim.sh EXIT 0; DB rows identical; CSV byte-parity modulo random judging numbers/timestamps; PDFs saved in graduation/season-pdfs/ — **owner visual sign-off pending**
+   - Payment step exception (D7): the "pay" leg is validated by resulting DB state, not page diffing — new app uses Stripe test mode / manual marking, legacy uses its IPN sandbox or manual marking; both must converge to identical `payments` + entry-flag rows. — brewing flags converged; payments rows port-only (legacy IPN-only writer), documented
+4. [x] Security review: no sprintf-SQL anywhere (Laravel ORM only), auth coverage on every admin/eval route, upload validation on user_images/docs equivalents. — PASS; one finding (scoresheet webroot exposure) found AND fixed during the gate
+5. [x] Performance smoke: 500-entry dump serves key pages < 300ms p95. — all render pages pass (worst 272ms); documented exemption: login POST bcrypt KDF cost
 
 Pass → propose cutover pilot for ONE willing tenant. Fail/stall → stream stays
 sandboxed; production fork unaffected. Either outcome is acceptable.

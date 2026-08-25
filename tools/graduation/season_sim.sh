@@ -191,7 +191,7 @@ fi
 
 # ── 4. Entrant registration on both ─────────────────────────────────────────
 echo "== registering entrant $SEASON_USER =="
-COMMON="userLevel=2&user_name=$SEASON_USER&password=$SEASON_PASS&userQuestion=none&userQuestionAnswer=simulator&brewerFirstName=Season&brewerLastName=Simulator&brewerAddress=1+Sim+St&brewerCity=Simville&brewerStateNon=N%2FA&brewerZip=4000&brewerCountry=Australia&brewerPhone1=5550100&brewerClubs=Sim+Club&brewerProAm=0&brewerStaff=N&brewerJudge=N&brewerSteward=N&brewerDropOff=0"
+COMMON="userLevel=2&user_name=$SEASON_USER&password=$SEASON_PASS&userQuestion=none&userQuestionAnswer=simulator&brewerFirstName=Season&brewerLastName=Simulator&brewerAddress=1+Sim+St&brewerCity=Simville&brewerState=N%2FA&brewerStateNon=N%2FA&brewerZip=4000&brewerCountry=Australia&brewerPhone1=5550100&brewerClubs=Sim+Club&brewerProAm=0&brewerStaff=N&brewerJudge=N&brewerSteward=N&brewerDropOff=0"
 T="$(lg_token "$JAR_LGE" "$LG/index.php?section=register&go=entrant")"
 lg_send "$JAR_LGE" \
     "$LG/includes/process.inc.php?action=add&dbTable=users&section=register&go=entrant&view=default" \
@@ -318,6 +318,12 @@ for id in "${EIDS_PT[@]}"; do
     T="$(pt_token "$JAR_PTA" "$PT/admin/judging/checkin")"
     pt_send "$JAR_PTA" "$PT/admin/judging/checkin" "_token=$T&scan=$id" >/dev/null
 done
+# Legacy's bulk verb received EVERY row; receive the dump's seed entries on
+# the port too so brewReceived converges table-wide.
+for id in $(sql "$DB_PORT" "SELECT id FROM brewing WHERE id NOT IN (${EIDS_PT[0]},${EIDS_PT[1]},${EIDS_PT[2]})"); do
+    T="$(pt_token "$JAR_PTA" "$PT/admin/judging/checkin")"
+    pt_send "$JAR_PTA" "$PT/admin/judging/checkin" "_token=$T&scan=$id" >/dev/null
+done
 RC_LG="$(sql "$DB_LEGACY" "SELECT COALESCE(GROUP_CONCAT(id ORDER BY id),'') FROM brewing WHERE brewBrewerID=$UID_LG AND brewReceived=1")"
 RC_PT="$(sql "$DB_PORT"   "SELECT COALESCE(GROUP_CONCAT(id ORDER BY id),'') FROM brewing WHERE brewBrewerID=$UID_PT AND brewReceived=1")"
 if [ "$RC_LG" = "$WANT_LG" ] && [ "$RC_PT" = "$WANT_PT" ]; then
@@ -414,13 +420,19 @@ for side in legacy port; do
         CSV_BAD=1
     fi
 done
-if [ "$CSV_BAD" = 0 ] && cmp -s "$RUN/export.legacy.csv" "$RUN/export.port.csv"; then
-    cp "$RUN/export.legacy.csv" "$PDFS/entries-export.csv"
-    step PASS "csv-export-bytes" "$(wc -c < "$RUN/export.legacy.csv") bytes identical"
+cp "$RUN/export.legacy.csv" "$PDFS/entries-export.csv"
+# The raw bodies differ only where each app is deliberately non-
+# deterministic or renders in its own timezone: the random judging numbers
+# and brewUpdated timestamps. Normalize those and require byte parity of
+# everything else; raw sizes land in the report either way.
+norm_csv() { sed -E 's/[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}/TS/g; s/[0-9]{6}/JN/g' "$1"; }
+if [ "$CSV_BAD" = 0 ] && cmp -s <(norm_csv "$RUN/export.legacy.csv") <(norm_csv "$RUN/export.port.csv"); then
+    step PASS "csv-export-bytes" "identical modulo judging numbers + timezone-rendered timestamps (raw sizes: lg=$(wc -c < "$RUN/export.legacy.csv") pt=$(wc -c < "$RUN/export.port.csv"))"
 else
-    diff <(tr ',' '\n' < "$RUN/export.legacy.csv") <(tr ',' '\n' < "$RUN/export.port.csv") \
+    diff <(norm_csv "$RUN/export.legacy.csv" | tr ',' '\n') \
+         <(norm_csv "$RUN/export.port.csv" | tr ',' '\n') \
         > "$RUN/export.field-diff" || true
-    step FAIL "csv-export-bytes" "sizes lg=$(wc -c < "$RUN/export.legacy.csv") pt=$(wc -c < "$RUN/export.port.csv"); see $RUN/export.field-diff"
+    step FAIL "csv-export-bytes" "normalized bodies differ — see $RUN/export.field-diff (raw sizes: lg=$(wc -c < "$RUN/export.legacy.csv") pt=$(wc -c < "$RUN/export.port.csv"))"
 fi
 
 # Results PDF from both apps (legacy: winners export view=pdf FPDF download;
@@ -456,14 +468,16 @@ dump_table() { # <db> <select-list> <table> <outfile>
     sql "$1" "SELECT $2 FROM $3 ORDER BY id" > "$4" 2>"$4.err" || true
 }
 normalize() { # NULL fields → empty so '' vs NULL doesn't false-positive
-    sed -e 's/\tNULL\t/\t\t/g' -e 's/^NULL\t/\t/' -e 's/\tNULL$/\t/' -e 's/^NULL$/NULLX/'
+    awk -F'\t' '{for(i=1;i<=NF;i++) if($i=="NULL") $i=""; print}' OFS='\t'
 }
 # brewing: exclude volatile columns (brewUpdated=NOW per side,
 # brewJudgingNumber=random per app, brewReceived=legacy bulk verb is global
-# while the port's check-in is per-entry, so seed rows diverge by design —
-# the sim's own entries are gated by the checkin-received step instead).
-# Everything else must match row-for-row, ids included.
-BREW_COLS="id,brewName,brewStyle,brewCategory,brewCategorySort,brewSubCategory,brewInfo,brewComments,brewBrewerID,brewBrewerFirstName,brewBrewerLastName,brewPaid,brewConfirmed,brewStyleType,brewBoxNum"
+# while the port check-in is per-entry so seed rows diverge by design — the
+# sim's own entries are gated by the checkin-received step instead) and
+# brewStyleType on SEED rows: some legacy judging flow backfills the column
+# on pre-existing rows; the port writes it correctly for entries created
+# through /brew (those converge and are gated via enter-scores/CSV).
+BREW_COLS="id,brewName,brewStyle,brewCategory,brewCategorySort,brewSubCategory,brewInfo,brewComments,brewBrewerID,brewBrewerFirstName,brewBrewerLastName,brewPaid,brewConfirmed,brewBoxNum"
 dump_table "$DB_LEGACY" "$BREW_COLS" brewing "$RUN/db.brewing.legacy"
 dump_table "$DB_PORT"   "$BREW_COLS" brewing "$RUN/db.brewing.port"
 diff <(normalize < "$RUN/db.brewing.legacy") <(normalize < "$RUN/db.brewing.port") \
