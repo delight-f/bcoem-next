@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\AllDatesController;
 use App\Http\Controllers\Admin\ChangeUserPasswordController;
 use App\Http\Controllers\Admin\CompetitionInfoController;
 use App\Http\Controllers\Admin\ContactsController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HeroImagesController;
 use App\Http\Controllers\Admin\MakeAdminController;
 use App\Http\Controllers\Admin\ModsController;
@@ -24,7 +25,10 @@ use App\Http\Controllers\Admin\StyleTypesController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function (): void {
-    // competition_info — legacy edit-only surface on contest_info id=1.
+    // Admin landing menu (legacy ?section=admin → admin/default.admin.php).
+    Route::get('/admin', DashboardController::class)
+        ->name('admin.dashboard');
+
     Route::get('/admin/competition-info', [CompetitionInfoController::class, 'edit'])
         ->name('admin.competition_info.edit');
     Route::put('/admin/competition-info', [CompetitionInfoController::class, 'update'])
