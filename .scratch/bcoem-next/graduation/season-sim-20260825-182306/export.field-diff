@@ -1,0 +1,303 @@
+0a1,302
+> ﻿"First Name"
+> "Last Name"
+> "Email Address"
+> Address
+> City
+> State/Province
+> "Zip/Postal Code"
+> Country
+> Club
+> "Entry Number"
+> "Entry Name"
+> Style
+> Category
+> "Category Sort"
+> "Sub Category"
+> "Required Info"
+> Carbonation
+> Sweetness
+> Strength
+> "Brewer's Specifics"
+> "Brewer ID"
+> "Brewer First Name"
+> "Brewer Last Name"
+> Paid
+> ABV
+> "Optional Info"
+> "Admin Notes"
+> "Staff Notes"
+> "Poss Allergens"
+> Received
+> "Final Gravity"
+> "Co Brewer"
+> "Judging Number"
+> Updated
+> Confirmed
+> "Box Num"
+> "Juice Source"
+> "Juice Source Other"
+> Packaging
+> "Pouring Inst"
+> "Rouse Yeast"
+> "Style Type"
+> Table
+> Flight
+> Round
+> Score
+> Place
+> "Best of Show Place"
+> "Style Type"
+> Location
+> Taylor
+> Vance
+> taylor.vance3@example.invalid
+> 
+> 
+> 
+> 
+> Australia
+> "Synthetic Homebrew Club"
+> 1
+> "Anonymized Entry 1"
+> "Specialty IPA"
+> 21
+> 21
+> B
+> "There was no 21C hazy IPA in the drop-down menu. This is a hazy^Standard Strength"
+> 
+> 
+> 
+> 
+> 3
+> Taylor
+> Vance
+> 1
+> 
+> 
+> 
+> 
+> 
+> 1
+> 
+> 
+> 315782
+> "2026-08-14 05:34:20"
+> 1
+> 
+> 
+> 
+> 
+> Normal
+> No
+> Beer
+> Taylor
+> Vance
+> taylor.vance3@example.invalid
+> 
+> 
+> 
+> 
+> Australia
+> "Synthetic Homebrew Club"
+> 2
+> "Anonymized Entry 2"
+> "International Amber Lager"
+> 2
+> 02
+> B
+> 
+> 
+> 
+> 
+> 
+> 3
+> Taylor
+> Vance
+> 1
+> 
+> 
+> 
+> 
+> 
+> 1
+> 
+> 
+> 812739
+> "2026-08-14 05:35:05"
+> 1
+> 
+> 
+> 
+> 
+> Normal
+> No
+> Beer
+> Casey
+> Larkin
+> casey.larkin5@example.invalid
+> 
+> 
+> 
+> 
+> Australia
+> "Synthetic Homebrew Club"
+> 3
+> "Anonymized Entry 3"
+> "Irish Red Ale"
+> 15
+> 15
+> A
+> 
+> 
+> 
+> 
+> 
+> 5
+> Casey
+> Larkin
+> 1
+> 4.7
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 483736
+> "2026-08-14 06:57:49"
+> 1
+> 
+> 
+> 
+> 
+> Normal
+> No
+> Beer
+> Season
+> Simulator
+> season.sim@example.invalid
+> "1 Sim St"
+> Simville
+> 
+> 4000
+> Australia
+> 
+> 4
+> "Season Sim Red"
+> 
+> 15
+> 15
+> A
+> "Irish red ale brewed for the season simulation"
+> 
+> 
+> 
+> 
+> 7
+> Season
+> Simulator
+> 1
+> 
+> 
+> 
+> 
+> 
+> 0
+> 
+> 
+> 235355
+> "2026-08-25 08:23:28"
+> 1
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> Season
+> Simulator
+> season.sim@example.invalid
+> "1 Sim St"
+> Simville
+> 
+> 4000
+> Australia
+> 
+> 5
+> "Season Sim IPA"
+> 
+> 21
+> 21
+> B
+> "Specialty IPA brewed for the season simulation"
+> 
+> 
+> 
+> 
+> 7
+> Season
+> Simulator
+> 1
+> 
+> 
+> 
+> 
+> 
+> 0
+> 
+> 
+> 448385
+> "2026-08-25 08:23:28"
+> 1
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> Season
+> Simulator
+> season.sim@example.invalid
+> "1 Sim St"
+> Simville
+> 
+> 4000
+> Australia
+> 
+> 6
+> "Season Sim Lager"
+> 
+> 1
+> 01
+> A
+> "Light lager brewed for the season simulation"
+> 
+> 
+> 
+> 
+> 7
+> Season
+> Simulator
+> 1
+> 
+> 
+> 
+> 
+> 
+> 0
+> 
+> 
+> 125969
+> "2026-08-25 08:23:29"
+> 1
+> 
+> 
+> 
+> 
+> 
+> 
+> 

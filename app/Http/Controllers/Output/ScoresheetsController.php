@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
+use App\Support\Entries\UserDocs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,8 +20,9 @@ use Illuminate\Http\Response;
  * obfuscated-filename dance (encrypt/decrypt + copy into user_temp)
  * existed to hide paths from the brewer-facing URL; behind this
  * authenticated admin route it is unnecessary, so the port resolves
- * ?file= directly inside public/user_docs (basename-clamped, which also
- * blocks the ../ traversal legacy never checked).
+ * ?file= directly inside the non-public storage/user_docs directory
+ * (basename-clamped, which also blocks the ../ traversal legacy never
+ * checked; files outside the webroot are additionally unreachable by URL).
  *
  * DIVERGENCE: no filename obfuscation, no user_temp copy, no per-entry
  * subdirectory parameter (?view=); the file is streamed in place.
@@ -41,7 +43,7 @@ final class ScoresheetsController extends Controller
             abort(404);
         }
 
-        $path = public_path('user_docs/'.$name);
+        $path = UserDocs::path($name);
         if (! is_file($path)) {
             abort(404);
         }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Archive;
 
 use App\Http\Controllers\Controller;
+use App\Support\Entries\UserDocs;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -288,7 +289,7 @@ final class ArchiveController extends Controller
      */
     private static function archiveUserDocs(string $suffix): void
     {
-        $root = public_path('user_docs');
+        $root = UserDocs::root();
         if (! is_dir($root)) {
             return;
         }

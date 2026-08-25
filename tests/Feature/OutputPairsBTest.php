@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Support\Entries\UserDocs;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,11 +59,13 @@ final class OutputPairsBTest extends PublicSurfaceTestCase
             DB::table('users')->where('user_name', $email)->delete();
         }
 
-        if (! is_dir(public_path('user_docs'))) {
-            mkdir(public_path('user_docs'));
+        $docs = UserDocs::root();
+        if (! is_dir($docs)) {
+            mkdir($docs, 0775, true);
         }
-        file_put_contents(public_path('user_docs/P52b-951001.pdf'), "%PDF-1.4\n%P52b-fake-scoresheet\n%%EOF\n");
-        $this->tempFiles[] = public_path('user_docs/P52b-951001.pdf');
+        $fixture = UserDocs::path('P52b-951001.pdf');
+        file_put_contents($fixture, "%PDF-1.4\n%P52b-fake-scoresheet\n%%EOF\n");
+        $this->tempFiles[] = $fixture;
 
         $this->makeUser(self::ADMIN_EMAIL, self::ADMIN_ID, '1');
         $this->makeUser(self::MEMBER_EMAIL, self::MEMBER_ID, '2');
@@ -73,7 +76,7 @@ final class OutputPairsBTest extends PublicSurfaceTestCase
         foreach ($this->tempFiles as $file) {
             @unlink($file);
         }
-        @rmdir(public_path('user_docs'));
+        @rmdir(UserDocs::root());
 
         // flightEntryID is a CSV column: match members with LIKE, not =.
         foreach (array_merge($this->entryIds, [0]) as $id) {
@@ -155,7 +158,7 @@ final class OutputPairsBTest extends PublicSurfaceTestCase
         $this->loginAs(self::ADMIN_EMAIL);
 
         $payload = "%PDF-1.4\n%P52b-fake-scoresheet\n%%EOF\n";
-        $this->assertSame($payload, file_get_contents(public_path('user_docs/P52b-951001.pdf')));
+        $this->assertSame($payload, file_get_contents(UserDocs::path('P52b-951001.pdf')));
         $response = $this->get('/admin/output/scoresheets?file=P52b-951001.pdf');
 
         $response->assertOk();

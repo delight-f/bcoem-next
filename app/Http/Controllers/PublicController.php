@@ -12,6 +12,7 @@ use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class PublicController extends Controller
 {
-    public function home(): View|RedirectResponse
+    public function home(Request $request): View|RedirectResponse
     {
         // Legacy served login as ?section=login (plus the reset flow via
         // go=password&action=forgot|reset-password); the standalone build
@@ -89,7 +90,7 @@ final class PublicController extends Controller
                 : null,
             'judgingStarted' => $judgingStarted,
             'sponsorsVisible' => $sponsorsVisible,
-            'glance' => $this->glanceCards($ctx, $windows, $langLong),
+            'glance' => $this->glanceCards($ctx, $windows, $langLong, $request->user() !== null),
             'heroImage' => self::heroImage($ctx),
             'salutation' => $salutation,
             'archives' => ResultsRepository::archives(),
@@ -187,7 +188,7 @@ final class PublicController extends Controller
      * cards gated by $at_a_glance_entry_info (FALSE only for pro-edition
      * judges/stewards).
      *
-     * @return list<array{id: string, title: string, pill: string, body: string}>
+     * @return list<array{id: string, title: string, pill: string, color: string, body: string, button: array{text: string, link: string}, buttonColor: string}>
      */
     private function listGlanceCards(TenantContext $ctx, Windows $w, bool $longDates, ?object $brewer): array
     {
@@ -218,7 +219,10 @@ final class PublicController extends Controller
                     2 => self::t('site.judging_concluded'),
                     default => self::t('site.judging_not_started'),
                 },
+                'color' => 'primary',
                 'body' => $body,
+                'button' => ['text' => '', 'link' => ''],
+                'buttonColor' => 'primary',
             ];
         }
 
@@ -234,7 +238,17 @@ final class PublicController extends Controller
                     default => self::t('site.state_before'),
                 };
 
-                return compact('id', 'title', 'pill', 'body');
+                return [
+                    'id' => $id, 'title' => $title, 'pill' => $pill,
+                    'color' => match ($state) {
+                        WindowState::Open => 'success',
+                        WindowState::After => 'danger',
+                        default => 'secondary',
+                    },
+                    'body' => $body,
+                    'button' => ['text' => '', 'link' => ''],
+                    'buttonColor' => 'secondary',
+                ];
             };
 
             $tz = $ctx->prefsStr('prefsTimeZone');
@@ -270,9 +284,9 @@ final class PublicController extends Controller
     }
 
     /**
-     * @return list<array{id: string, title: string, pill: string, body: string}>
+     * @return list<array{id: string, title: string, pill: string, color: string, body: string, button: array{text: string, link: string}, buttonColor: string}>
      */
-    private function glanceCards(TenantContext $ctx, Windows $w, bool $longDates): array
+    private function glanceCards(TenantContext $ctx, Windows $w, bool $longDates, bool $loggedIn): array
     {
         $tz = $ctx->prefsStr('prefsTimeZone');
         $df = $ctx->prefsStr('prefsDateFormat');
@@ -280,6 +294,20 @@ final class PublicController extends Controller
         $style = $longDates ? 'long' : 'short';
 
         $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
+
+        // Legacy at-a-glance.pub.php CTA decision table: each open window's
+        // card carries one button (empty link = disabled variant); closed
+        // windows render the danger pill and no button.
+
+        $buttonFor = function (WindowState $state, bool $capReached, callable $whenOpen): array {
+            // Legacy at-a-glance.pub.php: closed/capped windows carry no CTA.
+            /** @var array{text: string, link: string} $button */
+            $button = $state === WindowState::Open && ! $capReached
+                ? $whenOpen()
+                : ['text' => '', 'link' => ''];
+
+            return $button;
+        };
 
         $totalEntries = (int) DB::table('brewing')->count();
         $paidEntries = (int) DB::table('brewing')->where('brewPaid', 1)->count();
@@ -301,29 +329,64 @@ final class PublicController extends Controller
         }
         $entryBody .= '</ul>';
 
-        $cards[] = ['id' => 'entries', 'title' => self::t('site.entries'), 'pill' => self::t('site.status'), 'body' => $entryBody];
+        $cards[] = ['id' => 'entries', 'title' => self::t('site.entries'), 'pill' => self::t('site.status'), 'color' => 'primary', 'body' => $entryBody, 'button' => ['text' => '', 'link' => ''], 'buttonColor' => 'primary'];
 
-        $windowCard = function (string $id, string $title, WindowState $state, ?string $openAt, ?string $closeAt, bool $capReached = false): array {
+        $windowCard = function (string $id, string $title, WindowState $state, ?string $openAt, ?string $closeAt, bool $capReached = false, ?array $button = null): array {
+            /** @var array{text: string, link: string} $cta */
+            $cta = $button ?? ['text' => '', 'link' => ''];
             $body = '<ul class="list-unstyled">'
                 .'<li><strong>'.self::t('site.open_label').'</strong> &ndash; '.($openAt ?? self::t('site.not_set')).'</li>'
                 .'<li><strong>'.self::t('site.close_label').'</strong> &ndash; '.($closeAt ?? self::t('site.not_set')).'</li>'
                 .($capReached ? '<li>'.self::t('site.cap_reached').'</li>' : '')
                 .'</ul>';
-            $pill = match ($state) {
-                WindowState::Open => self::t('site.state_open'),
-                WindowState::After => self::t('site.state_closed'),
-                default => self::t('site.state_before'),
+            [$pill, $color] = match ($state) {
+                WindowState::Open => [self::t('site.state_open'), 'success'],
+                WindowState::After => [self::t('site.state_closed'), 'danger'],
+                default => [self::t('site.state_before'), 'secondary'],
             };
 
-            return compact('id', 'title', 'pill', 'body');
+            return [
+                'id' => $id, 'title' => $title, 'pill' => $pill, 'color' => $color,
+                'body' => $body,
+                'button' => $cta,
+                'buttonColor' => $color === 'danger' ? 'secondary' : $color,
+            ];
         };
 
+        // Entry card: legacy shows "Add Entry" for logged-in entrants with
+        // remaining slots; anonymous visitors get the disabled "Log In to
+        // Enter" variant (at-a-glance.pub.php:158-175).
+        $entryButton = $buttonFor($w->entry, false, function () use ($ctx, $loggedIn): array {
+            if (! $loggedIn) {
+                return ['text' => self::t('site.log_in_to_enter'), 'link' => ''];
+            }
+            $limit = self::numericOrNull($ctx->prefsStr('prefsEntryLimit'));
+            $remaining = $limit === null ? PHP_INT_MAX : max(0, $limit - (int) DB::table('brewing')->count());
+
+            return ['text' => self::t('site.add_entry'), 'link' => $remaining > 0 ? url('/brew') : ''];
+        });
+
+        $accountButton = $buttonFor($w->registration, false, fn (): array => $loggedIn
+            ? ['text' => self::t('site.edit_account'), 'link' => url('/list/edit-account')]
+            : ['text' => self::t('site.register'), 'link' => url('/register')]);
+
+        $judgeButton = $buttonFor($w->judge, $w->judgeCapReached, fn (): array => $loggedIn
+            ? ['text' => self::t('site.edit_account'), 'link' => url('/list/edit-account')]
+            : ['text' => self::t('site.register_as_judge'), 'link' => url('/register/judge')]);
+
+        $stewardButton = $buttonFor($w->judge, $w->stewardCapReached, fn (): array => $loggedIn
+            ? ['text' => self::t('site.edit_account'), 'link' => url('/list/edit-account')]
+            : ['text' => self::t('site.register_as_steward'), 'link' => url('/register/steward')]);
+
         $cards[] = $windowCard('account-registration', self::t('site.account_registration'), $w->registration,
-            $fmt($ctx->contestEpoch('contestRegistrationOpen')), $fmt($ctx->contestEpoch('contestRegistrationDeadline')));
+            $fmt($ctx->contestEpoch('contestRegistrationOpen')), $fmt($ctx->contestEpoch('contestRegistrationDeadline')),
+            button: $accountButton);
         $cards[] = $windowCard('judge-registration', self::t('site.judge_registration'), $w->judge,
-            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')), $w->judgeCapReached);
+            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')),
+            $w->judgeCapReached, $judgeButton);
         $cards[] = $windowCard('steward-registration', self::t('site.steward_registration'), $w->judge,
-            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')), $w->stewardCapReached);
+            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')),
+            $w->stewardCapReached, $stewardButton);
         $cards[] = $windowCard('drop-off', self::t('site.drop_off'), $w->dropoff,
             $fmt($ctx->contestEpoch('contestDropoffOpen')), $fmt($ctx->contestEpoch('contestDropoffDeadline')));
 

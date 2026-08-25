@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\DB;
  * construction and load-bearing for handwriting legibility on scoresheets.
  * Uniqueness is app-level only (schema has no unique index, ledger #9):
  * the loop re-rolls while the number is already stored in `brewing` OR a
- * `$USER_DOCS/<num>.pdf` scoresheet file exists. The port checks
- * `public/user_docs` when the directory is present; tenants without one
- * (the standalone build so far) just get the DB check.
+ * `$USER_DOCS/<num>.pdf` scoresheet file exists. The port checks the
+ * non-public `storage/user_docs` directory when present; tenants without
+ * one (the standalone build so far) just get the DB check.
  */
 final class JudgingNumber
 {
@@ -33,8 +33,8 @@ final class JudgingNumber
                 ->where('brewJudgingNumber', $number)
                 ->exists();
 
-            if (! $taken && is_dir(public_path('user_docs'))) {
-                $taken = is_file(public_path('user_docs/'.strtolower($number).'.pdf'));
+            if (! $taken && is_dir(UserDocs::root())) {
+                $taken = is_file(UserDocs::path(strtolower($number).'.pdf'));
             }
         } while ($taken);
 
