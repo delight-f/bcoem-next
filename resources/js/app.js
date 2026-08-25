@@ -52,10 +52,38 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
     revealables.forEach((el) => el.classList.add('active-element'));
 }
 
-// daisyUI <dialog> modals: open via data-open-modal="modal-id".
-document.querySelectorAll('[data-open-modal]').forEach((btn) =>
-    btn.addEventListener('click', () => {
-        const modal = document.getElementById(btn.dataset.openModal);
-        if (modal && typeof modal.showModal === 'function') modal.showModal();
+
+// Admin chrome (nav.sec.php semantics without Bootstrap JS):
+// top-bar + offcanvas dropdowns toggle on click, close on outside click.
+document.querySelectorAll('.dropdown-toggle, .my-dropdown').forEach((toggler) =>
+    toggler.addEventListener('click', (e) => {
+        e.preventDefault();
+        const li = toggler.closest('.dropdown');
+        const wasOpen = li.classList.contains('open');
+        document.querySelectorAll('.dropdown.open').forEach((d) => d.classList.remove('open'));
+        if (!wasOpen) li.classList.add('open');
+    }),
+);
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown.open').forEach((d) => d.classList.remove('open'));
+    }
+});
+
+
+// Admin dashboard accordion (Bootstrap panel collapse without Bootstrap JS):
+// clicking a panel title toggles its body; open one per group (accordion).
+document.querySelectorAll('.panel-collapse-toggle').forEach((toggler) =>
+    toggler.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = document.getElementById(toggler.dataset.target);
+        if (!target) return;
+        const group = toggler.closest('.panel-group');
+        if (group) {
+            group.querySelectorAll('.panel-collapse.collapse.in').forEach((open) => {
+                if (open !== target) open.classList.remove('in');
+            });
+        }
+        target.classList.toggle('in');
     }),
 );

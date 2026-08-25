@@ -113,6 +113,9 @@ final class DashboardController extends Controller
                 'registration' => $windows->registration === WindowState::Open,
                 'judge' => $windows->judge === WindowState::Open,
             ],
+            // sidebar.admin.php tail: server environment line
+            'phpVersion' => PHP_VERSION,
+            'dbVersion' => (string) (DB::selectOne('SELECT VERSION() AS v')->v ?? ''),
             'updated' => DateFmt::dateTime(
                 $now,
                 $ctx->prefs['prefsTimeZone'] ?? null,

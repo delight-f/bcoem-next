@@ -12,62 +12,69 @@
             {{-- default.admin.php:473-490 action row. Reset Competition Info is
                 the non-hosted variant; Publish Results / Launch Awards
                 Presentation have no port equivalent and are omitted. --}}
-            <div class="row bcoem-admin-element mb-4 g-2">
-                <div class="col-lg-3 col-md-12">
-                    <a class="btn btn-info btn-sm w-full" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
+            <div class="row bcoem-admin-element mb-4">
+                <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                    <a class="btn btn-info btn-sm btn-block" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
                 </div>
                 @if ($status['postCompTasks'])
-                    <div class="col-lg-3 col-md-12">
-                        <a class="btn btn-info btn-sm w-full" href="#" data-open-modal="post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <a class="btn btn-info btn-sm btn-block" href="#" data-open-modal="post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
                     </div>
                 @endif
                 @if ($status['showBest'])
-                    <div class="col-lg-3 col-md-12">
-                        <button type="button" class="btn btn-info btn-sm w-full" data-open-modal="preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <button type="button" class="btn btn-info btn-sm btn-block" data-open-modal="preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
                     </div>
                 @endif
             </div>
 
             <div class="bcoem-admin-dashboard-accordion">
-                <div class="row g-4">
+                <div class="row">
                     @foreach (['left' => $left, 'right' => $right] as $side => $sections)
-                        <div class="col-lg-6">
+                        <div class="col col-lg-6 col-md-12 col-sm-12 col-xs-12">
+                            <div class="panel-group" id="accordion-{{ $side }}">
                             @foreach ($sections as [$title, $icon, $help, $links])
-                                <div class="collapse collapse-arrow bg-base-200">
-                                    <input type="checkbox" />
-                                    <div class="collapse-title font-medium">
-                                        <i class="fa {{ $icon }} me-2"></i>{{ $title }}
-                                        <a href="#" role="button" data-open-modal="help-{{ $side }}-{{ $loop->index }}"
-                                            onclick="event.stopPropagation()"
-                                            class="ms-2 no-underline"
-                                            aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
+                                <div id="dashboard-{{ Str::slug($title) }}" class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h4 class="panel-title">
+                                            <a href="#" class="panel-collapse-toggle" data-target="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}
+                                                <a href="#" role="button" data-open-modal="help-{{ $side }}-{{ $loop->index }}"
+                                                    onclick="event.stopPropagation()"
+                                                    aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a><span class="fa {{ $icon }} pull-right"></span>
+                                            </a>
+                                        </h4>
                                     </div>
-                                    <div class="collapse-content">
-                                        <ul class="list-unstyled mb-0">
+                                    <div id="collapse-{{ $side }}-{{ $loop->index }}" class="panel-collapse">
+                                        <div class="panel-body">
                                             @foreach ($links as [$uri, $label])
-                                                <li class="py-1">
-                                                    <a href="{{ url($uri) }}"><i class="fa fa-angle-right me-2"></i>{{ $label }}</a>
-                                                </li>
+                                                <div class="row">
+                                                    <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12 small">
+                                                        <ul class="list-inline">
+                                                            <li><a href="{{ url($uri) }}">{{ $label }}</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
                                             @endforeach
-                                        </ul>
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach
+                            </div>
                         </div>
                     @endforeach
                 </div>
             </div>
         </div>
-
-        {{-- sidebar.admin.php: Donate + Competition Status panel --}}
-        <div class="sidebar col-lg-3">
-            <div class="bcoem-admin-element mb-3">
-                <a class="btn btn-neutral btn-sm w-full mb-2" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa fa-lg fa-paypal"></span></a>
-            </div>
+         {{-- sidebar.admin.php: Donate + Competition Status panel --}}
+         <div class="sidebar col-lg-3">
+             <div class="bcoem-admin-element mb-3">
+                <button type="button" class="btn btn-dark btn-sm btn-block mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
+                 <a class="btn btn-dark btn-sm btn-block" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa fa-lg fa-paypal"></span></a>
+             </div>
 
             <div class="panel panel-info">
                 <div class="panel-heading">
-                    <h4 class="m-0 pb-1">Competition Status<span class="fa fa-2x fa-bar-chart text-info float-right"></span></h4>
+                    <h4 style="margin: 0px; padding-bottom: 5px;">Competition Status<span class="fa fa-2x fa-bar-chart text-info pull-right"></span></h4>
                     <p class="small m-0"><span class="small text-muted">Updated {{ $status['updated'] }}</span></p>
                 </div>
                 <div class="panel-body small">
@@ -163,6 +170,16 @@
                             @endif
                         </div>
                     @endforeach
+                    {{-- sidebar.admin.php tail: server environment line --}}
+                    <div class="small" style="margin-top: 10px; margin-bottom: 0px;">
+                        <em><span class="text-muted">
+                            <ul class="list-inline">
+                                <li>Environment Info:</li>
+                                <li>PHP Version &ndash; {{ $status['phpVersion'] }}</li>
+                                <li>{{ str_contains($status['dbVersion'], 'MariaDB') ? 'MariaDB Version' : 'MySQL Version' }} &ndash; {{ $status['dbVersion'] }}</li>
+                            </ul>
+                        </span></em>
+                    </div>
                 </div>
             </div>
         </div>

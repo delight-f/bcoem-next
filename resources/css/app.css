@@ -145,6 +145,7 @@
     .col-auto { flex: 0 0 auto; width: auto; }
     .col-12 { flex: 0 0 auto; width: 100%; }
     @media (min-width: 576px) {
+        .col-xs-12 { flex: 0 0 auto; width: 100%; }
         .col-sm-1 { flex: 0 0 auto; width: 8.33333333%; }
         .col-sm-2 { flex: 0 0 auto; width: 16.66666667%; }
         .col-sm-3 { flex: 0 0 auto; width: 25%; }
@@ -163,6 +164,7 @@
         .col-lg-3 { flex: 0 0 auto; width: 25%; }
         .col-lg-6 { flex: 0 0 auto; width: 50%; }
         .col-lg-9 { flex: 0 0 auto; width: 75%; }
+        .col-lg-12 { flex: 0 0 auto; width: 100%; }
     }
     .g-2 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.5rem; }
     .g-3 { --bs-gutter-x: 1rem; --bs-gutter-y: 1rem; }
@@ -199,7 +201,12 @@
         margin-left: -1.5em;
         margin-top: 0.25em;
     }
-    .text-muted { color: #6c757d; }
+    .small { font-size: 0.875em; }
+    .mb-2 { margin-bottom: 0.5rem !important; }
+    .pb-1 { padding-bottom: 0.25rem !important; }
+    .pb-1 { padding-bottom: 0.25rem !important; }
+    .pb-2 { padding-bottom: 0.5rem !important; }
+    .pb-3 { padding-bottom: 1rem !important; }
 
     /* Nav pills/tabs */
     .nav { display: flex; flex-wrap: wrap; padding-left: 0; margin-bottom: 0; list-style: none; }
@@ -617,16 +624,16 @@ html {
 [data-theme="bcoem-brux"] h5,
 [data-theme="bcoem-brux"] h6 {
     font-family: "Merriweather", Georgia, serif;
-    font-weight: 800;
-    margin: 0;
-    padding: 10px 0 20px 0;
+ [data-theme="bcoem-brux"] h1 {
+     padding: 15px 0 25px 0;
+ }
+[data-theme="bcoem-brux"] .page-header h1 {
+    font-size: 2em;
 }
-[data-theme="bcoem-brux"] h1 {
-    padding: 15px 0 25px 0;
-}
-[data-theme="bcoem-brux"] .page-header {
-    margin: 0 0 15px 0;
-    padding: 0;
+ [data-theme="bcoem-brux"] .page-header {
+     margin: 0 0 15px 0;
+     padding: 0;
+ }
 }
 [data-theme="bcoem-brux"] .lead {
     font-weight: 400;
@@ -664,4 +671,332 @@ html {
     justify-content: space-between;
     gap: 0.5rem;
 }
-.pull-right { float: right; }
+
+/* ---- Admin top bar + off-canvas menu (legacy sections/nav.sec.php) ----
+   Scoped to .navbar-inverse so daisyUI's .navbar (public pages) is untouched. */
+.navbar-inverse {
+    min-height: 50px;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    border-color: #303E4B;
+    background: #303E4B;
+    background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
+    box-shadow: 0px 3px 3px 0px rgba(230, 230, 230, 0.75);
+    border-radius: 0;
+    border-width: 0 0 1px;
+}
+.admin-nav-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+[data-theme="bcoem-brux"] #main-content {
+    padding-top: 60px;
+}
+.pull-right {
+    float: right;
+}
+@media (min-width: 768px) {
+    [data-theme="bcoem-brux"] h1 { font-size: 36px; }
+    [data-theme="bcoem-brux"] h2 { font-size: 30px; }
+    [data-theme="bcoem-brux"] h3 { font-size: 24px; }
+    [data-theme="bcoem-brux"] h4 { font-size: 18px; }
+    [data-theme="bcoem-brux"] h5 { font-size: 14px; }
+    [data-theme="bcoem-brux"] h6 { font-size: 12px; }
+}
+.navbar-inverse .navbar-nav > li > a {
+    color: #bec8d8;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    line-height: 20px;
+}
+/* brux a:not(.btn):visited outranks the base rule — pin all states grey */
+.navbar-inverse .navbar-nav > li > a:visited {
+    color: #bec8d8;
+}
+.navbar-inverse .navbar-nav > li > a:hover,
+.navbar-inverse .navbar-nav > li > a:focus {
+    color: #DFE4EC;
+    background-color: transparent;
+}
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+.navbar-nav > li {
+    position: relative;
+}
+.navbar-nav > li > a {
+    display: block;
+    padding: 10px 15px;
+    line-height: 20px;
+}
+.navbar-right {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+}
+.navbar-nav .open > a {
+    background-color: #303E4B;
+    color: #DFE4EC;
+}
+.caret {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+    border-top: 4px dashed;
+    border-top: 4px solid;
+    border-right: 4px solid transparent;
+    border-left: 4px solid transparent;
+}
+.dropdown {
+    position: relative;
+}
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    display: none;
+    float: left;
+    min-width: 160px;
+    padding: 5px 0;
+    margin: 2px 0 0;
+    font-size: 14px;
+    text-align: left;
+    list-style: none;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+}
+.dropdown-menu > li > a,
+.dropdown-menu .dropdown-item {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+    width: 100%;
+    text-align: left;
+}
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus,
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    color: #262626;
+    text-decoration: none;
+    background-color: #f5f5f5;
+}
+.dropdown-menu .dropdown-header {
+    display: block;
+    padding: 3px 20px;
+    font-size: 12px;
+    line-height: 1.42857143;
+    color: #777;
+    white-space: nowrap;
+}
+.dropdown-menu .divider {
+    height: 1px;
+    margin: 9px 0;
+    overflow: hidden;
+    background-color: #e5e5e5;
+}
+.dropdown.open .dropdown-menu {
+    display: block;
+}
+.navmenu {
+    width: 300px;
+    height: 100%;
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    z-index: 1040;
+    padding-top: 50px;
+    display: none;
+}
+.navmenu-fixed-right {
+    right: 0;
+}
+.navmenu.in {
+    display: block;
+}
+.navmenu-brand {
+    padding: 10px 15px;
+    font-size: 18px;
+    line-height: 20px;
+}
+.navmenu .nav > li > a {
+    color: #bec8d8;
+    padding: 10px 15px;
+}
+.navmenu .nav > li > a:hover,
+.navmenu .nav > li > a:focus {
+    color: #DFE4EC;
+    background-color: transparent;
+}
+.navmenu .navmenu-nav {
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
+}
+.navmenu .navmenu-nav > li > a {
+    display: block;
+    padding: 10px 15px;
+    color: #bec8d8;
+}
+.navmenu .navmenu-nav > li > a:hover,
+.navmenu .navmenu-nav > li > a:focus {
+    color: #DFE4EC;
+    background-color: #303E4B;
+}
+.navmenu .navmenu-nav .dropdown-menu {
+    position: static;
+    float: none;
+    width: auto;
+    margin-top: 0;
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+    display: none;
+    padding: 0 0 0 15px;
+}
+.navmenu .navmenu-nav > li.open > .dropdown-menu {
+    display: block;
+}
+.navmenu .navmenu-nav .dropdown-menu > li {
+    margin: 0;
+}
+.navmenu .navmenu-nav .dropdown-menu > li > a {
+    color: #bec8d8;
+    padding: 4px 15px;
+    line-height: 20px;
+}
+.navmenu .navmenu-nav .dropdown-menu > li > a:hover {
+    color: #DFE4EC;
+    background-color: transparent;
+}
+.bcoem-admin-menu-disabled {
+    color: #acc0c7 !important;
+}
+.off-canvas-header {
+    color: #DFE4EC;
+    font-weight: bold;
+}
+
+/* ---- Bootstrap panels (admin dashboard accordion + Competition Status) ---- */
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.panel-default {
+    border-color: #bec8d8;
+}
+.panel-default > .panel-heading {
+    color: #303E4B;
+    background-color: #DFE4EC;
+    border-color: #bec8d8;
+}
+.panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+.panel-title {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 16px;
+    color: inherit;
+}
+.panel-title > a,
+[data-theme="bcoem-brux"] .panel-title > a,
+[data-theme="bcoem-brux"] .panel-heading .panel-title > a,
+[data-theme="bcoem-brux"] .panel-heading .panel-title > a:hover {
+    color: inherit;
+    text-decoration: none;
+}
+.panel-info {
+    border-color: #B3E5FC;
+}
+.panel-body {
+    padding: 15px;
+}
+.panel-collapse {
+    display: none;
+}
+.panel-collapse.in {
+    display: block;
+}
+.panel-title .pull-right {
+    margin-top: 2px;
+}
+
+/* ---- Bootstrap buttons (admin action row + sidebar) ---- */
+.btn-info {
+    color: #fff !important;
+    background-color: #29B6F6;
+    border-color: #0288D1;
+}
+.btn-info:hover,
+.btn-info:focus {
+    color: #fff !important;
+    background-color: #039BE5;
+    border-color: #0288D1;
+}
+.btn-dark {
+    color: #ffffff !important;
+    background-color: #262626;
+    border-color: #212121;
+}
+.btn-dark:hover,
+.btn-dark:focus {
+    color: #ffffff !important;
+    background-color: #424242;
+    border-color: #212121;
+}
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
+}
+.btn-block {
+    display: block;
+    width: 100%;
+}
+.list-inline {
+    padding-left: 0;
+    list-style: none;
+    margin-left: -5px;
+}
+.list-inline > li {
+    display: inline-block;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+.hidden-xs { display: none; }
+@media (min-width: 768px) {
+    .hidden-sm { display: none; }
+}
+@media (min-width: 992px) {
+    .hidden-md { display: none; }
+}
+.hide-loader { cursor: pointer; }

@@ -21,14 +21,111 @@
 
 <a name="top"></a>
 
-<header id="home" class="site-header">
-    <nav id="site-nav" class="site-nav family-sans navbar fixed top-0 text-white print:hidden" style="z-index: 1000;">
-        <div class="container-fluid flex flex-wrap items-center">
-            <a class="btn btn-ghost" href="{{ url()->current() === url('/') ? '#home' : url('/') }}"><i class="fas fa-home me-2"></i></a>
-            <input type="checkbox" id="nav-toggle" class="peer hidden">
-            <label for="nav-toggle" class="btn btn-ghost btn-square md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
-            <section id="nav-menu" class="md:ms-auto w-full md:w-auto flex-col md:flex-row items-start md:items-center hidden peer-checked:flex md:flex">
-                @php($onLanding = request()->routeIs('home'))
+@if ($isAdminSide)
+    {{-- Legacy admin chrome (index.legacy.php + sections/nav.sec.php):
+        inverse navbar (Home left; print, user dropdown, Admin offcanvas
+        right), then the admin off-canvas "Admin Essentials" menu.
+        Class names avoid daisyUI's .collapse (accordion) on purpose. --}}
+    <nav class="navbar-inverse navbar-fixed-top print:hidden" style="z-index: 1000;">
+        <div class="container-fluid">
+            <div class="admin-nav-body">
+                <ul class="nav navbar-nav">
+                    <li><a class="hide-loader" href="{{ url('/') }}">Home</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a class="hide-loader hidden-xs hidden-sm hidden-md" href="#" onclick="window.print()" role="button"><span class="fa fa-print"></span></a></li>
+                    @auth
+                        <li class="dropdown">
+                            <a href="#" class="my-dropdown" role="button"><span class="fa fa-user"></span> <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li class="dropdown-header"><strong>{{ auth()->user()->user_name }}</strong></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
+                                <li><a href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li>
+                                    <form method="post" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item" tabindex="-1">{{ __('site.log_out') }}</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                        @if (auth()->user()->isAdmin())
+                            <li><a href="#" id="admin-offcanvas-open" role="button"><i class="fa fa-chevron-circle-left"></i> {{ __('site.admin_short') }}</a></li>
+                        @endif
+                    @endauth
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="navbar-inverse navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas" id="admin-offcanvas">
+        <div class="navmenu-brand disabled off-canvas-header">Admin Essentials Menu</div>
+        <ul class="nav navmenu-nav">
+            <li class="disabled"><a href="#"><em class="bcoem-admin-menu-disabled">This menu contains only essential functions. Select <strong>Admin Dashboard</strong> for all options.</em></a></li>
+            <li><a href="{{ url('/admin') }}">Admin Dashboard</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Competition Preparation <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/dates') }}">Edit All Competition Dates</a></li>
+                    <li><a href="{{ url('/admin/competition-info') }}">Edit Competition Info</a></li>
+                    <li><a href="{{ url('/admin/contacts') }}">Manage Contacts</a></li>
+                    <li><a href="{{ url('/admin/judging/special-best') }}">Manage Custom Categories</a></li>
+                    <li><a href="{{ url('/admin/dropoff') }}">Manage Drop-Off Locations</a></li>
+                    <li><a href="{{ url('/admin/judging/locations') }}">Manage Judging Sessions</a></li>
+                    <li><a href="{{ url('/admin/judging/non-judging') }}">Manage Non-Judging Sessions</a></li>
+                    <li><a href="{{ url('/admin/sponsors') }}">Manage Sponsors</a></li>
+                    <li><a href="{{ url('/admin/styles') }}">Manage Styles Accepted</a></li>
+                    <li><a href="{{ url('/admin/style-types') }}">Manage Style Types</a></li>
+                    <li><a href="{{ url('/admin/hero-images') }}">Upload Logo Images</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Entries, Payments, and Participants <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
+                    <li><a href="{{ url('/backoffice/payments') }}">Manage Payments</a></li>
+                    <li><a href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
+                    <li><a href="{{ url('/admin/judging/flights') }}">Assign Judges</a></li>
+                    <li><a href="{{ url('/admin/judging/flights') }}">Assign Stewards</a></li>
+                    <li><a href="{{ url('/register/entrant') }}">Quick Register a Judge</a></li>
+                    <li><a href="{{ url('/register/entrant') }}">Quick Register Steward</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Sorting <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/backoffice/entries') }}">Manually</a></li>
+                    <li><a href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Organizing <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}">Assign Judges/Stewards to Tables</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Scoring <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/output/scoresheets') }}">Upload Scoresheets</a></li>
+                    <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
+                    <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+@else
+    <header id="home" class="site-header">
+        <nav id="site-nav" class="site-nav family-sans navbar fixed top-0 text-white print:hidden" style="z-index: 1000;">
+            <div class="container-fluid flex flex-wrap items-center">
+                <a class="btn btn-ghost" href="{{ url()->current() === url('/') ? '#home' : url('/') }}"><i class="fas fa-home me-2"></i></a>
+                <input type="checkbox" id="nav-toggle" class="peer hidden">
+                <label for="nav-toggle" class="btn btn-ghost btn-square md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
+                <section id="nav-menu" class="md:ms-auto w-full md:w-auto flex-col md:flex-row items-start md:items-center hidden peer-checked:flex md:flex">
+                    @php($onLanding = request()->routeIs('home'))
                     @if (! ($judgingStarted ?? false))
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#rules' : url('/').'#rules' }}">{{ __('site.rules') }}</a>
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#volunteers' : url('/').'#volunteers' }}">{{ __('site.volunteers') }}</a>
@@ -54,52 +151,52 @@
                     @else
                         <a class="nav-item nav-link" href="{{ route('login') }}">{{ __('site.log_in') }}</a>
                     @endif
-                </div>
+                </section>
+            </div>
+        </nav>
+        {{-- Legacy renders section alerts (login nudge, archived-data notice)
+             between the nav and the hero (headers.inc.php via alerts.pub.php). --}}
+        @if ((int) request('msg') === 99)
+            <p class="alert alert-warning"><strong>{{ __('site.please_log_in') }}</strong></p>
+        @elseif ((int) request('msg') === 8)
+            <p class="alert alert-warning"><strong>{{ __('site.archived_not_available') }}</strong></p>
+        @endif
+        @if (isset($showHero) && $showHero)
+            {{-- Hero: gradient overlay over a random style-type-appropriate image,
+                 mirroring the live hero band. --}}
+            <style>
+                .layout-hero {
+                    background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.75)), url('{{ asset('images/'.($heroImage ?? 'misc-cropped-bottles_3000x500.webp')) }}');
+                    background-repeat: no-repeat;
+                    background-size: cover;
+                    background-position: center top;
+                }
+            </style>
+            <div id="hero" class="layout-hero text-white flex items-center print:hidden">
+                <section class="container-fluid shadow-text color-hero px-4">
+                    <header>
+                        <h1 class="text-center">{{ $ctx->contestStr('contestName') }}</h1>
+                    </header>
+                </section>
+            </div>
+        @endif
+
+        <div id="salutation" class="text-white bg-black pt-6 pb-4 print:hidden">
+            <section class="container-xxl">
+                {!! $salutation ?? '' !!}
             </section>
         </div>
-    </nav>
-    {{-- Legacy renders section alerts (login nudge, archived-data notice)
-         between the nav and the hero (headers.inc.php via alerts.pub.php). --}}
-    @if ((int) request('msg') === 99)
-        <p class="alert alert-warning"><strong>{{ __('site.please_log_in') }}</strong></p>
-    @elseif ((int) request('msg') === 8)
-        <p class="alert alert-warning"><strong>{{ __('site.archived_not_available') }}</strong></p>
-    @endif
-    @if (isset($showHero) && $showHero)
-        {{-- Hero: gradient overlay over a random style-type-appropriate image,
-             mirroring the live hero band. --}}
-        <style>
-            .layout-hero {
-                background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.75)), url('{{ asset('images/'.($heroImage ?? 'misc-cropped-bottles_3000x500.webp')) }}');
-                background-repeat: no-repeat;
-                background-size: cover;
-                background-position: center top;
-            }
-        </style>
-        <div id="hero" class="layout-hero text-white flex items-center print:hidden">
-            <section class="container-fluid shadow-text color-hero px-4">
-                <header>
-                    <h1 class="text-center">{{ $ctx->contestStr('contestName') }}</h1>
-                </header>
-            </section>
+
+        {{-- Legacy renders a print-only h1 with the contest name on every page
+             after the salutation (L4 DOM order: hero, salutation, print-h1); the
+             text extractor sees it, so it must be present for content parity. --}}
+        <div class="hidden print:block landing-page-section p-4">
+            <h1>{{ $ctx->contestStr('contestName') }}</h1>
         </div>
-    @endif
+    </header>
+@endif
 
-    <div id="salutation" class="text-white bg-black pt-6 pb-4 print:hidden">
-        <section class="container-xxl">
-            {!! $salutation ?? '' !!}
-        </section>
-    </div>
-
-    {{-- Legacy renders a print-only h1 with the contest name on every page
-         after the salutation (L4 DOM order: hero, salutation, print-h1); the
-         text extractor sees it, so it must be present for content parity. --}}
-    <div class="hidden print:block landing-page-section p-4">
-        <h1>{{ $ctx->contestStr('contestName') }}</h1>
-    </div>
-</header>
-
-<div id="main-content" class="container-xxl">
+<div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}">
     {{ $slot }}
 </div>
 
