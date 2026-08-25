@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Host: 127.0.0.1:8395
+Date: Tue, 25 Aug 2026 09:50:34 GMT
+Connection: close
+X-Powered-By: PHP/8.4.23
+Cache-Control: no-store, no-cache, must-revalidate
+Content-Type: text/csv; charset=utf-8
+Content-Disposition: attachment;filename="Synthetic_Competition_Entries_All_All_2026-08-25.csv"
+Pragma: no-cache
+Expires: 0
+

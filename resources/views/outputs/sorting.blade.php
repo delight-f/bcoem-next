@@ -8,14 +8,14 @@
 <meta charset="utf-8">
 <title>Sorting Sheets</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; }
     h2 { font-size: 15px; margin: 0 0 6px; }
     h4 { font-size: 11px; font-weight: normal; margin: 8px 0 4px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
     th, td { border: 1px solid #444; padding: 3px 5px; text-align: left;
              vertical-align: top; }
     th { background-color: #eee; }
-    .no { font-family: monospace; white-space: nowrap; }
+    .no { font-family: 'DejaVu Sans Mono', monospace; white-space: nowrap; }
     .box { width: 40px; height: 40px; border: 1px solid #000;
            display: inline-block; }
     .box-small { width: 16px; height: 16px; border: 1px solid #000;

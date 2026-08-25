@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>Drop-off {{ $mode === 'check' ? 'Check Sheets' : 'Summary' }}</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11pt; }
     h1 { font-size: 16pt; margin-bottom: 4pt; }
     h2 { font-size: 13pt; margin: 0 0 2pt 0; }
     table { width: 100%; border-collapse: collapse; margin-top: 8pt; }

@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>{{ $heading }} Cup Mats</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; }
+    body { font-family: 'DejaVu Sans', sans-serif; }
     table.mat { width: 100%; table-layout: fixed; border-collapse: collapse; }
     table.mat td { width: 33.3%; height: 200pt; border: 0.75pt solid #333; padding: 6pt; vertical-align: top; position: relative; }
     .head { text-align: center; font-size: 9pt; margin: 0 0 4pt 0; }

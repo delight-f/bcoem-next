@@ -9,7 +9,7 @@
 <meta charset="utf-8">
 <title>Entry Bottle Labels</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: {{ $large ? '12px' : '9px' }}; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: {{ $large ? '12px' : '9px' }}; }
     .row::after { content: ""; display: table; clear: both; }
     .cell { float: left; width: 33.33%; box-sizing: border-box;
             border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '210px' : '150px' }};

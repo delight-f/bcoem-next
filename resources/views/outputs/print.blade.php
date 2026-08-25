@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>Contacts</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11pt; }
     h2 { font-size: 14pt; margin: 10pt 0 2pt 0; }
     h2 small { font-size: 10pt; font-weight: normal; color: #444; }
     p { margin: 3pt 0; }

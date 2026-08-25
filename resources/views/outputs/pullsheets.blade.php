@@ -7,7 +7,7 @@
 <meta charset="utf-8">
 <title>Pull Sheets</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; }
     h1 { font-size: 18px; margin: 0 0 4px; }
     h2 { font-size: 13px; margin: 0 0 6px; font-weight: normal; }
     h3 { font-size: 12px; margin: 10px 0 4px; }
@@ -15,7 +15,7 @@
     table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
     th, td { border: 1px solid #444; padding: 4px 6px; vertical-align: top; text-align: left; }
     th { background-color: #eee; }
-    td.no { white-space: nowrap; font-family: monospace; font-size: 12px; }
+    td.no { white-space: nowrap; font-family: 'DejaVu Sans Mono', monospace; font-size: 12px; }
     p.info { margin: 0 0 3px; }
     .page-break { page-break-after: always; }
 </style>

@@ -8,7 +8,7 @@
 <meta charset="utf-8">
 <title>Table Cards</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; }
     h1 { font-size: 22px; margin: 6px 0 2px; }
     h1 small { font-size: 15px; font-weight: normal; }
     h2 { font-size: 13px; font-weight: normal; margin: 0 0 8px; }

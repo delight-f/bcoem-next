@@ -7,7 +7,7 @@
 <meta charset="utf-8">
 <title>Address Labels</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
     td { border: 1px solid #000; height: 72px; padding: 6px 4px;
          vertical-align: top; overflow: hidden; }

@@ -7,7 +7,7 @@
 <meta charset="utf-8">
 <title>Post-Judging Entry Inventory</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #000; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #000; }
     h1 { font-size: 18px; margin: 0 0 10px 0; }
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #999; padding: 3px 5px; text-align: left; vertical-align: top; }

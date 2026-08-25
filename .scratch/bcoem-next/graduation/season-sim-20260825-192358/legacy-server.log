@@ -128,3 +128,19 @@
 [Tue Aug 25 19:24:22 2026] 127.0.0.1:54146 Accepted
 [Tue Aug 25 19:24:23 2026] 127.0.0.1:54146 [200]: GET /includes/output.inc.php?section=table-cards
 [Tue Aug 25 19:24:23 2026] 127.0.0.1:54146 Closing
+[Tue Aug 25 19:47:40 2026] 127.0.0.1:46912 Accepted
+[Tue Aug 25 19:47:40 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown database 'season_sim_legacy_418231' in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php:81
+Stack trace:
+#0 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php(81): mysqli->__construct('127.0.0.1', 'root', Object(SensitiveParameterValue), 'season_sim_lega...', '3306')
+#1 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/paths.php(212): require_once('/home/faraaz/de...')
+#2 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php(13): require_once('/home/faraaz/de...')
+#3 {main}
+  thrown in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php on line 81
+[Tue Aug 25 19:47:40 2026] 127.0.0.1:46912 [500]: GET / - Uncaught mysqli_sql_exception: Unknown database 'season_sim_legacy_418231' in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php:81
+Stack trace:
+#0 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php(81): mysqli->__construct('127.0.0.1', 'root', Object(SensitiveParameterValue), 'season_sim_lega...', '3306')
+#1 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/paths.php(212): require_once('/home/faraaz/de...')
+#2 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php(13): require_once('/home/faraaz/de...')
+#3 {main}
+  thrown in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php on line 81
+[Tue Aug 25 19:47:40 2026] 127.0.0.1:46912 Closing

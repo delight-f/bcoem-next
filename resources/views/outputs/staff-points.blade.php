@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <title>BJCP Points Report</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #000; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #000; }
     h1 { font-size: 18px; margin: 0 0 4px 0; }
     h2 { font-size: 14px; margin: 12px 0 4px 0; }
     .lead { font-size: 11px; margin: 4px 0; }

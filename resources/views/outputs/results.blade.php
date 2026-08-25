@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <title>{{ $contestName }} — Results</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10.5pt; }
     h1 { font-size: 17pt; margin: 0 0 4pt 0; }
     h2 { font-size: 14pt; margin: 14pt 0 4pt 0; }
     h3 { font-size: 12pt; margin: 10pt 0 3pt 0; }

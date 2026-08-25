@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <title>Participant Summary</title>
 <style>
-    body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #000; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #000; }
     h1 { font-size: 18px; margin: 0 0 4px 0; }
     .lead { font-size: 12px; margin: 4px 0; }
     table.entries { width: 100%; border-collapse: collapse; margin-top: 8px; }
