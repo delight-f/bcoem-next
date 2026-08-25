@@ -1,58 +1,71 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# bcoem-next
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A ground-up Laravel rewrite of [BCOE&M](https://www.brewingcompetitions.com/)
+(Brew Competition Online Entry & Management) — behavior-matched to the legacy
+PHP app through a formal parity program, modernized onto a supported stack.
 
-## About Laravel
+## Status
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Phase 5 complete — graduation gate (spec §8) in progress.**
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Slice | Scope | State |
+|---|---|---|
+| A | Public surface | ✅ zero content-diff vs legacy |
+| B | Accounts + registration + payments (Stripe) | ✅ DB-convergence proven |
+| C | Judging: flights, scoring, BOS, eval sub-app, check-in | ✅ 6/6 parity ×3 dumps |
+| D | Outputs (21 PDFs), CSV export (byte-identical), full admin back-office, archive/purge | ✅ gate summary in `.scratch/bcoem-next/parity/slice-d/summary.md` |
+| §8 | Graduation: dual-app simulated season, security review, perf smoke | 🚧 |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Stack
 
-## Learning Laravel
+- PHP 8.5, `declare(strict_types=1)` everywhere; latest Laravel
+- MySQL against the legacy schema (all 24 tables; no migrations for tenant data)
+- dompdf for the output pipeline; Stripe Connect for payments
+- Max-level PHPStan with a **permanently empty baseline**; Pint
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Verification model
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+The port is kept honest against the legacy oracle
+(`brewcompetitiononlineentry`, modernization branch):
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+1. **Characterization tests** pin exact legacy behaviors before reimplementation.
+   Behavior ledgers live in `.scratch/bcoem-next/ledger/`.
+2. **Parity harness** — `tools/parity/parity.sh` boots both apps side-by-side
+   on identical corpus dumps and diffs every public URL:
+   ```bash
+   LEGACY_DIR=~/dev/bcoe/brewcompetitiononlineentry \
+   DUMP_SQL=~/dev/bcoe/corpus/derived/anon-base.sql \
+   PARITY_DB_PREFIX= PARITY_DB_PASS=root tools/parity/parity.sh
+   ```
+3. **Byte-compare legs** — CSV exports must be byte-identical
+   (`tools/parity/fetch_export.sh`).
+4. Auth-gated surfaces are validated by DB-state convergence tests instead of
+   page diffs.
 
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Development
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install && npm ci && npm run build
+cp .env.example .env && php artisan key:generate
+php artisan test                 # 563 tests, MySQL bcoem_test required
+vendor/bin/phpstan analyse --memory-limit=1G
+vendor/bin/pint --dirty
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Feature tests share a local MySQL database `bcoem_test` with the
+`baseline_`-prefixed legacy schema (see CI workflow).
 
-## Contributing
+## Layout
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- `app/Http/Controllers/{Admin,Archive,Eval,Judging,Output}` — slice-scoped controllers
+- `app/Support/{Judging,Eval,Results,Outputs,Tenant}` — ported engines (flight assignment,
+  eval consensus, winners rollups, PDF pipeline, tenant context)
+- `routes/{admin,archive,backoffice,eval,judging*,outputs}.php` — per-slice route files
+- `tools/parity/`, `tools/graduation/` — dual-app verification tooling
+- `.scratch/bcoem-next/` — spec, per-phase tickets, behavior ledgers, gate summaries
 
-## Code of Conduct
+## Explicitly not ported
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+HOSTED/SINGLE mode remnants, deprecated themes, PayPal/IPN transport
+(EOL Jan 2027; replaced by Stripe), vendored FPDF/MysqliDb/phpass-era libraries,
+legacy migration history. See spec §9.
