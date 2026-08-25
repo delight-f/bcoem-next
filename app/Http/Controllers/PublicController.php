@@ -44,6 +44,11 @@ final class PublicController extends Controller
             return redirect('/register/'.$go);
         }
 
+        // Legacy admin entry point (?section=admin → admin/default.admin.php).
+        if (request('section') === 'admin') {
+            return redirect('/admin');
+        }
+
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
