@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\ModsController;
 use App\Http\Controllers\Admin\SendTestEmailController;
 use App\Http\Controllers\Admin\SitePreferencesController;
 use App\Http\Controllers\Admin\SponsorsController;
+use App\Http\Controllers\Admin\UploadScoresheetsController;
 use App\Http\Controllers\Admin\StylesAdminController;
 use App\Http\Controllers\Admin\StyleTypesController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,11 @@ Route::middleware(['web', 'auth'])->group(function (): void {
     // Admin landing menu (legacy ?section=admin → admin/default.admin.php).
     Route::get('/admin', DashboardController::class)
         ->name('admin.dashboard');
+
+    Route::get('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'show'])
+        ->name('admin.upload_scoresheets');
+    Route::post('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'store'])
+        ->name('admin.upload_scoresheets.store');
 
     Route::get('/admin/competition-info', [CompetitionInfoController::class, 'edit'])
         ->name('admin.competition_info.edit');

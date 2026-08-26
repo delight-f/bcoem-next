@@ -110,7 +110,7 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Scoring <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/output/scoresheets') }}">Upload Scoresheets</a></li>
+                    <li><a href="{{ url('/admin/upload-scoresheets') }}">Upload Scoresheets</a></li>
                     <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
                     <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
                 </ul>
