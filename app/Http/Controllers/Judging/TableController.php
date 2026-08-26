@@ -47,6 +47,9 @@ final class TableController extends Controller
         return view('judging.config.tables', [
             'ctx' => TenantContext::load(),
             'tables' => DB::table('judging_tables')->orderBy('tableNumber')->get(),
+            // jPrefsTablePlanning drives the mode alert + switch buttons
+            // (judging_tables.admin.php:594-651).
+            'planning' => (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1',
         ]);
     }
 

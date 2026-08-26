@@ -46,11 +46,16 @@
                                     </div>
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="panel-collapse">
                                         <div class="panel-body">
-                                            @foreach ($links as [$uri, $label])
+                                            @foreach ($links as [$category, $rowLinks])
                                                 <div class="row">
-                                                    <div class="col col-lg-12 col-md-12 col-sm-12 col-xs-12 small">
+                                                    <div class="col col-lg-4 col-md-4 col-sm-4 col-xs-12 small">
+                                                        <strong>{{ $category }}</strong>
+                                                    </div>
+                                                    <div class="col col-lg-8 col-md-8 col-sm-8 col-xs-12 small">
                                                         <ul class="list-inline">
-                                                            <li><a href="{{ url($uri) }}">{{ $label }}</a></li>
+                                                            @foreach ($rowLinks as [$uri, $label])
+                                                                <li><a href="{{ url($uri) }}">{{ $label }}</a></li>
+                                                            @endforeach
                                                         </ul>
                                                     </div>
                                                 </div>

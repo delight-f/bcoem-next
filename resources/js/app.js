@@ -171,3 +171,22 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
             input.addEventListener('input', () => { target.textContent = input.value.length; });
         });
 })();
+
+// Admin Essentials offcanvas (pub/admin-nav.pub.php:383 data-toggle="offcanvas"
+// without Bootstrap JS): the trigger toggles .in on the navmenu panel.
+const offcanvasToggle = document.getElementById('admin-offcanvas-open');
+if (offcanvasToggle) {
+    offcanvasToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('admin-offcanvas')?.classList.toggle('in');
+    });
+    document.addEventListener('click', (e) => {
+        const panel = document.getElementById('admin-offcanvas');
+        if (panel?.classList.contains('in')
+            && !panel.contains(e.target)
+            && e.target !== offcanvasToggle
+            && !offcanvasToggle.contains(e.target)) {
+            panel.classList.remove('in');
+        }
+    });
+}

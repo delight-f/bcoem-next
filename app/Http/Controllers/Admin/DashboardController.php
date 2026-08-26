@@ -137,114 +137,145 @@ final class DashboardController extends Controller
     }
 
     /**
-     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: string}>}>
+     * Admin dashboard panels in default.admin.php order and shape: each
+     * section carries rows of [category label, links] mirroring the legacy
+     * accordion bodies (strong label left, inline action links right).
+     *
+     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: list<array{0: string, 1: string}>}>}>
      */
     private function leftSections(): array
     {
         return [
             ['Competition Preparation', 'fa-wrench',
-                'Set up the competition: important dates, contest info, logos and banners, contacts, special-best awards, drop-off/judging locations, sponsors, and the style stack. Everything here shapes what entrants see.',
+                'Your competition&#39;s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
                 [
-                    ['/admin/dates', 'Edit Important Dates'],
-                    ['/admin/competition-info', 'Edit Competition Info'],
-                    ['/admin/hero-images', 'Upload Logo & Banner Images'],
-                    ['/admin/contacts', 'Manage Contacts'],
-                    ['/admin/contacts/create', 'Add Contact'],
-                    ['/admin/judging/special-best', 'Manage Special Best'],
-                    ['/admin/dropoff', 'Manage Drop-off Locations'],
-                    ['/admin/judging/locations', 'Manage Judging Locations'],
-                    ['/admin/judging/non-judging', 'Manage Non-Judging Locations'],
-                    ['/admin/sponsors', 'Manage Sponsors'],
-                    ['/admin/sponsors/create', 'Add Sponsor'],
-                    ['/admin/styles', 'Manage Styles'],
-                    ['/admin/style-types', 'Manage Style Types'],
+                    ['All Competition Dates', [['/admin/dates', 'Edit']]],
+                    ['Competition Info', [['/admin/competition-info', 'Edit'], ['/admin/hero-images', 'Upload Logo']]],
+                    ['Contacts', [['/admin/contacts', 'Manage'], ['/admin/contacts/create', 'Add']]],
+                    ['Custom Categories', [['/admin/judging/special-best', 'Manage'], ['/admin/judging/special-best/create', 'Add']]],
+                    ['Drop-Off Locations', [['/admin/dropoff', 'Manage'], ['/admin/dropoff/create', 'Add']]],
+                    ['Judging Sessions', [['/admin/judging/locations', 'Manage'], ['/admin/judging/locations/create', 'Add']]],
+                    ['Non-Judging Sessions', [['/admin/judging/non-judging', 'Manage'], ['/admin/judging/non-judging/create', 'Add']]],
+                    ['Sponsors', [['/admin/sponsors', 'Manage'], ['/admin/sponsors/create', 'Add'], ['/admin/hero-images', 'Upload Logos']]],
+                    ['Styles Accepted', [['/admin/styles', 'Manage'], ['/admin/styles/create', 'Add']]],
+                    ['Style Types', [['/admin/style-types', 'Manage'], ['/admin/style-types/create', 'Add']]],
                 ]],
             ['Entries, Payments, and Participants', 'fa-beer',
-                'Manage received entries, mark payments, and maintain participant accounts. The assignment links route to the flights screen.',
+                'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
                 [
-                    ['/backoffice/entries', 'Manage Entries'],
-                    ['/backoffice/payments', 'Manage Payments'],
-                    ['/backoffice/participants', 'Manage Participants'],
-                    ['/admin/judging/flights', 'Assign/Unassign Judges'],
-                    ['/admin/judging/flights', 'Assign/Unassign Stewards'],
-                    ['/admin/judging/flights', 'Assign/Unassign Staff'],
-                    ['/register/entrant', 'Register a Participant'],
+                    ['Entries', [['/backoffice/entries', 'Manage']]],
+                    ['Payments', [['/backoffice/payments', 'Manage']]],
+                    ['Participants', [
+                        ['/backoffice/participants', 'Manage'],
+                        ['/admin/judging/flights', 'Assign/Unassign Judges'],
+                        ['/admin/judging/flights', 'Assign/Unassign Stewards'],
+                        ['/admin/judging/flights', 'Assign/Unassign Staff'],
+                    ]],
+                    ['Register', [
+                        ['/register/entrant', 'A Participant'],
+                        ['/register/judge?view=quick', 'A Judge (Quick)'],
+                        ['/register/judge', 'A Judge (Standard)'],
+                        ['/register/steward?view=quick', 'A Steward (Quick)'],
+                        ['/register/steward', 'A Steward (Standard)'],
+                    ]],
                 ]],
             ['Entry Sorting', 'fa-exchange',
-                'Check entries in via barcode scanner and print sorting/quicksort labels for bottle handling.',
+                'Everything you need to help you with sorting received entries from participants. Check-in entries and print sorting sheets.',
                 [
-                    ['/backoffice/entries', 'Sort Manually'],
-                    ['/admin/judging/checkin', 'Check-in Via Barcode Scanner'],
-                    ['/admin/output/sorting', 'Quicksort & Sorting Sheets'],
-                    ['/admin/output/labels', 'Quicksort Labels'],
+                    ['Entry Check-In', [
+                        ['/backoffice/entries', 'Manually'],
+                        ['/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)'],
+                        ['/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)'],
+                    ]],
+                    ['Sorting Sheets', [['/admin/output/sorting', 'Print']]],
+                    ['Bottle Labels', [['/admin/output/bottle_label', 'Print (PDF)']]],
+                    ['Box Labels', [['/admin/output/labels', 'Print (PDF)']]],
                 ]],
             ['Organizing', 'fa-tasks',
-                'Work with the judge, steward, and staff pools, manage judging tables, and assign crews to tables and flights.',
+                'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
                 [
-                    ['/backoffice/participants?filter=judges', 'Judges'],
-                    ['/backoffice/participants?filter=stewards', 'Stewards'],
-                    ['/backoffice/participants?filter=staff', 'Staff'],
-                    ['/admin/judging/tables', 'Manage Judging Tables'],
-                    ['/admin/judging/tables/create', 'Add Judging Table'],
-                    ['/admin/judging/flights', 'Assign Judges/Stewards to Tables'],
-                    ['/admin/judging/flights', 'Manage Flights'],
+                    ['Assign/Unassign', [
+                        ['/admin/judging/flights', 'Judges'],
+                        ['/admin/judging/flights', 'Stewards'],
+                        ['/admin/judging/flights', 'Staff'],
+                    ]],
+                    ['Tables', [
+                        ['/admin/judging/tables', 'Manage'],
+                        ['/admin/judging/tables/create', 'Add'],
+                        ['/admin/judging/flights', 'Assign Judges/Stewards'],
+                    ]],
+                    ['Flights', [['/admin/judging/flights', 'Manage'], ['/admin/judging/flights', 'Add']]],
+                    ['BOS Judges', [['/admin/judging/bos', 'Add']]],
                 ]],
             ['Scoring', 'fa-trophy',
-                'Scoresheet output, the evaluation sub-app, score entry, best-of-show rounds, and special-best data entry.',
+                'Manage all functions related to evaluating and scoring participant entries for all stages of judging.',
                 [
-                    ['/admin/upload-scoresheets', 'Upload Scoresheets'],
-                    ['/eval', 'Evaluation Sub-app'],
-                    ['/admin/judging/scores', 'Manage Scores'],
-                    ['/admin/judging/bos', 'Manage Best of Show'],
-                    ['/admin/judging/special-best-data', 'Manage Special Best Data'],
+                    ['Scoresheets and Docs', [
+                        ['/admin/upload-scoresheets', 'Upload Multiple'],
+                        ['/admin/upload-scoresheets', 'Upload Individually'],
+                    ]],
+                    ['Entry Evaluations', [['/eval', 'Manage']]],
+                    ['Scores', [['/admin/judging/scores', 'Manage']]],
+                    ['BOS Entries and Places', [['/admin/judging/bos', 'Manage']]],
+                    ['Custom Categories', [['/admin/judging/special-best-data', 'Manage']]],
                 ]],
         ];
     }
 
     /**
-     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: string}>}>
+     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: list<array{0: string, 1: string}>}>}>
      */
     private function rightSections(): array
     {
         return [
             ['Reports', 'fa-file',
-                'Printable views: judging assignments, organizer/admin notes, allergen report, drop-off tallies, pull sheets, and staff points.',
+                'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
                 [
-                    ['/admin/output/assignments', 'Judging Assignments by Last Name'],
-                    ['/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'],
-                    ['/admin/output/judge_notes?go=admin', 'Admin and Staff Notes'],
-                    ['/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries'],
-                    ['/admin/output/dropoff', 'Entry Totals by Drop-off'],
-                    ['/admin/output/dropoff?go=check', 'List of Entries by Drop-off'],
-                    ['/admin/output/pullsheets', 'Pull Sheets — All by Table'],
-                    ['/admin/output/staff_points', 'Staff Points'],
+                    ['Before Judging', [
+                        ['/admin/output/assignments', 'Judging Assignments by Last Name'],
+                        ['/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'],
+                        ['/admin/output/judge_notes?go=admin', 'Admin and Staff Notes'],
+                        ['/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries'],
+                    ]],
+                    ['Drop-Off and Shipping', [
+                        ['/admin/output/dropoff', 'Entry Totals by Drop-off'],
+                        ['/admin/output/dropoff?go=check', 'List of Entries by Drop-off'],
+                    ]],
+                    ['Pullsheets', [['/admin/output/pullsheets', 'All by Table']]],
+                    ['During Judging', [['/admin/output/bos_mat', 'Cup Mats']]],
+                    ['After Judging', [['/admin/output/staff_points', 'Staff Points']]],
                 ]],
             ['Data Exports', 'fa-download',
-                'CSV exports of entries and participants for external tools (BJCP reporting, circuit data, email lists).',
+                'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
                 [
-                    ['/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'],
-                    ['/admin/output/export?go=csv', 'All Entries: Limited Data'],
-                    ['/admin/output/export?go=csv&tb=p', 'Paid Entries'],
-                    ['/admin/output/export?go=csv&tb=w', 'Winners: Limited Data'],
-                    ['/admin/output/participant_entries_list', 'Participant Entries List'],
-                    ['/admin/output/participant_summary', 'Participant Summary'],
+                    ['Entries and Associated Data (CSV)', [
+                        ['/admin/output/export?go=csv&action=all&tb=all', 'All Data'],
+                        ['/admin/output/export?go=csv', 'Limited Data'],
+                        ['/admin/output/export?go=csv&tb=w', 'Winners: Limited Data'],
+                    ]],
+                    ['Participant Data (CSV)', [
+                        ['/admin/output/participant_entries_list', 'Participant Entries List'],
+                        ['/admin/output/participant_summary', 'Participant Summary'],
+                    ]],
                 ]],
             ['Data Management', 'fa-archive',
-                'End-of-competition close-out. Archive preserves history in sibling tables; purge flows irreversibly delete — read the warnings before confirming.',
+                'Actions to help maintain the data collected by your installation including various archive and purge functions.',
                 [
-                    ['/admin/archive', 'Archive Current Data'],
-                    ['/admin/purge', 'Purge & Reset Flows'],
+                    ['Archives', [['/admin/archive', 'Manage'], ['/admin/archive', 'Archive Current Data']]],
+                    ['Purge', [['/admin/purge', 'Purge & Reset Flows']]],
                 ]],
             ['Preferences', 'fa-cog',
-                'General/entry/email/payment/best-brewer preferences, banner images, judging organization defaults, and organizer-defined custom categories.',
+                'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
                 [
-                    ['/admin/site-preferences', 'General & Entry Preferences'],
-                    ['/admin/site-preferences#email', 'Email Sending / Contact Display'],
-                    ['/admin/site-preferences#payments', 'Currency and Payment'],
-                    ['/admin/site-preferences#best-brewer', 'Best Brewer'],
-                    ['/admin/judging/preferences', 'Judging / Competition Organization'],
-                    ['/admin/hero-images', 'Banner Images'],
-                    ['/admin/mods', 'Manage Custom Categories'],
+                    ['Preferences', [
+                        ['/admin/site-preferences', 'General'],
+                        ['/admin/site-preferences#email', 'Email Sending / Contact Display'],
+                        ['/admin/site-preferences#payments', 'Currency and Payment'],
+                        ['/admin/site-preferences#best-brewer', 'Best Brewer'],
+                        ['/admin/judging/preferences', 'Judging/Competition Organization'],
+                        ['/admin/hero-images', 'Banner Images'],
+                    ]],
+                    ['Custom Modules', [['/admin/mods', 'Manage']]],
                 ]],
         ];
     }
