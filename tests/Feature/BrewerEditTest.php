@@ -132,7 +132,7 @@ final class BrewerEditTest extends PublicSurfaceTestCase
         $userId = $this->loginAsEntrant();
 
         $this->post('/list/edit-account', $this->savePayload())
-            ->assertRedirect('/list');
+            ->assertRedirect('/list?msg=2');
 
         $brewer = (array) DB::table('brewer')->where('uid', $userId)->first();
         $payload = $this->savePayload();
@@ -152,7 +152,7 @@ final class BrewerEditTest extends PublicSurfaceTestCase
         $userId = $this->loginAsEntrant();
 
         $this->post('/list/edit-account', $this->savePayload('new.email@example.com'))
-            ->assertRedirect('/list');
+            ->assertRedirect('/list?msg=2');
 
         $this->assertSame(
             'new.email@example.com',
@@ -216,7 +216,7 @@ final class BrewerEditTest extends PublicSurfaceTestCase
         $payload['brewerState'] = '';
         $payload['brewerPhone2'] = '';
 
-        $this->post('/list/edit-account', $payload)->assertRedirect('/list');
+        $this->post('/list/edit-account', $payload)->assertRedirect('/list?msg=2');
 
         $brewer = (array) DB::table('brewer')->where('uid', $userId)->first();
         $this->assertNull($brewer['brewerAddress']);

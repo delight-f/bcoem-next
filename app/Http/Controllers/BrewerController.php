@@ -92,7 +92,8 @@ final class BrewerController extends Controller
             'userCreated' => now()->format('Y-m-d H:i:s'),
         ]);
 
-        return redirect('/list');
+        // Legacy landing: ?section=list&msg=2 (info successfully updated).
+        return redirect('/list?msg=2');
     }
 
     /**
