@@ -9,7 +9,7 @@ if (navToggle) {
 }
 
 // Scrollspy: highlight the nav link of the section currently in view.
-const navLinks = [...document.querySelectorAll('#site-nav a[href^="#"]')];
+const navLinks = [...document.querySelectorAll('#site-nav a[href^="#"]:not([href="#"])')];
 const spyTargets = navLinks
     .map((l) => document.querySelector(l.getAttribute('href')))
     .filter(Boolean);

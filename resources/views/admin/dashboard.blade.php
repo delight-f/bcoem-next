@@ -69,7 +69,7 @@
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
                 <button type="button" class="btn btn-dark btn-sm btn-block mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
-                 <a class="btn btn-dark btn-sm btn-block" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa fa-lg fa-paypal"></span></a>
+                 <a class="btn btn-dark btn-sm btn-block" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
              </div>
 
             <div class="panel panel-info">

@@ -142,11 +142,28 @@
                         @if (auth()->user()->isAdmin())
                             <a class="nav-item nav-link" href="{{ url('/admin') }}">{{ __('site.admin_short') }}</a>
                         @endif
-                        <a class="nav-item nav-link" href="{{ url('/list') }}">{{ __('site.my_account') }}</a>
-                        <a class="nav-item nav-link" href="{{ url('/list/edit-account') }}">{{ __('site.edit_account') }}</a>
+                        {{-- pub/nav.pub.php: fa-user dropdown + flat logout icon --}}
+                        @php($navWindows = \App\Support\Tenant\Windows::derive($ctx, time()))
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><i class="fa fa-lg fa-fw fa-user"></i></a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li class="small"><a class="dropdown-item {{ request()->routeIs('list') ? 'disabled' : '' }}" href="{{ url('/list') }}">{{ __('site.my_account') }}</a></li>
+                                <li class="small"><a class="dropdown-item" href="{{ url('/list') }}#entries">{{ __('site.entries') }}</a></li>
+                                @if ($navWindows->entry === \App\Support\Tenant\WindowState::Open
+                                    && ! $navWindows->compEntryLimitReached
+                                    && ! $navWindows->compPaidEntryLimitReached)
+                                    <li class="small"><a class="dropdown-item {{ request()->routeIs('brew.*') ? 'disabled' : '' }}" href="{{ url('/brew') }}">{{ __('site.add_entry') }}</a></li>
+                                @endif
+                                @if (! $navWindows->compPaidEntryLimitReached)
+                                    <li class="small"><a class="dropdown-item" href="{{ url('/pay') }}">{{ __('site.pay') }}</a></li>
+                                @endif
+                                <li class="small"><hr class="dropdown-divider"></li>
+                                <li class="small"><a class="dropdown-item" href="{{ url('/list/edit-account') }}">{{ __('site.edit_account') }}</a></li>
+                            </ul>
+                        </div>
                         <form method="post" action="{{ route('logout') }}">
                             @csrf
-                            <button type="submit" class="nav-item nav-link btn btn-link">{{ __('site.log_out') }}</button>
+                            <button type="submit" class="nav-item nav-link" aria-label="{{ __('site.log_out') }}"><i class="fa fa-lg fa-fw fa-sign-out-alt"></i></button>
                         </form>
                     @else
                         <a class="nav-item nav-link" href="{{ route('login') }}">{{ __('site.log_in') }}</a>

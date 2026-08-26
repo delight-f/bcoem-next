@@ -202,6 +202,8 @@
         margin-top: 0.25em;
     }
     .small { font-size: 0.875em; }
+    .lead { margin-bottom: 1rem; font-size: 1.25rem; font-weight: 300; }
+    .fw-light { font-weight: 300 !important; }
     .mb-2 { margin-bottom: 0.5rem !important; }
     .pb-1 { padding-bottom: 0.25rem !important; }
     .pb-1 { padding-bottom: 0.25rem !important; }
@@ -818,6 +820,43 @@ html {
 }
 .dropdown.open .dropdown-menu {
     display: block;
+}
+/* pub/nav.pub.php user dropdown: Bootstrap 5 dark theme, right-aligned */
+.dropdown-menu-end {
+    right: 0;
+    left: auto;
+}
+.site-nav .dropdown-toggle::after {
+    content: "";
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+}
+.site-nav .dropdown-menu {
+    background-color: #212529;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+.site-nav .dropdown-menu > li > a,
+.site-nav .dropdown-menu .dropdown-item {
+    color: #dee2e6;
+    padding: 0.25rem 1rem;
+}
+.site-nav .dropdown-menu > li > a:hover,
+.site-nav .dropdown-menu .dropdown-item:hover {
+    color: #fff;
+    background-color: #495057;
+}
+.site-nav .dropdown-menu .dropdown-divider {
+    margin: 0.5rem 0;
+    background-color: rgba(255, 255, 255, 0.15);
+    height: 1px;
+    opacity: 1;
 }
 .navmenu {
     width: 300px;

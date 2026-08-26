@@ -60,6 +60,7 @@ return [
     'salutation_interest' => 'Thank you for your interest in the',
     'salutation_thanks' => 'Thanks to all who participated in the',
     'organized_by' => 'organized by',
+    'welcome' => 'Welcome',
     'there_were' => 'There were',
     'entries_judged' => 'entries judged',
     'and' => 'and',

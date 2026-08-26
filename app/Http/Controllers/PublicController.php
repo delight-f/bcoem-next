@@ -76,9 +76,23 @@ final class PublicController extends Controller
         $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
             && (int) DB::table('sponsors')->count() > 0;
 
-        $salutation = self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
-            .' '.self::t('site.organized_by').' '.e($ctx->contestStr('contestHost'))
-            .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '').'.';
+        // index.pub.php: "Welcome {name}!" lead when logged in, then the
+        // fw-light interest line with <small> wrapper and host website link.
+        $salutation = '';
+        if ($request->user() !== null) {
+            $firstName = DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '';
+            $salutation .= '<p class="landing-page-salutation">'.self::t('site.welcome').' '.e($firstName).'!</p>';
+        }
+        $host = e($ctx->contestStr('contestHost') ?? '');
+        $website = $ctx->contestStr('contestHostWebsite');
+        $hostHtml = $website !== null && $website !== ''
+            ? '<a class="hide-loader" href="'.e($website).'" target="_blank">'.$host.'</a>'
+            : $host;
+        $salutation .= '<p class="lead landing-page-salutation fw-light"><small>'
+            .self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
+            .' '.self::t('site.organized_by').' '.$hostHtml
+            .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
+            .'.</small></p>';
 
         return view('public.home', [
             'ctx' => $ctx,
