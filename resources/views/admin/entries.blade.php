@@ -44,6 +44,8 @@
                         <th>Name</th>
                         <th>Style</th>
                         <th>Brewer</th>
+                        <th>Club</th>
+                        <th>Updated</th>
                         <th>Paid?</th>
                         <th>Rec'd?</th>
                         <th>Admin Notes</th>
@@ -61,6 +63,8 @@
                             <td>{{ ltrim((string) $entry->brewCategorySort, '0') }}{{ $entry->brewSubCategory }}
                                 {{ $entry->brewStyle }}</td>
                             <td>{{ $entry->brewBrewerFirstName }} {{ $entry->brewBrewerLastName }}</td>
+                            <td>{{ $entry->brewerClubs }}</td>
+                            <td>{{ $entry->brewUpdated ? \Illuminate\Support\Str::of($entry->brewUpdated)->before(' ') : '' }}</td>
                             <td>@if ((int) $entry->brewPaid === 1)<span class="text-success">&#10003;</span>@endif</td>
                             <td>@if ((int) $entry->brewReceived === 1)<span class="text-success">&#10003;</span>@endif</td>
                             <td>{{ $entry->brewAdminNotes }}</td>
