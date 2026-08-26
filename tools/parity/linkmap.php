@@ -18,6 +18,14 @@ if ($argc < 4) {
     exit(2);
 }
 
+/** Normalize a URL path to a canonical "/..." form (root = "/"). */
+function canonPath(string $path): string
+{
+    $path = trim($path, '/');
+
+    return $path === '' ? '/' : '/'.$path;
+}
+
 /** @return array<string,string> canonical key => original href */
 function extractLinks(string $html, string $host): array
 {
@@ -26,6 +34,9 @@ function extractLinks(string $html, string $host): array
         return $links;
     }
     foreach ($m[1] as $href) {
+        // Raw HTML hrefs are entity-encoded (&amp;); unescape before parsing
+        // so &amp;-variants canonicalize to the same key as a real '&' query.
+        $href = html_entity_decode($href, ENT_QUOTES, 'UTF-8');
         if (preg_match('/^(mailto:|javascript:|#|tel:)/i', $href)) {
             continue;
         }
@@ -38,7 +49,7 @@ function extractLinks(string $html, string $host): array
         // Canonical key: path + sorted query pairs (drop fragment).
         parse_str($query, $q);
         ksort($q);
-        $key = rtrim($path, '/');
+        $key = canonPath($path);
         if ($q !== []) {
             $key .= '?'.http_build_query($q);
         }
@@ -66,7 +77,7 @@ foreach (file($argv[3], FILE_IGNORE_NEW_LINES) as $line) {
     $lp = parse_url($legacy);
     parse_str($lp['query'] ?? '', $q);
     ksort($q);
-    $map[rtrim($lp['path'] ?? '/', '/').'?'.http_build_query($q)] = '/'.ltrim($port, '/');
+    $map[canonPath($lp['path'] ?? '/').'?'.http_build_query($q)] = canonPath($port);
 }
 
 $legacyLinks = extractLinks($legacyHtml, $host);

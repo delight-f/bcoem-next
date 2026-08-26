@@ -133,6 +133,7 @@ if grep -q '^admin|' urls.txt; then
 fi
 
 pass=0; fail=0; skipped=0
+link_missing=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
     safe="$(echo "$url" | tr '/?=&|' '_____')"
@@ -160,11 +161,20 @@ while IFS= read -r url; do
     else
         diff -u "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" > "$REPORT/$safe.content-diff" || true
         diff "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" > "$REPORT/$safe.markup-diff" || true
-        echo "DIFF $url  (content: $safe.content-diff, markup: $safe.markup-diff)"; fail=$((fail+1))
+        # Link-map (DIFF pairs only — cheap): MISSING links in the port page
+        # vs the legacy link graph. linkmap.php exits 1 when MISSING > 0.
+        link_count=0
+        if ! php linkmap.php "$REPORT/$safe.legacy.raw" "$REPORT/$safe.new.raw" "urls.txt" > "$REPORT/$safe.linkmap" 2>/dev/null; then
+            link_count=$(grep -c '^MISSING' "$REPORT/$safe.linkmap" || true)
+        fi
+        if [ "$link_count" -gt 0 ]; then
+            link_missing=$((link_missing + link_count))
+        fi
+        echo "DIFF $url  (content: $safe.content-diff, markup: $safe.markup-diff, missing-links: $link_count -> $safe.linkmap)"; fail=$((fail+1))
     fi
 done < urls.txt
 
 echo
-echo "== parity report: $pass pass, $fail fail/diff, $skipped skipped =="
+echo "== parity report: $pass pass, $fail fail/diff, $skipped skipped, $link_missing missing links =="
 echo "== artifacts: $REPORT =="
 [ "$fail" -eq 0 ]
