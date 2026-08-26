@@ -105,3 +105,69 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
         btn.addEventListener('click', () => dialog.close()),
     );
 });
+
+// Entry form (pub/brew.pub.php + js_includes/entry.min.js): show/hide the
+// required-info, optional-info, carbonation, sweetness (mead vs cider),
+// strength, and pouring fieldsets based on the selected style. Flag data
+// comes from #style-flag-map JSON emitted by brew/_fields.blade.php.
+(() => {
+    const styleSelect = document.getElementById('brewStyle');
+    if (!styleSelect) return;
+
+    const flagMap = JSON.parse(document.getElementById('style-flag-map').textContent);
+    const optionalStyles = JSON.parse(document.getElementById('optional-info-styles').textContent);
+
+    const setOn = (id, on) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('hidden', !on);
+    };
+    const requireRadios = (name, on) => document.querySelectorAll(`input[name="${name}"]`)
+        .forEach((input) => { input.required = on; });
+
+    const apply = () => {
+        const flags = flagMap[styleSelect.value];
+        const code = styleSelect.value;
+        setOn('req-special', !!flags?.reqSpec);
+        setOn('req-strength', !!flags?.strength);
+        setOn('req-carbonation', !!flags?.carb);
+        setOn('req-sweetness', !!flags?.sweet);
+        setOn('special', !!flags?.reqSpec);
+        if (document.getElementById('brewInfo')) document.getElementById('brewInfo').required = !!flags?.reqSpec;
+        // Style-specific entry text (#specialInfo).
+        const specialInfo = document.getElementById('specialInfo');
+        if (specialInfo) {
+            if (flags && flags.entry) {
+                document.getElementById('specialInfoText').textContent = flags.entry;
+                specialInfo.classList.remove('hidden');
+            } else {
+                specialInfo.classList.add('hidden');
+            }
+        }
+        const optional = optionalStyles.includes(code);
+        setOn('optional', optional);
+        // Cider styles start with C, mead with M (entry.min.js disp_sweetness).
+        const isCider = !!flags?.sweet && (code.startsWith('C') || flags.type === '2');
+        const isMead = !!flags?.sweet && (code.startsWith('M') || flags.type === '3');
+        setOn('sweetness-cider', isCider);
+        setOn('sweetness-mead', isMead);
+        requireRadios('brewMead2-cider', isCider);
+        requireRadios('brewMead2-mead', isMead);
+        setOn('carbonation', !!flags?.carb);
+        requireRadios('brewMead1', !!flags?.carb);
+        setOn('strength', !!flags?.strength);
+        requireRadios('brewMead3', !!flags?.strength);
+        setOn('specify-pouring', !!flags && flags.type === '1');
+    };
+
+    styleSelect.addEventListener('change', apply);
+    apply();
+
+    // Character counters (prefsSpecialCharLimit help blocks).
+    [['brewInfo', 'countInfo'], ['brewInfoOptional', 'countInfoOptional'], ['brewComments', 'countComments']]
+        .forEach(([field, counter]) => {
+            const input = document.getElementById(field);
+            const target = document.getElementById(counter);
+            if (!input || !target) return;
+            input.addEventListener('input', () => { target.textContent = input.value.length; });
+        });
+})();

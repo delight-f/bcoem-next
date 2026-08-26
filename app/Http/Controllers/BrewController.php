@@ -78,10 +78,13 @@ final class BrewController extends Controller
 
         return view('brew.create', [
             'ctx' => $ctx,
+            'brewer' => $brewer,
             'styles' => self::activeStyles($ctx),
             // Variant fieldsets render when the previously posted (failed
             // validation) style requires them.
             'variantFlags' => self::styleFlags(is_string(old('brewStyle')) ? old('brewStyle') : null, $ctx),
+            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet')),
+            'styleFlagMap' => self::styleFlagMap(self::activeStyles($ctx)),
             'salutation' => __('site.add_entry'),
         ]);
     }
@@ -243,9 +246,12 @@ final class BrewController extends Controller
         $ctx = TenantContext::load();
         $code = ltrim((string) $row->brewCategorySort, '0').'-'.$row->brewSubCategory;
 
+        $brewer = DB::table('brewer')->where('uid', Auth::id())->first();
+
         return view('brew.edit', [
             'ctx' => $ctx,
             'entry' => $row,
+            'brewer' => $brewer,
             'styles' => self::activeStyles($ctx),
             // Variant fieldsets render for the entry's stored style unless
             // a failed validation reposted another one.
@@ -253,12 +259,13 @@ final class BrewController extends Controller
                 is_string($reposted = old('brewStyle')) ? $reposted : $code,
                 $ctx,
             ),
+            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet')),
+            'styleFlagMap' => self::styleFlagMap(self::activeStyles($ctx)),
         ]);
     }
 
     /**
      * Edit save (P3.3b) — process_brewing.inc.php's edit branch.
-     *
      * Paid/received are admin-writable only; entrant POSTs re-read both
      * flags from the row loaded this request (:269-279). Style/category
      * fields freeze once the entry window closes (ledger #4). The judging
@@ -506,11 +513,27 @@ final class BrewController extends Controller
     }
 
     /**
-     * Style row for a posted `<cat>-<sub>` code — the same lookup the add
-     * branch uses to fill brewStyle/brewStyleType and gate the mead/cider
-     * variant fields (process_brewing.inc.php:335-344). Null when the code
-     * is absent or matches no row of the active set (or its customs).
+     * Styles whose Optional Info field shows on the entry form — the
+     * per-style-set lists from includes/constants.inc.php:566-591.
+     *
+     * @return list<string>
      */
+    public static function optionalInfoStyles(string $set): array
+    {
+        return match ($set) {
+            'BA' => [],
+            'AABC' => ['12-01', '14-08', '17-03', '18-04', '18-05', '19-05', '19-07', '16-01', '19-01', '19-02', '19-03', '19-04', '19-06', '20-02', '20-03'],
+            'AABC2022' => ['07-03', '12-01', '14-08', '17-03', '18-04', '18-05', '16-01', '19-01', '19-02', '19-03', '19-04', '19-05', '19-06', '19-07', '19-08', '19-09', '19-10', '19-11', '19-12', '19-13', '20-02', '20-03', '16-08'],
+            'AABC2025' => ['07-03', '12-01', '14-08', '17-03', '18-04', '18-05', '16-01', '16-08', '19-01', '19-02', '19-03', '19-04', '19-05', '19-06', '19-07', '19-08', '19-09', '19-10', '19-11', '19-12', '19-13', '20-01', '20-02', '20-03', '20-04', '20-05', '20-10', '20-11', '20-12', '20-16'],
+            'NWCiderCup' => ['C4-A', 'C4-B', 'C5-A', 'C8-A', 'C8-B', 'C8-C', 'C9-A', 'C9-B', 'C9-C'],
+            default => array_merge(
+                ['21-B', '28-A', '30-B', '33-A', '33-B', '34-B', 'M2-C', 'M2-D', 'M2-E', 'M3-A', 'M3-B', 'M4-B', 'M4-C', '7-C', 'M1-A', 'M1-B', 'M1-C', 'M2-A', 'M2-B', 'M4-A', 'C1-A', 'C1-B', 'C1-C'],
+                $set === 'BJCP2021' ? ['25-B'] : [],
+                $set === 'BJCP2025' ? ['C1-D', 'C1-E', 'C3-A', 'C3-B', 'C3-C', 'C4-D'] : [],
+            ),
+        };
+    }
+
     public static function styleFlags(?string $code, TenantContext $ctx): ?\stdClass
     {
         if ($code === null || ! str_contains($code, '-')) {
@@ -599,5 +622,27 @@ final class BrewController extends Controller
     private static function blankToNull(?string $value): ?string
     {
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * Per-style client-side flag map for the entry form's show/hide JS
+     * (entry.min.js parity): keyed by the <option> style code.
+     *
+     * @return array<string, array{reqSpec: bool, carb: bool, sweet: bool, strength: bool, type: string, group: string, num: string, entry: string}>
+     */
+    private static function styleFlagMap(Collection $styles): array
+    {
+        return $styles->mapWithKeys(fn (\stdClass $s): array => [
+            self::styleValue($s) => [
+                'reqSpec' => (int) $s->brewStyleReqSpec === 1,
+                'carb' => (int) $s->brewStyleCarb === 1,
+                'sweet' => (int) $s->brewStyleSweet === 1,
+                'strength' => (int) $s->brewStyleStrength === 1,
+                'type' => (string) $s->brewStyleType,
+                'group' => ltrim((string) $s->brewStyleGroup, '0'),
+                'num' => (string) $s->brewStyleNum,
+                'entry' => (string) ($s->brewStyleEntry ?? ''),
+            ],
+        ])->all();
     }
 }
