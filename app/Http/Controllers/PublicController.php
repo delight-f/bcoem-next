@@ -363,7 +363,7 @@ final class PublicController extends Controller
     }
 
     /**
-     * @return list<array{id: string, title: string, pill: string, color: string, body: string, button: array{text: string, link: string}, buttonColor: string}>
+     * @return list<array{id: string, title: string, pill: string, color: string, icon: string, body: string, button: array{text: string, link: string}, buttonColor: string}>
      */
     private function glanceCards(TenantContext $ctx, Windows $w, bool $longDates, bool $loggedIn): array
     {
@@ -371,15 +371,14 @@ final class PublicController extends Controller
         $df = $ctx->prefsStr('prefsDateFormat');
         $tf = $ctx->prefsStr('prefsTimeFormat');
         $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
+        $now = time();
 
         $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
 
         // Legacy at-a-glance.pub.php CTA decision table: each open window's
         // card carries one button (empty link = disabled variant); closed
         // windows render the danger pill and no button.
-
         $buttonFor = function (WindowState $state, bool $capReached, callable $whenOpen): array {
-            // Legacy at-a-glance.pub.php: closed/capped windows carry no CTA.
             /** @var array{text: string, link: string} $button */
             $button = $state === WindowState::Open && ! $capReached
                 ? $whenOpen()
@@ -388,53 +387,81 @@ final class PublicController extends Controller
             return $button;
         };
 
-        $totalEntries = (int) DB::table('brewing')->count();
-        $paidEntries = (int) DB::table('brewing')->where('brewPaid', 1)->count();
-
-        $cards = [];
-
-        $entryBody = '<ul class="list-unstyled">'
-            .'<li><strong>'.self::t('site.total').'</strong> &ndash; '.$totalEntries
-            .(self::numericOrNull($ctx->prefsStr('prefsEntryLimit')) !== null
-                ? ' / '.self::numericOrNull($ctx->prefsStr('prefsEntryLimit')) : '').'</li>'
-            .'<li><strong>'.self::t('site.paid').'</strong> &ndash; '.$paidEntries
-            .(self::numericOrNull($ctx->prefsStr('prefsEntryLimitPaid')) !== null
-                ? ' / '.self::numericOrNull($ctx->prefsStr('prefsEntryLimitPaid')) : '').'</li>';
-
-        if ($w->entry === WindowState::Before) {
-            $entryBody .= '<li>'.self::t('site.opens').' '.$fmt($ctx->contestEpoch('contestEntryOpen')).'</li>';
-        } elseif ($w->entry === WindowState::After) {
-            $entryBody .= '<li>'.self::t('site.closed').' '.$fmt($ctx->contestEpoch('contestEntryDeadline')).'</li>';
-        }
-        $entryBody .= '</ul>';
-
-        $cards[] = ['id' => 'entries', 'title' => self::t('site.entries'), 'pill' => self::t('site.status'), 'color' => 'primary', 'body' => $entryBody, 'button' => ['text' => '', 'link' => ''], 'buttonColor' => 'primary'];
-
-        $windowCard = function (string $id, string $title, WindowState $state, ?string $openAt, ?string $closeAt, bool $capReached = false, ?array $button = null): array {
+        // Window-card pill: legacy does not distinguish a not-yet-open window
+        // from a closed one — any non-open state carries the danger "Closed"
+        // pill. The countdown <li> placeholders stay empty (server-rendered);
+        // the live countdown is a browser-only enhancement the port omits.
+        $windowCard = function (
+            string $id, string $title, WindowState $state, ?int $openEpoch, ?int $closeEpoch,
+            bool $capReached = false, ?array $button = null,
+        ) use ($fmt): array {
             /** @var array{text: string, link: string} $cta */
             $cta = $button ?? ['text' => '', 'link' => ''];
+            $openAt = $openEpoch !== null ? $fmt($openEpoch) : self::t('site.not_set');
+            $closeAt = $closeEpoch !== null ? $fmt($closeEpoch) : self::t('site.not_set');
+
             $body = '<ul class="list-unstyled">'
-                .'<li><strong>'.self::t('site.open_label').'</strong> &ndash; '.($openAt ?? self::t('site.not_set')).'</li>'
-                .'<li><strong>'.self::t('site.close_label').'</strong> &ndash; '.($closeAt ?? self::t('site.not_set')).'</li>'
-                .($capReached ? '<li>'.self::t('site.cap_reached').'</li>' : '')
-                .'</ul>';
-            [$pill, $color] = match ($state) {
-                WindowState::Open => [self::t('site.state_open'), 'success'],
-                WindowState::After => [self::t('site.state_closed'), 'danger'],
-                default => [self::t('site.state_before'), 'secondary'],
-            };
+                .'<li><strong>'.self::t('site.open_label').'</strong> &ndash; '.$openAt.'</li>';
+
+            if ($state === WindowState::Before) {
+                $body .= '<li><i class="fa fa-clock me-1"></i><span id="'.$id.'-open-date"></span></li>';
+            }
+
+            $body .= '<li><strong>'.self::t('site.close_label').'</strong> &ndash; '.$closeAt.'</li>';
+
+            if ($state === WindowState::Open) {
+                $body .= '<li id="'.$id.'-close-date-item"><i class="fa fa-clock me-1"></i><span id="'.$id.'-close-date"></span></li>';
+            }
+
+            $body .= '</ul>';
+
+            if ($capReached) {
+                $body .= '<p class="lh-1"><small>'.self::t('site.cap_reached').'</small></p>';
+            }
+
+            [$pill, $color] = $state === WindowState::Open
+                ? [self::t('site.state_open'), 'success']
+                : [self::t('site.state_closed'), 'danger'];
 
             return [
                 'id' => $id, 'title' => $title, 'pill' => $pill, 'color' => $color,
+                'icon' => $color === 'success' ? 'circle-check' : 'circle-exclamation',
                 'body' => $body,
                 'button' => $cta,
                 'buttonColor' => $color === 'danger' ? 'secondary' : $color,
             ];
         };
 
-        // Entry card: legacy shows "Add Entry" for logged-in entrants with
-        // remaining slots; anonymous visitors get the disabled "Log In to
-        // Enter" variant (at-a-glance.pub.php:158-175).
+        // Entries status card — Amateur edition only (at-a-glance.pub.php).
+        $totalEntries = (int) DB::table('brewing')->count();
+        $paidEntries = (int) DB::table('brewing')->where('brewPaid', 1)->count();
+        $totalLimit = self::numericOrNull($ctx->prefsStr('prefsEntryLimit'));
+        $paidLimit = self::numericOrNull($ctx->prefsStr('prefsEntryLimitPaid'));
+
+        $entryBody = '<ul class="list-unstyled">'
+            .'<li><strong>'.self::t('site.total').'</strong> &ndash; <span id="entry-total-count">'.$totalEntries
+            .($totalLimit !== null ? ' / '.$totalLimit : '').'</span></li>'
+            .'<li><strong>'.self::t('site.paid').'</strong> &ndash; <span id="entry-paid-count">'.$paidEntries
+            .($paidLimit !== null ? ' / '.$paidLimit : '').'</span></li>';
+
+        if ($w->entry === WindowState::Before) {
+            $entryBody .= '<li class="small text-muted lh-1 pt-1">'.self::t('site.opens').' '.$fmt($ctx->contestEpoch('contestEntryOpen')).'</li>';
+        } elseif ($w->entry === WindowState::Open) {
+            $entryBody .= '<li class="small text-muted lh-1 pt-1">'.self::t('site.updated').' '.$fmt($now).'</li>';
+        } elseif ($w->entry === WindowState::After) {
+            $entryBody .= '<li class="small text-muted lh-1 pt-1">'.self::t('site.closed').' '.$fmt($ctx->contestEpoch('contestEntryDeadline')).'</li>';
+        }
+        $entryBody .= '</ul>';
+
+        $entryStatusCard = [
+            'id' => 'entries', 'title' => self::t('site.entries'), 'pill' => self::t('site.status'),
+            'color' => 'primary', 'icon' => 'circle-info', 'body' => $entryBody,
+            'button' => ['text' => '', 'link' => ''], 'buttonColor' => 'primary',
+        ];
+
+        // Entry Registration card: legacy shows "Add Entry" for logged-in
+        // entrants with remaining slots; anonymous visitors get the disabled
+        // "Log In to Enter" variant (at-a-glance.pub.php:158-175).
         $entryButton = $buttonFor($w->entry, false, function () use ($ctx, $loggedIn): array {
             if (! $loggedIn) {
                 return ['text' => self::t('site.log_in_to_enter'), 'link' => ''];
@@ -457,21 +484,140 @@ final class PublicController extends Controller
             ? ['text' => self::t('site.edit_account'), 'link' => url('/list/edit-account')]
             : ['text' => self::t('site.register_as_steward'), 'link' => url('/register/steward')]);
 
-        $cards[] = $windowCard('account-registration', self::t('site.account_registration'), $w->registration,
-            $fmt($ctx->contestEpoch('contestRegistrationOpen')), $fmt($ctx->contestEpoch('contestRegistrationDeadline')),
-            button: $accountButton);
-        $cards[] = $windowCard('judge-registration', self::t('site.judge_registration'), $w->judge,
-            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')),
-            $w->judgeCapReached, $judgeButton);
-        $cards[] = $windowCard('steward-registration', self::t('site.steward_registration'), $w->judge,
-            $fmt($ctx->contestEpoch('contestJudgeOpen')), $fmt($ctx->contestEpoch('contestJudgeDeadline')),
-            $w->stewardCapReached, $stewardButton);
-        $cards[] = $windowCard('drop-off', self::t('site.drop_off'), $w->dropoff,
-            $fmt($ctx->contestEpoch('contestDropoffOpen')), $fmt($ctx->contestEpoch('contestDropoffDeadline')));
+        // Judges/stewards share the same registration window ($w->judge).
+        $entryRegOpen = $ctx->contestEpoch('contestEntryOpen');
+        $entryRegClose = $ctx->contestEpoch('contestEntryDeadline');
+        $regOpen = $ctx->contestEpoch('contestRegistrationOpen');
+        $regClose = $ctx->contestEpoch('contestRegistrationDeadline');
+        $judgeOpen = $ctx->contestEpoch('contestJudgeOpen');
+        $judgeClose = $ctx->contestEpoch('contestJudgeDeadline');
+        $dropoffOpen = $ctx->contestEpoch('contestDropoffOpen');
+        $dropoffClose = $ctx->contestEpoch('contestDropoffDeadline');
+        $shipOpen = $ctx->contestEpoch('contestShippingOpen');
+        $shipClose = $ctx->contestEpoch('contestShippingDeadline');
 
-        if ((int) $ctx->prefsStr('prefsShipping') === 1 && $ctx->contestStr('contestShippingAddress')) {
-            $cards[] = $windowCard('shipping', self::t('site.shipping'), $w->shipping,
-                $fmt($ctx->contestEpoch('contestShippingOpen')), $fmt($ctx->contestEpoch('contestShippingDeadline')));
+        $shippingGated = (int) $ctx->prefsStr('prefsShipping') === 1
+            && ! empty($ctx->contestStr('contestShippingAddress'))
+            && $shipOpen !== null;
+
+        $entryRegCard = $windowCard('entry-registration', self::t('site.entries_registration'), $w->entry, $entryRegOpen, $entryRegClose, button: $entryButton);
+        $accountRegCard = $windowCard('account-registration', self::t('site.account_registration'), $w->registration, $regOpen, $regClose, button: $accountButton);
+        $judgeRegCard = $windowCard('judge-registration', self::t('site.judge_registration'), $w->judge, $judgeOpen, $judgeClose, $w->judgeCapReached, $judgeButton);
+        $stewardRegCard = $windowCard('steward-registration', self::t('site.steward_registration'), $w->judge, $judgeOpen, $judgeClose, $w->stewardCapReached, $stewardButton);
+        $dropOffCard = $dropoffOpen !== null
+            ? $windowCard('drop-off', self::t('site.drop_off'), $w->dropoff, $dropoffOpen, $dropoffClose)
+            : null;
+        $shippingCard = $shippingGated
+            ? $windowCard('shipping', self::t('site.entry_shipping'), $w->shipping, $shipOpen, $shipClose)
+            : null;
+
+        // Judging card — rendered whenever judging sessions exist
+        // (legacy $date_arr non-empty); status is the $judging_start tri-state.
+        $judgingCard = null;
+        if ($w->firstJudgingDate !== null) {
+            $open = $fmt($w->firstJudgingDate);
+            $close = $w->lastJudgingDate !== null ? $fmt($w->lastJudgingDate) : null;
+            $startLi = '<li><strong>'.self::t('site.start').'</strong> &ndash; '.$open.'</li>';
+            $endLi = $close !== null
+                ? '<li><strong>'.self::t('site.end').'</strong> &ndash; '.$close.'</li>'
+                : '';
+            $judgeState = $w->judgingState($now, $ctx->contestEpoch('contestAwardsLocDate'));
+
+            [$pill, $color, $icon, $body] = match ($judgeState) {
+                1 => [
+                    self::t('site.judging_in_progress'), 'primary', 'sync-spin',
+                    '<ul class="list-unstyled">'.$startLi.$endLi
+                        .'<li><i class="fa fa-clock me-1"></i><span id="judging-close-date"></span></li></ul>',
+                ],
+                2 => [
+                    self::t('site.judging_concluded'), 'success', 'circle-check',
+                    '<ul class="list-unstyled">'.$startLi.$endLi.'</ul>',
+                ],
+                default => [
+                    self::t('site.judging_not_started'), 'secondary', 'clock',
+                    '<ul class="list-unstyled">'.$startLi
+                        .'<li><i class="fa fa-clock me-1"></i><span id="judging-open-date"></span></li>'
+                        .$endLi.'</ul>',
+                ],
+            };
+
+            $judgingCard = [
+                'id' => 'judging', 'title' => self::t('site.judging'), 'pill' => $pill, 'color' => $color,
+                'icon' => $icon, 'body' => $body, 'button' => ['text' => '', 'link' => ''], 'buttonColor' => 'secondary',
+            ];
+        }
+
+        // Awards card — once judging has started AND an award venue is named
+        // (legacy $glance_awards). Pro edition additionally gates on the
+        // shipping window existing (faithful to at-a-glance.pub.php quirk).
+        $awardsCard = null;
+        $awardName = $ctx->contestStr('contestAwardsLocName');
+        if ($judgingCard !== null && ! empty($awardName) && $w->judgingState($now, $ctx->contestEpoch('contestAwardsLocDate')) > 0) {
+            $body = '<ul class="list-unstyled">';
+            $locAddr = $ctx->contestStr('contestAwardsLocation');
+            if (empty($locAddr)) {
+                $body .= '<li><strong>'.self::t('site.location').'</strong> &ndash; '.e($awardName).'</li>';
+            } else {
+                $addr = rtrim($locAddr, '&amp;KeepThis=true');
+                $addr = str_replace(' ', '+', $addr);
+                $mapLink = 'http://maps.google.com/maps?f=q&source=s_q&hl=en&q='.$addr;
+                $body .= '<li><strong>'.self::t('site.location').'</strong> &ndash; '.e($awardName)
+                    .'<a class="hide-loader" href="'.e($mapLink).'" data-bs-toggle="tooltip" data-bs-placement="top" title="Map to '.e($awardName).'" target="_blank"><i class="fa fa-lg fa-map-marker ms-1"></i></a></li>';
+            }
+            $awardTime = $ctx->contestEpoch('contestAwardsLocTime');
+            if ($awardTime !== null) {
+                $body .= '<li><strong>'.self::t('site.date_label').'</strong> &ndash; '.$fmt($awardTime).'</li>';
+                if ($now < $awardTime) {
+                    $body .= '<li id="awards-date-item"><i class="fa fa-clock me-1"></i><span id="awards-date"></span></li>';
+                }
+            }
+            $body .= '</ul>';
+
+            $awardsCard = [
+                'id' => 'awards', 'title' => self::t('site.awards'), 'pill' => self::t('site.info'), 'color' => 'primary',
+                'icon' => 'circle-info', 'body' => $body, 'button' => ['text' => '', 'link' => ''], 'buttonColor' => 'secondary',
+            ];
+        }
+
+        // Deck assembly mirrors at-a-glance.pub.php's per-edition card order.
+        $proEdition = (int) $ctx->prefsStr('prefsProEdition') === 1;
+        $cards = [];
+
+        if ($proEdition) {
+            $cards[] = $entryRegCard;
+            $cards[] = $accountRegCard;
+            $cards[] = $judgeRegCard;
+            $cards[] = $stewardRegCard;
+            if ($dropOffCard !== null) {
+                $cards[] = $dropOffCard;
+            }
+            if ($shippingCard !== null) {
+                $cards[] = $shippingCard;
+            }
+            if ($shippingCard !== null && $awardsCard !== null) {
+                $cards[] = $awardsCard;
+            }
+            if ($judgingCard !== null) {
+                $cards[] = $judgingCard;
+            }
+        } else {
+            $cards[] = $entryStatusCard;
+            if ($awardsCard !== null) {
+                $cards[] = $awardsCard;
+            }
+            if ($judgingCard !== null) {
+                $cards[] = $judgingCard;
+            }
+            $cards[] = $entryRegCard;
+            $cards[] = $accountRegCard;
+            $cards[] = $judgeRegCard;
+            $cards[] = $stewardRegCard;
+            if ($dropOffCard !== null) {
+                $cards[] = $dropOffCard;
+            }
+            if ($shippingCard !== null) {
+                $cards[] = $shippingCard;
+            }
         }
 
         return $cards;
