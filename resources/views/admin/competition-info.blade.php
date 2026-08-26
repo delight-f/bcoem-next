@@ -22,6 +22,9 @@
         <form method="post" action="{{ url('/admin/competition-info') }}">
             @csrf
             @method('put')
+            <div class="alert alert-info">
+                Entry-related information has moved to <a href="{{ url('/admin/site-preferences/entries') }}">Entry Preferences</a>.
+            </div>
 
             <h3>General</h3>
             <div class="mb-4 row">
@@ -49,7 +52,7 @@
                 <div class="col-sm-9"><input class="input input-bordered" id="contestLogo" name="contestLogo" type="text" value="{{ $contest['contestLogo'] ?? '' }}"></div>
             </div>
             <div class="mb-4 row">
-                <label for="contestCheckInPassword" class="col-sm-4 col-form-label">Entry Check-In Password</label>
+                <label for="contestCheckInPassword" class="col-sm-4 col-form-label">QR Code Log On Password</label>
                 <div class="col-sm-9">
                     <input class="input input-bordered" id="contestCheckInPassword" name="contestCheckInPassword" type="password">
                     <span class="help-block">Leave blank to clear (stored hashed).</span>
@@ -137,11 +140,73 @@
                 </div>
             </div>
             <div class="mb-4 row">
+                <label for="search-club-list-input" class="col-sm-4 col-form-label">Additional Club Names</label>
+                <div class="col-sm-9">
+                    <input id="search-club-list-input" class="input input-bordered" placeholder="Search the clubs database">
+                    <span class="help-block">Search to check if a club is already in the database. <button type="button" id="clear-search-btn" class="btn btn-xs btn-default" disabled>Clear the Search Field</button></span>
+                    <button type="button" id="search-club-list-btn" class="btn btn-sm btn-primary">Search Clubs</button>
+                    <button type="button" id="copy-to-club-list-btn" class="btn btn-sm btn-success" disabled><span class="fa fa-plus"></span> Add</button>
+                    <div id="search-club-list-results-div"></div>
+                </div>
+            </div>
+            <div class="mb-4 row">
                 <label for="contestWinnerLink" class="col-sm-4 col-form-label">Past Winners Link</label>
                 <div class="col-sm-9"><input class="input input-bordered" id="contestWinnerLink" name="contestWinnerLink" type="text" value="{{ $contest['contestWinnerLink'] ?? '' }}"></div>
             </div>
 
             <button type="submit" class="btn btn-primary">Save Competition Info</button>
         </form>
+        <script>
+            var bcoem_clubs = @json($clubs);
+            document.addEventListener('DOMContentLoaded', function () {
+                var input = document.getElementById('search-club-list-input');
+                var resultsDiv = document.getElementById('search-club-list-results-div');
+                var addBtn = document.getElementById('copy-to-club-list-btn');
+                var clearBtn = document.getElementById('clear-search-btn');
+                var clubField = document.getElementById('contestClubs');
+                var searchBtn = document.getElementById('search-club-list-btn');
+                var lastAdded = '';
+                function refreshMatchState() {
+                    var term = (input.value || '').trim();
+                    addBtn.disabled = term === '';
+                    clearBtn.disabled = term === '';
+                }
+                searchBtn.addEventListener('click', function () {
+                    var term = (input.value || '').trim();
+                    if (!term) { return; }
+                    var re = new RegExp(term, 'i');
+                    var out = '';
+                    for (var i = 0; i < bcoem_clubs.length; i++) {
+                        if (bcoem_clubs[i].search(re) !== -1) {
+                            out += '<li>' + bcoem_clubs[i] + ';</li>';
+                        }
+                    }
+                    if (out) {
+                        resultsDiv.style.display = 'block';
+                        resultsDiv.innerHTML = '<ul class="list-inline"><li><strong>Possible matches in the database:</strong></li> ' + out + '</ul>If none match, select the Add button to add the name you searched to the list above.';
+                    } else {
+                        resultsDiv.style.display = 'block';
+                        resultsDiv.innerHTML = '<span class="text-danger">No clubs found in the database.</span>';
+                    }
+                });
+                addBtn.addEventListener('click', function () {
+                    var val = (input.value || '').trim();
+                    if (!val) { return; }
+                    lastAdded = val + ';';
+                    var current = clubField.value;
+                    if (current.indexOf(val) === -1) {
+                        clubField.value = current ? current + val + '; ' : val + '; ';
+                    }
+                    resultsDiv.style.display = 'none';
+                    input.value = '';
+                    refreshMatchState();
+                });
+                clearBtn.addEventListener('click', function () {
+                    input.value = '';
+                    resultsDiv.style.display = 'none';
+                    refreshMatchState();
+                });
+            });
+        </script>
     </section>
 </x-public-layout>

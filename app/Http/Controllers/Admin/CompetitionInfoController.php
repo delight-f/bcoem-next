@@ -48,6 +48,9 @@ final class CompetitionInfoController extends Controller
         return view('admin.competition-info', [
             'ctx' => $ctx,
             'contest' => (array) DB::table('contest_info')->where('id', 1)->first(),
+            'clubs' => DB::table('brewer')
+                ->whereNotNull('brewerClubs')->where('brewerClubs', '!=', '')
+                ->distinct()->pluck('brewerClubs')->all(),
         ]);
     }
 

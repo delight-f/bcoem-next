@@ -45,6 +45,66 @@ final class SitePreferencesController extends Controller
 {
     private const GO_TABS = ['default', 'entries', 'email', 'payment', 'best'];
 
+    /** Legacy constants.inc.php $languages. */
+    private const LANGUAGES = [
+        'pt-BR' => 'Brazilian Portuguese',
+        'cs-CZ' => 'Czech',
+        'en-GB' => 'English (GB)',
+        'en-US' => 'English (US)',
+        'fr-FR' => 'French',
+        'hu-HU' => 'Hungarian',
+        'es-419' => 'Spanish (Latin America)',
+    ];
+
+    /** Legacy site_preferences.admin.php:1213-1258 time zone select options. */
+    private const TIMEZONES = [
+        '-12.000' => '(GMT -12:00) International Date Line West, Eniwetok, Kwajalein, Baker Island, Howland Island',
+        '-11.000' => '(GMT -11:00) Midway Island, Samoa, Pago Pago',
+        '-10.000' => '(GMT -10:00) Hawaii',
+        '-9.000' => '(GMT -9:00) Alaska',
+        '-9.500' => '(GMT -9:30) Marquesas',
+        '-8.000' => '(GMT -8:00) Pacific Time (US &amp; Canada), Tiajuana',
+        '-7.000' => '(GMT -7:00) Mountain Time (US &amp; Canada)',
+        '-7.001' => '(GMT -7:00) Mountain Time - Arizona (No Daylight Savings)',
+        '-6.000' => '(GMT -6:00) Central Time (US &amp; Canada), Central America',
+        '-6.001' => '(GMT -6:00) Sonora, Mexico (No Daylight Savings)',
+        '-6.002' => '(GMT -6:00) Canada Central Time (No Daylight Savings)',
+        '-5.000' => '(GMT -5:00) Eastern Time (US &amp; Canada)',
+        '-5.001' => '(GMT -5:00) Bogota, Lima (No Daylight Savings)',
+        '-4.000' => '(GMT -4:00) Caracas, La Paz, Virgin Islands (No Daylight Savings)',
+        '-4.001' => '(GMT -4:00) Paraguay (No Daylight Savings)',
+        '-4.002' => '(GMT -4:00) Atlantic Time (Canada)',
+        '-4.003' => '(GMT -4:00) Santiago, Chile',
+        '-4.004' => '(GMT -4:00) Thule, Greenland',
+        '-3.500' => '(GMT -3:30) Newfoundland',
+        '-3.000' => '(GMT -3:00) Buenos Aires, Georgetown, Greenland',
+        '-3.001' => '(GMT -3:00) Brazil (Brasilia - No Daylight Savings)',
+        '-2.000' => '(GMT -2:00) Mid-Atlantic',
+        '-1.000' => '(GMT -1:00 hour) Azores, Cape Verde Islands, Ittoqqortoormiit',
+        '0.000' => '(GMT) Western Europe Time, London, Lisbon, Casablanca, Monrovia',
+        '1.000' => '(GMT +1:00 hour) Brussels, Copenhagen, Madrid, Paris, Lagos',
+        '2.000' => '(GMT +2:00) Kaliningrad, Johannesburg, Cairo Helsinki',
+        '3.000' => '(GMT +3:00) Istanbul, Baghdad, Riyadh, Moscow, St. Petersburg, Nairobi',
+        '3.500' => '(GMT +3:30) Tehran',
+        '4.000' => '(GMT +4:00) Abu Dhabi, Muscat, Baku, Tbilisi',
+        '4.500' => '(GMT +4:30) Kabul',
+        '5.000' => '(GMT +5:00) Ekaterinburg, Islamabad, Karachi, Tashkent',
+        '5.500' => '(GMT +5:30) Bombay, Calcutta, Madras, New Delhi',
+        '5.750' => '(GMT +5:45) Kathmandu',
+        '6.000' => '(GMT +6:00) Almaty, Dhaka, Colombo, Krasnoyarsk',
+        '7.000' => '(GMT +7:00) Bangkok, Hanoi, Jakarta',
+        '8.000' => '(GMT +8:00) Beijing, Singapore, Hong Kong',
+        '8.001' => '(GMT +8:00) Perth, Western Australia (No Daylight Savings)',
+        '9.000' => '(GMT +9:00) Tokyo, Osaka, Sapporo, Yakutsk',
+        '9.001' => '(GMT +9:00) Seoul, South Korea',
+        '9.500' => '(GMT +9:30) Adelaide, Darwin, the Northern Territory',
+        '10.000' => '(GMT +10:00) Eastern Australia, Guam, Vladivostok',
+        '10.001' => '(GMT +10:00) Brisbane, Queensland (No Daylight Savings)',
+        '10.002' => '(GMT +10:00) Melbourne',
+        '11.000' => '(GMT +11:00) Magadan, Solomon Islands, New Caledonia',
+        '12.000' => '(GMT +12:00) Auckland, Wellington, Fiji, Kamchatka',
+    ];
+
     public function edit(Request $request, string $go = 'default'): View|RedirectResponse
     {
         if (! ($request->user()?->isAdmin() ?? false)) {
@@ -59,7 +119,47 @@ final class SitePreferencesController extends Controller
             'ctx' => TenantContext::load(),
             'go' => $go,
             'styleTypes' => DB::table('style_types')->orderBy('id')->get(),
+            'languages' => self::LANGUAGES,
+            'timezones' => self::TIMEZONES,
+            'styleSet' => TenantContext::load()->prefsStr('prefsStyleSet'),
+            'styleLimitRows' => $this->styleLimitRows(TenantContext::load()->prefsStr('prefsStyleSet')),
         ]);
+    }
+
+    /** Per-style limit grid rows for a style set: group key + label + current limit. */
+    private function styleLimitRows(string $set): array
+    {
+        $limits = json_decode((string) TenantContext::load()->prefsStr('prefsStyleLimits'), true) ?: [];
+
+        return $this->activeStyleCategoryQuery($set)->get()
+            ->map(fn ($s): array => [
+                'key' => (string) $s->brewStyleGroup,
+                'label' => (string) $s->brewStyleGroup.' - '.($s->brewStyleCategory ?: $s->brewStyle),
+                'value' => (string) ($limits[$s->brewStyleGroup] ?? ''),
+            ])
+            ->all();
+    }
+
+    /** Style query matching the rebuildSelectedStyles active-set predicate. */
+    private function activeStyleCategoryQuery(string $set)
+    {
+        $query = DB::table('styles')
+            ->select('brewStyleGroup', 'brewStyleCategory', 'brewStyle')
+            ->orderBy('brewStyleGroup');
+
+        if ($set === 'AABC2025') {
+            $query->where(function ($q): void {
+                $q->where(function ($qq): void {
+                    $qq->where('brewStyleVersion', 'AABC2025')->where('brewStyleType', '2');
+                })->orWhere(function ($qq): void {
+                    $qq->where('brewStyleVersion', 'AABC2022')->where('brewStyleType', '!=', '2');
+                })->orWhere('brewStyleOwn', 'custom');
+            });
+        } else {
+            $query->where('brewStyleVersion', $set);
+        }
+
+        return $query;
     }
 
     public function update(Request $request, string $go = 'default'): RedirectResponse
@@ -275,7 +375,7 @@ final class SitePreferencesController extends Controller
         $set = (string) $data['prefsStyleSet'];
         $limits = [];
         foreach ($request->all() as $key => $value) {
-            if (is_string($key) && str_contains($key, $set) && str_contains($key, '-limit-') && $value !== '' && $value !== null) {
+            if (is_string($key) && str_starts_with($key, 'styleEntryLimit-'.$set.'-') && $value !== '' && $value !== null) {
                 $parts = explode('-', $key);
                 $limits[$parts[2]] = (string) $value;
             }
@@ -323,7 +423,7 @@ final class SitePreferencesController extends Controller
         $stored = TenantContext::load()->prefs;
         $data = $request->validate([
             'prefsEmailSMTP' => ['required', 'in:0,1'],
-            'prefsContact' => ['required', 'in:Y,N'],
+            'prefsContact' => ['required', 'in:Y,N,X'],
             'prefsEmailRegConfirm' => ['required', 'in:0,1'],
             'change-email-password-choice' => ['required', 'in:0,1'],
             'prefsEmailPassword' => ['nullable', 'string', 'max:255'],

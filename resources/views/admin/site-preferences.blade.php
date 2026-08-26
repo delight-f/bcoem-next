@@ -7,6 +7,10 @@
     );
     $go = $go ?? 'default';
     $tabs = ['default' => 'Display', 'entries' => 'Entries', 'email' => 'Email', 'payment' => 'Payment', 'best' => 'Best Brewer/Club'];
+    $langOptions = json_decode((string) $ctx->prefsStr('prefsLanguageOptions'), true);
+    if (! is_array($langOptions)) {
+        $langOptions = array_keys($languages);
+    }
 @endphp
 
 <x-public-layout :ctx="$ctx" :show-hero="false">
@@ -66,12 +70,12 @@
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsWinnerDelay" name="prefsWinnerDelay" type="text" style="width:auto;" value="{{ \App\Support\Tenant\DateFmt::dateTime($ctx->prefsStr('prefsWinnerDelay'), $tz, $df, $tf, 'system', false) }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsWinnerMethod" class="col-sm-4 col-form-label">Winners Display Method</label>
+                    <label for="prefsWinnerMethod" class="col-sm-4 col-form-label">Winner Place Distribution Method</label>
                     <div class="col-sm-9">
                         <select class="select select-bordered" id="prefsWinnerMethod" name="prefsWinnerMethod" style="width:auto;">
-                            <option value="0" @selected($p('prefsWinnerMethod') === '0')>All placing entries</option>
-                            <option value="1" @selected($p('prefsWinnerMethod') === '1')>Winners only</option>
-                            <option value="2" @selected($p('prefsWinnerMethod') === '2')>Winners + Best Brewer/Club</option>
+                            <option value="0" @selected($p('prefsWinnerMethod') === '0')>By Table/Medal Group</option>
+                            <option value="1" @selected($p('prefsWinnerMethod') === '1')>By Style</option>
+                            <option value="2" @selected($p('prefsWinnerMethod') === '2')>By Sub-Style</option>
                         </select>
                     </div>
                 </div>
@@ -114,7 +118,13 @@
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsLanguage" class="col-sm-4 col-form-label">Language</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsLanguage" name="prefsLanguage" type="text" style="width:auto;" value="{{ $p('prefsLanguage') }}"></div>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsLanguage" name="prefsLanguage" style="width:auto;">
+                            @foreach ($languages as $code => $name)
+                                <option value="{{ $code }}" @selected($p('prefsLanguage') === $code)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsDateFormat" class="col-sm-4 col-form-label">Date Format</label>
@@ -137,8 +147,14 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTimeZone" class="col-sm-4 col-form-label">Time Zone (UTC offset)</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsTimeZone" name="prefsTimeZone" type="text" style="width:auto;" value="{{ $p('prefsTimeZone') }}"></div>
+                    <label for="prefsTimeZone" class="col-sm-4 col-form-label">Time Zone</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsTimeZone" name="prefsTimeZone" style="width:auto;">
+                            @foreach ($timezones as $value => $label)
+                                <option value="{{ $value }}" @selected($p('prefsTimeZone') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsCAPTCHA" class="col-sm-4 col-form-label">Enable CAPTCHA</label>
@@ -192,6 +208,18 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
+                    <label for="prefsLanguageOptions" class="col-sm-4 col-form-label">Available Languages</label>
+                    <div class="col-sm-9">
+                        @foreach ($languages as $code => $name)
+                            <div class="form-check">
+                                <input class="checkbox" type="checkbox" name="prefsLanguageOptions[]" value="{{ $code }}" id="langOpt-{{ $code }}" @checked(in_array($code, $langOptions, true))>
+                                <label class="form-check-label" for="langOpt-{{ $code }}">{{ $name }}</label>
+                            </div>
+                        @endforeach
+                        <span class="help-block">Which languages visitors may choose from when the runtime language toggle is enabled.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
                     <label for="prefsSponsorLogos" class="col-sm-4 col-form-label">Sponsor Logo Display</label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
@@ -218,7 +246,7 @@
                 <h3>Fees (stored on contest info)</h3>
                 @php $c = fn (string $k) => (string) ($ctx->contestStr($k) ?? ''); @endphp
                 <div class="mb-4 row">
-                    <label for="contestEntryFee" class="col-sm-4 col-form-label">Entry Fee</label>
+                    <label for="contestEntryFee" class="col-sm-4 col-form-label">Per Entry Fee</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFee" name="contestEntryFee" type="text" style="width:auto;" value="{{ $c('contestEntryFee') }}"></div>
                 </div>
                 <div class="mb-4 row">
@@ -226,12 +254,21 @@
                     <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFee2" name="contestEntryFee2" type="text" style="width:auto;" value="{{ $c('contestEntryFee2') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscountNum" class="col-sm-4 col-form-label">Discount Threshold (entries)</label>
+                    <label for="contestEntryFeeDiscountNum" class="col-sm-4 col-form-label">Minimum Entries for Discount</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryCap" class="col-sm-4 col-form-label">Competition Entry Cap</label>
+                    <label for="contestEntryCap" class="col-sm-4 col-form-label">Fee Cap</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="contestEntryCap" name="contestEntryCap" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryCap') }}"></div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeeDiscount" class="col-sm-4 col-form-label">Discount Multiple Entries</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="contestEntryFeeDiscount" value="N" id="discN" @checked($c('contestEntryFeeDiscount') !== 'Y')><label class="form-check-label" for="discN">No</label></div>
+                    </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="contestEntryFeePassword" class="col-sm-4 col-form-label">Member Discount Password</label>
@@ -258,10 +295,10 @@
                     </div>
                 </div>
                 @foreach ([
-                    'prefsEntryLimit' => 'Competition Entry Limit',
-                    'prefsEntryLimitPaid' => 'Paid Entries Limit',
-                    'prefsUserEntryLimit' => 'Entries per Participant',
-                    'prefsUserSubCatLimit' => 'Entries per Subcategory',
+                    'prefsEntryLimit' => 'Total Entry Limit &ndash; Paid/Unpaid',
+                    'prefsEntryLimitPaid' => 'Total Entry Limit &ndash; Paid',
+                    'prefsUserEntryLimit' => 'Overall Entry Limit per Participant',
+                    'prefsUserSubCatLimit' => 'Per Participant Sub-Style Entry Limit',
                 ] as $field => $label)
                     <div class="mb-4 row">
                         <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
@@ -321,15 +358,31 @@
 
                 <h3>Per-style limits</h3>
                 <div class="mb-4 row">
-                    <label for="choose-style-entry-limits" class="col-sm-4 col-form-label">Method</label>
+                    <label for="choose-style-entry-limits" class="col-sm-4 col-form-label">Entry Limits by Style or Table/Medal Group</label>
                     <div class="col-sm-9">
                         <select class="select select-bordered" id="choose-style-entry-limits" name="choose-style-entry-limits" style="width:auto;">
-                            <option value="0" @selected($p('prefsStyleLimits') === '')>No per-style limits</option>
-                            <option value="1" @selected(str_starts_with($p('prefsStyleLimits'), '{'))>By medal group / style</option>
-                            <option value="2" @selected($p('prefsStyleLimits') === '2')>By table or medal group</option>
+                            <option value="0" @selected($p('prefsStyleLimits') === '')>Disable</option>
+                            <option value="1" @selected(str_starts_with($p('prefsStyleLimits'), '{'))>Enable By Style</option>
+                            <option value="2" @selected($p('prefsStyleLimits') === '2')>Enable By Table or Medal Group</option>
                         </select>
+                        <span class="help-block">Limiting by table or medal group requires Tables Planning Mode and defined tables/medal groups. Limiting entries by style allows a numerical limit on overall styles or style groups.</span>
                     </div>
                 </div>
+                <section id="define-style-entry-limits">
+                    <div class="mb-4 row">
+                        <label for="styleLimitsEdit" class="col-sm-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
+                        <div class="col-sm-9">
+                            @foreach ($styleLimitRows as $row)
+                                <div class="row mb-1 small">
+                                    <div class="col-sm-3 col-md-2">{{ $row['label'] }}</div>
+                                    <div class="col-sm-9 col-md-5">
+                                        <input type="number" min="0" class="input input-bordered" name="styleEntryLimit-{{ $styleSet }}-{{ $row['key'] }}" value="{{ $row['value'] }}">
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
 
                 <button type="submit" class="btn btn-primary">Save Entry Preferences</button>
             </form>
@@ -338,7 +391,7 @@
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Use SMTP Email?</label>
+                    <label class="col-sm-4 col-form-label">Allow BCOE&amp;M to Send Emails</label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="prefsEmailSMTP" value="1" id="smtpYes" @checked($p('prefsEmailSMTP') === '1')><label class="form-check-label" for="smtpYes">Yes</label></div>
@@ -365,7 +418,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailUsername" class="col-sm-4 col-form-label">Username</label>
+                    <label for="prefsEmailUsername" class="col-sm-4 col-form-label">SMTP Username</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailUsername" name="prefsEmailUsername" type="text" value="{{ $p('prefsEmailUsername') }}"></div>
                 </div>
                 <div class="mb-4 row">
@@ -386,13 +439,16 @@
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailFrom" class="col-sm-4 col-form-label">From Address</label>
+                    <label for="prefsEmailFrom" class="col-sm-4 col-form-label">Originating Email Address</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailFrom" name="prefsEmailFrom" type="text" value="{{ $p('prefsEmailFrom') }}"></div>
                 </div>
-                <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Contact Form</label>
-                    <div class="col-sm-9">
+                            <input class="radio" type="radio" name="prefsContact" value="Y" id="contactY" @checked($p('prefsContact') === 'Y')><label class="form-check-label" for="contactY">Enable Contact Form</label></div>
                         <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsContact" value="N" id="contactN" @checked($p('prefsContact') === 'N')><label class="form-check-label" for="contactN">Disable Contact Form - List Contacts</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsContact" value="X" id="contactX" @checked($p('prefsContact') === 'X')><label class="form-check-label" for="contactX">Disable Contact Form - Do Not List Contacts</label></div>
+                    </div>
+                </div>
                             <input class="radio" type="radio" name="prefsContact" value="Y" id="contactY" @checked($p('prefsContact') === 'Y')><label class="form-check-label" for="contactY">Enabled</label></div>
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="prefsContact" value="N" id="contactN" @checked($p('prefsContact') !== 'Y')><label class="form-check-label" for="contactN">Disabled</label></div>
@@ -408,14 +464,18 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">CC Admin on Emails</label>
+                    <label class="col-sm-4 col-form-label">Contact Form CC</label>
+                <div class="mb-4 row">
+                    <label for="send-test-email" class="col-sm-4 col-form-label">SMTP Settings Test</label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailCC" value="1" id="ccYes" @checked($p('prefsEmailCC') === '1')><label class="form-check-label" for="ccYes">Yes</label></div>
+                            <input class="radio" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailCC" value="0" id="ccNo" @checked($p('prefsEmailCC') !== '1')><label class="form-check-label" for="ccNo">No</label></div>
+                            <input class="radio" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
+                        {{-- TODO: legacy send_test_email.admin.php fires a test email via AJAX on save; that handler is not ported (out of scope). --}}
                     </div>
                 </div>
+                <button type="submit" class="btn btn-primary">Save Email Preferences</button>
                 <button type="submit" class="btn btn-primary">Save Email Preferences</button>
             </form>
         @elseif ($go === 'payment')

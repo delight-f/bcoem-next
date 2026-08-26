@@ -3,6 +3,18 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: {{ $row !== null ? 'Edit a Contact' : 'Contacts' }}</h1>
+        <p class="mb-3">
+            <a class="btn btn-sm btn-outline" href="{{ url('/admin/contacts') }}"><span class="fa fa-eye"></span> View All Contacts</a>
+            <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#contactsHelpModal">Contact Help</button>
+        </p>
+
+        <dialog class="modal" id="contactsHelpModal">
+            <div class="modal-box">
+                <h4 class="font-bold">Contact Help</h4>
+                <p>Define the contacts associated with the competition (e.g., the Competition Coordinator, Head Judge, Cellar Master, etc.). The names will be available via a drop-down list on the Contact page.</p>
+                <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form></div>
+            </div>
+        </dialog>
 
         @if ((int) request('msg') === 9)
             <div class="alert alert-success">Contacts updated.</div>
