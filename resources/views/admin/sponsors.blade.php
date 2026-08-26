@@ -67,7 +67,12 @@
             <p>There are no sponsors in the database.</p>
         @endif
 
-        <p><a class="btn btn-primary" href="{{ url('/admin/sponsors/create') }}">Add a Sponsor</a></p>
+        <p>
+            <a class="btn btn-primary" href="{{ url('/admin/sponsors/create') }}">Add a Sponsor</a>
+            {{-- Legacy sponsors.admin.php:41 — the logo images live in
+                 public/user_images, managed by the go=upload screen. --}}
+            <a class="btn btn-primary" href="{{ url('/admin/upload') }}"><span class="fa fa-upload"></span> Upload Sponsor Logo Images</a>
+        </p>
 
         {{-- Add/edit form --}}
         @if ($row !== null || request()->routeIs('admin.sponsors.create'))
@@ -114,6 +119,8 @@
                         @else
                             <p>No images exist in the user_images directory.</p>
                         @endif
+                        {{-- Legacy sponsors.admin.php:274. --}}
+                        <a class="btn btn-sm btn-primary ms-2" href="{{ url('/admin/upload') }}"><span class="fa fa-upload"></span> Upload Logo Images</a>
                     </div>
                 </div>
                 <div class="mb-4 row">

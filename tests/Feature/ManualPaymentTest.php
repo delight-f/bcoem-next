@@ -113,7 +113,7 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
      */
     private function mark(array $ids, string $payMethod = 'check', string $reference = '#123'): TestResponse
     {
-        return $this->post('/admin/payments/mark-paid', [
+        return $this->post('/admin/payments/mark', [
             'entry_ids' => $ids,
             'pay_method' => $payMethod,
             'reference' => $reference,
@@ -126,12 +126,12 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
         $id = $this->makeEntry();
 
         // Guest: the route's auth middleware bounces to /login.
-        $this->get('/admin/payments')->assertRedirect('/login');
+        $this->get('/admin/payments/mark')->assertRedirect('/login');
         $this->mark([$id])->assertRedirect('/login');
 
         // Entrant (userLevel=2): same rejection.
         $this->login(self::ENTRANT);
-        $this->get('/admin/payments')->assertRedirect('/?msg=99');
+        $this->get('/admin/payments/mark')->assertRedirect('/?msg=99');
         $this->mark([$id])->assertRedirect('/?msg=99');
 
         self::assertSame(0, (int) DB::table('payments')->count());
@@ -143,9 +143,9 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
         $id = $this->makeEntry();
         $this->login(self::ADMIN);
 
-        $this->get('/admin/payments')->assertOk()->assertSee('Marking Fixture');
+        $this->get('/admin/payments/mark')->assertOk()->assertSee('Marking Fixture');
 
-        $this->mark([$id])->assertRedirect('/admin/payments?msg=marked');
+        $this->mark([$id])->assertRedirect('/admin/payments/mark?msg=marked');
 
         $payment = (array) DB::table('payments')->where('entrant_uid', 9102)->sole();
         self::assertSame('paid', $payment['status']);
@@ -169,7 +169,7 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
         $this->login(self::ADMIN);
 
         $this->mark([$a, $b], 'bank-transfer', 'TRF-77')
-            ->assertRedirect('/admin/payments?msg=marked');
+            ->assertRedirect('/admin/payments/mark?msg=marked');
 
         self::assertSame(1, (int) DB::table('payments')->count());
         self::assertSame(14.0, (float) DB::table('payments')->value('amount'));
@@ -181,7 +181,7 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
         // Re-marking the same batch: idempotent no-op — no second ledger
         // row, no new event (pinned: explicit no-op, not an error).
         $before = DB::table('payments')->get();
-        $this->mark([$a, $b])->assertRedirect('/admin/payments?msg=already-paid');
+        $this->mark([$a, $b])->assertRedirect('/admin/payments/mark?msg=already-paid');
         self::assertSame($before->toJson(), DB::table('payments')->get()->toJson());
     }
 

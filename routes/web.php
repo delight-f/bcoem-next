@@ -133,9 +133,9 @@ Route::post('/admin/stripe/webhook-secret', [StripeConnectController::class, 'sa
 // controller): minimal surface listing unpaid confirmed entries; marking
 // routes through ManualGateway + PaymentService so the rows converge with
 // any gateway path. The full admin entries view is P5.5 scope.
-Route::get('/admin/payments', [ManualPaymentController::class, 'show'])
+Route::get('/admin/payments/mark', [ManualPaymentController::class, 'show'])
     ->name('admin.payments')->middleware('auth');
-Route::post('/admin/payments/mark-paid', [ManualPaymentController::class, 'markPaid'])
+Route::post('/admin/payments/mark', [ManualPaymentController::class, 'markPaid'])
     ->name('admin.payments.mark')->middleware('auth');
 
 // AJAX endpoints (P3.7). Port the legacy ajax/*.ajax.php files; response

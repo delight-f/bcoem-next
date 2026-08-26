@@ -26,7 +26,7 @@
         @else
             {{-- Minimal admin surface (P3.5c): the full entries admin view is
                  P5.5 scope. Batch via checkboxes; one payments row per entrant. --}}
-            <form method="post" action="{{ url('/admin/payments/mark-paid') }}">
+            <form method="post" action="{{ url('/admin/payments/mark') }}">
                 @csrf
                 <table class="table table-sm">
                     <thead>

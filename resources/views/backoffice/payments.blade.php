@@ -1,6 +1,6 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="container mt-6 mb-4">
-        <h1>{{ $ctx->contestStr('contestName') }}: Payments</h1>
+        <h1>{{ $ctx->contestStr('contestName') }}: PayPal Payments</h1>
 
         @if (request('msg') === 'deleted')
             <div class="alert alert-success">Payment record deleted.</div>
@@ -9,7 +9,7 @@
         <p class="text-muted">
             Ledger of all recorded payments (Stripe and manual marking share this
             table). Mark entries paid on the
-            <a href="{{ url('/admin/payments') }}">manual marking screen</a>.
+            <a href="{{ url('/admin/payments/mark') }}">manual marking screen</a>.
         </p>
 
         @if ($payments->isEmpty())
@@ -40,7 +40,7 @@
                             <td>{!! \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) !!}</td>
                             <td>{{ \App\Http\Controllers\Admin\PaymentsController::paymentDate($ctx, $payment->created_at) }}</td>
                             <td>
-                                <form method="post" action="{{ route('backoffice.payments.destroy', ['id' => $payment->id]) }}"
+                                <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}"
                                       onsubmit="return confirm('Delete this payment record? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

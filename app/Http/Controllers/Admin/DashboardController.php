@@ -164,7 +164,7 @@ final class DashboardController extends Controller
                 'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
                 [
                     ['Entries', [['/backoffice/entries', 'Manage']]],
-                    ['Payments', [['/backoffice/payments', 'Manage']]],
+                    ['Payments', [['/admin/payments/mark', 'Manage']]],
                     ['Participants', [
                         ['/backoffice/participants', 'Manage'],
                         ['/admin/judging/flights', 'Assign/Unassign Judges'],

@@ -121,7 +121,7 @@ final class BackofficeTest extends PublicSurfaceTestCase
     public function test_guest_and_entrant_are_rejected_on_all_screens(): void
     {
         $screens = [
-            '/backoffice/participants', '/backoffice/payments', '/backoffice/entries',
+            '/backoffice/participants', '/admin/payments', '/backoffice/entries',
             '/backoffice/count-by-style', '/backoffice/count-by-substyle',
         ];
 
@@ -145,11 +145,11 @@ final class BackofficeTest extends PublicSurfaceTestCase
         // Path A — admin marks paid through the HTTP surface (the same
         // route the payments back office links to).
         $this->login(self::ADMIN_EMAIL);
-        $this->post('/admin/payments/mark-paid', [
+        $this->post('/admin/payments/mark', [
             'entry_ids' => [$manualEntry],
             'pay_method' => 'check',
             'reference' => '#P55',
-        ])->assertRedirect('/admin/payments?msg=marked');
+        ])->assertRedirect('/admin/payments/mark?msg=marked');
 
         // Path B — verified Stripe success applied through PaymentService
         // (exactly what the webhook/callback path does).
@@ -178,7 +178,7 @@ final class BackofficeTest extends PublicSurfaceTestCase
         self::assertSame('paid', $pm['status']);
 
         // Both ledger rows render on the payments back office screen.
-        $this->get('/backoffice/payments')
+        $this->get('/admin/payments')
             ->assertOk()
             ->assertSee('Entry Fees')
             ->assertSee('paid');

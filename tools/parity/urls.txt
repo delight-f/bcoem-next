@@ -31,7 +31,7 @@ admin|index.php?section=admin&go=non-judging|/admin/judging/non-judging
 admin|index.php?section=admin&go=sponsors|/admin/sponsors
 admin|index.php?section=admin&go=styles|/admin/styles
 admin|index.php?section=admin&go=style_types|/admin/style-types
-admin|index.php?section=admin&go=upload&action=html|/admin/hero-images
+admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
 admin|index.php?section=admin&go=hero_images|/admin/hero-images
 admin|index.php?section=admin&go=mods|/admin/mods
 #

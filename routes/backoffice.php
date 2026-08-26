@@ -21,12 +21,13 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::delete('/backoffice/participants/{uid}', [ParticipantsController::class, 'destroy'])
         ->name('backoffice.participants.destroy');
 
-    // Payments ledger (legacy go=payments). Manual MARKING lives at
-    // /admin/payments (ManualPaymentController, P3.5c).
-    Route::get('/backoffice/payments', [PaymentsController::class, 'index'])
-        ->name('backoffice.payments.index');
-    Route::delete('/backoffice/payments/{id}', [PaymentsController::class, 'destroy'])
-        ->name('backoffice.payments.destroy');
+    // Payments ledger (legacy go=payments): the transaction-records page
+    // lives at the legacy-correct /admin/payments URL; manual marking is a
+    // port-only function relocated to /admin/payments/mark.
+    Route::get('/admin/payments', [PaymentsController::class, 'index'])
+        ->name('admin.payments.index');
+    Route::delete('/admin/payments/{id}', [PaymentsController::class, 'destroy'])
+        ->name('admin.payments.destroy');
 
     // Entries admin
     Route::get('/backoffice/entries', [EntriesController::class, 'index'])

@@ -232,7 +232,21 @@ final class BrewEditTest extends PublicSurfaceTestCase
 
     public function test_edit_blocked_after_window_and_edit_deadline_pass(): void
     {
-        // Baseline contest dates are all past and no judging sessions exist.
+        // Force the entry window AND the edit deadline into the past (the
+        // baseline drop-ship date is future, so without this the shared test
+        // DB can leave editing open and this gate won't trip).
+        $row = (array) DB::table('contest_info')->where('id', 1)->first();
+        if ($this->origContest === []) {
+            $this->origContest = collect($row)->except(['id'])->all();
+        }
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => 946684800,        // 2000-01-01
+            'contestEntryDeadline' => 978307200,    // 2001-01-01
+            'contestEntryEditDeadline' => 978307200,
+            'contestDropoffDeadline' => 978307200,
+            'contestShippingDeadline' => 978307200,
+        ]);
+
         $id = $this->makeEntry();
 
         $this->login();

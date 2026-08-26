@@ -109,7 +109,7 @@
                     </div>
                     <div class="bcoem-sidebar-panel">
                         <strong class="text-info">Total Fees Paid</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/payments') }}">{{ $status['currencySymbol'] }}{{ number_format($status['feesPaid'], 2) }}</a></span>
+                        <span class="pull-right"><a href="{{ url('/admin/payments/mark') }}">{{ $status['currencySymbol'] }}{{ number_format($status['feesPaid'], 2) }}</a></span>
                     </div>
                     <div class="bcoem-sidebar-panel">
                         <strong class="text-info">Tables Planning Mode</strong>

@@ -10,6 +10,7 @@ declare(strict_types=1);
 // guarantees a user, not an admin.
 
 use App\Http\Controllers\Admin\AllDatesController;
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\ChangeUserPasswordController;
 use App\Http\Controllers\Admin\CompetitionInfoController;
 use App\Http\Controllers\Admin\ContactsController;
@@ -62,6 +63,17 @@ Route::middleware(['web', 'auth'])->group(function (): void {
         ->name('admin.hero_images.save');
     Route::post('/admin/hero-images/delete', [HeroImagesController::class, 'delete'])
         ->name('admin.hero_images.delete');
+
+    // go=upload — sponsor logo images into public/user_images
+    // (admin/upload.admin.php + handle.php user_images branch +
+    // process_delete.inc.php go=image). ?action=html is the single-file
+    // variant of the same page.
+    Route::get('/admin/upload', [UploadController::class, 'index'])
+        ->name('admin.upload.index');
+    Route::post('/admin/upload', [UploadController::class, 'store'])
+        ->name('admin.upload.store');
+    Route::post('/admin/upload/delete', [UploadController::class, 'destroy'])
+        ->name('admin.upload.delete');
 
     // sponsors — CRUD plus the inline bulk update (action=update).
     Route::get('/admin/sponsors', [SponsorsController::class, 'index'])

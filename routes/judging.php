@@ -104,6 +104,13 @@ Route::post('/judge', [JudgeSignupController::class, 'store'])
 // Flight definition grid: manual radio per entry (ledger #7).
 Route::get('/admin/judging/flights', [FlightController::class, 'index'])
     ->name('admin.judging.flights.index')->middleware('auth');
+// Assign Flights to Rounds sub-screen (legacy action=assign&filter=rounds);
+// registered before the {id} grid route.
+Route::get('/admin/judging/flights/rounds', [FlightController::class, 'rounds'])
+    ->name('admin.judging.flights.rounds')->middleware('auth');
+Route::post('/admin/judging/flights/rounds', [FlightController::class, 'assignRounds'])
+    ->name('admin.judging.flights.rounds.assign')->middleware('auth');
+
 Route::get('/admin/judging/flights/{id}', [FlightController::class, 'show'])
     ->name('admin.judging.flights.show')->middleware('auth');
 Route::post('/admin/judging/flights/{id}', [FlightController::class, 'store'])

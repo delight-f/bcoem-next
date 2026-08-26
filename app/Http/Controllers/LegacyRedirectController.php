@@ -78,8 +78,8 @@ final class LegacyRedirectController extends Controller
         'admin|sponsors|' => ['/admin/sponsors'],
         'admin|styles|' => ['/admin/styles'],
         'admin|style_types|' => ['/admin/style-types'],
-        'admin|upload|html' => ['/admin/hero-images'],
-        'admin|upload|' => ['/admin/hero-images'],
+        'admin|upload|html' => ['/admin/upload?action=html'],
+        'admin|upload|' => ['/admin/upload'],
         'admin|hero_images|' => ['/admin/hero-images'],
         'admin|mods|' => ['/admin/mods'],
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 
@@ -51,6 +52,16 @@ final class BrewCreateTest extends PublicSurfaceTestCase
                 'userLevel' => '2',
             ]);
         }
+        $row = DB::table('contest_info')->where('id', 1)->first();
+        $this->origContest = $row === null ? [] : (array) $row;
+
+        // Open the entry window: the brew form (brew.pub.php add mode) only
+        // renders between the entry-open and deadline timestamps, and the
+        // baseline has it closed. Pin the window open for form-listing tests.
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => Date::now()->subDays(2)->getTimestamp(),
+            'contestEntryDeadline' => Date::now()->addDays(7)->getTimestamp(),
+        ]);
     }
 
     protected function tearDown(): void

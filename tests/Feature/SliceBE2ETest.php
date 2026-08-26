@@ -186,12 +186,12 @@ final class SliceBE2ETest extends PublicSurfaceTestCase
 
         $fee = (float) DB::table('contest_info')->where('id', 1)->value('contestEntryFee');
 
-        $this->post('/admin/payments/mark-paid', [
+        $this->post('/admin/payments/mark', [
             'entry_ids' => [$entryId],
             'pay_method' => 'check',
             'reference' => '#1001',
             'note' => 'mailed check',
-        ])->assertRedirect('/admin/payments?msg=marked');
+        ])->assertRedirect('/admin/payments/mark?msg=marked');
 
         // --- 5. Final convergence state. ---
         $entry = (array) DB::table('brewing')->where('id', $entryId)->sole();

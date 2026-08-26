@@ -57,7 +57,7 @@ final class PaymentsController extends Controller
         // Legacy delete: removes the ledger row only, no flag reversal.
         DB::table('payments')->where('id', $id)->delete();
 
-        return redirect('/backoffice/payments?msg=deleted');
+        return redirect('/admin/payments?msg=deleted');
     }
 
     /**

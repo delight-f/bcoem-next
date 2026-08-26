@@ -139,12 +139,117 @@ final class FlightController extends Controller
     }
 
     /**
+     * "Assign Flights to Rounds" sub-screen (legacy go=judging_flights
+     * &action=assign&filter=rounds): every defined table with its location,
+     * one select per defined flight. Current round per flight follows
+     * flight_round_number() (admin.lib.php:747): the flight's round only
+     * counts once EVERY judging_flights row for that table/flight has a
+     * non-empty round, and then it's the latest row's value.
+     */
+    public function rounds(Request $request): View|RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        $rows = [];
+        $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
+        foreach ($tables as $table) {
+            $location = $table->tableLocation !== null
+                ? DB::table('judging_locations')->where('id', $table->tableLocation)->first()
+                : null;
+
+            $maxFlight = (int) DB::table('judging_flights')
+                ->where('flightTable', $table->id)->max('flightNumber');
+
+            $flights = [];
+            for ($i = 1; $i <= $maxFlight; $i++) {
+                $flights[$i] = self::flightRoundNumber((int) $table->id, $i);
+            }
+
+            $rows[] = ['table' => $table, 'location' => $location, 'flights' => $flights];
+        }
+
+        return view('judging.flights-rounds', [
+            'ctx' => TenantContext::load(),
+            'rows' => $rows,
+        ]);
+    }
+
+    /**
+     * Legacy process_judging_flights.inc.php action=assign: when a
+     * table/flight's round CHANGES, delete all judge/steward assignments
+     * pinned to the old round, then move every judging_flights row of that
+     * table/flight to the new round. Unchanged pairs are no-ops.
+     */
+    public function assignRounds(Request $request): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        $data = $request->validate([
+            'rounds' => ['required', 'array'],
+            'rounds.*' => ['array'],
+            'rounds.*.*' => ['nullable', 'regex:/^\d*$/'],
+        ]);
+
+        foreach ($data['rounds'] as $tableId => $flights) {
+            $tableId = (int) $tableId;
+            if (DB::table('judging_tables')->where('id', $tableId)->doesntExist()) {
+                continue;
+            }
+
+            foreach ((array) $flights as $flightNumber => $round) {
+                $flightNumber = (int) $flightNumber;
+                $previous = self::flightRoundNumber($tableId, $flightNumber);
+                $round = (string) ($round ?? '');
+
+                if ($round === $previous) {
+                    continue;
+                }
+
+                DB::table('judging_assignments')
+                    ->where('assignTable', $tableId)
+                    ->where('assignFlight', $flightNumber)
+                    ->where('assignRound', $previous)
+                    ->delete();
+
+                // Legacy stored the raw posted value on an INT column, so
+                // "Not Assigned" landed as 0 — mirrored.
+                DB::table('judging_flights')
+                    ->where('flightTable', $tableId)
+                    ->where('flightNumber', $flightNumber)
+                    ->update(['flightRound' => $round === '' ? 0 : (int) $round]);
+            }
+        }
+
+        return redirect('/admin/judging/flights/rounds');
+    }
+
+    /**
      * jPrefsTablePlanning flips both counting (#2) and the grid to ALL
      * entries instead of received-only.
      */
     private static function planningMode(TenantContext $ctx): bool
     {
         return $ctx->judgingStr('jPrefsTablePlanning') === '1';
+    }
+
+    /** Legacy flight_round_number(): "" unless every row has a round; then latest. */
+    private static function flightRoundNumber(int $tableId, int $flightNumber): string
+    {
+        $rounds = DB::table('judging_flights')
+            ->where('flightTable', $tableId)
+            ->where('flightNumber', $flightNumber)
+            ->orderBy('id')
+            ->pluck('flightRound');
+
+        if ($rounds->isEmpty() || $rounds->contains(fn ($r) => (int) $r <= 0)) {
+            return '';
+        }
+
+        return (string) (int) $rounds->last();
     }
 
     /**

@@ -67,7 +67,7 @@ final class ManualPaymentController extends Controller
         $batch = array_values(array_intersect($data['entry_ids'], $markable));
 
         if ($batch === []) {
-            return redirect('/admin/payments?msg=already-paid');
+            return redirect('/admin/payments/mark?msg=already-paid');
         }
 
         $gateway = new ManualGateway;
@@ -111,7 +111,7 @@ final class ManualPaymentController extends Controller
             );
         }
 
-        return redirect('/admin/payments?msg=marked');
+        return redirect('/admin/payments/mark?msg=marked');
     }
 
     /**
