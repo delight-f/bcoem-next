@@ -902,6 +902,9 @@ html {
     display: none;
 }
 .navmenu-fixed-right {
+    /* .navbar-inverse sets left:0 for the top bar; without left:auto
+       the panel anchors screen-left instead of right. */
+    left: auto;
     right: 0;
 }
 .navmenu.in {
