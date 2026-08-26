@@ -80,7 +80,7 @@ export DB_TABLE_PREFIX="${PARITY_DB_PREFIX-baseline_}"
 # Legacy builds absolute URLs from $base_url in site/config.php; without the
 # port its redirects leave the harness server.
 export LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/"
-php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" "$LEGACY_DIR/index.php" \
+php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" \
     >"$REPORT/legacy-server.log" 2>&1 &
 LEGACY_PID=$!
 php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
@@ -95,9 +95,12 @@ NEW_LOGIN_URL="http://127.0.0.1:$PORT_NEW/login"
 
 login_role() {
     local role="$1" email="$2" pass="$3"
-    # Legacy: session cookie, then POST login credentials.
+    # Legacy: session cookie (primes prefs into the session), then POST
+    # login credentials. The Referer is REQUIRED: process.inc.php drops the
+    # dispatch when its host != SERVER_NAME.
     curl -s -c "$REPORT/jar-legacy-$role" "http://127.0.0.1:$PORT_LEGACY/" > /dev/null
     curl -s -b "$REPORT/jar-legacy-$role" -c "$REPORT/jar-legacy-$role" \
+        -e "http://127.0.0.1:$PORT_LEGACY/" \
         -d "loginUsername=$email" -d "loginPassword=$pass" \
         "$LEGACY_LOGIN_URL" > /dev/null
     # Port: session cookie + CSRF token from the login form, then POST.
