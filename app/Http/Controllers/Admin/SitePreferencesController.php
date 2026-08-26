@@ -408,9 +408,10 @@ final class SitePreferencesController extends Controller
     private function updateBest(Request $request): array
     {
         $data = $request->validate([
-            'prefsShowBestBrewer' => ['required', 'in:0,1'],
+            // Legacy selects run -1 (display all) .. 50 (site_preferences.admin.php:1562-1565).
+            'prefsShowBestBrewer' => ['required', 'integer', 'min:-1', 'max:50'],
             'prefsBestBrewerTitle' => ['nullable', 'string', 'max:100'],
-            'prefsShowBestClub' => ['required', 'in:0,1'],
+            'prefsShowBestClub' => ['required', 'integer', 'min:-1', 'max:50'],
             'prefsBestClubTitle' => ['nullable', 'string', 'max:100'],
             'prefsBestUseBOS' => ['required', 'in:0,1'],
             'prefsScoringCOA' => ['required', 'in:0,1'],

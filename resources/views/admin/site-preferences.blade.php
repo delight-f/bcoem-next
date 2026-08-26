@@ -357,58 +357,129 @@
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
             </form>
         @else
+            @php($ordinal = fn (int $i) => ($i % 100 >= 11 && $i % 100 <= 13) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][$i % 10])
+            @php($positionOptions = fn (?string $current) => collect(range(-1, 50))
+                ->map(fn ($i) => '<option value="'.$i.'"'.((string) $i === (string) $current ? ' selected' : '').'>'
+                    .($i === -1 ? 'Display all' : ($i === 0 ? 'Do not display' : 'Up to '.$i.$ordinal($i).' position'))
+                    .'</option>')
+                ->implode('\n'))
+            @php($tieBreakRules = [
+                '' => 'Unused.',
+                'TBTotalPlaces' => 'The highest total number of first, second, and third places.',
+                'TBTotalExtendedPlaces' => 'The highest total number of first, second, third, fourth (if applicable), and honorable mention places.',
+                'TBFirstPlaces' => 'The highest number of first places.',
+                'TBNumEntries' => 'The lowest number of entries.',
+                'TBMinScore' => 'The highest minimum score.',
+                'TBMaxScore' => 'The highest maximum score.',
+                'TBAvgScore' => 'The highest average score.',
+            ])
+            <h3>Best Brewer and/or Club</h3>
             <form method="post" action="{{ url('/admin/site-preferences/best') }}">
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Show Best Brewer?</label>
-                    <div class="col-sm-9">
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsShowBestBrewer" value="1" id="bbYes" @checked($p('prefsShowBestBrewer') === '1')><label class="form-check-label" for="bbYes">Yes</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsShowBestBrewer" value="0" id="bbNo" @checked($p('prefsShowBestBrewer') !== '1')><label class="form-check-label" for="bbNo">No</label></div>
+                    <label for="prefsShowBestBrewer" class="col-sm-4 col-form-label">Best Brewer Display? Up to which Position?</label>
+                    <div class="col-sm-8">
+                        <select class="select select-bordered" name="prefsShowBestBrewer" id="prefsShowBestBrewer">{!! $positionOptions($p('prefsShowBestBrewer')) !!}</select>
+                        <p class="help-block">Indicate whether you want to display the list of best brewers according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsBestBrewerTitle" class="col-sm-4 col-form-label">Best Brewer Title</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsBestBrewerTitle" name="prefsBestBrewerTitle" type="text" value="{{ $p('prefsBestBrewerTitle') }}"></div>
+                    <div class="col-sm-8">
+                        <input class="input input-bordered" id="prefsBestBrewerTitle" name="prefsBestBrewerTitle" type="text" value="{{ $p('prefsBestBrewerTitle') }}">
+                        <p class="help-block">Enter the title for the Best Brewer award (e.g., Heavy Medal, Ninkasi Award).</p>
+                    </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Show Best Club?</label>
-                    <div class="col-sm-9">
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsShowBestClub" value="1" id="bcYes" @checked($p('prefsShowBestClub') === '1')><label class="form-check-label" for="bcYes">Yes</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsShowBestClub" value="0" id="bcNo" @checked($p('prefsShowBestClub') !== '1')><label class="form-check-label" for="bcNo">No</label></div>
+                    <label for="prefsShowBestClub" class="col-sm-4 col-form-label">Best Club Display? Up to which Position?</label>
+                    <div class="col-sm-8">
+                        <select class="select select-bordered" name="prefsShowBestClub" id="prefsShowBestClub">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
+                        <p class="help-block">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsBestClubTitle" class="col-sm-4 col-form-label">Best Club Title</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}"></div>
+                    <div class="col-sm-8">
+                        <input class="input input-bordered" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
+                        <p class="help-block">Enter the title for the Best Club award.</p>
+                    </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Use BOS in Best Brewer/Club Scoring?</label>
-                    <div class="col-sm-9">
+                    <label class="col-sm-4 col-form-label">Include BOS in Calculations?</label>
+                    <div class="col-sm-8">
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="prefsBestUseBOS" value="1" id="bbosYes" @checked($p('prefsBestUseBOS') === '1')><label class="form-check-label" for="bbosYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="prefsBestUseBOS" value="0" id="bbosNo" @checked($p('prefsBestUseBOS') !== '1')><label class="form-check-label" for="bbosNo">No</label></div>
+                        <p class="help-block">Indicate whether you wish to include any Best of Show (BOS) places in Best Brewer and Best Club calculations.</p>
                     </div>
                 </div>
-                @foreach ([
-                    'prefsFirstPlacePts' => 'First Place Points',
-                    'prefsSecondPlacePts' => 'Second Place Points',
-                    'prefsThirdPlacePts' => 'Third Place Points',
-                    'prefsFourthPlacePts' => 'Fourth Place Points',
-                    'prefsHMPts' => 'Honorable Mention Points',
-                ] as $field => $label)
+                <div class="mb-4 row">
+                    <label class="col-sm-4 col-form-label">Use Circuit of America Calculations?</label>
+                    <div class="col-sm-8">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsScoringCOA" value="1" id="coaYes" @checked($p('prefsScoringCOA') === '1')><label class="form-check-label" for="coaYes">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsScoringCOA" value="0" id="coaNo" @checked($p('prefsScoringCOA') !== '1')><label class="form-check-label" for="coaNo">No</label></div>
+                        <p class="help-block">Indicate whether you wish use the Master Homebrewer Program's <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank">Circuit of America</a> scoring methodolgy for all Best Brewer and Best Club calculations. <strong>Indicating "Yes" here will override all other calculation preferences.</strong></p>
+                        <button type="button" class="btn btn-info btn-xs" data-open-modal="coa-info-modal">Circuit of America Calculations Info</button>
+                    </div>
+                </div>
+                <section id="non-COA-scoring" @if ($p('prefsScoringCOA') === '1') hidden @endif>
+                    @foreach ([
+                        'prefsFirstPlacePts' => 'Points for First Place',
+                        'prefsSecondPlacePts' => 'Points for Second Place',
+                        'prefsThirdPlacePts' => 'Points for Third Place',
+                        'prefsFourthPlacePts' => 'Points for Fourth Place',
+                        'prefsHMPts' => 'Points for Honorable Mention',
+                    ] as $field => $label)
+                        <div class="mb-4 row">
+                            <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
+                            <div class="col-sm-8">
+                                <select class="select select-bordered" name="{{ $field }}" id="{{ $field }}">
+                                    @foreach (range(0, 25) as $i)
+                                        <option value="{{ $i }}" @selected((string) $i === (string) $p($field))>{{ $i }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endforeach
+                </section>
+                @foreach (range(1, 6) as $i)
                     <div class="mb-4 row">
-                        <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
-                        <div class="col-sm-9"><input class="input input-bordered" id="{{ $field }}" name="{{ $field }}" type="number" min="0" style="width:auto;" value="{{ $p($field) }}"></div>
+                        <label for="prefsTieBreakRule{{ $i }}" class="col-sm-4 col-form-label">Tie Break Rule #{{ $i }}</label>
+                        <div class="col-sm-8">
+                            <select class="select select-bordered" name="prefsTieBreakRule{{ $i }}" id="prefsTieBreakRule{{ $i }}">
+                                @foreach ($tieBreakRules as $rule => $label)
+                                    <option value="{{ $rule }}" @selected((string) $p('prefsTieBreakRule'.$i) === (string) $rule)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 @endforeach
                 <button type="submit" class="btn btn-primary">Save Best Brewer/Club Preferences</button>
             </form>
+            <dialog class="modal" id="coa-info-modal">
+                <div class="modal-box">
+                    <h3 class="font-bold">Circuit of America Scoring Info</h3>
+                    <p>Use the Master Homebrewer Program's Circuit of America scoring methodology to determine Best Brewer and Best Club results.</p>
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Close</button></form>
+                    </div>
+                </div>
+            </dialog>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const sync = () => {
+                        const coa = document.querySelector('input[name="prefsScoringCOA"]:checked');
+                        const section = document.getElementById('non-COA-scoring');
+                        if (coa && section) section.hidden = coa.value === '1';
+                    };
+                    document.querySelectorAll('input[name="prefsScoringCOA"]').forEach((r) => r.addEventListener('click', sync));
+                    sync();
+                });
+            </script>
         @endif
     </section>
 </x-public-layout>
