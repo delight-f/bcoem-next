@@ -25,10 +25,10 @@ Ignored as universal noise everywhere: hostnames `127.0.0.1:8091` vs `:8092`, CS
 
 | legacy URL | port URL | class | what's missing/wrong | legacy source |
 |---|---|---|---|---|
-| index.php?section=brew&action=add | /brew | B | Port renders a full submittable Add Entry form where legacy gates it off: "Adding entries is not available. Entry registration has closed." alert + lead, no form — port missing the registration-closed gate | sections/brew.sec.php |
-| index.php?section=brewer&action=account | /list/edit-account | B | Legacy shows only "Edit Account Info / You can only edit your own profile." with no form; port renders the full editable account form (Email*/First*/Last*/Address…Save) | sections/brewer.sec.php |
-| index.php?section=list | /list | B | Port missing "Add Entry" + "Change Password" buttons and Entries info cards (Bottles Required Per Entry: 2, Entry Edit Deadline, Confirmed/Unpaid counts); labels differ (Organization Address vs Address, AHA Number vs AHA Member Number, Entry Drop-Off vs Entry Delivery); date format "Friday 14 August, 2026 00:47" vs "08/14/2026 3:47 AM" | sections/brewer_entries.sec.php |
-| index.php?section=pay | /pay | B | Legacy section=pay renders the full account/entries page (Pay Entry Fees, Add Entry/Edit Account buttons, Entry Registration Closed card) plus PayPal confirmation modal ("Return to Merchant"); port shows only fee total + paid notice | sections/pay.sec.php |
+| index.php?section=brew&action=add | /brew | B | FIXED (commit "fix(public): entrant pages parity — brew gate, list buttons/cards, pay account surface"): closed-window render gate — entrants get only the "Adding and editing of entries is not available." lead (no form), admins keep the form (brew.sec.php:112) | sections/brew.sec.php |
+| index.php?section=brewer&action=account | /list/edit-account | B | FIXED (commit "fix(public): entrant pages parity — brew gate, list buttons/cards, pay account surface"): ownership gate (brewer.sec.php:86/:370) — non-owners get only the "You can only edit your own profile." lead, no form | sections/brewer.sec.php |
+| index.php?section=list | /list | B | FIXED (commit "fix(public): entrant pages parity — brew gate, list buttons/cards, pay account surface"): Add Entry + Change Password buttons, Entries info cards (Bottles Required Per Entry, Entry Edit Deadline, Confirmed/Unpaid counts), legacy labels (Address, AHA Member Number, Entry Delivery), long-style date with timezone | sections/brewer_entries.sec.php |
+| index.php?section=pay | /pay | B | FIXED (commit "fix(public): entrant pages parity — brew gate, list buttons/cards, pay account surface"): full account/entries surface shared with /list (account-main partial) + PayPal "Return to Merchant"/"About to Leave" confirmation modal | sections/pay.sec.php |
 
 ## Admin
 

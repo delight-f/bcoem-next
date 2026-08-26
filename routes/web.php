@@ -57,6 +57,13 @@ Route::get('/list/edit-account', [BrewerController::class, 'showEdit'])
 Route::post('/list/edit-account', [BrewerController::class, 'saveEdit'])
     ->name('brewer.update')->middleware('auth');
 
+// Authenticated password change. Legacy: ?section=user&go=account&action=password
+// (form) + process.inc.php go=password (save).
+Route::get('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'show'])
+    ->name('user.password')->middleware('auth');
+Route::post('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'update'])
+    ->name('user.password.update')->middleware('auth');
+
 // Password reset (P3.1c). Legacy: ?section=login&go=password&action=
 // forgot|verify|reset-password; clean URLs are canonical.
 Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.forgot');

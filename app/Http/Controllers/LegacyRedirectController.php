@@ -56,6 +56,15 @@ final class LegacyRedirectController extends Controller
         'pay||' => ['/pay'],
         'brewer||account' => ['/list/edit-account'],
 
+        // ?section=user&go=account&action=password → the authenticated
+        // change-password page; username/account variants fold into the
+        // merged account form (the port merged legacy's email change into
+        // /list/edit-account).
+        'user||' => ['/list'],
+        'user|account|password' => ['/user/password'],
+        'user|account|username' => ['/list/edit-account'],
+        'user|account|' => ['/list/edit-account'],
+
         // ── Admin (userLevel <= 1) — config ──
         'admin||' => ['/admin'],
         'admin|dates|' => ['/admin/dates'],

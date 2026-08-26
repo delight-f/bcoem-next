@@ -1,12 +1,15 @@
-{{-- Legacy pay.pub.php (ticket 15): unpaid entries, batch fee total, and
-     the Pay button routed through the active gateway. Alert codes follow
-     alerts.pub.php: 13 = payment completed (success), 14 = cancelled
-     (danger). States: disabled ($disable_pay), paid_limit
-     ($comp_paid_entry_limit), settled (nothing owed / free comp),
-     unavailable (no gateway configured), payable. --}}
+{{-- Legacy section=pay: index.pub.php renders the SAME list.pub.php
+     account block as section=list (brewer info, buttons, glance, entries)
+     plus $pay_modal (the PayPal "Return to Merchant" confirmation modal,
+     echoed for both list and pay) and — when payments are enabled — the
+     pay.pub.php fee section below. The port keeps its own gateway flow
+     inside #pay-fees; alert codes follow alerts.pub.php: 13 = payment
+     completed (success), 14 = cancelled (danger). --}}
 @php($band = '<h1 class="fw-bold">'.e($ctx->contestStr('contestName')).'</h1>'
     .'<p class="landing-page-salutation"><small>'.__('site.welcome').' '.e($firstName).'!</small></p>')
 <x-public-layout :ctx="$ctx" :salutation="$band" :judging-started="false" :future-judging-sessions="$windows->futureJudgingSessions">
+    @include('public.partials.account-main')
+
     @php($msg = (int) request('msg'))
     @if ($msg === 13)
         <p class="alert alert-success print:hidden">{{ __('site.payment_received') }}</p>
@@ -55,4 +58,18 @@
             @endif
         @endif
     </section>
+
+    {{-- Legacy $pay_modal (index.pub.php): PayPal confirmation dialog shown
+         on both list and pay; copy differs by prefsPaypalIPN. --}}
+    @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
+        <div class="modal" id="confirm-submit">
+            <h3>{{ __('site.paypal_leaving_title') }}</h3>
+            <p>{!! __('site.paypal_leaving_body') !!}</p>
+        </div>
+    @else
+        <div class="modal" id="confirm-submit">
+            <h3>{!! __('site.paypal_return_title') !!}</h3>
+            <p>{!! __('site.paypal_return_body') !!}</p>
+        </div>
+    @endif
 </x-public-layout>

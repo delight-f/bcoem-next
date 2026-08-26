@@ -35,12 +35,22 @@ final class BrewerController extends Controller
             abort(404);
         }
 
+        // Legacy brewer.sec.php:86 — the profile form renders only when the
+        // session user owns the row (login email == row email) or is an
+        // admin (userLevel <= 1); otherwise just the "own profile" lead
+        // (:370). The port page always loads by session uid, so the email
+        // match is the live condition.
+        $user = Auth::user();
+        $ownsProfile = strtolower((string) $brewer->brewerEmail) === strtolower((string) $user->user_name)
+            || (int) $user->userLevel <= 1;
+
         return view('brewer.edit', [
             'brewer' => $brewer,
             'ctx' => TenantContext::load(),
             'judgingStarted' => false,
             'futureJudgingSessions' => 0,
             'sponsorsVisible' => false,
+            'ownsProfile' => $ownsProfile,
         ]);
     }
 

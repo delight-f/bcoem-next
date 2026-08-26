@@ -19,6 +19,10 @@
             </div>
         @endif
 
+        {{-- Legacy brewer.sec.php:86/:370 — non-owners get the lead only. --}}
+        @if (! $ownsProfile)
+            <p class="lead">{{ __('site.only_edit_own_profile') }}</p>
+        @else
         <form method="post" action="{{ url('/list/edit-account') }}" class="needs-validation" novalidate>
             @csrf
 
@@ -99,5 +103,6 @@
                 </div>
             </div>
         </form>
+        @endif
     </section>
 </x-public-layout>

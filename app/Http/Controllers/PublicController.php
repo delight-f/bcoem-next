@@ -183,6 +183,17 @@ final class PublicController extends Controller
             return redirect('/?msg=99');
         }
 
+        return view('public.account', $this->accountData());
+    }
+
+    /**
+     * View payload for the pub/list.pub.php account surface, shared by
+     * /list and /pay (index.pub.php renders the same block for both).
+     *
+     * @return array<string, mixed>
+     */
+    public function accountData(): array
+    {
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
         $now = time();
@@ -216,7 +227,16 @@ final class PublicController extends Controller
             ->where('brewPaid', '!=', 1)
             ->count();
 
-        return view('public.account', [
+        // pub/brewer_entries.pub.php $page_info1: confirmed/unpaid counts and
+        // the fee total (unpaid confirmed entries × per-entry fee — the port
+        // fee model shared with PayController; legacy total_fees nuances for
+        // caps/discounts don't apply to this tenant shape).
+        $confirmed = DB::table('brewing')
+            ->where('brewBrewerID', (int) Auth::id())
+            ->where('brewConfirmed', '1')
+            ->count();
+
+        return [
             'ctx' => $ctx,
             'windows' => $windows,
             'judgingStarted' => $judgingStarted,
@@ -225,7 +245,19 @@ final class PublicController extends Controller
             'rows' => $rows,
             'addEntryShow' => $entryWindowOpen && ! $windows->compEntryLimitReached && ! $windows->compPaidEntryLimitReached,
             'payDisabled' => $unpaidCount === 0,
-        ]);
+            'entryInfo' => [
+                'bottles' => $ctx->judgingStr('jPrefsBottleNum'),
+                'editDeadline' => DateFmt::dateTime(
+                    Windows::entryEditDeadline($ctx), $ctx->prefsStr('prefsTimeZone'),
+                    $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'),
+                ) ?? self::t('site.not_set'),
+                'confirmed' => $confirmed,
+                'unconfirmed' => max(0, count($rows) - $confirmed),
+                'unpaidConfirmed' => $unpaidCount,
+                'feesToPay' => $unpaidCount * $fee,
+                'currency' => $ctx->currencySymbol(),
+            ],
+        ];
     }
 
     /**

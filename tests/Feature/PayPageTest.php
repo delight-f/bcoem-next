@@ -154,9 +154,18 @@ final class PayPageTest extends PublicSurfaceTestCase
         ], $overrides), 'id');
     }
 
+    /**
+     * The /pay page now renders the full legacy account surface above the
+     * payment block (index.pub.php shares list.pub.php between list and
+     * pay) — assertions about the unpaid batch slice to #pay-fees.
+     */
     private function html(): string
     {
-        return (string) $this->get('/pay')->assertOk()->getContent();
+        $content = (string) $this->get('/pay')->assertOk()->getContent();
+
+        $pos = strpos($content, 'id="pay-fees"');
+
+        return $pos === false ? $content : substr($content, $pos);
     }
 
     // -----------------------------------------------------------------

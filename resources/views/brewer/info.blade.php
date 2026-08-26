@@ -18,15 +18,18 @@
         })
         @php($yesNo = fn (string $v) => $v === 'Y' ? __('site.yes') : __('site.no'))
 
-        @php($row(__('site.contact').' '.__('site.name'), e($brewer->brewerFirstName.' '.$brewer->brewerLastName)))
-        @php($row(__('site.contact').' '.__('site.email'), e($email)))
+        {{-- pub/brewer_info.pub.php: the Contact/Organization label prefixes
+             exist only in the pro-edition brewery branch; amateur edition
+             renders bare labels. --}}
+        @php($row(__('site.name'), e($brewer->brewerFirstName.' '.$brewer->brewerLastName)))
+        @php($row(__('site.email_address'), e($email)))
         @php($phone = e($brewer->brewerPhone1 ?: __('site.none_entered')).($brewer->brewerPhone2 ? '<br>'.e($brewer->brewerPhone2) : ''))
-        @php($row(__('site.contact').' '.__('site.phone'), $phone))
-        @php($row(__('site.organization').' '.__('site.address'), e($address)))
-        @php($row(__('site.organization').' '.__('site.city'), e($city)))
-        @php($row(__('site.organization').' '.__('site.state'), e($state)))
-        @php($row(__('site.organization').' '.__('site.zip'), e($zip)))
-        @php($row(__('site.organization').' '.__('site.country'), e($country)))
+        @php($row(__('site.phone'), $phone))
+        @php($row(__('site.address'), e($address)))
+        @php($row(__('site.city'), e($city)))
+        @php($row(__('site.state'), e($state)))
+        @php($row(__('site.zip'), e($zip)))
+        @php($row(__('site.country'), e($country)))
         @if ($mhpDisplay)
             @php($row('<strong>'.__('site.mhp_number').'</strong> <span class="badge" style="color: #F2D06C; background-color: #000;">MHP</span>', '<a class="hide-loader" href="https://www.masterhomebrewerprogram.com" target="_blank" title="'.__('site.mhp_note').'">'.e($mhp).'</a>'))
         @endif
@@ -38,7 +41,7 @@
         @if ((int) $brewer->brewerDropOff === 0)
             @php($dropoffCell .= '<br><a class="hide-loader" href="'.url('/admin/output/shipping_label').'" title="'.__('site.shipping_labels_note').'">'.__('site.print_shipping_labels').'</a>')
         @endif
-        @php($row(__('site.drop_off'), $dropoffCell))
+        @php($row(__('site.entry_delivery'), $dropoffCell))
         @php($row(__('site.club'), e($club)))
 
         @if ($brewer->brewerJudge === 'Y' || $brewer->brewerSteward === 'Y')

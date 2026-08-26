@@ -60,27 +60,23 @@ final class PayController extends Controller
                 $fee = self::feePerEntry();
                 $total = bcmul((string) count($unpaid), $fee);
 
-                return view('public.pay', [
+                return view('public.pay', array_merge(app(PublicController::class)->accountData(), [
                     'state' => app()->bound(GatewayAdapter::class) ? 'payable' : 'unavailable',
-                    'ctx' => $ctx,
-                    'windows' => $windows,
                     'firstName' => self::firstName(),
                     'unpaid' => $unpaid,
                     'fee' => $fee,
                     'total' => $total,
-                ]);
+                ]));
             }
         }
 
-        return view('public.pay', [
+        return view('public.pay', array_merge(app(PublicController::class)->accountData(), [
             'state' => $state,
-            'ctx' => $ctx,
-            'windows' => $windows,
             'unpaid' => collect(),
             'fee' => '0',
             'firstName' => self::firstName(),
             'total' => '0.00',
-        ]);
+        ]));
     }
 
     /**

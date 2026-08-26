@@ -67,7 +67,7 @@ final class BrewController extends Controller
         'brewPossAllergens' => ['nullable', 'string', 'max:255'],
     ];
 
-    public function showCreate(): View|RedirectResponse
+    public function showCreate(Request $request): View|RedirectResponse
     {
         $brewer = DB::table('brewer')->where('uid', Auth::id())->first();
         if ($brewer === null) {
@@ -75,6 +75,21 @@ final class BrewController extends Controller
         }
 
         $ctx = TenantContext::load();
+
+        // Legacy brew.sec.php:112 — once the entry window closes, adding is
+        // disabled for entrants (userLevel > 1); admins keep the form. The
+        // save path itself is NOT window-gated in legacy (process_brewing.inc.php),
+        // so this is purely a render gate.
+        $windows = Windows::derive($ctx, time());
+        $addAllowed = $windows->entry === WindowState::Open
+            || (bool) ($request->user()?->isAdmin() ?? false);
+
+        if (! $addAllowed) {
+            return view('brew.closed', [
+                'ctx' => $ctx,
+                'salutation' => __('site.add_entry'),
+            ]);
+        }
 
         return view('brew.create', [
             'ctx' => $ctx,

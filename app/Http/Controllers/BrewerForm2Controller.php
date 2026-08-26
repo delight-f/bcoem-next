@@ -256,8 +256,12 @@ final class BrewerForm2Controller extends Controller
         return [
             'brewer' => $brewer,
             'email' => (string) ($user['user_name'] ?? ''),
+            // pub/brewer_info.pub.php lead: getTimeZoneDateTime(..., "long",
+            // "date-time-no-gmt") — tz offset first, then date/time prefs,
+            // then the long style ("Friday 14 August, 2026 00:47").
             'updated' => DateFmt::dateTime(
                 strtotime((string) ($user['userCreated'] ?? '')) ?: null,
+                $ctx->prefsStr('prefsTimeZone'),
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
                 'long',
