@@ -89,12 +89,14 @@
                 <a href="#" class="dropdown-toggle" role="button">Entries, Payments, and Participants <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
-                    <li><a href="{{ url('/backoffice/payments') }}">Manage Payments</a></li>
+                    <li><a href="{{ url('/backoffice/count-by-style') }}">Entry Count By Style</a></li>
+                    <li><a href="{{ url('/backoffice/count-by-substyle') }}">Entry Count By Sub-Style</a></li>
+                    <li><a href="{{ url('/admin/payments') }}">Manage Payments</a></li>
                     <li><a href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
-                    <li><a href="{{ url('/admin/judging/flights') }}">Assign Judges</a></li>
-                    <li><a href="{{ url('/admin/judging/flights') }}">Assign Stewards</a></li>
-                    <li><a href="{{ url('/register/entrant') }}">Quick Register a Judge</a></li>
-                    <li><a href="{{ url('/register/entrant') }}">Quick Register Steward</a></li>
+                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=judges">Assign Judges</a></li>
+                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=stewards">Assign Stewards</a></li>
+                    <li><a href="{{ url('/register/judge') }}?view=quick">Quick Register a Judge</a></li>
+                    <li><a href="{{ url('/register/steward') }}?view=quick">Quick Register Steward</a></li>
                 </ul>
             </li>
             <li class="dropdown">
@@ -108,15 +110,42 @@
                 <a href="#" class="dropdown-toggle" role="button">Organizing <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}">Assign Judges/Stewards to Tables</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
                 </ul>
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Scoring <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=bos">Add BOS Judges</a></li>
                     <li><a href="{{ url('/admin/upload-scoresheets') }}">Upload Scoresheets</a></li>
+                    <li><a href="{{ url('/eval') }}">Manage Entry Evaluations</a></li>
                     <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
                     <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Printing <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/judging/tables') }}?id=default">Table Cards</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?view=entry&id=default">Pullsheets - Entry Numbers</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?id=default">Pullsheets - Judging Numbers</a></li>
+                    <li><a href="{{ url('/admin/judging/bos') }}">BOS Pullsheets</a></li>
+                    <li><a href="{{ url('/admin/judging/scores') }}?action=print&filter=score">Winners with Scores</a></li>
+                    <li><a href="{{ url('/admin/judging/scores') }}?action=print&filter=none">Winners without Scores</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Data Management <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/archive') }}">Manage Archives</a></li>
+                    <li><a href="{{ url('/admin/archive') }}?action=add">Archive Current Data</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" role="button">Preferences <span class="caret"></span></a>
+                <ul class="dropdown-menu navmenu-nav">
+                    <li><a href="{{ url('/admin/site-preferences') }}">Website</a></li>
+                    <li><a href="{{ url('/admin/judging/preferences') }}">Judging/Competition Organization</a></li>
                 </ul>
             </li>
         </ul>
