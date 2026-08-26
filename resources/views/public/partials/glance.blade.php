@@ -1,4 +1,4 @@
-@aware(['stacked' => false])
+@php($stacked = $stacked ?? false)
 <div class="row {{ $stacked ? 'row-cols-1 gy-3' : 'row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-center' }} mt-1 print:hidden">
     @foreach ($cards as $card)
         <div class="col">

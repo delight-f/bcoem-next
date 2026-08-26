@@ -43,15 +43,20 @@ final class RegisterController extends Controller
 {
     public function show(Request $request, string $go = 'entrant'): View|RedirectResponse
     {
-        if (Auth::check()) {
+        // Legacy pub/register.pub.php:28-60 — logged-in non-admins
+        // (userLevel 2) get bounced; admins (<=1) may register people on
+        // their behalf and bypass the window gates.
+        $currentUser = Auth::user();
+        if ($currentUser !== null && (int) $currentUser->userLevel >= 2) {
             return redirect('/list');
         }
+        $adminRegister = $currentUser !== null && (int) $currentUser->userLevel <= 1;
 
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
 
-        $registrationOpen = $windows->registration === WindowState::Open;
-        $judgeOpen = $windows->judge === WindowState::Open;
+        $registrationOpen = $adminRegister || $windows->registration === WindowState::Open;
+        $judgeOpen = $adminRegister || $windows->judge === WindowState::Open;
 
         $allowed = match ($go) {
             'judge', 'steward' => $judgeOpen,
@@ -75,16 +80,22 @@ final class RegisterController extends Controller
 
     public function store(Request $request, string $go = 'entrant'): RedirectResponse
     {
+        // Admins registering on behalf of someone bypass window gates
+        $currentUser = Auth::user();
+        $adminRegister = $currentUser !== null && (int) $currentUser->userLevel <= 1;
+
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
 
-        $allowed = match ($go) {
-            'judge', 'steward' => $windows->judge === WindowState::Open,
-            default => $windows->registration === WindowState::Open,
-        };
+        if (! $adminRegister) {
+            $allowed = match ($go) {
+                'judge', 'steward' => $windows->judge === WindowState::Open,
+                default => $windows->registration === WindowState::Open,
+            };
 
-        if (! $allowed) {
-            return redirect('/?section=register&go='.$go);
+            if (! $allowed) {
+                return redirect('/?section=register&go='.$go);
+            }
         }
 
         $data = $request->validate([
@@ -231,6 +242,13 @@ final class RegisterController extends Controller
                 (string) $ctx->contestStr('contestName'),
                 $this->confirmRows($data, $clubs, $brewerJudge, $brewerSteward, $brewerStaff),
             ));
+        }
+        if ($adminRegister) {
+            // filter=admin branch (process_users_register.inc.php:430-458):
+            // keep the admin session; route to the new participant.
+            // ponytail: quick-register judge-info deep link collapses to
+            // the participants list until a judge-info edit screen exists.
+            return redirect('/backoffice/participants?msg=1');
         }
 
         // Auto-login (filter=default branch) + rotate CSRF, then redirect.

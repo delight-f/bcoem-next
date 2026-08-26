@@ -190,3 +190,11 @@ if (offcanvasToggle) {
         }
     });
 }
+document.getElementById('admin-offcanvas-close')?.addEventListener('click', () => {
+    document.getElementById('admin-offcanvas')?.classList.remove('in');
+});
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        document.getElementById('admin-offcanvas')?.classList.remove('in');
+    }
+});

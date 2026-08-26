@@ -62,7 +62,10 @@
     </nav>
 
     <div class="navbar-inverse navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas" id="admin-offcanvas">
-        <div class="navmenu-brand disabled off-canvas-header">Admin Essentials Menu</div>
+        <div class="navmenu-brand disabled off-canvas-header d-flex justify-content-between align-items-center">
+            <span>Admin Essentials Menu</span>
+            <button type="button" id="admin-offcanvas-close" class="btn-close btn-close-white" aria-label="Close Admin Essentials menu"></button>
+        </div>
         <ul class="nav navmenu-nav">
             <li class="disabled"><a href="#"><em class="bcoem-admin-menu-disabled">This menu contains only essential functions. Select <strong>Admin Dashboard</strong> for all options.</em></a></li>
             <li><a href="{{ url('/admin') }}">Admin Dashboard</a></li>
