@@ -11,6 +11,7 @@ use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
 use App\Http\Controllers\EntriesController;
+use App\Http\Controllers\LegacyRedirectController;
 use App\Http\Controllers\ManualPaymentController;
 use App\Http\Controllers\PayController;
 use App\Http\Controllers\PublicController;
@@ -18,14 +19,12 @@ use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
-// Public read-only surface (Phase 2). Legacy served these as ?section=
-// query params; the standalone build uses clean URLs and additionally
-// accepts the legacy query shape so old links keep working.
-// Legacy served login as ?section=login (and the reset flow as
-// ?section=login&go=password&action=forgot|reset-password); the clean
-// /login URL is canonical, legacy query shapes redirect to it.
-Route::get('/', [PublicController::class, 'home'])->name('home');
-Route::get('/?section=login', [LoginController::class, 'show'])->name('login.legacy');
+// Home (Phase 2) doubles as the legacy URL entry point: old bookmarks hit
+// index.php?section=… and LegacyRedirectController 301s them onto the
+// clean port URLs per the HANDOVER §4.3 contract; anything without a
+// recognized legacy section renders home as before.
+Route::get('/', LegacyRedirectController::class)->name('home.legacy');
+Route::get('/index.php', LegacyRedirectController::class);
 Route::get('/list', [PublicController::class, 'list'])->name('list');
 // Legacy served archives as ?section=past-winners&go={suffix}; the suffix is a
 // table-name fragment and is sanitized to alphanumerics in the repository.
@@ -156,3 +155,12 @@ require __DIR__.'/outputs.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/backoffice.php';
 require __DIR__.'/archive.php';
+
+// Legacy URL redirect contract (HANDOVER §4.3): the bcoem query-string
+// dispatch (GET index.php?section=… / POST includes/process.inc.php)
+// maps onto the clean port URLs; see LegacyRedirectController for the map.
+// /index.php and / both reach the controller (the front controller strips
+// its own script name from the path).
+Route::post('/includes/process.inc.php', [LegacyRedirectController::class, 'process'])
+    ->name('legacy.process');
+Route::get('/includes/process.inc.php', [LegacyRedirectController::class, 'process']);

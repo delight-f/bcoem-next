@@ -29,34 +29,6 @@ final class PublicController extends Controller
 {
     public function home(Request $request): View|RedirectResponse
     {
-        // Legacy served login as ?section=login (plus the reset flow via
-        // go=password&action=forgot|reset-password); the standalone build
-        // uses the clean /login URL — legacy query shapes redirect there.
-        if (request('section') === 'login') {
-            return redirect('/login');
-        }
-
-        // Legacy served the account page as ?section=list; the register
-        // flow lands back on it with msg=7 (success).
-        if (request('section') === 'list') {
-            $msg = (string) request('msg');
-
-            return redirect('/list'.($msg !== '' ? '?msg='.$msg : ''));
-        }
-
-        // Legacy served registration as ?section=register&go={entrant|judge|
-        // steward}; the clean /register URL is canonical.
-        if (request('section') === 'register') {
-            $go = (string) (request('go') ?: 'entrant');
-
-            return redirect('/register/'.$go);
-        }
-
-        // Legacy admin entry point (?section=admin → admin/default.admin.php).
-        if (request('section') === 'admin') {
-            return redirect('/admin');
-        }
-
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
