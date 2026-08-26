@@ -9,6 +9,7 @@ use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -47,7 +48,32 @@ final class SpecialBestDataController extends Controller
         return view('judging.special-best-data', [
             'ctx' => TenantContext::load(),
             'rows' => $rows,
+            // "View..." 'All Custom Style Entries' renders only when winner
+            // rows exist (special_best_data.admin.php:816-822).
+            'entriesCount' => $rows->count(),
+            // "Add/Edit Entries For..." dropdown — legacy
+            // lib/admin.lib.php score_custom_winning_choose().
+            'entryDropdown' => $this->entryDropdown(),
         ]);
+    }
+
+    /**
+     * @return Collection<int, array{id:int,name:string,hasData:bool}>
+     */
+    private function entryDropdown(): Collection
+    {
+        $counts = DB::table('special_best_data')
+            ->select('sid')
+            ->selectRaw('count(*) as c')
+            ->groupBy('sid')
+            ->pluck('c', 'sid');
+
+        return DB::table('special_best_info')->orderBy('sbi_name')->get(['id', 'sbi_name'])
+            ->map(static fn (\stdClass $c): array => [
+                'id' => (int) $c->id,
+                'name' => $c->sbi_name,
+                'hasData' => (int) ($counts[$c->id] ?? 0) > 0,
+            ]);
     }
 
     /** Add/edit slots for one category (existing rows prefilled, rest blank). */

@@ -1,7 +1,18 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     @php($j = $judging)
     <section class="container mt-6 mb-4">
-        <h1>{{ $ctx->contestStr('contestName') }}: Judging/Competition Organization Preferences</h1>
+        <h1>{{ $ctx->contestStr('contestName') }}: Set Preferences</h1>
+        {{-- Sibling preference-tab buttons (judging_preferences.admin.php:187-198).
+             The Judging tab is the current page, so it is rendered disabled. --}}
+        <div class="bcoem-admin-element hidden-print mb-3">
+            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit') }}"><span class="fa fa-cog"></span> General Preferences</a>
+            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'entries']) }}"><span class="fa fa-beer"></span> Entry Preferences</a>
+            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'email']) }}"><span class="fa fa-envelope"></span> Email Sending / Contact Display Preferences</a>
+            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'payment']) }}"><span class="fa fa-money"></span> Currency and Payment Preferences</a>
+            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'best']) }}"><span class="fa fa-trophy"></span> Best Brewer and/or Club Preferences</a>
+            <a class="btn btn-primary disabled" style="margin: 5px 5px 5px 0" href="{{ route('admin.judging.preferences.show') }}"><span class="fa fa-cog"></span> Judging/Competition Organization Preferences</a>
+        </div>
+        <h3>Judging/Competition Organization</h3>
 
         @if ($errors->any())
             <div class="alert alert-error">
@@ -39,6 +50,9 @@
                         <input class="radio" type="radio" name="jPrefsQueued" id="jPrefsQueued_N" value="N" required @checked(old('jPrefsQueued', $j['jPrefsQueued'] ?? 'Y') === 'N')>
                         <label class="form-check-label" for="jPrefsQueued_N">No</label>
                     </div>
+                    <div class="form-text">
+                        <button type="button" class="btn btn-xs btn-info" data-open-modal="queuedModal">Queued Judging Info</button>
+                    </div>
                 </div>
             </fieldset>
 
@@ -53,6 +67,9 @@
                         <input class="radio" type="radio" name="prefsDisplaySpecial" id="prefsDisplaySpecial_E" value="E" required @checked(old('prefsDisplaySpecial', $prefsDisplaySpecial ?? 'J') === 'E')>
                         <label class="form-check-label" for="prefsDisplaySpecial_E">6-Digit Entry Number</label>
                     </div>
+                    <div class="form-text">
+                        <p>How entries are identified to judges when evaluating. If uploading scoresheet PDF files, the PDFs for each entry should be named according to the exact 6-character number for use by the system. <span class="text-primary"><strong>Using the random, system-generated <u>Judging Numbers</u> ensures unique file names for live and archived entry data.</strong></span></p>
+                    </div>
                 </div>
             </div>
 
@@ -66,6 +83,9 @@
                     <div class="form-check form-check-inline">
                         <input class="radio" type="radio" name="prefsEval" id="prefsEval_0" value="0" required @checked((string) old('prefsEval', $prefsEval ?? '0') === '0')>
                         <label class="form-check-label" for="prefsEval_0">Disable</label>
+                    </div>
+                    <div class="form-text">
+                        <button type="button" class="btn btn-xs btn-info" data-open-modal="prefsEvalModal">Electronic Scoresheets Info</button>
                     </div>
                 </div>
             </div>
@@ -170,5 +190,28 @@
 
             <button type="submit" class="btn btn-primary">Set Preferences</button>
         </form>
+        {{-- Legacy #queuedModal (judging_preferences.admin.php:228-245). --}}
+        <dialog class="modal" id="queuedModal">
+            <div class="modal-box">
+                <h4 class="font-bold" id="queuedModalLabel">Queued Judging Info</h4>
+                <p>Indicate whether you would like to use the Queued Judging methodology (employed by the American Homebrewers Association for judging the National Hombrewers Competition).</p>
+                <p>If &ldquo;Yes,&rdquo; there is no need for competition organizers to define flights. More information can be downloaded on the <a href="https://www.bjcp.org/competitions/supplies-reference-materials/" target="_blank">BJCP's website</a>.</p>
+                <div class="modal-action">
+                    <form method="dialog"><button class="btn">Close</button></form>
+                </div>
+            </div>
+        </dialog>
+
+        {{-- Legacy #prefsEvalModal (judging_preferences.admin.php:284-302). --}}
+        <dialog class="modal" id="prefsEvalModal">
+            <div class="modal-box">
+                <h4 class="font-bold" id="prefsEvalModalLabel">Electronic Scoresheets Info</h4>
+                <p>Enable or disable the Electronic Scoresheets function. If enabled, Admins have the option to accept judges' entry evaluations via fully electronic, web-based scoresheets built to emulate BJCP official and quasi-official paper-based forms.</p>
+                <p>If enabling Electronic Scoresheets and associated functions, Admins should also make sure to set up their installation to take full advantage of them by following the steps outlined in the <a href="https://brewingcompetitions.com/setup-electronic-scoresheets" target="_blank">Setup BCOE&amp;M Electronic Scoresheets</a> help article. Admins or competition officials should also direct all judges who will be using Electronic Scoresheets to review the <a href="https://brewingcompetitions.com/judging-with-electronic-scoresheets" target="_blank">Judging with BCOE&amp;M Electronic Scoresheets</a> primer.</p>
+                <div class="modal-action">
+                    <form method="dialog"><button class="btn">Close</button></form>
+                </div>
+            </div>
+        </dialog>
     </section>
 </x-public-layout>

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Judging\FlightAssignment;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -44,12 +45,24 @@ final class TableController extends Controller
             return redirect('/?msg=99');
         }
 
+        // jPrefsTablePlanning drives the mode alert + switch buttons
+        // (judging_tables.admin.php:594-651).
+        $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
+
         return view('judging.config.tables', [
             'ctx' => TenantContext::load(),
             'tables' => DB::table('judging_tables')->orderBy('tableNumber')->get(),
-            // jPrefsTablePlanning drives the mode alert + switch buttons
-            // (judging_tables.admin.php:594-651).
-            'planning' => (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1',
+            'planning' => $planning,
+            // Print "By Location" items render only when >1 judging session
+            // (legacy $totalRows_judging > 1, judging_tables.admin.php:799-813).
+            'sessionCount' => DB::table('judging_locations')->whereIn('judgingLocType', [0, 1])->count(),
+            // Pullsheets by Table only when the admin does not obfuscate entry
+            // data (judging_tables.admin.php:800-803).
+            'obfuscate' => (int) ($request->user()?->userAdminObfuscate ?? 0) === 1,
+            // Judges/Stewards Not Assigned to a Table modals (legacy
+            // lib/admin.lib.php not_assigned()).
+            'unassignedJudges' => $this->unassigned('J', 'staff_judge'),
+            'unassignedStewards' => $this->unassigned('S', 'staff_steward'),
         ]);
     }
 
@@ -205,6 +218,37 @@ final class TableController extends Controller
         $numbers = DB::table('judging_tables')->distinct()->orderBy('tableNumber')->pluck('tableNumber')->map(intval(...))->all();
 
         return array_values($numbers);
+    }
+
+    /**
+     * Signed-up judges/stewards with zero table assignments — the legacy
+     * lib/admin.lib.php not_assigned() roster feeding the "Not Assigned to
+     * a Table" view-menu modals (mirrors Output\AssignmentsController's
+     * bull pen).
+     *
+     * @return Collection<int, array<string, string>>
+     */
+    private function unassigned(string $role, string $staffColumn): Collection
+    {
+        return DB::table('staff')
+            ->join('brewer', 'brewer.uid', '=', 'staff.uid')
+            ->where($staffColumn, 1)
+            ->whereNotExists(static function (Builder $q) use ($role): void {
+                $q->select(DB::raw(1))
+                    ->from('judging_assignments')
+                    ->whereColumn('judging_assignments.bid', 'brewer.uid')
+                    ->where('judging_assignments.assignment', $role);
+            })
+            ->orderBy('brewer.brewerLastName')
+            ->get(['brewer.brewerFirstName', 'brewer.brewerLastName', 'brewer.brewerJudgeRank'])
+            ->map(static function (\stdClass $b): array {
+                $ranks = array_values(array_filter(array_map('trim', explode(',', (string) $b->brewerJudgeRank))));
+
+                return [
+                    'name' => trim(($b->brewerLastName ?? '').', '.($b->brewerFirstName ?? '')),
+                    'rank' => $ranks[0] ?? 'Non-BJCP',
+                ];
+            });
     }
 
     /**

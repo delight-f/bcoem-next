@@ -10,6 +10,13 @@
             <a class="btn btn-primary" href="{{ route($nonJudging ? 'admin.judging.non_judging.create' : 'admin.judging.locations.create') }}">Add a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</a>
         </p>
 
+        @if ($nonJudging)
+            {{-- non-judging_locations.admin.php:158-161 — definition + staff
+                 availability copy. --}}
+            <p>Non-judging sessions are scheduled periods of time that necessitate staffing, such as entry pick-up, entry sorting, judge check-in, awards preparation, etc.</p>
+            <p>Anyone with an account who inicates they are willing to serve as staff will also have the option to indictate their availability for each non-judging session.</p>
+        @endif
+
         @if ($locations->isEmpty())
             <p>No {{ $nonJudging ? 'non-judging sessions' : 'judging sessions' }} have been defined.</p>
         @else

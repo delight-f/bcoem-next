@@ -9,6 +9,7 @@ use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -31,7 +32,34 @@ final class SpecialBestController extends Controller
         return view('judging.special-best', [
             'ctx' => TenantContext::load(),
             'categories' => DB::table('special_best_info')->orderBy('sbi_rank')->get(),
+            // "View..." 'All Custom Category Entries' renders only when winner
+            // rows exist (special_best.admin.php:784-790).
+            'entriesCount' => DB::table('special_best_data')->count(),
+            // "Add/Edit Entries For..." dropdown — legacy
+            // lib/admin.lib.php score_custom_winning_choose() orders by
+            // sbi_name and labels each item add/edit by whether the category
+            // already has winner rows.
+            'entryDropdown' => $this->entryDropdown(),
         ]);
+    }
+
+    /**
+     * @return Collection<int, array{id:int,name:string,hasData:bool}>
+     */
+    private function entryDropdown(): Collection
+    {
+        $counts = DB::table('special_best_data')
+            ->select('sid')
+            ->selectRaw('count(*) as c')
+            ->groupBy('sid')
+            ->pluck('c', 'sid');
+
+        return DB::table('special_best_info')->orderBy('sbi_name')->get(['id', 'sbi_name'])
+            ->map(static fn (\stdClass $c): array => [
+                'id' => (int) $c->id,
+                'name' => $c->sbi_name,
+                'hasData' => (int) ($counts[$c->id] ?? 0) > 0,
+            ]);
     }
 
     public function create(Request $request): View|RedirectResponse
