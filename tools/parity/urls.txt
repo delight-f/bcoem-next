@@ -1,19 +1,68 @@
-# Parity URL inventory — Phase 2 slice A (public surface, anonymous).
-# One entry per line; optionally "legacy_path|new_path" when the two apps
-# route the same page differently (legacy ?section= vs clean port URLs).
+# Parity URL inventory — FULL COVERAGE.
+# Format: role|legacy_path|port_path   (role: anon|entrant|admin; port_path optional).
+# Lines starting with # are skipped. Legacy paths are query-string form;
+# port paths are clean URLs.
 #
-# Landing page carries: at-a-glance cards, rules/entry-window sections,
-# contacts, and (post-reveal) BOS + winning-entries results.
-/
-# Past winners over archive sibling tables.
-index.php?section=past-winners&go=demoarchive|/past-winners/demoarchive
-# Account-gated list: both sides redirect anonymous requests.
-index.php?section=list|/list
-
-# --- Phase 3 slice B: anonymous-diffable auth surfaces ---
-# Login page (clean URL canonical; legacy ?section=login).
-index.php?section=login|/login
-# Registration page (entrant tab; legacy ?section=register&go=entrant).
-index.php?section=register&go=entrant|/register/entrant
-# Forgot-password form (legacy ?section=login&go=password&action=forgot).
-index.php?section=login&go=password&action=forgot|/forgot-password
+# ── Anonymous public ──
+anon|/
+anon|index.php?section=past-winners&go=demoarchive|/past-winners/demoarchive
+anon|index.php?section=login|/login
+anon|index.php?section=register&go=entrant|/register/entrant
+anon|index.php?section=register&go=judge|/register/judge
+anon|index.php?section=register&go=steward|/register/steward
+anon|index.php?section=login&go=password&action=forgot|/forgot-password
+#
+# ── Entrant (logged in, userLevel 2) ──
+entrant|index.php?section=list|/list
+entrant|index.php?section=brew&action=add|/brew
+entrant|index.php?section=pay|/pay
+entrant|index.php?section=brewer&action=account|/list/edit-account
+#
+# ── Admin (userLevel 0) — config ──
+admin|index.php?section=admin|/admin
+admin|index.php?section=admin&go=dates|/admin/dates
+admin|index.php?section=admin&go=contest_info&action=edit|/admin/competition-info
+admin|index.php?section=admin&go=contacts|/admin/contacts
+admin|index.php?section=admin&go=contacts&action=add|/admin/contacts/create
+admin|index.php?section=admin&go=special_best|/admin/judging/special-best
+admin|index.php?section=admin&go=dropoff|/admin/dropoff
+admin|index.php?section=admin&go=judging|/admin/judging/locations
+admin|index.php?section=admin&go=non-judging|/admin/judging/non-judging
+admin|index.php?section=admin&go=sponsors|/admin/sponsors
+admin|index.php?section=admin&go=styles|/admin/styles
+admin|index.php?section=admin&go=style_types|/admin/style-types
+admin|index.php?section=admin&go=upload&action=html|/admin/hero-images
+admin|index.php?section=admin&go=hero_images|/admin/hero-images
+admin|index.php?section=admin&go=mods|/admin/mods
+#
+# ── Admin — entries & participants ──
+admin|index.php?section=admin&go=entries|/backoffice/entries
+admin|index.php?section=admin&go=count_by_style|/backoffice/count-by-style
+admin|index.php?section=admin&go=count_by_substyle|/backoffice/count-by-substyle
+admin|index.php?section=admin&go=payments|/admin/payments
+admin|index.php?section=admin&go=participants|/backoffice/participants
+admin|index.php?section=admin&go=participants&filter=judges|/backoffice/participants?filter=judges
+admin|index.php?section=admin&go=participants&filter=stewards|/backoffice/participants?filter=stewards
+admin|index.php?section=admin&go=checkin|/admin/judging/checkin
+admin|index.php?section=admin&go=send_test_email|/admin/send-test-email
+#
+# ── Admin — organizing & scoring ──
+admin|index.php?section=admin&go=judging_tables|/admin/judging/tables
+admin|index.php?section=admin&go=judging_flights|/admin/judging/flights
+admin|index.php?section=admin&go=judging_preferences|/admin/judging/preferences
+admin|index.php?section=admin&go=judging_scores|/admin/judging/scores
+admin|index.php?section=admin&go=judging_scores_bos|/admin/judging/bos
+admin|index.php?section=admin&go=special_best_data|/admin/judging/special-best-data
+admin|index.php?section=admin&go=upload_scoresheets|/admin/upload-scoresheets
+admin|index.php?section=evaluation&go=default&filter=default&view=admin|/eval
+#
+# ── Admin — preferences tabs ──
+admin|index.php?section=admin&go=preferences|/admin/site-preferences
+admin|index.php?section=admin&go=preferences&action=entries|/admin/site-preferences/entries
+admin|index.php?section=admin&go=preferences&action=email|/admin/site-preferences/email
+admin|index.php?section=admin&go=preferences&action=payment|/admin/site-preferences/payment
+admin|index.php?section=admin&go=preferences&action=best|/admin/site-preferences/best
+#
+# ── Admin — data management ──
+admin|index.php?section=admin&go=archive|/admin/archive
+admin|index.php?section=admin&go=user|/admin/purge

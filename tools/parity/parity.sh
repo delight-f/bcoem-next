@@ -68,9 +68,9 @@ export DB_PORT=3306
 export DB_DATABASE="$DB_NAME"
 export DB_USERNAME="${PARITY_DB_USER:-root}"
 export DB_PASSWORD="${PARITY_DB_PASS:-}"
-# Anonymous slice needs no persistence; avoid requiring framework tables
-# inside the tenant schema.
-export SESSION_DRIVER=array
+# Authenticated roles need sessions to survive across curl requests, but
+# the tenant dump has no framework tables: use file sessions.
+export SESSION_DRIVER=file
 export CACHE_STORE=array
 export QUEUE_CONNECTION=sync
 # apps must resolve the same physical tables. Set PARITY_DB_PREFIX to the
@@ -88,23 +88,65 @@ php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
 NEW_PID=$!
 sleep 2
 
+# ── Role sessions ─────────────────────────────────────────────
+# Login once per role on both apps; crawl reuses the cookie jars.
+LEGACY_LOGIN_URL="http://127.0.0.1:$PORT_LEGACY/includes/process.inc.php?section=login&action=login"
+NEW_LOGIN_URL="http://127.0.0.1:$PORT_NEW/login"
+
+login_role() {
+    local role="$1" email="$2" pass="$3"
+    # Legacy: session cookie, then POST login credentials.
+    curl -s -c "$REPORT/jar-legacy-$role" "http://127.0.0.1:$PORT_LEGACY/" > /dev/null
+    curl -s -b "$REPORT/jar-legacy-$role" -c "$REPORT/jar-legacy-$role" \
+        -d "loginUsername=$email" -d "loginPassword=$pass" \
+        "$LEGACY_LOGIN_URL" > /dev/null
+    # Port: session cookie + CSRF token from the login form, then POST.
+    curl -s -c "$REPORT/jar-new-$role" "$NEW_LOGIN_URL" -o "$REPORT/login-$role.html"
+    local token
+    token=$(grep -oE 'name="_token" value="[^"]*"' "$REPORT/login-$role.html" | head -1 | sed 's/.*value="//;s/"$//')
+    curl -s -b "$REPORT/jar-new-$role" -c "$REPORT/jar-new-$role" \
+        -d "_token=$token" -d "loginUsername=$email" -d "loginPassword=$pass" \
+        "$NEW_LOGIN_URL" > /dev/null
+}
+
+# Verify a jar actually holds a session (login landed somewhere gated).
+check_role() {
+    local role="$1" probe="$2" probe_new="$3"
+    local l n
+    l=$(curl -s -b "$REPORT/jar-legacy-$role" -o /dev/null -w '%{redirect_url}' "http://127.0.0.1:$PORT_LEGACY/$probe")
+    n=$(curl -s -b "$REPORT/jar-new-$role" -o /dev/null -w '%{redirect_url}' "http://127.0.0.1:$PORT_NEW/$probe_new")
+    if [ -n "$l" ] || [ -n "$n" ]; then
+        echo "WARN: $role session did not stick (legacy -> ${l:-ok}, port -> ${n:-ok})"
+    fi
+}
+
+if grep -q '^entrant|' urls.txt; then
+    login_role entrant "${ENTRANT_EMAIL:-test4@example.com}" "${ENTRANT_PASS:-TestPass123!}"
+    check_role entrant "index.php?section=list" "list"
+fi
+if grep -q '^admin|' urls.txt; then
+    login_role admin "${ADMIN_EMAIL:-faraaz@debelder.com}" "${ADMIN_PASS:-review-admin}"
+    check_role admin "index.php?section=admin" "admin"
+fi
+
 pass=0; fail=0; skipped=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
-    safe="$(echo "$url" | tr '/?=&' '____')"
-    # URLs are joined onto the host with a leading "/", so drop any leading
-    # slash from the path itself — a doubled slash 404s on the port.
+    safe="$(echo "$url" | tr '/?=&|' '_____')"
+    role="anon"
+    case "$url" in entrant\|*) role="entrant";; admin\|*) role="admin";; esac
+    url="${url#*|}"
     legacy_url="${url%%|*}"; new_url="${url#*|}"
     [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
     legacy_url="${legacy_url#/}"; new_url="${new_url#/}"
-    curl -sL -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
+    curl -sL -b "$REPORT/jar-legacy-$role" -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
         > "$REPORT/$safe.legacy.code" \
         || { echo "SKIP (legacy error $(cat "$REPORT/$safe.legacy.code")) $url"; skipped=$((skipped+1)); continue; }
-    curl -sL -w '%{http_code}' "http://127.0.0.1:$PORT_NEW/$new_url" -o "$REPORT/$safe.new.raw" \
+    curl -sL -b "$REPORT/jar-new-$role" -w '%{http_code}' "http://127.0.0.1:$PORT_NEW/$new_url" -o "$REPORT/$safe.new.raw" \
         > "$REPORT/$safe.new.code" \
         || { echo "FAIL (new error $(cat "$REPORT/$safe.new.code"))  $url"; fail=$((fail+1)); continue; }
     php normalize.php < "$REPORT/$safe.legacy.raw" > "$REPORT/$safe.legacy.clean"
-    php normalize.php < "$REPORT/$safe.new.raw"   > "$REPORT/$safe.new.clean"
+    php normalize.php < "$REPORT/$safe.new.raw" > "$REPORT/$safe.new.clean"
     # Option B: content-level comparison. The standalone port is not a
     # markup transliteration, so visible text is the regression contract;
     # markup diffs are kept for triage but do not fail the gate.
