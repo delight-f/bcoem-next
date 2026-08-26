@@ -53,9 +53,20 @@ final class ScoreController extends Controller
                 't.tableNumber', 't.tableName',
             ]);
 
+        // Legacy control set (admin/judging_scores.admin.php, default view):
+        // the dropdown lists every judging table; the status line counts ALL
+        // judging_scores rows (admin_common.db.php:75-82) against entries
+        // marked paid AND received (total_paid_received('judging_scores',0)).
+        $ctx = TenantContext::load();
+
         return view('judging.scores', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'scores' => $scores,
+            'tables' => DB::table('judging_tables')->orderBy('tableNumber')->get(['id', 'tableNumber', 'tableName']),
+            'bosTypes' => DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get(['id', 'styleTypeName']),
+            'scoresEntered' => DB::table('judging_scores')->count(),
+            'paidReceived' => DB::table('brewing')->where('brewPaid', '1')->where('brewReceived', '1')->count(),
+            'evalOn' => $ctx->prefsStr('prefsEval') === '1',
         ]);
     }
 

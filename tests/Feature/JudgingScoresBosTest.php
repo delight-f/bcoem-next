@@ -400,6 +400,93 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
         $this->get('/admin/judging/special-best')->assertRedirect('/login');
     }
 
+    /**
+     * The scores index must render legacy's control set
+     * (admin/judging_scores.admin.php default view): All Tables / View BOS
+     * buttons, "Add or Update Scores For..." populated from judging_tables,
+     * the Print menu with per-style-type BOS pullsheets, and the
+     * scores-entered status line. One dropdown selection followed through.
+     */
+    public function test_scores_index_renders_legacy_control_set(): void
+    {
+        $this->styleType(1, 'Beer', 'Y', '2');
+        $this->styleType(2, 'Cider', 'Y', '1');
+        $this->table('1');
+        $entry = $this->entry(['brewJudgingNumber' => '800001']);
+        // Unpaid/unreceived entries never reach the status-line denominator
+        // (total_paid_received filters brewPaid='1' AND brewReceived='1').
+        $this->entry(['brewJudgingNumber' => '800002', 'brewPaid' => 0, 'brewReceived' => 0]);
+
+        $scoresEntered = DB::table('judging_scores')->count();
+        $paidReceived = DB::table('brewing')->where('brewPaid', '1')->where('brewReceived', '1')->count();
+        // The shared baseline DB may already carry score rows; the
+        // empty-state paragraph only renders at exactly zero.
+        $response = $this->get('/admin/judging/scores')
+            ->assertOk()
+            ->assertSee('All Tables')
+            ->assertSee('View BOS Entries and Places')
+            ->assertSee('Add or Update Scores For...')
+            ->assertSee('Print...')
+            ->assertSee('BOS Pullsheet for Beer')
+            ->assertSee('BOS Pullsheet for Cider')
+            ->assertSee("Scores have been entered for {$scoresEntered} of {$paidReceived} entries marked as paid and received.", false);
+        if ($scoresEntered === 0) {
+            $response->assertSee('No scores have been entered. If tables have been defined', false);
+        }
+
+        $table = DB::table('judging_tables')->find($this->tableId);
+        $response->assertSee("Table {$table->tableNumber}: {$table->tableName}", false);
+
+        // Following one dropdown selection lands on the score grid, 200.
+        $this->get('/admin/judging/scores/'.$this->tableId.'/edit')->assertOk();
+
+        // With a score row present, the empty-state paragraph disappears.
+        DB::table('judging_scores')->insert([
+            'eid' => $entry,
+            'bid' => self::ENTRANT_ID,
+            'scoreTable' => $this->tableId,
+            'scoreEntry' => '30',
+            'scorePlace' => '1',
+            'scoreType' => 1,
+            'scoreMiniBOS' => 0,
+        ]);
+        $scoresEntered++;
+        $this->get('/admin/judging/scores')
+            ->assertOk()
+            ->assertSee("Scores have been entered for {$scoresEntered} of {$paidReceived} entries marked as paid and received.", false)
+            ->assertDontSee('no-scores-entered');
+    }
+
+    /**
+     * The BOS index must render legacy's control set
+     * (admin/judging_scores_bos.admin.php default view): All Scores / All
+     * Tables buttons, "Add or Update..." per BOS style type, Print menu with
+     * pullsheet + both Cup Mats variants. One dropdown selection through.
+     */
+    public function test_bos_index_renders_legacy_control_set(): void
+    {
+        $beerType = $this->styleType(1, 'Beer', 'Y', '2');
+        $this->styleType(2, 'Cider', 'Y', '1');
+
+        $this->get('/admin/judging/bos')
+            ->assertOk()
+            ->assertSee('All Scores')
+            ->assertSee('All Tables')
+            ->assertSee('Add or Update...')
+            ->assertSee('BOS Places for Beer')
+            ->assertSee('BOS Places for Cider')
+            ->assertSee('Print...')
+            ->assertSee('BOS Pullsheet for Beer')
+            ->assertSee('BOS Cup Mats (Judging Numbers)')
+            ->assertSee('BOS Cup Mats (Entry Numbers)');
+
+        // Cup Mats items point at the existing port outputs.
+        $this->get(route('outputs.bos_mat'))->assertOk();
+
+        // Following one dropdown selection lands on the BOS places form, 200.
+        $this->get('/admin/judging/bos/'.$beerType.'/edit')->assertOk();
+    }
+
     // ── Fixture helpers ──────────────────────────────────────────────────
 
     private function style(string $group, string $num, string $name, string $type): int

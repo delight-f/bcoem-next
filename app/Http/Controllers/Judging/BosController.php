@@ -40,6 +40,9 @@ final class BosController extends Controller
 
         return view('judging.bos', [
             'ctx' => TenantContext::load(),
+            // Same list feeds the "Add or Update..." and Print dropdowns
+            // (admin/judging_scores_bos.admin.php default view).
+            'types' => $types,
             'groups' => collect($types)->map(fn (object $type): object => (object) [
                 'type' => $type,
                 'rows' => self::eligible((int) $type->id),
