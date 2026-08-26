@@ -1,6 +1,6 @@
-# Parity DIFF triage matrix — run-20260826-213414
+# Parity DIFF triage matrix — run-20260827-012920
 
-Source run: `tools/parity/reports/run-20260826-213414/` (5 PASS, 45 DIFF, 18 skipped).
+Source run: `tools/parity/reports/run-20260826-213414/` (5 PASS, 45 DIFF, 18 skipped — unchanged totals; residual is C-class copy/styling + harness nav/login-state noise, plus `/admin/payments` data-500 from the port-only `payments` table missing in anon-base).
 Classes: **A** broken function · **B** structural (section/control missing) · **C** styling/copy · **H** harness-noise or bad pairing.
 
 ## Counts
@@ -8,9 +8,9 @@ Classes: **A** broken function · **B** structural (section/control missing) · 
 | Role | A | B | C | H | total |
 |---|---|---|---|---|---|
 | anon | 0 | 0 | 2 | 0 | 2 |
-| entrant | 0 | 4 | 0 | 0 | 4 |
-| admin | 12 | 12 | 12 | 3 | 39 |
-| **total** | **12** | **16** | **14** | **3** | **45** |
+| entrant | 0 | 0 | 4 | 0 | 4 |
+| admin | 2 | 5 | 16 | 16 | 39 |
+| **total** | **2** | **5** | **22** | **16** | **45** |
 
 Ignored as universal noise everywhere: hostnames `127.0.0.1:8091` vs `:8092`, CSRF tokens, session ids, rotating hero images.
 
