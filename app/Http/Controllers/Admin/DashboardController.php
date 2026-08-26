@@ -122,7 +122,7 @@ final class DashboardController extends Controller
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
             ),
-            'currencySymbol' => self::currencySymbol((string) ($ctx->prefsStr('prefsCurrency') ?? '$')),
+            'currencySymbol' => $ctx->currencySymbol(),
             // default.admin.php action-row gates
             'judgingStarted' => $judgingStarted,
             'judgingPast' => $judgingPast,
@@ -134,21 +134,6 @@ final class DashboardController extends Controller
                 'flat',
             ) : [],
         ];
-    }
-
-    /**
-     * Symbol half of legacy currency_info() (lib/common.lib.php:662) —
-     * prefsCurrency stores legacy keys like "A$", "euro", "pound".
-     */
-    private static function currencySymbol(string $pref): string
-    {
-        return match ($pref) {
-            'R$' => 'R$', 'pound' => '£', 'czkoruna' => 'Kč', 'euro' => '€',
-            'A$', 'C$', 'H$', 'N$', 'S$', 'T$', '$' => '$',
-            'Ft' => 'Ft', 'shekel' => '₪', 'yen' => '¥',
-            'nkr', 'kr' => 'kr', 'RM' => 'RM',
-            default => $pref,
-        };
     }
 
     /**

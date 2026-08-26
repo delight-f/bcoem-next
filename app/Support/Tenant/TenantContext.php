@@ -55,6 +55,19 @@ final class TenantContext
         return self::str($this->judging, $key);
     }
 
+    /** prefsCurrency code -> symbol (legacy common.lib currency map). */
+    public function currencySymbol(): string
+    {
+        $pref = $this->prefsStr('prefsCurrency') ?? '$';
+
+        return match ($pref) {
+            'pound' => '£', 'czkoruna' => 'Kč', 'euro' => '€',
+            'Ft' => 'Ft', 'shekel' => '₪', 'yen' => '¥',
+            'nkr', 'kr' => 'kr',
+            default => $pref,
+        };
+    }
+
     /**
      * Contest date column as a UTC epoch, or null when empty/unset — the
      * NULL-means-closed contract from WindowStates.

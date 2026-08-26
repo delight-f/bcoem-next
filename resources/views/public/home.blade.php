@@ -1,4 +1,4 @@
-<x-public-layout :ctx="$ctx" :show-hero="true" :hero-image="$heroImage ?? null" :salutation="$salutation" :judging-started="$judgingStarted" :future-judging-sessions="$windows->futureJudgingSessions" :sponsors-visible="$sponsorsVisible">
+<x-public-layout :ctx="$ctx" :show-hero="true" :hero-image="$heroImage ?? null" :salutation="$salutation" :judging-started="$judgingStarted" :future-judging-sessions="$windows->futureJudgingSessions" :sponsors-visible="$sponsorsVisible" :fyi-alerts="$fyiAlerts ?? []">
     @php($style = $longDates ? 'long' : 'short')
 
     {{-- Legacy landing composition (index.pub.php): print-only heading, then

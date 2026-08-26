@@ -178,6 +178,15 @@
         @elseif ((int) request('msg') === 8)
             <p class="alert alert-warning"><strong>{{ __('site.archived_not_available') }}</strong></p>
         @endif
+        {{-- alerts.pub.php stacked info alerts ("For Your Information") --}}
+        @if (! empty($fyiAlerts))
+            <div class="alert alert-info print:hidden" role="alert">
+                <strong>{{ __('site.fyi') }}</strong>
+                @foreach ($fyiAlerts as $fyiAlert)
+                    <p class="mb-1">{!! $fyiAlert !!}</p>
+                @endforeach
+            </div>
+        @endif
         @if (isset($showHero) && $showHero)
             {{-- Hero: gradient overlay over a random style-type-appropriate image,
                  mirroring the live hero band. --}}

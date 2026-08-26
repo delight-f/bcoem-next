@@ -94,7 +94,46 @@ final class PublicController extends Controller
             .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
             .'.</small></p>';
 
+        // alerts.pub.php stacked info alerts ("For Your Information"):
+        // logged-out visitors on the landing page with no msg param.
+        $fyiAlerts = [];
+        if ($request->user() === null) {
+            $tz = $ctx->prefsStr('prefsTimeZone');
+            $df = $ctx->prefsStr('prefsDateFormat');
+            $tf = $ctx->prefsStr('prefsTimeFormat');
+            $long = fn (?int $epoch): string => (string) DateFmt::dateTime($epoch, $tz, $df, $tf, 'long');
+            $reg = $windows->registration;
+            $entry = $windows->entry;
+            $judge = $windows->judge;
+
+            if ($reg === WindowState::Before) {
+                $fyiAlerts[] = '<strong>'.self::t('site.fyi_reg_will_open').' '.$long($ctx->contestEpoch('contestRegistrationOpen')).'.</strong> '.self::t('site.fyi_return_register');
+            }
+            if ($entry === WindowState::Before) {
+                $fyiAlerts[] = '<strong>'.self::t('site.fyi_entry_will_open').' '.$long($ctx->contestEpoch('contestEntryOpen')).'.</strong> '.self::t('site.fyi_return_entries');
+            }
+            if ($reg === WindowState::After && $judge === WindowState::Before) {
+                $fyiAlerts[] = '<strong>'.self::t('site.fyi_js_will_open').' '.$long($ctx->contestEpoch('contestJudgeOpen')).'.</strong> '.self::t('site.fyi_return_judge');
+            }
+            if ($reg === WindowState::Open && $entry === WindowState::Open && (int) $ctx->prefsStr('prefsEntryLimit') > 0) {
+                $fyiAlerts[] = '<strong>'.self::t('site.fyi_entry_open').'</strong> '
+                    .'A total of '.(int) DB::table('brewing')->count().' entries have been added to the system as of '
+                    .DateFmt::dateTime($now, $tz, $df, $tf, 'short').'. '
+                    .self::t('site.fyi_reg_will_close').' '.$long($ctx->contestEpoch('contestRegistrationDeadline')).'.';
+            }
+            if (in_array($reg, [WindowState::Before, WindowState::After], true) && $judge === WindowState::Open) {
+                $roles = match ([$windows->judgeCapReached, $windows->stewardCapReached]) {
+                    [true, false] => 'Steward',
+                    [false, true] => 'Judge',
+                    default => 'Judge or steward',
+                };
+                $fyiAlerts[] = '<strong>'.__('site.fyi_js_open', ['roles' => $roles]).'</strong> '
+                    .__('site.fyi_js_close', ['roles' => strtolower($roles), 'date' => $long($ctx->contestEpoch('contestJudgeDeadline'))]);
+            }
+        }
+
         return view('public.home', [
+            'fyiAlerts' => $fyiAlerts,
             'ctx' => $ctx,
             'windows' => $windows,
             'longDates' => $langLong,
@@ -282,7 +321,7 @@ final class PublicController extends Controller
             $tz = $ctx->prefsStr('prefsTimeZone');
             $df = $ctx->prefsStr('prefsDateFormat');
             $tf = $ctx->prefsStr('prefsTimeFormat');
-            $style = $longDates ? 'long' : 'short';
+            $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
             $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
 
             $cards[] = $windowCard('entry-registration', self::t('site.entries_registration'), $w->entry,
@@ -319,7 +358,7 @@ final class PublicController extends Controller
         $tz = $ctx->prefsStr('prefsTimeZone');
         $df = $ctx->prefsStr('prefsDateFormat');
         $tf = $ctx->prefsStr('prefsTimeFormat');
-        $style = $longDates ? 'long' : 'short';
+        $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
 
         $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
 
