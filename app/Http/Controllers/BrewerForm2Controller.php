@@ -178,28 +178,120 @@ final class BrewerForm2Controller extends Controller
     }
 
     /**
-     * The brewer_info block for /list (ticket 08 includes it from the new
-     * account view). Renders the legacy "thank you / next steps" lead plus
-     * the contact + volunteer summary.
+     * The brewer_info block for /list (pub/brewer_info.pub.php): thank-you
+     * lead, full account-info row set, judge/steward/staff availability.
      *
-     * @return array{brewer: \stdClass|null, email: string, updated: string|null}
+     * @return array<string, mixed>
      */
     public static function infoData(TenantContext $ctx): array
     {
         $brewer = DB::table('brewer')->where('uid', Auth::id())->first();
         $user = (array) (DB::table('users')->where('id', Auth::id())->first() ?? []);
 
+        // pub/brewer_info.pub.php: availability CSV entries are "Y-1" —
+        // flag char, dash, judging_locations id. Judge rows take types 0-1,
+        // staff rows type 2 (both from brewerJudgeLocation); steward rows
+        // come from brewerStewardLocation with no type filter.
+        $availability = function (?string $csv, ?int $maxType) use ($ctx): array {
+            $rows = [];
+            foreach (array_filter(explode(',', (string) $csv)) as $item) {
+                $loc = DB::table('judging_locations')->find((int) substr($item, 2));
+                if ($loc === null || ($maxType !== null && (int) $loc->judgingLocType >= $maxType)) {
+                    continue;
+                }
+                $rows[] = [
+                    'available' => substr($item, 0, 1) === 'Y',
+                    'name' => (string) $loc->judgingLocName,
+                    'date' => DateFmt::dateTime((int) $loc->judgingDate, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short')
+                        .(($loc->judgingDateEnd ?? 0) ? ' - '.DateFmt::dateTime((int) $loc->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short') : ''),
+                    'location' => (string) $loc->judgingLocation,
+                    'notes' => (string) $loc->judgingLocNotes,
+                    'type' => (int) $loc->judgingLocType,
+                ];
+            }
+
+            return $rows;
+        };
+
+        // pub/brewer_info.pub.php: rank CSV "Certified,Designation,…" renders
+        // via bjcp_rank(…,2) + designations(), joined with ", ".
+        $rankParts = array_values(array_filter(array_map('trim', explode(',', (string) ($brewer->brewerJudgeRank ?? ''))), fn ($p) => $p !== ''));
+        $rankDisplay = match ($rankParts[0] ?? '') {
+            'None', '', 'Novice', 'Non-BJCP', 'Experienced' => 'Non-BJCP Judge',
+            'Professional Brewer', 'Beer Sommelier', 'Certified Cicerone', 'Master Cicerone', 'Judge with Sensory Training' => $rankParts[0],
+            default => 'BJCP '.($rankParts[0] ?? '').' Judge',
+        };
+        $designations = $rankParts === [] ? 'N/A' : implode(', ', $rankParts);
+
+        // style_convert(…,4): comma-separated brewStyleGroup ids -> labels.
+        $styleLabels = function (?string $csv): string {
+            if ($csv === null || trim($csv) === '') {
+                return 'N/A';
+            }
+            $labels = [];
+            foreach (array_filter(array_map('trim', explode(',', $csv))) as $group) {
+                $style = DB::table('styles')->where('brewStyleGroup', $group)->first();
+                $labels[] = $style === null
+                    ? $group
+                    : ltrim((string) $style->brewStyleGroup, '0').$style->brewStyleNum.': '.$style->brewStyle;
+            }
+
+            return $labels === [] ? 'N/A' : implode(', ', $labels);
+        };
+
+        $affiliations = [];
+        $orgs = json_decode((string) ($brewer->brewerAssignment ?? ''), true);
+        if (is_array($orgs)) {
+            foreach (['affilliated', 'affilliatedOther'] as $key) {
+                foreach ((array) ($orgs[$key] ?? []) as $value) {
+                    if ($value !== '' && $value !== null) {
+                        $affiliations[] = $value;
+                    }
+                }
+            }
+        }
+
+        $dropoff = DB::table('drop_off')->find((int) $brewer->brewerDropOff);
+
         return [
             'brewer' => $brewer,
             'email' => (string) ($user['user_name'] ?? ''),
             'updated' => DateFmt::dateTime(
                 strtotime((string) ($user['userCreated'] ?? '')) ?: null,
-                $ctx->prefsStr('prefsTimeZone'),
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
                 'long',
                 withZone: false,
             ),
+            'phone2' => (string) ($brewer->brewerPhone2 ?? ''),
+            'address' => $brewer->brewerAddress !== '' && $brewer->brewerAddress !== null ? $brewer->brewerAddress : __('site.none_entered'),
+            'city' => $brewer->brewerCity !== '' && $brewer->brewerCity !== null ? $brewer->brewerCity : __('site.none_entered'),
+            'state' => $brewer->brewerState !== '' && $brewer->brewerState !== null ? $brewer->brewerState : __('site.none_entered'),
+            'zip' => $brewer->brewerZip !== '' && $brewer->brewerZip !== null ? $brewer->brewerZip : __('site.none_entered'),
+            'country' => $brewer->brewerCountry !== '' && $brewer->brewerCountry !== null ? $brewer->brewerCountry : __('site.none_entered'),
+            'club' => $brewer->brewerClubs !== '' && $brewer->brewerClubs !== null ? $brewer->brewerClubs : __('site.none_entered'),
+            'aha' => $brewer->brewerAHA !== '' && $brewer->brewerAHA !== null ? $brewer->brewerAHA : __('site.none_entered'),
+            'mhp' => $brewer->brewerMHP !== '' && $brewer->brewerMHP !== null ? $brewer->brewerMHP : __('site.none_entered'),
+            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1,
+            'proAm' => (string) ($brewer->brewerProAm ?? ''),
+            'dropoffName' => $dropoff->dropoffLocation ?? null,
+            'judgeId' => (string) ($brewer->brewerJudgeID ?? ''),
+            'waiver' => (string) ($brewer->brewerJudgeWaiver ?? ''),
+            'judgeNotes' => (string) ($brewer->brewerJudgeNotes ?? ''),
+            'judgeExp' => (string) ($brewer->brewerJudgeExp ?? ''),
+            'judgeMead' => (string) ($brewer->brewerJudgeMead ?? 'N'),
+            'judgeCider' => (string) ($brewer->brewerJudgeCider ?? 'N'),
+            'rankDisplay' => $rankParts === [] ? 'N/A' : $rankDisplay,
+            'designations' => $designations,
+            'judgeLikes' => $styleLabels($brewer->brewerJudgeLikes ?? null),
+            'judgeDislikes' => $styleLabels($brewer->brewerJudgeDislikes ?? null),
+            'judgeAvailability' => $availability($brewer->brewerJudgeLocation ?? null, 2),
+            // staff sessions share brewerJudgeLocation (legacy quirk): type 2 only
+            'staffAvailability' => array_values(array_filter(
+                $availability($brewer->brewerJudgeLocation ?? null, null),
+                fn ($r) => $r['type'] === 2,
+            )),
+            'stewardAvailability' => $availability($brewer->brewerStewardLocation ?? null, null),
         ];
     }
 

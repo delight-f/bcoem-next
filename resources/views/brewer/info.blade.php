@@ -1,42 +1,158 @@
-{{-- Brewer info block (legacy brewer_info.pub.php): post-registration
-     "thank you / next steps" lead + contact + volunteer summary.
+{{-- Brewer info block (pub/brewer_info.pub.php): thank-you lead + full
+     account-info row set + judge/steward/staff availability tables.
      Contract: @include('brewer.info', ['brewer' => row-or-null,
-     'email' => users.user_name, 'updated' => formatted datetime|null]). --}}
+     'email' => users.user_name, 'updated' => formatted datetime|null])
+     plus the infoData() payload keys. --}}
 <section id="account-info" class="mb-6">
+    <h2>{{ __('site.account_info') }}</h2>
     @if ($brewer === null)
         <p class="text-xl font-light">{{ __('site.no_profile_yet') }}</p>
     @else
-        <p class="text-xl font-light">
+        <p class="lead">
             {{ __('site.thanks_for_participating') }} {{ App\Support\Tenant\TenantContext::load()->contestStr('contestName') }}, {{ $brewer->brewerFirstName }}.
             <small class="text-muted">{{ __('site.account_last_updated') }} {{ $updated ?? '—' }}.</small>
         </p>
 
-        <div class="row bcoem-account-info">
-            <div class="col-12 col-md-4"><strong>{{ __('site.name') }}</strong></div>
-            <div class="col-12 col-md-8">{{ $brewer->brewerFirstName }} {{ $brewer->brewerLastName }}</div>
-        </div>
-        <div class="row bcoem-account-info">
-            <div class="col-12 col-md-4"><strong>{{ __('site.email') }}</strong></div>
-            <div class="col-12 col-md-8">{{ $email }}</div>
-        </div>
-        <div class="row bcoem-account-info">
-            <div class="col-12 col-md-4"><strong>{{ __('site.phone') }}</strong></div>
-            <div class="col-12 col-md-8">{{ $brewer->brewerPhone1 ?: __('site.none_entered') }}</div>
-        </div>
-        <div class="row bcoem-account-info">
-            <div class="col-12 col-md-4"><strong>{{ __('site.judge') }}</strong></div>
-            <div class="col-12 col-md-8">{{ $brewer->brewerJudge === 'Y' ? __('site.yes') : __('site.no') }}
-                @if ($brewer->brewerJudge === 'Y')
-                    &mdash; {{ $brewer->brewerJudgeRank ?: __('site.rank_non_bjcp') }}
-                @endif
-            </div>
-        </div>
-        <div class="row bcoem-account-info">
-            <div class="col-12 col-md-4"><strong>{{ __('site.stewarding') }}</strong></div>
-            <div class="col-12 col-md-8">{{ $brewer->brewerSteward === 'Y' ? __('site.yes') : __('site.no') }}</div>
-        </div>
+        @php($row = function (string $label, $value) {
+            echo '<div class="row bcoem-account-info"><div class="col-12 col-md-4"><strong>'.$label.'</strong></div><div class="col-12 col-md-8">'.$value.'</div></div>';
+        })
+        @php($yesNo = fn (string $v) => $v === 'Y' ? __('site.yes') : __('site.no'))
 
-        <a href="{{ url('/list/edit-account') }}" class="btn btn-outline btn-primary mt-2">{{ __('site.edit_account') }}</a>
-        <a href="{{ url('/list/edit-judging') }}" class="btn btn-outline btn-primary mt-2">{{ __('site.edit_judging_prefs') }}</a>
+        @php($row(__('site.contact').' '.__('site.name'), e($brewer->brewerFirstName.' '.$brewer->brewerLastName)))
+        @php($row(__('site.contact').' '.__('site.email'), e($email)))
+        @php($phone = e($brewer->brewerPhone1 ?: __('site.none_entered')).($brewer->brewerPhone2 ? '<br>'.e($brewer->brewerPhone2) : ''))
+        @php($row(__('site.contact').' '.__('site.phone'), $phone))
+        @php($row(__('site.organization').' '.__('site.address'), e($address)))
+        @php($row(__('site.organization').' '.__('site.city'), e($city)))
+        @php($row(__('site.organization').' '.__('site.state'), e($state)))
+        @php($row(__('site.organization').' '.__('site.zip'), e($zip)))
+        @php($row(__('site.organization').' '.__('site.country'), e($country)))
+        @if ($mhpDisplay)
+            @php($row('<strong>'.__('site.mhp_number').'</strong> <span class="badge" style="color: #F2D06C; background-color: #000;">MHP</span>', '<a class="hide-loader" href="https://www.masterhomebrewerprogram.com" target="_blank" title="'.__('site.mhp_note').'">'.e($mhp).'</a>'))
+        @endif
+        @php($row(__('site.aha_number'), '<a class="hide-loader" href="http://www.homebrewersassociation.org/membership/join-or-renew/" target="_blank" title="'.__('site.aha_note').'">'.e($aha).'</a>'))
+        @if ($country === 'United States')
+            @php($row(__('site.pro_am'), $yesNo($proAm)))
+        @endif
+        @php($dropoffCell = e($dropoffName ?? __('site.none_entered')))
+        @if ((int) $brewer->brewerDropOff === 0)
+            @php($dropoffCell .= '<br><a class="hide-loader" href="'.url('/admin/output/shipping_label').'" title="'.__('site.shipping_labels_note').'">'.__('site.print_shipping_labels').'</a>')
+        @endif
+        @php($row(__('site.drop_off'), $dropoffCell))
+        @php($row(__('site.club'), e($club)))
+
+        @if ($brewer->brewerJudge === 'Y' || $brewer->brewerSteward === 'Y')
+            <hr>
+            @php($row(__('site.bjcp_id'), $judgeId !== '' && $judgeId !== '0' ? e($judgeId) : 'N/A'))
+            @php($row(__('site.waiver'), $waiver !== '' ? $yesNo($waiver) : __('site.none_entered')))
+        @endif
+
+        @if ($judgeNotes !== '' && ($brewer->brewerJudge === 'Y' || $brewer->brewerSteward === 'Y' || $brewer->brewerStaff === 'Y'))
+            @php($row(__('site.notes'), '<em>'.e($judgeNotes).'</em>'))
+        @endif
+
+        @if ($brewer->brewerJudge === 'Y')
+            <hr>
+            @php($row(__('site.judge'), $yesNo($brewer->brewerJudge).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 print:hidden" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
+            @php($row('BJCP '.__('site.bjcp_mead'), $yesNo($judgeMead)))
+            @php($row('BJCP '.__('site.bjcp_cider'), $yesNo($judgeCider)))
+            @php($row(__('site.designations'), e($designations)))
+            @php($row(__('site.brewing_partners'), e($affiliations ?? __('site.none'))))
+            @php($row(__('site.judge_comps'), e($judgeExp !== '' ? $judgeExp : __('site.none_entered'))))
+            @php($row(__('site.judge_preferred'), e($judgeLikes)))
+            @php($row(__('site.judge_non_preferred'), e($judgeDislikes)))
+            @if ($judgeAvailability !== [])
+                @if (collect($judgeAvailability)->every(fn ($r) => ! $r['available']))
+                    <p class="alert alert-warning print:hidden"><i class="fa fa-exclamation-triangle"></i> {!! __('site.no_judge_availability') !!}</p>
+                @endif
+                @php($row(__('site.avail'), ''))
+                <div class="row bcoem-account-info print:hidden">
+                    <div class="col-12 col-md-8 offset-md-4">
+                        <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 14%">{{ __('site.yes') }}/{{ __('site.no') }}</th>
+                                    <th style="width: 43%">{{ __('site.session') }}</th>
+                                    <th style="width: 43%">{{ __('site.date') }}</th>
+                                    <th style="width: 43%">{{ __('site.notes') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($judgeAvailability as $r)
+                                <tr>
+                                    <td>{{ $r['available'] ? __('site.yes') : __('site.no') }}</td>
+                                    <td>{{ $r['name'] }}</td>
+                                    <td>{{ $r['date'] }}</td>
+                                    <td>{{ $r['type'] === 1 ? $r['location'].' '.$r['notes'] : $r['notes'] }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @endif
+
+        @if ($brewer->brewerSteward === 'Y')
+            <hr>
+            @php($row(__('site.stewarding'), $yesNo($brewer->brewerSteward).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 print:hidden" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
+            @if ($stewardAvailability !== [])
+                @php($row(__('site.avail'), ''))
+                <div class="row bcoem-account-info print:hidden">
+                    <div class="col-12 col-md-8 offset-md-4">
+                        <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%">{{ __('site.yes') }}/{{ __('site.no') }}</th>
+                                    <th style="width: 30%">{{ __('site.session') }}</th>
+                                    <th style="width: 25%">{{ __('site.date') }}</th>
+                                    <th style="width: 35%">{{ __('site.notes') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($stewardAvailability as $r)
+                                <tr>
+                                    <td>{{ $r['available'] ? __('site.yes') : __('site.no') }}</td>
+                                    <td>{{ $r['name'] }}</td>
+                                    <td>{{ $r['date'] }}</td>
+                                    <td>{{ $r['notes'] }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+        @endif
+
+        @if ($brewer->brewerStaff === 'Y' && $staffAvailability !== [])
+            <hr>
+            @php($row(__('site.staff'), $yesNo($brewer->brewerStaff)))
+            @php($row(__('site.avail'), ''))
+            <div class="row bcoem-account-info print:hidden">
+                <div class="col-12 col-md-8 offset-md-4">
+                    <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 14%">{{ __('site.yes') }}/{{ __('site.no') }}</th>
+                                <th style="width: 43%">{{ __('site.session') }}</th>
+                                <th style="width: 43%">{{ __('site.date') }}</th>
+                                <th style="width: 43%">{{ __('site.notes') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($staffAvailability as $r)
+                            <tr>
+                                <td>{{ $r['available'] ? __('site.yes') : __('site.no') }}</td>
+                                <td>{{ $r['name'] }}</td>
+                                <td>{{ $r['date'] }}</td>
+                                <td>{{ $r['notes'] }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     @endif
 </section>

@@ -190,6 +190,13 @@ final class PublicController extends Controller
 
         $brewer = DB::table('brewer')->where('uid', (int) Auth::id())->first();
 
+        // pub/list.pub.php button stack states
+        $unpaidCount = DB::table('brewing')
+            ->where('brewBrewerID', (int) Auth::id())
+            ->where('brewConfirmed', '1')
+            ->where('brewPaid', '!=', 1)
+            ->count();
+
         return view('public.account', [
             'ctx' => $ctx,
             'windows' => $windows,
@@ -197,6 +204,8 @@ final class PublicController extends Controller
             'info' => BrewerForm2Controller::infoData($ctx),
             'glance' => $this->listGlanceCards($ctx, $windows, $langLong, $brewer),
             'rows' => $rows,
+            'addEntryShow' => $entryWindowOpen && ! $windows->compEntryLimitReached && ! $windows->compPaidEntryLimitReached,
+            'payDisabled' => $unpaidCount === 0,
         ]);
     }
 
