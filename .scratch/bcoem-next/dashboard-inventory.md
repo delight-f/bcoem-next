@@ -3,6 +3,24 @@
 Source (legacy, the contract): `brewcompetitiononlineentry/admin/default.admin.php` (3120 lines)
 Port dashboard: `resources/views/admin/dashboard.blade.php` + `app/Http/Controllers/Admin/DashboardController.php`
 Port output routes: `routes/outputs.php` (21 `GET /admin/output/<slug>`, each admin-gated) — controllers in `app/Http/Controllers/Output/`.
+## Rebuild status (Phase 2/3 — DONE)
+
+The port dashboard (`resources/views/admin/dashboard.blade.php` +
+`app/Http/Controllers/Admin/DashboardController.php`) was rebuilt to present **every**
+link in the ledger: same subheadings (incl. the missing **More Help** panel), same order,
+same labels, same grouping, same conditionals. Links whose port backend does not exist are
+rendered **DISABLED** (dimmed) with an inline `<!-- TODO: legacy output -->` comment and the
+exact legacy target in the `title`, rather than silently dropped. The `dashboard-inventory.md`
+statuses below are the authoritative per-link record; `routes reused vs extended vs disabled`
+and test counts live in the ticket report.
+
+Coverage: Competition Preparation / Entries-Payments-Participants / Entry Sorting / Organizing /
+Scoring (left) and Reports / Data Exports / Data Management / Preferences / More Help (right) —
+with the bottle-label (Letter/A4/Round × entry/judging × required-info) and box-label families
+present as disabled-TODO (the port `LabelsController` only implements participant address labels).
+Verification: `tests/Feature/AdminDashboardLinksTest.php` (3 tests) asserts every non-disabled link
+renders with its label and every linked port route responds 200/302; scratch smoke on
+`parity_dash_smoke` confirmed /admin renders all subheadings and a bottle-label family.
 
 Notation:
 - `<base>` resolved away; legacy `&amp;` decoded to `&`.

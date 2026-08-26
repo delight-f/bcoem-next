@@ -53,8 +53,20 @@
                                                     </div>
                                                     <div class="col col-lg-8 col-md-8 col-sm-8 col-xs-12 small">
                                                         <ul class="list-inline">
-                                                            @foreach ($rowLinks as [$uri, $label])
-                                                                <li><a href="{{ url($uri) }}">{{ $label }}</a></li>
+                                                            @foreach ($rowLinks as $item)
+                                                                @if (!empty($item['children']))
+                                                                    <li class="text-muted">
+                                                                        <span class="text-muted">{{ $item['label'] }}</span>
+                                                                        <span class="text-muted">— labels per entry:</span>
+                                                                        @foreach ($item['children'] as $child)
+                                                                            <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                        @endforeach
+                                                                    </li>
+                                                                @elseif (!empty($item['todo']))
+                                                                    <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
+                                                                @else
+                                                                    <li><a href="{{ url($item['href']) }}">{{ $item['label'] }}</a></li>
+                                                                @endif
                                                             @endforeach
                                                         </ul>
                                                     </div>

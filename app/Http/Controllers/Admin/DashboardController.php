@@ -16,14 +16,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Admin landing dashboard — port of admin/default.admin.php: page-header h1,
- * "Hello" lead, action-button row (Post-Competition Tasks modal, Best
- * Brewer/Club Results modal), the two-column accordion (Competition
- * Preparation / Entries-Payments-Participants / Entry Sorting / Organizing /
- * Scoring | Reports / Data Exports / Data Management / Preferences), and the
- * right sidebar (admin/sidebar.admin.php): Donate button + Competition
- * Status panel. Links and buttons with no port equivalent (driver.js tour,
- * awards presentation, publish action) are omitted (see graduation report).
+ * Admin landing dashboard — port of admin/default.admin.php. Renders the
+ * two-column accordion with the SAME subheadings, order, link labels,
+ * grouping and conditionals as legacy, plus the action-button row and the
+ * right sidebar (admin/sidebar.admin.php).
+ *
+ * Links whose port backend does not exist (the label-template matrix,
+ * per-session/per-row report variants, pullsheet variants, awards/export
+ * families, regenerate/purge modal flows) are rendered DISABLED with a
+ * `<!-- TODO: legacy output -->` comment rather than silently dropped —
+ * the legacy contract is preserved and the gap is visible. Ledger:
+ * .scratch/bcoem-next/dashboard-inventory.md.
  */
 final class DashboardController extends Controller
 {
@@ -36,12 +39,36 @@ final class DashboardController extends Controller
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
+        $user = $request->user();
+
+        $prefs = [
+            'paypalIpn' => (int) $ctx->prefsStr('prefsPaypalIPN') === 1,
+            'entryForm' => (int) $ctx->prefsStr('prefsEntryForm'),
+            'useMods' => (string) $ctx->prefsStr('prefsUseMods') === 'Y',
+            'winnerMethod' => (int) $ctx->prefsStr('prefsWinnerMethod'),
+            'proEdition' => (int) $ctx->prefsStr('prefsProEdition'),
+            'eval' => (string) $ctx->prefsStr('prefsEval') === '1',
+            'showBestBrewer' => (int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0,
+            'showBestClub' => (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0,
+            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1,
+            // Legacy $barcode_qrcode_array (bottle_label.output.php :93-99).
+            'barcodes' => in_array((int) $ctx->prefsStr('prefsEntryForm'), [1, 3, 5, 6, 0, 11], true),
+        ];
+
+        $counts = [
+            'tables' => DB::table('judging_tables')->count(),
+            'judging' => DB::table('judging_locations')->count(),
+            'styleTypes' => DB::table('style_types')->count(),
+            'sbi' => DB::table('special_best_info')->count(),
+        ];
+
+        $sections = $this->sections((int) $user->userLevel, (int) $user->userAdminObfuscate, $prefs, $counts);
 
         return view('admin.dashboard', [
-            'left' => $this->leftSections(),
-            'right' => $this->rightSections(),
+            'left' => $sections['left'],
+            'right' => $sections['right'],
             'status' => $this->status($ctx, $windows, $now),
-            'firstName' => DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '',
+            'firstName' => DB::table('brewer')->where('uid', (int) $user->id)->value('brewerFirstName') ?? '',
         ]);
     }
 
@@ -137,146 +164,440 @@ final class DashboardController extends Controller
     }
 
     /**
-     * Admin dashboard panels in default.admin.php order and shape: each
-     * section carries rows of [category label, links] mirroring the legacy
-     * accordion bodies (strong label left, inline action links right).
+     * Admin dashboard panels in default.admin.php order and shape. Each
+     * section: [title, icon, help, categories]. Each category:
+     * [categoryLabel, items] where each item is one of:
+     *   ['label', 'href']                          active link
+     *   ['label', null, 'todo']                    disabled (backend missing)
+     *   ['label', null, null, children]            family (per-count / per-row dropdown)
      *
-     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: list<array{0: string, 1: string}>}>}>
+     * @return array{left: list<array>, right: list<array>}
      */
-    private function leftSections(): array
+    private function sections(int $level, int $obfuscate, array $prefs, array $counts): array
     {
-        return [
-            ['Competition Preparation', 'fa-wrench',
+        $l = static fn (string $href, string $label): array => ['label' => $label, 'href' => $href];
+        $todo = static fn (string $label, string $src): array => ['label' => $label, 'href' => null, 'todo' => 'TODO: legacy output — '.$src];
+        $family = static fn (string $label, array $children): array => ['label' => $label, 'children' => $children];
+
+        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown, where the
+        // port backend for the underlying label surface does not exist yet.
+        $countFamily = function (string $label, string $hrefTemplate) use ($todo): array {
+            $children = [];
+            for ($i = 1; $i <= 12; $i++) {
+                $children[] = ['label' => (string) $i, 'href' => null, 'todo' => $todo((string) $i, $hrefTemplate.'&sort='.$i)['todo']];
+            }
+
+            return ['label' => $label, 'children' => $children];
+        };
+
+        $level0 = $level === 0;
+        $barcodes = $prefs['barcodes'];
+        $tables = $counts['tables'];
+
+        $left = [];
+
+        if ($level0) {
+            $left[] = [
+                'Competition Preparation', 'fa-wrench',
                 'Your competition&#39;s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
                 [
-                    ['All Competition Dates', [['/admin/dates', 'Edit']]],
-                    ['Competition Info', [['/admin/competition-info', 'Edit'], ['/admin/hero-images', 'Upload Logo']]],
-                    ['Contacts', [['/admin/contacts', 'Manage'], ['/admin/contacts/create', 'Add']]],
-                    ['Custom Categories', [['/admin/judging/special-best', 'Manage'], ['/admin/judging/special-best/create', 'Add']]],
-                    ['Drop-Off Locations', [['/admin/dropoff', 'Manage'], ['/admin/dropoff/create', 'Add']]],
-                    ['Judging Sessions', [['/admin/judging/locations', 'Manage'], ['/admin/judging/locations/create', 'Add']]],
-                    ['Non-Judging Sessions', [['/admin/judging/non-judging', 'Manage'], ['/admin/judging/non-judging/create', 'Add']]],
-                    ['Sponsors', [['/admin/sponsors', 'Manage'], ['/admin/sponsors/create', 'Add'], ['/admin/hero-images', 'Upload Logos']]],
-                    ['Styles Accepted', [['/admin/styles', 'Manage'], ['/admin/styles/create', 'Add']]],
-                    ['Style Types', [['/admin/style-types', 'Manage'], ['/admin/style-types/create', 'Add']]],
-                ]],
-            ['Entries, Payments, and Participants', 'fa-beer',
-                'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
-                [
-                    ['Entries', [['/backoffice/entries', 'Manage']]],
-                    ['Payments', [['/admin/payments/mark', 'Manage']]],
-                    ['Participants', [
-                        ['/backoffice/participants', 'Manage'],
-                        ['/admin/judging/flights', 'Assign/Unassign Judges'],
-                        ['/admin/judging/flights', 'Assign/Unassign Stewards'],
-                        ['/admin/judging/flights', 'Assign/Unassign Staff'],
-                    ]],
-                    ['Register', [
-                        ['/register/entrant', 'A Participant'],
-                        ['/register/judge?view=quick', 'A Judge (Quick)'],
-                        ['/register/judge', 'A Judge (Standard)'],
-                        ['/register/steward?view=quick', 'A Steward (Quick)'],
-                        ['/register/steward', 'A Steward (Standard)'],
-                    ]],
-                ]],
-            ['Entry Sorting', 'fa-exchange',
-                'Everything you need to help you with sorting received entries from participants. Check-in entries and print sorting sheets.',
-                [
-                    ['Entry Check-In', [
-                        ['/backoffice/entries', 'Manually'],
-                        ['/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)'],
-                        ['/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)'],
-                    ]],
-                    ['Sorting Sheets', [['/admin/output/sorting', 'Print']]],
-                    ['Bottle Labels', [['/admin/output/bottle_label', 'Print (PDF)']]],
-                    ['Box Labels', [['/admin/output/labels', 'Print (PDF)']]],
-                ]],
-            ['Organizing', 'fa-tasks',
-                'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
-                [
-                    ['Assign/Unassign', [
-                        ['/admin/judging/flights', 'Judges'],
-                        ['/admin/judging/flights', 'Stewards'],
-                        ['/admin/judging/flights', 'Staff'],
-                    ]],
-                    ['Tables', [
-                        ['/admin/judging/tables', 'Manage'],
-                        ['/admin/judging/tables/create', 'Add'],
-                        ['/admin/judging/flights', 'Assign Judges/Stewards'],
-                    ]],
-                    ['Flights', [['/admin/judging/flights', 'Manage'], ['/admin/judging/flights', 'Add']]],
-                    ['BOS Judges', [['/admin/judging/bos', 'Add']]],
-                ]],
-            ['Scoring', 'fa-trophy',
-                'Manage all functions related to evaluating and scoring participant entries for all stages of judging.',
-                [
-                    ['Scoresheets and Docs', [
-                        ['/admin/upload-scoresheets', 'Upload Multiple'],
-                        ['/admin/upload-scoresheets', 'Upload Individually'],
-                    ]],
-                    ['Entry Evaluations', [['/eval', 'Manage']]],
-                    ['Scores', [['/admin/judging/scores', 'Manage']]],
-                    ['BOS Entries and Places', [['/admin/judging/bos', 'Manage']]],
-                    ['Custom Categories', [['/admin/judging/special-best-data', 'Manage']]],
-                ]],
+                    ['All Competition Dates', [$l('/admin/dates', 'Edit')]],
+                    ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload', 'Upload Logo')]],
+                    ['Contacts', [$l('/admin/contacts', 'Manage'), $l('/admin/contacts/create', 'Add')]],
+                    ['Custom Categories', [$l('/admin/judging/special-best', 'Manage'), $l('/admin/judging/special-best/create', 'Add')]],
+                    ['Drop-Off Locations', [$l('/admin/dropoff', 'Manage'), $l('/admin/dropoff/create', 'Add')]],
+                    ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations/create', 'Add')]],
+                    ['Non-Judging Sessions', [$l('/admin/judging/non-judging', 'Manage'), $l('/admin/judging/non-judging/create', 'Add')]],
+                    ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload', 'Upload Logos')]],
+                    ['Styles Accepted', [$l('/admin/styles', 'Manage'), $l('/admin/styles/create', 'Add')]],
+                    ['Style Types', [$l('/admin/style-types', 'Manage'), $l('/admin/style-types/create', 'Add')]],
+                ],
+            ];
+        }
+
+        // Entries, Payments, and Participants — legacy Entries/Payments and Participants.
+        $entriesItems = [];
+        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
+        if ($prefs['paypalIpn']) {
+            $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
+        }
+        $participantLinks = [$l('/backoffice/participants', 'Manage')];
+        if ($level0) {
+            array_push(
+                $participantLinks,
+                $l('/admin/judging/flights', 'Assign/Unassign Judges'),
+                $l('/admin/judging/flights', 'Assign/Unassign Stewards'),
+                $l('/admin/judging/flights', 'Assign/Unassign Staff'),
+            );
+        } else {
+            array_push($participantLinks, $l('/admin/judging/flights', 'Assign/Unassign Judges'), $l('/admin/judging/flights', 'Assign/Unassign Stewards'));
+        }
+        $entriesItems[] = ['Participants', $participantLinks];
+        $entriesItems[] = ['Register', [
+            $l('/register/entrant', 'A Participant'),
+            $l('/register/judge?view=quick', 'A Judge (Quick)'),
+            $l('/register/judge', 'A Judge (Standard)'),
+            $l('/register/steward?view=quick', 'A Steward (Quick)'),
+            $l('/register/steward', 'A Steward (Standard)'),
+        ]];
+
+        $left[] = ['Entries, Payments, and Participants', 'fa-beer',
+            'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
+            $entriesItems,
         ];
+
+        // Entry Sorting.
+        $sortItems = [];
+        if ($obfuscate === 0) {
+            $sortItems[] = ['Regenerate', [
+                $todo('Judging Numbers (Random)', 'go=... js regen modal'),
+                $todo('Judging Numbers (With Style Number Prefix)', 'go=... js regen modal'),
+                $todo('Judging Numbers (Same as Entry Numbers)', 'go=... js regen modal'),
+            ]];
+            if ($barcodes) {
+                $sortItems[] = ['Using Barcodes/QR Codes?', [
+                    ['label' => 'Download Barcode and Round Judging Number Labels', 'href' => 'http://brewingcompetitions.com/barcode-labels'],
+                ]];
+            }
+        }
+        $checkIn = [$l('/backoffice/entries', 'Manually')];
+        if ($obfuscate === 0) {
+            if ($barcodes) {
+                $checkIn[] = $todo('Via Mobile Devices', 'qr.php not ported');
+            }
+            $checkIn[] = $l('/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)');
+            $checkIn[] = $l('/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)');
+        }
+        $sortItems[] = ['Entry Check-In', $checkIn];
+
+        // Print Bottle Labels (PDF) — label-template matrix (legacy labels-admin).
+        if ($obfuscate === 0) {
+            $bottle = [];
+            $bottle[] = $family('Letter (Avery 5160) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=5160')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=5160')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — With Required Info, All Styles (Entry Numbers)', $countFamily('With Required Info, All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=5160')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=5160')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=3422')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=3422')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Entry Numbers)', $countFamily('With Required Info, All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=3422')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=3422')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
+            $sortItems[] = ['Bottle Labels', $bottle];
+
+            // Print Box Labels (PDF).
+            $box = [];
+            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=5160')['children']);
+            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=5160')['children']);
+            $box[] = $family('A4 (Avery 3422) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422')['children']);
+            $box[] = $family('A4 (Avery 3422) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422')['children']);
+            $sortItems[] = ['Box Labels', $box];
+        }
+
+        $left[] = ['Entry Sorting', 'fa-exchange',
+            'Everything you need to help you with sorting received entries from participants. Check-in entries and print sorting sheets.',
+            $sortItems,
+        ];
+
+        // Organizing.
+        $orgItems = [
+            ['Assign/Unassign', [
+                $l('/admin/judging/flights', 'Judges'),
+                $l('/admin/judging/flights', 'Stewards'),
+                $l('/admin/judging/flights', 'Staff'),
+            ]],
+            ['Tables', array_merge(
+                [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
+                $tables > 1 ? [$l('/admin/judging/flights', 'Assign Judges/Stewards')] : [],
+            )],
+            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights', 'Add')]],
+            ['BOS Judges', [$l('/admin/judging/bos', 'Add')]],
+        ];
+        $left[] = ['Organizing', 'fa-tasks',
+            'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
+            $orgItems,
+        ];
+
+        // Scoring.
+        $scoreItems = [
+            ['Scoresheets and Docs', [
+                $l('/admin/upload-scoresheets', 'Upload Multiple'),
+                $l('/admin/upload-scoresheets', 'Upload Individually'),
+            ]],
+        ];
+        if ($obfuscate === 0) {
+            $scoreItems[] = ['Entry Evaluations', [$l('/eval', 'Manage')]];
+        }
+        $scoreLinks = [$l('/admin/judging/scores', 'Manage')];
+        if ($prefs['eval']) {
+            $scoreLinks[] = $todo('Import Scores', 'import_scores.eval.php modal');
+        }
+        $scoreItems[] = ['Scores', $scoreLinks];
+        if ($level0 || $obfuscate === 0) {
+            $scoreItems[] = ['BOS Entries and Places', [$l('/admin/judging/bos', 'Manage')]];
+        }
+        if ($level0) {
+            $scoreItems[] = ['Custom Categories', [$l('/admin/judging/special-best-data', 'Manage')]];
+        }
+        $left[] = ['Scoring', 'fa-trophy',
+            'Manage all functions related to evaluating and scoring participant entries for all stages of judging.',
+            $scoreItems,
+        ];
+
+        // ---- Right column ----
+        $reportsItems = [];
+
+        // Before Judging.
+        $reportsItems[] = ['Staff Availability', [
+            $todo('By Last Name', 'section=assignments&go=judging_assignments&filter=staff&view=name'),
+            $todo('By Non-Judging Session', 'section=assignments&go=judging_assignments&filter=staff'),
+        ]];
+        $reportsItems[] = ['Notes', [
+            $l('/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'),
+            $l('/admin/output/judge_notes?go=admin', 'Admin and Staff Notes'),
+        ]];
+        if ($obfuscate === 0) {
+            $reportsItems[] = ['Allergens', [$l('/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries')]];
+        }
+        $reportsItems[] = ['Drop-Off and Shipping', [
+            $l('/admin/output/dropoff', 'Entry Totals'),
+            $l('/admin/output/dropoff?go=check', 'List of Entries'),
+        ]];
+        if ($tables > 0 && $obfuscate === 0) {
+            $reportsItems[] = ['Additional Info', [
+                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=all_entry_info&view=entry&id=default'),
+                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=all_entry_info&id=default'),
+            ]];
+            $reportsItems[] = ['Judge Inventories', [
+                $todo('Entries for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J'),
+                $todo('Judging Numbers for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J&sort=entry'),
+            ]];
+        }
+        $reportsItems[] = ['Table Cards', [
+            $l('/admin/output/table_cards', 'All Tables'),
+            $todo('For Table...', 'table_choose("table-cards","judging_tables")'),
+            $todo('For Session...', 'table-cards judging_locations round'),
+        ]];
+        $reportsItems[] = ['Sign In Sheets', [
+            $todo('Judges', 'section=assignments&go=judging_assignments&filter=judges&view=sign-in'),
+            $todo('Stewards', 'section=assignments&go=judging_assignments&filter=stewards&view=sign-in'),
+        ]];
+        if ($tables > 0) {
+            $reportsItems[] = ['Assignments', [
+                $l('/admin/output/assignments?filter=judges', 'All Judges By Last Name'),
+                $l('/admin/output/assignments?filter=judges', 'All Judges By Table'),
+                $l('/admin/output/assignments?filter=judges', 'All Judges By Session'),
+                $l('/admin/output/assignments?filter=stewards', 'All Stewards Last Name'),
+                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Table'),
+                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Session'),
+            ]];
+        }
+        $reportsItems[] = ['Judge Scoresheet Labels', [
+            $todo('Letter', 'section=labels-admin&go=participants&action=judging_labels&psort=5160'),
+            $todo('A4', 'section=labels-admin&go=participants&action=judging_labels&psort=3422'),
+        ]];
+        if ($obfuscate === 0) {
+            $reportsItems[] = ['Name Tags', [
+                $todo('Letter', 'section=labels-admin&go=participants&action=judging_nametags&psort=5395'),
+            ]];
+        }
+
+        // During Judging (tables>0 && obfuscate 0).
+        if ($tables > 0 && $obfuscate === 0) {
+            $reportsItems[] = ['Mini-BOS Pullsheets', [
+                $todo('All - Entry Numbers', 'section=pullsheets&go=mini_bos&view=entry'),
+                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=judging_tables&view=entry&filter=mini_bos&id=default'),
+                $todo('All - Judging Numbers', 'section=pullsheets&go=mini_bos'),
+                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=judging_tables&filter=mini_bos&id=default'),
+            ]];
+            $reportsItems[] = ['Mini-BOS Cup Mats', [
+                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank'),
+                $l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers'),
+                $todo('For Table...', 'bos-mat mini-bos per-table'),
+                $l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers'),
+                $todo('For Table... (Judging)', 'bos-mat mini-bos per-table judging'),
+            ]];
+            $reportsItems[] = ['BOS Pullsheets', [
+                $todo('All Style Types - Entry Numbers', 'section=pullsheets&go=judging_scores_bos&view=entry'),
+                $todo('For Style Type...', 'pullsheets judging_scores_bos per-style'),
+                $todo('All Style Types - Judging Numbers', 'section=pullsheets&go=judging_scores_bos'),
+                $todo('For Style Type... (Judging)', 'pullsheets judging_scores_bos per-style judging'),
+            ]];
+            $reportsItems[] = ['BOS Cup Mats', [
+                $l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'),
+                $todo('For Style Type...', 'bos-mat per-style'),
+                $l('/admin/output/bos_mat', 'All Style Types - Judging Numbers'),
+                $todo('For Style Type... (Judging)', 'bos-mat per-style judging'),
+            ]];
+            $reportsItems[] = ['Pullsheets', [
+                $l('/admin/output/pullsheets', 'All By Table'),
+            ]];
+        }
+
+        // After Judging.
+        $reportsItems[] = ['Award Labels', [
+            $todo('Award Labels', 'section=labels-admin&go=awards'),
+        ]];
+        $reportsItems[] = ['Medal Labels (Round)', [
+            $todo('Medal Labels (Round)', 'section=labels-admin&go=medals'),
+        ]];
+        $reportsItems[] = ['Address Labels', [
+            $todo('Address Labels', 'section=labels-admin&go=participants&action=address_labels'),
+        ]];
+        $reportsItems[] = ['Summaries', [
+            $l('/admin/output/participant_summary', 'Participant Summaries'),
+        ]];
+        $reportsItems[] = ['Participant Entries List', [
+            $l('/admin/output/participant_entries_list', 'Participant Entries List (Address)'),
+        ]];
+        $reportsItems[] = ['BJCP Points', [
+            $todo('BJCP Points', 'section=results&go=bjcp'),
+        ]];
+        $reportsItems[] = ['BOS Results', [
+            $todo('Print', 'section=results&go=judging_scores_bos&action=print&tb=bos&view=default'),
+            $todo('PDF', 'section=export-results&go=judging_scores_bos&action=download&view=pdf'),
+            $todo('HTML', 'section=export-results&go=judging_scores_bos&action=download&view=html'),
+        ]];
+        if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
+            $reportsItems[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), [
+                $todo('Print', 'section=results&go=best&action=print&view=default'),
+            ]];
+        }
+        $reportsItems[] = ['Results ('.$this->resultsMethodLabel($prefs['winnerMethod']).')', [
+            $todo('All with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=default'),
+            $todo('All without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=default'),
+            $todo('Winners Only with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=winners'),
+            $todo('Winners Only without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=winners'),
+            $todo('PDF report', 'section=export-results&go=judging_scores&action=default&tb=none&view=pdf'),
+            $todo('HTML report', 'section=export-results&go=judging_scores&action=default&tb=none&view=html'),
+        ]];
+
+        $right = [['Reports', 'fa-file',
+            'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
+            $reportsItems,
+        ]];
+
+        // Data Exports.
+        $dataExportItems = [];
+        $emailCsv = [
+            $todo('Available Judges', 'section=export-emails&go=csv&filter=avail_judges&action=email'),
+            $todo('Available Stewards', 'section=export-emails&go=csv&filter=avail_stewards&action=email'),
+            $todo('Assigned Judges', 'section=export-emails&go=csv&filter=judges&action=email'),
+            $todo('Assigned Stewards', 'section=export-emails&go=csv&filter=stewards&action=email'),
+            $todo('Available and Assigned Staff', 'section=export-emails&go=csv&filter=staff&action=email'),
+        ];
+        $participantCsv = [
+            $todo('All Participants', 'section=export-participants&go=csv'),
+            $todo('Winners: Limited Data', 'section=export-entries&go=csv&tb=winners'),
+            $todo('Winners: Circuit Data', 'section=export-entries&go=csv&tb=circuit'),
+            $todo('Winners: Master Homebrewer Program Member Data', 'section=export-entries&go=csv&tb=circuit&filter=mhp'),
+        ];
+        $entriesCsv = [
+            $l('/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'),
+            $l('/admin/output/export?go=csv', 'All Entries: Limited Data'),
+            $todo('All Entries: Limited Data with Participant Contact Info', 'section=export-entries&go=csv&tb=brewer_contact_info'),
+            $todo('Paid Entries', 'section=export-entries&go=csv&tb=paid&view=all'),
+            $todo('Paid & Received Entries', 'section=export-entries&go=csv&tb=paid'),
+            $todo('Paid Entries Not Received', 'section=export-entries&go=csv&tb=paid&view=not_received'),
+            $todo('Non-Paid Entries', 'section=export-entries&go=csv&tb=nopay&view=all'),
+            $todo('Non-Paid & Received Entries', 'section=export-entries&go=csv&tb=nopay'),
+            $todo('Entries with Required & Optional Info', 'section=export-entries&go=csv&action=required&tb=required'),
+        ];
+        $dataExportItems[] = ['Email Addresses and Associated Contact Data (CSV)', $emailCsv];
+        $dataExportItems[] = ['Participant Data (CSV)', $participantCsv];
+        if ($obfuscate === 0) {
+            $dataExportItems[] = ['Entries and Associated Data (CSV)', $entriesCsv];
+        }
+        $right[] = ['Data Exports', 'fa-download',
+            'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
+            $dataExportItems,
+        ];
+
+        if ($level0) {
+            // Data Management.
+            $dataMgmtItems = [];
+            $dataMgmtItems[] = ['Integrity', [
+                $todo('Clean-Up Data', 'cleanUp modal'),
+            ]];
+            $dataMgmtItems[] = ['Entries', [
+                $todo('Confirm All Unconfirmed', 'confirmAll modal'),
+                $todo('Purge All Unconfirmed', 'purgeUnconfirmed modal'),
+                $todo('Purge All Unpaid', 'purgeUnpaid modal'),
+            ]];
+            $dataMgmtItems[] = ['Purge', [
+                $l('/admin/purge', 'Entries'),
+                $todo('Payments', 'purgePayments modal'),
+                $todo('Participants', 'purgeParticipants modal'),
+                $todo('Judging Tables', 'purgeTables modal'),
+            ]];
+            $dataMgmtItems[] = ['Archives', [
+                $l('/admin/archive', 'Manage'),
+                $l('/admin/archive', 'Archive Current Data'),
+            ]];
+            $right[] = ['Data Management', 'fa-archive',
+                'Actions to help maintain the data collected by your installation including various archive and purge functions.',
+                $dataMgmtItems,
+            ];
+
+            // Preferences.
+            $prefItems = [['Preferences', [
+                $l('/admin/site-preferences', 'General'),
+                $l('/admin/site-preferences/entries', 'Entry'),
+                $l('/admin/hero-images', 'Banner Images'),
+                $l('/admin/site-preferences/email', 'Email Sending / Contact Display'),
+                $l('/admin/site-preferences/payment', 'Currency and Payment'),
+                $l('/admin/site-preferences/best', 'Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : '')),
+                $l('/admin/judging/preferences', 'Judging/Competition Organization'),
+            ]]];
+            if ($prefs['useMods']) {
+                $prefItems[] = ['Custom Modules', [
+                    $l('/admin/mods', 'Manage'),
+                    $l('/admin/mods/create', 'Add'),
+                ]];
+            }
+            $right[] = ['Preferences', 'fa-cog',
+                'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
+                $prefItems,
+            ];
+        }
+
+        // More Help (legacy dashboard-help panel).
+        $helpItems = [
+            ['How Do I...', [
+                $todo('Competition Preparation', 'help modal #dashboard-help-modal-comp-prep'),
+                $todo('Entries and Participants', 'help modal #dashboard-help-modal-entries-participants'),
+                $todo('Entry Sorting', 'help modal #dashboard-help-modal-sorting'),
+                $todo('Organizing', 'help modal #dashboard-help-modal-organizing'),
+                $todo('Scoring', 'help modal #dashboard-help-modal-scoring'),
+                $todo('Preferences', 'help modal #dashboard-help-modal-preferences'),
+                $todo('Reports', 'help modal #dashboard-help-modal-reports'),
+                $todo('Data Exports', 'help modal #dashboard-help-modal-data-exports'),
+                $todo('Data Management', 'help modal #dashboard-help-modal-data-mgmt'),
+                ['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose'],
+            ]],
+        ];
+        $right[] = ['More Help', 'fa-question-circle',
+            'Answers to common organization, judging, and reporting questions.',
+            $helpItems,
+        ];
+
+        return ['left' => $left, 'right' => $right];
     }
 
-    /**
-     * @return list<array{0: string, 1: string, 2: string, 3: list<array{0: string, 1: list<array{0: string, 1: string}>}>}>
-     */
-    private function rightSections(): array
+    /** Legacy $results_method[$_SESSION['prefsWinnerMethod']] label. */
+    private function resultsMethodLabel(int $method): string
     {
-        return [
-            ['Reports', 'fa-file',
-                'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
-                [
-                    ['Before Judging', [
-                        ['/admin/output/assignments', 'Judging Assignments by Last Name'],
-                        ['/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'],
-                        ['/admin/output/judge_notes?go=admin', 'Admin and Staff Notes'],
-                        ['/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries'],
-                    ]],
-                    ['Drop-Off and Shipping', [
-                        ['/admin/output/dropoff', 'Entry Totals by Drop-off'],
-                        ['/admin/output/dropoff?go=check', 'List of Entries by Drop-off'],
-                    ]],
-                    ['Pullsheets', [['/admin/output/pullsheets', 'All by Table']]],
-                    ['During Judging', [['/admin/output/bos_mat', 'Cup Mats']]],
-                    ['After Judging', [['/admin/output/staff_points', 'Staff Points']]],
-                ]],
-            ['Data Exports', 'fa-download',
-                'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
-                [
-                    ['Entries and Associated Data (CSV)', [
-                        ['/admin/output/export?go=csv&action=all&tb=all', 'All Data'],
-                        ['/admin/output/export?go=csv', 'Limited Data'],
-                        ['/admin/output/export?go=csv&tb=w', 'Winners: Limited Data'],
-                    ]],
-                    ['Participant Data (CSV)', [
-                        ['/admin/output/participant_entries_list', 'Participant Entries List'],
-                        ['/admin/output/participant_summary', 'Participant Summary'],
-                    ]],
-                ]],
-            ['Data Management', 'fa-archive',
-                'Actions to help maintain the data collected by your installation including various archive and purge functions.',
-                [
-                    ['Archives', [['/admin/archive', 'Manage'], ['/admin/archive', 'Archive Current Data']]],
-                    ['Purge', [['/admin/purge', 'Purge & Reset Flows']]],
-                ]],
-            ['Preferences', 'fa-cog',
-                'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
-                [
-                    ['Preferences', [
-                        ['/admin/site-preferences', 'General'],
-                        ['/admin/site-preferences#email', 'Email Sending / Contact Display'],
-                        ['/admin/site-preferences#payments', 'Currency and Payment'],
-                        ['/admin/site-preferences#best-brewer', 'Best Brewer'],
-                        ['/admin/judging/preferences', 'Judging/Competition Organization'],
-                        ['/admin/hero-images', 'Banner Images'],
-                    ]],
-                    ['Custom Modules', [['/admin/mods', 'Manage']]],
-                ]],
-        ];
+        return match ($method) {
+            1 => 'Winners Only',
+            2 => 'Winners Only No Scores',
+            3 => 'Entry Order',
+            4 => 'Average Score',
+            5 => 'Highest Score',
+            default => 'All with Scores',
+        };
     }
 }
