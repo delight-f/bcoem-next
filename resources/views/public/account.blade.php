@@ -11,6 +11,8 @@
         <p class="alert alert-error print:hidden">{{ __('site.deleted_ok') }}</p>
     @elseif ($msg === 2)
         <p class="alert alert-success print:hidden">{{ __('site.updated_ok') }}</p>
+    @elseif ($msg === 7)
+        <p class="alert alert-success print:hidden">{{ __('site.registration_complete') }}</p>
     @endif
 
     <a name="my-account"></a>

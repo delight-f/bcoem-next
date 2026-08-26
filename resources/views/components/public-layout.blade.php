@@ -166,7 +166,7 @@
                             <button type="submit" class="nav-item nav-link" aria-label="{{ __('site.log_out') }}"><i class="fa fa-lg fa-fw fa-sign-out-alt"></i></button>
                         </form>
                     @else
-                        <a class="nav-item nav-link" href="{{ route('login') }}">{{ __('site.log_in') }}</a>
+                        <a class="nav-item nav-link" href="#" data-open-modal="login-modal">{{ __('site.log_in') }}</a>
                     @endif
                 </section>
             </div>
@@ -177,6 +177,9 @@
             <p class="alert alert-warning"><strong>{{ __('site.please_log_in') }}</strong></p>
         @elseif ((int) request('msg') === 8)
             <p class="alert alert-warning"><strong>{{ __('site.archived_not_available') }}</strong></p>
+        @elseif ((int) request('msg') === 11)
+            <p class="alert alert-warning"><span class="fa fa-lg fa-exclamation-circle"></span>
+                <strong>{{ __('site.login_problem') }}</strong> {{ __('site.login_problem_detail') }}</p>
         @endif
         {{-- alerts.pub.php stacked info alerts ("For Your Information") --}}
         @if (! empty($fyiAlerts))
@@ -222,6 +225,69 @@
     </header>
 @endif
 
+
+@guest
+    {{-- index.pub.php #login-modal / #forgot-modal: the login form lives in
+         a shell modal opened by the nav Log In button, not on a page. --}}
+    <dialog id="login-modal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <h1 class="text-lg font-bold mb-4">{{ __('site.log_in') }}</h1>
+            @if ($errors->any())
+                <div class="alert alert-error mb-4">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form method="post" action="{{ route('login.store') }}" class="needs-validation" novalidate>
+                @csrf
+                <label class="floating-label w-full mb-4">
+                    <input class="input input-bordered input-lg w-full" id="login-user-name" type="email" name="loginUsername"
+                           placeholder="{{ __('site.email') }}" value="{{ old('loginUsername') }}" required autofocus>
+                    <span>{{ __('site.email') }}</span>
+                </label>
+                <label class="floating-label w-full mb-4">
+                    <input class="input input-bordered input-lg w-full" id="login-password" type="password" name="loginPassword"
+                           placeholder="{{ __('site.password') }}" required>
+                    <span>{{ __('site.password') }}</span>
+                </label>
+                <div class="d-grid gap-2 mx-auto mb-4">
+                    <button id="login-button" class="btn btn-lg btn-success" type="submit">
+                        {{ __('site.log_in') }}<i class="fas fa-sign-in-alt ps-2"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="d-grid gap-2 mx-auto text-center">
+                {{ __('site.forgot_password') }}
+                <button class="btn btn-sm btn-primary mt-1" data-open-modal="forgot-modal">{{ __('site.reset_password') }}</button>
+            </div>
+            <div class="modal-action">
+                <button type="button" class="btn btn-danger" data-close-modal>{{ __('site.close') }}</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="forgot-modal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <h1 class="text-lg font-bold mb-4">{{ __('site.reset_password') }}</h1>
+            <form method="post" action="{{ route('password.forgot') }}" class="needs-validation" novalidate>
+                @csrf
+                <label class="floating-label w-full mb-4">
+                    <input class="input input-bordered input-lg w-full" id="forgot-user-name" name="email" type="email"
+                           placeholder="{{ __('site.email') }}" value="{{ old('email') }}" required>
+                    <span>{{ __('site.email') }}</span>
+                </label>
+                <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
+            </form>
+            <div class="modal-action">
+                <button type="button" class="btn btn-dark" data-open-modal="login-modal"><i class="fas fa-chevron-left pe-2"></i>{{ __('site.log_in') }}</button>
+                <button type="button" class="btn btn-danger" data-close-modal>{{ __('site.close') }}</button>
+            </div>
+        </div>
+    </dialog>
+@endguest
 <div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}">
     {{ $slot }}
 </div>

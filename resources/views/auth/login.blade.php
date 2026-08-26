@@ -1,3 +1,7 @@
+{{-- Legacy pub/login.pub.php: the page itself carries only the heading,
+     rule, and messages — the email/password form lives in the shell's
+     #login-modal (opened by the nav Log In button). Failed logins redirect
+     here with errors and re-open the modal. --}}
 <x-public-layout
     :ctx="$ctx"
     :judging-started="$judgingStarted"
@@ -17,30 +21,14 @@
                     @endforeach
                 </ul>
             </div>
+            {{-- Legacy leaves the page bare; re-opening the modal keeps the
+                 failed-login flow usable without a dead end. --}}
+            <script>document.getElementById('login-modal')?.showModal();</script>
         @endif
-
-        <form method="post" action="{{ route('login.store') }}" class="needs-validation" novalidate>
-            @csrf
-            <label class="floating-label w-full mb-4">
-                <input class="input input-bordered input-lg w-full" id="login-user-name" type="email" name="loginUsername"
-                       placeholder="{{ __('site.email') }}" value="{{ old('loginUsername') }}" required autofocus>
-                <span>{{ __('site.email') }}</span>
-            </label>
-            <label class="floating-label w-full mb-4">
-                <input class="input input-bordered input-lg w-full" id="login-password" type="password" name="loginPassword"
-                       placeholder="{{ __('site.password') }}" required>
-                <span>{{ __('site.password') }}</span>
-            </label>
-            <div class="grid gap-2 mx-auto mb-6">
-                <button id="login-button" class="btn btn-lg btn-success" type="submit">
-                    {{ __('site.log_in') }}<i class="fas fa-sign-in-alt ps-2"></i>
-                </button>
-            </div>
-        </form>
 
         <p class="text-xl font-light">
             {{ __('site.forgot_password') }}
-            <a href="{{ route('login') }}?go=password&amp;action=forgot">{{ __('site.reset_password') }}</a>
+            <button type="button" class="link text-primary" data-open-modal="forgot-modal">{{ __('site.reset_password') }}</button>
         </p>
     </section>
 </x-public-layout>

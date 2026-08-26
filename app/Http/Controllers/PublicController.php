@@ -36,6 +36,14 @@ final class PublicController extends Controller
             return redirect('/login');
         }
 
+        // Legacy served the account page as ?section=list; the register
+        // flow lands back on it with msg=7 (success).
+        if (request('section') === 'list') {
+            $msg = (string) request('msg');
+
+            return redirect('/list'.($msg !== '' ? '?msg='.$msg : ''));
+        }
+
         // Legacy served registration as ?section=register&go={entrant|judge|
         // steward}; the clean /register URL is canonical.
         if (request('section') === 'register') {

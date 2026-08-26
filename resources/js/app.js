@@ -87,3 +87,21 @@ document.querySelectorAll('.panel-collapse-toggle').forEach((toggler) =>
         target.classList.toggle('in');
     }),
 );
+
+// daisyUI <dialog class="modal">: [data-open-modal="id"] opens, backdrop
+// click and [data-close-modal] close (Bootstrap modal semantics without
+// Bootstrap JS).
+document.querySelectorAll('[data-open-modal]').forEach((btn) =>
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById(btn.dataset.openModal)?.showModal();
+    }),
+);
+document.querySelectorAll('dialog.modal').forEach((dialog) => {
+    dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close();
+    });
+    dialog.querySelectorAll('[data-close-modal]').forEach((btn) =>
+        btn.addEventListener('click', () => dialog.close()),
+    );
+});
