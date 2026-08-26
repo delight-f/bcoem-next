@@ -69,8 +69,24 @@ final class ParticipantsController extends Controller
                 'brewer.uid', 'brewer.brewerFirstName', 'brewer.brewerLastName',
                 'brewer.brewerEmail', 'brewer.brewerClubs', 'brewer.brewerJudge',
                 'brewer.brewerSteward', 'brewer.brewerAssignment',
+                'brewer.brewerJudgeLocation', 'brewer.brewerJudgeID',
+                'brewer.brewerJudgeRank', 'brewer.brewerStewardLocation',
                 'users.userLevel',
             ]);
+
+        // Location ids for the judges/stewards filter columns: stored as
+        // Y-<id> CSV (availability flags), names resolved for display.
+        $locationNames = DB::table('judging_locations')->pluck('judgingLocName', 'id');
+        $locationDisplay = function (?string $csv) use ($locationNames): string {
+            if ($csv === null || $csv === '') {
+                return '';
+            }
+
+            return collect(explode(',', $csv))
+                ->map(fn (string $flag): string => $locationNames[(int) substr($flag, 2)] ?? '')
+                ->filter()
+                ->implode(', ');
+        };
 
         // Entry counts in one grouped pass, merged client-side (keeps the
         // main query prefix-agnostic instead of a raw subquery).
@@ -85,6 +101,7 @@ final class ParticipantsController extends Controller
             'entryCounts' => $entryCounts,
             'filter' => $filter,
             'q' => $q,
+            'locationDisplay' => $locationDisplay,
         ]);
     }
 

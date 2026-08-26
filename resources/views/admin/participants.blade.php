@@ -39,10 +39,24 @@
                     <tr>
                         <th>Name</th>
                         <th>User Level</th>
-                        <th>Club</th>
-                        <th>Steward?</th>
-                        <th>Judge?</th>
-                        <th>@if ($filter === 'with_entries') Entries @else Assigned As @endif</th>
+                        @if ($filter === 'judges' || $filter === 'stewards')
+                            <th>Location(s) Available</th>
+                        @else
+                            <th>Club</th>
+                        @endif
+                        @if ($filter === 'default')
+                            <th>Steward?</th>
+                            <th>Judge?</th>
+                        @endif
+                        @if ($filter === 'with_entries')
+                            <th>Entries</th>
+                        @else
+                            <th>Assigned As</th>
+                        @endif
+                        @if ($filter === 'judges')
+                            <th>ID</th>
+                            <th>Rank</th>
+                        @endif
                         <th class="print:hidden">Actions</th>
                     </tr>
                 </thead>
@@ -51,16 +65,24 @@
                         <tr>
                             <td>{{ $p->brewerFirstName }} {{ $p->brewerLastName }}</td>
                             <td>{{ $p->userLevel }}</td>
-                            <td>{{ $p->brewerClubs }}</td>
-                            <td>@if ($p->brewerSteward === 'Y')<span class="text-success">&#10003;</span>@endif</td>
-                            <td>@if ($p->brewerJudge === 'Y')<span class="text-success">&#10003;</span>@endif</td>
-                            <td>
-                                @if ($filter === 'with_entries')
-                                    {{ $entryCounts[$p->uid] ?? 0 }}
-                                @else
-                                    {{ $p->brewerAssignment }}
-                                @endif
-                            </td>
+                            @if ($filter === 'judges' || $filter === 'stewards')
+                                <td>{{ $locationDisplay($filter === 'judges' ? $p->brewerJudgeLocation : $p->brewerStewardLocation) }}</td>
+                            @else
+                                <td>{{ $p->brewerClubs }}</td>
+                            @endif
+                            @if ($filter === 'default')
+                                <td>@if ($p->brewerSteward === 'Y')<span class="text-success">&#10003;</span>@endif</td>
+                                <td>@if ($p->brewerJudge === 'Y')<span class="text-success">&#10003;</span>@endif</td>
+                            @endif
+                            @if ($filter === 'with_entries')
+                                <td>{{ $entryCounts[$p->uid] ?? 0 }}</td>
+                            @else
+                                <td>{{ $p->brewerAssignment }}</td>
+                            @endif
+                            @if ($filter === 'judges')
+                                <td>{{ $p->brewerJudgeID }}</td>
+                                <td>{{ $p->brewerJudgeRank }}</td>
+                            @endif
                             <td class="print:hidden">
                                 <a href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}">Edit</a>
                                 <a href="{{ url('/backoffice/entries', ['bid' => $p->uid]) }}">Entries</a>
