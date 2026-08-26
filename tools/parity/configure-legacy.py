@@ -52,4 +52,5 @@ config = re.sub(
 )
 if "$base_url" not in config or "SERVER_NAME" in config:
     raise SystemExit("config.sample.php shape changed — base_url override failed")
+pathlib.Path("site/config.php").write_text(config)
 print("site/config.php written")
