@@ -83,6 +83,12 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/backoffice/entries', 'Manually'],
             ['/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)'],
             ['/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)'],
+            ['/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards'],
+            ['/admin/output/sorting?go=default&filter=default&view=entry', 'Entry Numbers'],
+            ['/admin/output/sorting?go=default&filter=default', 'Judging Numbers'],
+            ['/admin/output/sorting?go=cheat&filter=default', 'Cheat Sheets'],
+            ['/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'],
+            ['/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'],
             // Organizing
             ['/admin/judging/flights', 'Judges'],
             ['/admin/judging/flights', 'Stewards'],

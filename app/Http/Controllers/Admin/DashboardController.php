@@ -270,6 +270,20 @@ final class DashboardController extends Controller
         }
         $sortItems[] = ['Entry Check-In', $checkIn];
 
+        // Sorting Sheets + Sorting Into Tables (legacy default.admin.php:910-936).
+        if ($obfuscate === 0) {
+            $sortItems[] = ['Sorting Sheets', [
+                $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards'),
+                $l('/admin/output/sorting?go=default&filter=default&view=entry', 'Entry Numbers'),
+                $l('/admin/output/sorting?go=default&filter=default', 'Judging Numbers'),
+                $l('/admin/output/sorting?go=cheat&filter=default', 'Cheat Sheets'),
+            ]];
+            $sortItems[] = ['Sorting Into Tables', [
+                $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'),
+                $l('/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'),
+            ]];
+        }
+
         // Print Bottle Labels (PDF) — label-template matrix (legacy labels-admin).
         if ($obfuscate === 0) {
             $bottle = [];
@@ -287,7 +301,7 @@ final class DashboardController extends Controller
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
-            $sortItems[] = ['Bottle Labels', $bottle];
+            $sortItems[] = ['Print Bottle Labels (PDF)', $bottle];
 
             // Print Box Labels (PDF).
             $box = [];
@@ -295,7 +309,7 @@ final class DashboardController extends Controller
             $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=5160')['children']);
             $box[] = $family('A4 (Avery 3422) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422')['children']);
             $box[] = $family('A4 (Avery 3422) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422')['children']);
-            $sortItems[] = ['Box Labels', $box];
+            $sortItems[] = ['Print Box Labels (PDF)', $box];
         }
 
         $left[] = ['Entry Sorting', 'fa-exchange',
