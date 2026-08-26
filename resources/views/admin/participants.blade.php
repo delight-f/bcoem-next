@@ -1,4 +1,14 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
+    @php
+        $subtitle = match ($filter) {
+            'judges' => 'Available Judges',
+            'stewards' => 'Available Stewards',
+            'with_entries' => 'Participants with Entries',
+            default => 'Participants',
+        };
+        // Legacy "All <subtitle> Email Addresses" copy/paste modal.
+        $allEmails = $participants->pluck('brewerEmail')->filter()->unique()->implode(', ');
+    @endphp
     <section class="container mt-6 mb-4">
         <h1>Participants</h1>
 
@@ -12,12 +22,124 @@
             <div class="alert alert-warning">Participant not found.</div>
         @endif
 
+        {{-- Legacy admin-element control row (participants.admin.php:538+). --}}
+        <div class="mb-4 flex flex-wrap gap-2 items-start">
+            <div class="flex flex-wrap gap-2">
+                @if ($filter !== 'default')
+                    <a class="btn btn-secondary" href="{{ url('/backoffice/participants') }}">&larr; All Participants</a>
+                @endif
+
+                {{-- Register... dropdown (participants.admin.php:576). URLs follow
+                     the Admin Essentials menu mapping (1deb35c): the port register
+                     forms are the canonical surfaces, quick variants pass view=quick. --}}
+                <div class="dropdown">
+                    <button type="button" class="btn btn-secondary dropdown-toggle">
+                        <span class="fa fa-plus-circle"></span> Register... <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="small"><a class="dropdown-item" href="{{ url('/register/entrant') }}">A Participant</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/register/judge') }}">A Judge (Standard)</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/register/steward') }}">A Steward (Standard)</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/register/judge') }}?view=quick">A Judge (Quick)</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/register/steward') }}?view=quick">A Steward (Quick)</a></li>
+                    </ul>
+                </div>
+
+                {{-- Assign/Unassign... dropdown (participants.admin.php:591); same
+                     targets as the Admin Essentials menu fix. --}}
+                <div class="dropdown">
+                    <button type="button" class="btn btn-secondary dropdown-toggle">
+                        <span class="fa fa-check-circle"></span> Assign/Unassign... <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/locations') }}?action=assign&filter=judges">Judges</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/locations') }}?action=assign&filter=bos">BOS Judges</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/locations') }}?action=assign&filter=stewards">Stewards</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/locations') }}?action=assign&filter=staff">Staff</a></li>
+                        <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign">Judges/Stewards to Tables</a></li>
+                    </ul>
+                </div>
+
+                {{-- Print Current View... dropdown (participants.admin.php:606).
+                     TODO: legacy output — the print targets are
+                     includes/output.inc.php?section=admin&go=participants&action=print
+                     re-rendering participants.admin.php in print mode; no port
+                     output route exists yet. --}}
+                <div class="dropdown">
+                    <button type="button" class="btn btn-secondary dropdown-toggle">
+                        <span class="fa fa-print"></span> Print Current View... <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @if ($filter === 'default')
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Last Name</a></li>
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Club</a></li>
+                        @elseif ($filter === 'with_entries')
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Entrant Last Name</a></li>
+                        @elseif ($filter === 'judges')
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Judge ID</a></li>
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Judge Rank</a></li>
+                        @elseif ($filter === 'stewards')
+                            <li class="small"><a class="dropdown-item disabled" aria-disabled="true">By Last Name</a></li>
+                        @endif
+                    </ul>
+                </div>
+
+                @if ($allEmails !== '')
+                    {{-- All Participant Email Addresses modal (participants.admin.php:660). --}}
+                    <button type="button" class="btn btn-info" data-open-modal="allEmailModal">
+                        All {{ $subtitle }} Email Addresses
+                    </button>
+                @endif
+            </div>
+
+            {{-- Participant Status modal trigger (participants.admin.php:689). --}}
+            <button type="button" class="btn btn-success ms-auto" data-open-modal="participantStatusModal">
+                Participant Status
+            </button>
+        </div>
+
+        @if ($allEmails !== '')
+            <dialog class="modal" id="allEmailModal">
+                <div class="modal-box">
+                    <h4 class="font-bold" id="allEmailModalLabel">Participant Email Addresses</h4>
+                    <p>Copy and paste the list below into your favorite email program.</p>
+                    <textarea class="w-full border rounded p-2 font-mono text-sm" rows="8" readonly>{{ $allEmails }}</textarea>
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Close</button></form>
+                    </div>
+                </div>
+            </dialog>
+        @endif
+
+        <dialog class="modal" id="participantStatusModal">
+            <div class="modal-box">
+                    <h4 class="font-bold" id="participantStatusModalLabel">Participant Status</h4>
+                    <div>
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <strong class="text-info">Participants</strong><span>{{ $statusCounts['participants'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <strong class="text-info">Participants with Entries</strong><span>{{ $statusCounts['withEntries'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <strong class="text-info">Available Judges</strong><span>{{ $statusCounts['judges'] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-bottom py-1">
+                            <strong class="text-info">Available Stewards</strong><span>{{ $statusCounts['stewards'] }}</span>
+                        </div>
+                    </div>
+                    <div class="modal-action">
+                        <form method="dialog"><button class="btn">Close</button></form>
+                    </div>
+            </div>
+        </dialog>
+
         {{-- Legacy filters: default / judges / stewards / with_entries --}}
         <ul class="nav nav-pills mb-4">
             @foreach ([['default', 'All'], ['judges', 'Available Judges'], ['stewards', 'Available Stewards'], ['with_entries', 'Participants with Entries']] as [$f, $label])
                 <li class="nav-item">
                     <a class="nav-link {{ $filter === $f ? 'active' : '' }}"
-                       href="{{ url('/backoffice/participants', array_filter(['filter' => $f !== 'default' ? $f : null, 'q' => $q !== '' ? $q : null])) }}">{{ $label }}</a>
+                       href="{{ url('/backoffice/participants').($f !== 'default' ? '?filter='.$f : '').($q !== '' ? '&q='.urlencode($q) : '') }}">{{ $label }}</a>
                 </li>
             @endforeach
         </ul>
@@ -30,7 +152,7 @@
             <input class="input input-bordered" name="q" placeholder="Search participants…"
                    value="{{ $q }}">
             <button type="submit" class="btn btn-outline btn-secondary">Search</button>
-</form>
+        </form>
         @if ($participants->isEmpty())
             <p>No participants found.</p>
         @else
@@ -56,6 +178,13 @@
                         @if ($filter === 'judges')
                             <th>ID</th>
                             <th>Rank</th>
+                        @endif
+                        @if ($filter === 'judges' || $filter === 'stewards')
+                            <th>Assigned to Table(s)</th>
+                            <th class="print:hidden">Has Entries In...</th>
+                        @endif
+                        @if ($filter !== 'with_entries')
+                            <th class="print:hidden">Updated</th>
                         @endif
                         <th class="print:hidden">Actions</th>
                     </tr>
@@ -83,9 +212,26 @@
                                 <td>{{ $p->brewerJudgeID }}</td>
                                 <td>{{ $p->brewerJudgeRank }}</td>
                             @endif
+                            @if ($filter === 'judges' || $filter === 'stewards')
+                                <td>{{ $tableAssignments[$p->uid.'|'.($filter === 'judges' ? 'J' : 'S')] ?? '' }}</td>
+                                <td class="print:hidden">
+                                    @foreach ($judgeEntries[$p->uid] ?? collect() as $i => $e)
+                                        @if ($i !== 0), @endif
+                                        <a href="{{ '/backoffice/entries?filter='.$e['filter'] }}"
+                                           title="View the {{ $e['label'] }} Entries">{{ $e['label'] }}</a>
+                                    @endforeach
+                                </td>
+                            @endif
+                            @if ($filter !== 'with_entries')
+                                <td class="print:hidden">
+                                    @if ($p->userCreated)
+                                        {{ \App\Support\Tenant\DateFmt::dateTime(strtotime($p->userCreated) ?: null, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', false) }}
+                                    @endif
+                                </td>
+                            @endif
                             <td class="print:hidden">
                                 <a href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}">Edit</a>
-                                <a href="{{ url('/backoffice/entries', ['bid' => $p->uid]) }}">Entries</a>
+                                <a href="{{ '/backoffice/entries?bid='.$p->uid }}">Entries</a>
                                 <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="inline"
                                       onsubmit="return confirm('Delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
                                     @csrf

@@ -78,13 +78,109 @@ final class EntriesController extends Controller
             'brewer.brewerClubs',
         ]);
 
+        $base = DB::table('brewing');
+        if ($view === 'paid') {
+            $base->where('brewPaid', '1');
+        } elseif ($view === 'unpaid') {
+            $base->where('brewPaid', '!=', 1);
+        }
+        if ($filter !== 'default' && $filter !== '') {
+            $base->where('brewCategorySort', $filter);
+        }
+        if ($bid !== 'default' && $bid !== '') {
+            $base->where('brewBrewerID', (int) $bid);
+        }
+
+        // Entry Status modal (entries.admin.php:936): counts scoped to the
+        // current view/filter/participant selection; fees only on the
+        // unscoped view, like legacy's sidebar_extension branches.
+        $clone = fn () => clone $base;
+        $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
+        $entryStatus = [
+            'confirmed' => (clone $base)->where('brewConfirmed', '1')->count(),
+            'unconfirmed' => (clone $base)->where('brewConfirmed', '!=', 1)->count(),
+            'received' => (clone $base)->where('brewReceived', '1')->count(),
+        ];
+        if ($view === 'default' && $filter === 'default' && $bid === 'default') {
+            $entryStatus['paidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '1')->count();
+            $entryStatus['unpaidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '!=', 1)->count();
+            $entryStatus['totalFees'] = DB::table('brewing')->where('brewConfirmed', '1')->count() * $fee;
+        }
+        if ($view !== 'unpaid') {
+            $entryStatus['totalFeesPaid'] = $clone()->where('brewConfirmed', '1')->where('brewPaid', '1')->count() * $fee;
+        }
+        if ($view !== 'paid') {
+            $entryStatus['totalFeesUnpaid'] = $clone()->where('brewConfirmed', '1')->where('brewPaid', '!=', 1)->count() * $fee;
+        }
+
+        // Copy/paste email modals (entries.admin.php:853-933): unique
+        // brewer emails behind entries / paid entries / unpaid entries.
+        $emailsFor = function (?string $paid): string {
+            $q = DB::table('brewing as b')
+                ->join('brewer as br', 'br.uid', '=', 'b.brewBrewerID');
+            if ($paid === '1') {
+                $q->where('b.brewPaid', '1');
+            } elseif ($paid === '0') {
+                $q->where('b.brewPaid', '!=', 1);
+            }
+
+            return $q->distinct()
+                ->orderBy('br.brewerLastName')
+                ->pluck('br.brewerEmail')
+                ->filter()->unique()->values()
+                ->implode(', ');
+        };
+        $emailLists = [
+            'all' => $emailsFor(null),
+            'paid' => $emailsFor('1'),
+            'unpaid' => $emailsFor('0'),
+        ];
+
+        // Participant jump select (participant_choose, admin.lib.php:511).
+        $participants = DB::table('brewer')
+            ->orderBy('brewerLastName')
+            ->get(['uid', 'brewerFirstName', 'brewerLastName']);
+
         return view('admin.entries', [
             'ctx' => $ctx,
             'entries' => $entries,
             'view' => $view,
             'filter' => $filter,
             'bid' => $bid,
+            'entryStatus' => $entryStatus,
+            'emailLists' => $emailLists,
+            'participants' => $participants,
         ]);
+    }
+
+    /**
+     * Legacy process_brewing.inc.php:991 mark-everything actions (the
+     * "Admin Actions" dropdown). Legacy updates the WHOLE brewing table
+     * regardless of the current filter — mirrored. Redirects carry the
+     * legacy msg codes (headers.inc.php 642-656): 20 paid, 34 unpaid,
+     * 21 received, 35 not-received, 22 confirmed.
+     */
+    public function markAll(Request $request): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+        $actions = [
+            'paid' => ['column' => 'brewPaid', 'value' => '1', 'msg' => 20],
+            'unpaid' => ['column' => 'brewPaid', 'value' => '0', 'msg' => 34],
+            'received' => ['column' => 'brewReceived', 'value' => '1', 'msg' => 21],
+            'not-received' => ['column' => 'brewReceived', 'value' => '0', 'msg' => 35],
+            'confirmed' => ['column' => 'brewConfirmed', 'value' => '1', 'msg' => 22],
+        ];
+
+        $action = (string) $request->input('action');
+        if (! isset($actions[$action])) {
+            return redirect('/backoffice/entries');
+        }
+
+        DB::table('brewing')->update([$actions[$action]['column'] => $actions[$action]['value']]);
+
+        return redirect('/backoffice/entries?msg='.$actions[$action]['msg']);
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse

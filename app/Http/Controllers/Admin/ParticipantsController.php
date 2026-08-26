@@ -71,7 +71,7 @@ final class ParticipantsController extends Controller
                 'brewer.brewerSteward', 'brewer.brewerAssignment',
                 'brewer.brewerJudgeLocation', 'brewer.brewerJudgeID',
                 'brewer.brewerJudgeRank', 'brewer.brewerStewardLocation',
-                'users.userLevel',
+                'users.userLevel', 'users.userCreated',
             ]);
 
         // Location ids for the judges/stewards filter columns: stored as
@@ -95,6 +95,45 @@ final class ParticipantsController extends Controller
             ->groupBy('brewBrewerID')
             ->pluck('n', 'brewBrewerID');
 
+        $uids = $participants->pluck('uid')->all();
+
+        // "Assigned to Table(s)" (legacy table_assignments method 2=1):
+        // judging_assignments ⋈ judging_tables per uid/role, "N - Name".
+        $tableAssignments = $uids === [] ? collect() : DB::table('judging_assignments as ja')
+            ->leftJoin('judging_tables as jt', 'jt.id', '=', 'ja.assignTable')
+            ->whereIn('ja.bid', $uids)
+            ->whereIn('ja.assignment', ['J', 'S'])
+            ->orderBy('ja.assignTable')
+            ->get(['ja.bid', 'ja.assignment', 'jt.tableNumber', 'jt.tableName'])
+            ->groupBy(fn ($r) => $r->bid.'|'.$r->assignment)
+            ->map(fn ($rows) => $rows
+                ->map(fn ($r) => trim((string) $r->tableNumber).' - '.$r->tableName)
+                ->implode(', '));
+
+        // "Has Entries In..." (legacy judge_entries): distinct category+
+        // subcategory of the participant's entries, linked to the entries
+        // admin filtered by brewCategorySort.
+        $judgeEntries = $uids === [] ? collect() : DB::table('brewing')
+            ->whereIn('brewBrewerID', $uids)
+            ->orderBy('brewCategorySort')
+            ->get(['brewBrewerID', 'brewCategorySort', 'brewCategory', 'brewSubCategory'])
+            ->groupBy('brewBrewerID')
+            ->map(fn ($rows) => $rows
+                ->unique(fn ($r) => $r->brewCategory.$r->brewSubCategory)
+                ->map(fn ($r) => [
+                    'label' => ltrim((string) $r->brewCategory, '0').$r->brewSubCategory,
+                    'filter' => $r->brewCategorySort,
+                ]));
+
+        // Participant Status modal counts (legacy get_participant_count +
+        // the with-entries count).
+        $statusCounts = [
+            'participants' => DB::table('brewer')->count(),
+            'withEntries' => DB::table('brewing')->distinct()->count('brewBrewerID'),
+            'judges' => DB::table('brewer')->where('brewerJudge', 'Y')->count(),
+            'stewards' => DB::table('brewer')->where('brewerSteward', 'Y')->count(),
+        ];
+
         return view('admin.participants', [
             'ctx' => TenantContext::load(),
             'participants' => $participants,
@@ -102,6 +141,9 @@ final class ParticipantsController extends Controller
             'filter' => $filter,
             'q' => $q,
             'locationDisplay' => $locationDisplay,
+            'tableAssignments' => $tableAssignments,
+            'judgeEntries' => $judgeEntries,
+            'statusCounts' => $statusCounts,
         ]);
     }
 

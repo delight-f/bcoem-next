@@ -31,6 +31,8 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Entries admin
     Route::get('/backoffice/entries', [EntriesController::class, 'index'])
         ->name('backoffice.entries.index');
+    Route::post('/backoffice/entries/mark-all', [EntriesController::class, 'markAll'])
+        ->name('backoffice.entries.mark_all');
     Route::get('/backoffice/entries/{id}/edit', [EntriesController::class, 'edit'])
         ->name('backoffice.entries.edit');
     Route::put('/backoffice/entries/{id}', [EntriesController::class, 'update'])
