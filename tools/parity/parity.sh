@@ -121,11 +121,11 @@ check_role() {
 }
 
 if grep -q '^entrant|' urls.txt; then
-    login_role entrant "${ENTRANT_EMAIL:-test4@example.com}" "${ENTRANT_PASS:-TestPass123!}"
+    login_role entrant "${ENTRANT_EMAIL:-jordan.oakes2@example.invalid}" "${ENTRANT_PASS:-bcoem-parity}"
     check_role entrant "index.php?section=list" "list"
 fi
 if grep -q '^admin|' urls.txt; then
-    login_role admin "${ADMIN_EMAIL:-faraaz@debelder.com}" "${ADMIN_PASS:-review-admin}"
+    login_role admin "${ADMIN_EMAIL:-sam.holloway1@example.invalid}" "${ADMIN_PASS:-bcoem-parity}"
     check_role admin "index.php?section=admin" "admin"
 fi
 

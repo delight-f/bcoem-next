@@ -81,6 +81,10 @@ final class SitePreferencesController extends Controller
             return redirect('/admin/site-preferences');
         }
 
+        // Tenant schemas vary (SCABS fork drops prefsLanguageToggle/Options);
+        // write only columns this database actually has.
+        $existing = collect(DB::getSchemaBuilder()->getColumnListing('preferences'))->flip();
+        $update = collect($update)->only($existing->keys()->all())->all();
         DB::table('preferences')->where('id', 1)->update($update);
 
         return redirect('/admin/site-preferences/'.$go.'?msg=2');
@@ -97,35 +101,30 @@ final class SitePreferencesController extends Controller
             'prefsWinnerDelay' => ['nullable', 'string'],
             'prefsWinnerMethod' => ['required', 'in:0,1,2'],
             'prefsTheme' => ['required', 'string', 'max:50'],
-            'prefsSEF' => ['required', 'in:0,1'],
+            'prefsSEF' => ['required', 'in:Y,N'],
             'prefsUseMods' => ['required', 'in:0,1'],
             'prefsCAPTCHA' => ['nullable', 'in:0,1'],
-            'prefsGoogleAccount0' => ['nullable', 'string', 'max:255'],
-            'prefsGoogleAccount1' => ['nullable', 'string', 'max:255'],
-            'prefsGoogleAccount2' => ['nullable', 'string', 'max:255'],
+            'prefsGoogleAccount' => ['nullable', 'string', 'max:255'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
             'prefsAutoPurge' => ['required', 'in:0,1'],
             'prefsLanguage' => ['required', 'string', 'max:10'],
-            'prefsLanguageToggle' => ['required', 'in:0,1'],
+            'prefsLanguageToggle' => ['required', 'in:Y,N'],
             'prefsLanguageOptions' => ['nullable', 'array'],
             'prefsDateFormat' => ['required', 'in:0,1,2,999'],
             'prefsTimeFormat' => ['required', 'in:0,1'],
             'prefsTimeZone' => ['required', 'string', 'max:10'],
             'prefsSponsors' => ['required', 'in:Y,N'],
-            'prefsSponsorLogos' => ['required', 'in:0,1'],
+            'prefsSponsorLogos' => ['required', 'in:Y,N'],
         ]);
         $data = $this->validateDates($request, $data, ['prefsWinnerDelay'], $tz);
 
         // Pro edition suppresses the MHP display (legacy quirk).
         $mhp = $data['prefsProEdition'] == 1 ? '0' : (string) ($data['prefsMHPDisplay'] ?? '0');
 
-        // CAPTCHA uses the prefsGoogleAccount column: three pipe-joined parts.
-        $google = implode('|', [
-            (string) ($data['prefsGoogleAccount0'] ?? ''),
-            (string) ($data['prefsGoogleAccount1'] ?? ''),
-            (string) ($data['prefsGoogleAccount2'] ?? ''),
-        ]);
+        // Legacy stores the reCAPTCHA account as pipe-joined parts; the form
+        // posts the combined value directly.
+        $google = (string) ($data['prefsGoogleAccount'] ?? '');
 
         $languageOptions = array_values(array_filter(
             is_array($data['prefsLanguageOptions'] ?? null) ? $data['prefsLanguageOptions'] : [],
@@ -175,9 +174,9 @@ final class SitePreferencesController extends Controller
             'contestEntryFeePasswordNum' => ['nullable', 'integer', 'min:1'],
             'contestEntryCap' => ['nullable', 'integer', 'min:1'],
             'prefsStyleSet' => ['required', 'string', 'max:20'],
-            'prefsEntryForm' => ['required', 'in:0,1'],
+            'prefsEntryForm' => ['required', 'integer'],
             'prefsSpecific' => ['required', 'in:0,1'],
-            'prefsSpecialCharLimit' => ['required', 'in:0,1'],
+            'prefsSpecialCharLimit' => ['required', 'integer', 'min:25', 'max:255'],
             'prefsEntryLimit' => ['nullable', 'integer', 'min:1'],
             'prefsEntryLimitPaid' => ['nullable', 'integer', 'min:1'],
             'prefsUserEntryLimit' => ['nullable', 'integer', 'min:1'],
@@ -388,7 +387,7 @@ final class SitePreferencesController extends Controller
             'prefsPaypal' => ['required', 'in:0,1'],
             'prefsPaypalAccount' => ['nullable', 'string', 'max:255'],
             'prefsPaypalIPN' => ['required', 'in:0,1'],
-            'prefsTransFee' => ['required', 'numeric'],
+            'prefsTransFee' => ['required', 'in:Y,N'],
         ]);
 
         return [

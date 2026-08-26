@@ -141,6 +141,66 @@
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsTimeZone" name="prefsTimeZone" type="text" style="width:auto;" value="{{ $p('prefsTimeZone') }}"></div>
                 </div>
                 <div class="mb-4 row">
+                    <label for="prefsCAPTCHA" class="col-sm-4 col-form-label">Enable CAPTCHA</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsCAPTCHA" value="1" id="capY" @checked($p('prefsCAPTCHA') === '1')><label class="form-check-label" for="capY">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsCAPTCHA" value="0" id="capN" @checked($p('prefsCAPTCHA') !== '1')><label class="form-check-label" for="capN">No</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsRecordPaging" class="col-sm-4 col-form-label">Records Displayed</label>
+                    <div class="col-sm-9">
+                        <input class="input input-bordered" id="prefsRecordPaging" name="prefsRecordPaging" type="text" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
+                        <span class="help-block">The number of records displayed per page when viewing lists.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsGoogleAccount" class="col-sm-4 col-form-label">reCAPTCHA Account(s)</label>
+                    <div class="col-sm-9">
+                        <input class="input input-bordered" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
+                        <span class="help-block">reCAPTCHA site key|secret key (pipe-separated) if CAPTCHA is enabled.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsSEF" class="col-sm-4 col-form-label">Search Engine Friendly URLs</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSEF" value="N" id="sefN" @checked($p('prefsSEF') !== 'Y')><label class="form-check-label" for="sefN">Disable</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsAutoPurge" class="col-sm-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsAutoPurge" value="1" id="apY" @checked($p('prefsAutoPurge') === '1')><label class="form-check-label" for="apY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsAutoPurge" value="0" id="apN" @checked($p('prefsAutoPurge') !== '1')><label class="form-check-label" for="apN">Disable</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsLanguageToggle" class="col-sm-4 col-form-label">Runtime Language Toggle</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsLanguageToggle" value="Y" id="ltY" @checked($p('prefsLanguageToggle') === 'Y')><label class="form-check-label" for="ltY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsLanguageToggle" value="N" id="ltN" @checked($p('prefsLanguageToggle') !== 'Y')><label class="form-check-label" for="ltN">Disable</label></div>
+                        <span class="help-block">Requires additional language files in the lang directory.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsSponsorLogos" class="col-sm-4 col-form-label">Sponsor Logo Display</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSponsorLogos" value="Y" id="slY" @checked($p('prefsSponsorLogos') === 'Y')><label class="form-check-label" for="slY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSponsorLogos" value="N" id="slN" @checked($p('prefsSponsorLogos') !== 'Y')><label class="form-check-label" for="slN">Disable</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
                     <label class="col-sm-4 col-form-label">Sponsors</label>
                     <div class="col-sm-9">
                         <div class="form-check form-check-inline">
@@ -173,6 +233,17 @@
                     <label for="contestEntryCap" class="col-sm-4 col-form-label">Competition Entry Cap</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="contestEntryCap" name="contestEntryCap" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryCap') }}"></div>
                 </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeePassword" class="col-sm-4 col-form-label">Member Discount Password</label>
+                    <div class="col-sm-9">
+                        <input class="input input-bordered" id="contestEntryFeePassword" name="contestEntryFeePassword" type="text" value="{{ $c('contestEntryFeePassword') }}">
+                        <span class="help-block">Password for participants to enter to receive discounted entry fees.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeePasswordNum" class="col-sm-4 col-form-label">Member Discount Fee</label>
+                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
+                </div>
 
                 <h3>Limits</h3>
                 <div class="mb-4 row">
@@ -197,6 +268,56 @@
                         <div class="col-sm-9"><input class="input input-bordered" id="{{ $field }}" name="{{ $field }}" type="number" min="1" style="width:auto;" value="{{ $p($field) }}"></div>
                     </div>
                 @endforeach
+                <div class="mb-4 row">
+                    <label for="prefsUSCLExLimit" class="col-sm-4 col-form-label">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
+                            <option value="" @selected($p('prefsUSCLExLimit') === '')></option>
+                            @foreach (range(1, 50) as $i)
+                                <option value="{{ $i }}" @selected($p('prefsUSCLExLimit') === (string) $i)>{{ $i }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4 row">
+                    <label for="prefsEntryForm" class="col-sm-4 col-form-label">Printed Entry Bottle/Can Labels</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsEntryForm" name="prefsEntryForm" style="width:auto;">
+                            @foreach ([
+                                '7' => 'Standard',
+                                '10' => 'Standard - Larger Printed Number and Style',
+                                '5' => 'Standard with Barcode/QR Code',
+                                '11' => 'Standard - Larger Printed Number and Style with Barcode/QR Code',
+                                '8' => 'Anonymous - Smaller Printed Entry Number',
+                                '6' => 'Anonymous - Smaller Printed Entry Number with Barcode/QR Code',
+                                '9' => 'Anonymous - Smaller Printed Random Number',
+                            ] as $val => $label)
+                                <option value="{{ $val }}" @selected($p('prefsEntryForm') === $val)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsSpecific" class="col-sm-4 col-form-label">Hide Brewer's Specifics Field</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSpecific" value="1" id="specY" @checked($p('prefsSpecific') === '1')><label class="form-check-label" for="specY">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsSpecific" value="0" id="specN" @checked($p('prefsSpecific') !== '1')><label class="form-check-label" for="specN">No</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsSpecialCharLimit" class="col-sm-4 col-form-label">Character Limit for Text Entry</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsSpecialCharLimit" name="prefsSpecialCharLimit" style="width:auto;">
+                            @foreach (range(25, 255, 5) as $i)
+                                <option value="{{ $i }}" @selected($p('prefsSpecialCharLimit') === (string) $i)>{{ $i }}</option>
+                            @endforeach
+                        </select>
+                        <span class="help-block">Limit for special ingredients, optional ingredients, and brewer's specifics. 65 or less suggested when attaching bottle labels at sorting.</span>
+                    </div>
+                </div>
 
                 <h3>Per-style limits</h3>
                 <div class="mb-4 row">
@@ -301,15 +422,25 @@
             <form method="post" action="{{ url('/admin/site-preferences/payment') }}">
                 @csrf
                 @method('put')
-                @foreach ([
-                    'prefsCurrency' => ['Currency code', 'text'],
-                    'prefsTransFee' => ['Transaction Fee', 'text'],
-                ] as $field => [$label, $type])
-                    <div class="mb-4 row">
-                        <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
-                        <div class="col-sm-9"><input class="input input-bordered" id="{{ $field }}" name="{{ $field }}" type="{{ $type }}" style="width:auto;" value="{{ $p($field) }}"></div>
+                <div class="mb-4 row">
+                    <label for="prefsCurrency" class="col-sm-4 col-form-label">Currency</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="prefsCurrency" name="prefsCurrency" style="width:auto;">
+                            @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc'] as $curr)
+                                <option value="{{ $curr }}" @selected($p('prefsCurrency') === $curr)>{{ $curr }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                @endforeach
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsTransFee" class="col-sm-4 col-form-label">Checkout Fees Paid by Entrant</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsTransFee" value="Y" id="tfY" @checked($p('prefsTransFee') === 'Y')><label class="form-check-label" for="tfY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsTransFee" value="N" id="tfN" @checked($p('prefsTransFee') !== 'Y')><label class="form-check-label" for="tfN">Disable</label></div>
+                    </div>
+                </div>
                 <div class="mb-4 row">
                     <label class="col-sm-4 col-form-label">Pay to Print?</label>
                     <div class="col-sm-9">
@@ -353,6 +484,14 @@
                 <div class="mb-4 row">
                     <label for="prefsPaypalAccount" class="col-sm-4 col-form-label">PayPal Account</label>
                     <div class="col-sm-9"><input class="input input-bordered" id="prefsPaypalAccount" name="prefsPaypalAccount" type="text" value="{{ $p('prefsPaypalAccount') }}"></div>
+                <div class="mb-4 row">
+                    <label for="prefsPaypalIPN" class="col-sm-4 col-form-label">PayPal IPN</label>
+                    <div class="col-sm-9">
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsPaypalIPN" value="1" id="ipnY" @checked($p('prefsPaypalIPN') === '1')><label class="form-check-label" for="ipnY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="radio" type="radio" name="prefsPaypalIPN" value="0" id="ipnN" @checked($p('prefsPaypalIPN') !== '1')><label class="form-check-label" for="ipnN">Disable</label></div>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
             </form>

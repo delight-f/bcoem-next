@@ -149,20 +149,20 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsWinnerDelay' => '',
             'prefsWinnerMethod' => '1',
             'prefsTheme' => 'default',
-            'prefsSEF' => '0',
+            'prefsSEF' => 'N',
             'prefsUseMods' => '0',
             'prefsCAPTCHA' => '0',
-            'prefsGoogleAccount0' => 'site', 'prefsGoogleAccount1' => '6LeKEY', 'prefsGoogleAccount2' => 'secret',
+            'prefsGoogleAccount' => 'site|6LeKEY|secret',
             'prefsDropOff' => 'Y',
             'prefsShipping' => 'N',
             'prefsAutoPurge' => '0',
             'prefsLanguage' => 'en-US',
-            'prefsLanguageToggle' => '0',
+            'prefsLanguageToggle' => 'N',
             'prefsDateFormat' => '1',
             'prefsTimeFormat' => '0',
             'prefsTimeZone' => '-7',
             'prefsSponsors' => 'Y',
-            'prefsSponsorLogos' => '1',
+            'prefsSponsorLogos' => 'Y',
         ]);
 
         $p = $this->prefs();
@@ -170,7 +170,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame('0', (string) $p['prefsMHPDisplay']); // suppressed by pro edition
         // Empty winner delay stores the legacy far-future sentinel.
         self::assertSame(2145916800, (int) $p['prefsWinnerDelay']);
-        // CAPTCHA pipe-joins into prefsGoogleAccount.
+        // reCAPTCHA account stores the pipe-joined value verbatim.
         self::assertSame('site|6LeKEY|secret', (string) $p['prefsGoogleAccount']);
         self::assertSame(1, (int) $p['prefsDropOff']);
         self::assertSame(0, (int) $p['prefsShipping']);
@@ -190,9 +190,9 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'contestEntryFee2' => '6',
             'contestEntryFeeDiscountNum' => '5',
             'prefsStyleSet' => $set, // unchanged — no selected-styles rebuild
-            'prefsEntryForm' => '0',
+            'prefsEntryForm' => '7',
             'prefsSpecific' => '0',
-            'prefsSpecialCharLimit' => '0',
+            'prefsSpecialCharLimit' => '150',
             'choose-style-entry-limits' => '0',
         ]);
 
@@ -223,9 +223,9 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         try {
             $this->put('/admin/site-preferences/entries', [
                 'prefsStyleSet' => 'AABC2025',
-                'prefsEntryForm' => '0',
+                'prefsEntryForm' => '7',
                 'prefsSpecific' => '0',
-                'prefsSpecialCharLimit' => '0',
+                'prefsSpecialCharLimit' => '150',
                 'choose-style-entry-limits' => '0',
             ]);
 

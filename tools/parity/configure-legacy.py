@@ -42,7 +42,14 @@ for var, value in replacements.items():
 base_url = os.environ.get("LEGACY_BASE_URL")
 if not base_url:
     raise SystemExit("LEGACY_BASE_URL is required")
-config = re.sub(r"^\$base_url = .*$", f"$base_url = '{base_url}';", config, flags=re.M)
-
-pathlib.Path("site/config.php").write_text(config)
+# The sample builds $base_url across three lines (init, https check, and
+# .= SERVER_NAME); replace the whole block, not just the first assignment.
+config = re.sub(
+    r"^\$base_url = 'http://';\nif \(is_https\(\)\) \$base_url = 'https://';\n\$base_url \.= .*$",
+    f"$base_url = '{base_url}';",
+    config,
+    flags=re.M,
+)
+if "$base_url" not in config or "SERVER_NAME" in config:
+    raise SystemExit("config.sample.php shape changed — base_url override failed")
 print("site/config.php written")
