@@ -469,7 +469,11 @@ final class DashboardController extends Controller
             $l('/admin/output/participant_entries_list', 'Participant Entries List (Address)'),
         ]];
         $reportsItems[] = ['BJCP Points', [
-            $todo('BJCP Points', 'section=results&go=bjcp'),
+            $l('/admin/output/staff_points', 'Print'),
+        ]];
+        $reportsItems[] = ['Inventory', [
+            $l('/admin/output/post_judge_inventory', 'With Scores'),
+            $l('/admin/output/post_judge_inventory', 'Without Scores'),
         ]];
         $reportsItems[] = ['BOS Results', [
             $todo('Print', 'section=results&go=judging_scores_bos&action=print&tb=bos&view=default'),
