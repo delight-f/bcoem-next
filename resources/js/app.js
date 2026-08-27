@@ -199,12 +199,27 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Legacy admin date picker (js_includes/app.min.js init):
-//   $('.date-time-picker-system').datetimepicker({format:'YYYY-MM-DD hh:mm A'})
-// jQuery + moment + bootstrap-datetimepicker 4.15.35 are loaded via CDN on the
-// admin layout head (includes/load_cdn_libraries_admin.inc.php). No-op elsewhere.
-if (window.jQuery && window.jQuery.fn && window.jQuery.fn.datetimepicker) {
-    window.jQuery('.date-time-picker-system').datetimepicker({ format: 'YYYY-MM-DD hh:mm A' });
+// Modern admin date picker (flatpickr, loaded via CDN on the admin layout head
+// only — public pages neither load flatpickr nor render these inputs). Matches
+// the value the controller pre-renders (AllDatesController::edit -> DateFmt):
+// prefsTimeFormat 1 => 24h "Y-m-d H:i"; otherwise 12h "Y-m-d h:i K". Both are
+// parsed by AllDatesController::toUtcEpoch (PHP DateTimeImmutable). allowInput
+// keeps legacy type-to-edit; altInput stays OFF so the posted value IS the input.
+const dateTimeInputs = document.querySelectorAll('.date-time-picker-system');
+if (dateTimeInputs.length > 0 && window.flatpickr) {
+    const pickerForm = dateTimeInputs[0].closest('form');
+    // data-time-24hr (dashed) => dataset["time-24hr"], not .time24hr.
+    const time24hr = pickerForm?.dataset['time-24hr'] === '1';
+    const dateFormat = time24hr ? 'Y-m-d H:i' : 'Y-m-d h:i K';
+    dateTimeInputs.forEach((el) =>
+        window.flatpickr(el, {
+            enableTime: true,
+            dateFormat,
+            time_24hr: time24hr,
+            allowInput: true,
+            altInput: false,
+        }),
+    );
 }
 
 // Admin session-expiry modals + auto-logout. Port of legacy

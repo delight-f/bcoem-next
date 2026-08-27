@@ -40,16 +40,40 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
     @if ($isAdminSide)
-        {{-- Legacy admin date picker (includes/load_cdn_libraries_admin.inc.php):
-             eonasdan bootstrap-datetimepicker 4.15.35 + moment + jQuery + Bootstrap JS
-             (BS3 CSS is provided by the app.css compat layer, not the CDN). --}}
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/css/bootstrap-datetimepicker.min.css">
-        {{-- BS3 Glyphicons for the picker's chevron/calendar steppers (vendored). --}}
-        <link rel="stylesheet" href="{{ asset('vendor/glyphicons/glyphicons.css') }}">
+        {{-- Modern admin date/time picker: flatpickr (no jQuery/moment), from the
+             same jsdelivr CDN used for fontawesome. moment + the eonasdan picker +
+             its vendored glyphicons are gone (glyphicons had no other consumer). --}}
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+        <style>
+            /* Flatpickr beside daisyUI: match the admin theme primary accent
+               (#1565C0) and a 4px radius. A modern widget, not a legacy clone. */
+            .flatpickr-calendar { border-radius: 4px; }
+            .flatpickr-day.selected,
+            .flatpickr-day.selected:hover,
+            .flatpickr-day.startRange,
+            .flatpickr-day.endRange {
+                background: #1565C0;
+                border-color: #1565C0;
+                color: #fff;
+            }
+            .flatpickr-day.today { border-color: #1565C0; }
+            .flatpickr-day.today:hover,
+            .flatpickr-day.today:focus {
+                background: #1565C0;
+                border-color: #1565C0;
+                color: #fff;
+            }
+            .flatpickr-months .flatpickr-prev-month:hover,
+            .flatpickr-months .flatpickr-next-month:hover { color: #1565C0; }
+            .flatpickr-months .flatpickr-prev-month:hover svg,
+            .flatpickr-months .flatpickr-next-month:hover svg { fill: #1565C0; }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+        {{-- jQuery + Bootstrap JS remain on admin pages: app.js's session-expiry
+             autologout calls jQuery(...).modal() and the Bootstrap modal in
+             admin/all-dates (judging info) is opened via data-toggle/data-dismiss. --}}
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/js/bootstrap-datetimepicker.min.js"></script>
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

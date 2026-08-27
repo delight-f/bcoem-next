@@ -23,7 +23,7 @@
         <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
 
-    <form data-toggle="validator" role="form" class="form-horizontal" method="post" action="{{ url('/admin/dates') }}">
+    <form data-time-24hr="{{ (int) $tf === 1 ? '1' : '0' }}" data-toggle="validator" role="form" class="form-horizontal" method="post" action="{{ url('/admin/dates') }}">
         @csrf
         @method('put')
 
