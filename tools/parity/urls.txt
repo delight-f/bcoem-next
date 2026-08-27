@@ -67,6 +67,7 @@ admin|index.php?section=admin&go=preferences&action=best|/admin/site-preferences
 admin|index.php?section=admin&go=archive|/admin/archive
 admin|index.php?section=admin&go=user|/admin/purge
 
+
 admin|includes/output.inc.php?go=entries&action=bottle-category-round&filter=default&psort=OL32&sort=1&section=labels-admin|/admin/output/labels?action=bottle-category-round&filter=default&go=entries&psort=OL32&sort=1
 admin|includes/output.inc.php?go=entries&action=bottle-category-round&filter=default&psort=OL32&sort=10&section=labels-admin|/admin/output/labels?action=bottle-category-round&filter=default&go=entries&psort=OL32&sort=10
 admin|includes/output.inc.php?go=entries&action=bottle-category-round&filter=default&psort=OL32&sort=11&section=labels-admin|/admin/output/labels?action=bottle-category-round&filter=default&go=entries&psort=OL32&sort=11
@@ -373,6 +374,11 @@ admin|includes/output.inc.php?go=entries&action=bottle-judging-round&filter=rece
 admin|includes/output.inc.php?go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR&sort=7&section=labels-admin|/admin/output/labels?action=bottle-judging-round&filter=recent&go=entries&psort=OL5275WR&sort=7
 admin|includes/output.inc.php?go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR&sort=8&section=labels-admin|/admin/output/labels?action=bottle-judging-round&filter=recent&go=entries&psort=OL5275WR&sort=8
 admin|includes/output.inc.php?go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR&sort=9&section=labels-admin|/admin/output/labels?action=bottle-judging-round&filter=recent&go=entries&psort=OL5275WR&sort=9
+admin|includes/output.inc.php?go=judging_scores&action=awards&filter=address&psort=3422&section=labels-admin|/admin/output/labels?action=awards&filter=address&go=judging_scores&psort=3422
+admin|includes/output.inc.php?go=judging_scores&action=awards&filter=address&psort=5160&section=labels-admin|/admin/output/labels?action=awards&filter=address&go=judging_scores&psort=5160
+admin|includes/output.inc.php?go=judging_scores&action=awards&filter=default&psort=3422&section=labels-admin|/admin/output/labels?action=awards&filter=default&go=judging_scores&psort=3422
+admin|includes/output.inc.php?go=judging_scores&action=awards&filter=default&psort=5160&section=labels-admin|/admin/output/labels?action=awards&filter=default&go=judging_scores&psort=5160
+admin|includes/output.inc.php?go=judging_scores&action=awards&filter=round&psort=5293&section=labels-admin|/admin/output/labels?action=awards&filter=round&go=judging_scores&psort=5293
 admin|includes/output.inc.php?go=judging_tables&filter=judges&psort=3422&sort=1&section=labels-admin|/admin/output/labels?filter=judges&go=judging_tables&psort=3422&sort=1
 admin|includes/output.inc.php?go=judging_tables&filter=judges&psort=3422&sort=10&section=labels-admin|/admin/output/labels?filter=judges&go=judging_tables&psort=3422&sort=10
 admin|includes/output.inc.php?go=judging_tables&filter=judges&psort=3422&sort=11&section=labels-admin|/admin/output/labels?filter=judges&go=judging_tables&psort=3422&sort=11

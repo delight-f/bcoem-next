@@ -479,10 +479,15 @@ final class DashboardController extends Controller
 
         // After Judging.
         $reportsItems[] = ['Award Labels', [
-            $todo('Award Labels', 'section=labels-admin&go=awards'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=3422', 'A4'),
+        ]];
+        $reportsItems[] = ['Winner Address Labels', [
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4'),
         ]];
         $reportsItems[] = ['Medal Labels (Round)', [
-            $todo('Medal Labels (Round)', 'section=labels-admin&go=medals'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=round&psort=5293', '5293'),
         ]];
         $reportsItems[] = ['Address Labels', [
             $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Address Labels — Letter (All)'),

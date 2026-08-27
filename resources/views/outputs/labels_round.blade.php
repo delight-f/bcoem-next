@@ -18,13 +18,20 @@
 </head>
 <body>
 @php
-    $cols = $psort === 'OL32' ? 11 : 9;
-    $rows = $psort === 'OL32' ? 14 : 12;
-    $cell = $psort === 'OL32' ? '12.7mm' : '19.05mm';
-    $size = $psort === 'OL32' ? '7px' : '9px';
+    // Round bottle sheets (OL32 / OL5275WR) plus the medal-round sheets
+    // (5293, OL3012, EU30095 / OL5375 default) from pdf_label.php.
+    [$cols, $rows, $cellW, $cellH, $size, $pitch] = match ($psort) {
+        'OL32' => [11, 14, '12.7mm', '12.7mm', '7px', 19.05],
+        'OL5275WR' => [9, 12, '19.05mm', '19.05mm', '9px', 20.65],
+        '5293' => [4, 6, '41.28mm', '41.28mm', '9px', 49.28],
+        'OL3012' => [4, 5, '50.8mm', '50.8mm', '9px', 52.39],
+        'EU30095' => [4, 6, '45mm', '45mm', '9px', 47],
+        default => [4, 5, '50.8mm', '50.8mm', '9px', 52.39],
+    };
+    $cell = $cellW;
 @endphp
 @foreach (array_chunk($cells, $cols * $rows) as $sheet)
-    <table style="width: {{ $cols * ($psort === 'OL32' ? 19.05 : 20.65) }}mm;">
+    <table style="width: {{ $cols * $pitch }}mm;">
         @foreach (array_chunk($sheet, $cols) as $row)
             <tr>
                 @foreach ($row as $cellLines)

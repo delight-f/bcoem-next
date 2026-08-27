@@ -119,6 +119,17 @@ final class LabelsController extends Controller
 
             return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
         }
+
+        // go=judging_scores&action=awards: award labels (filter=default),
+        // winner address labels (filter=address), medal round labels
+        // (filter=round).
+        if ($action === 'awards') {
+            $filter = (string) $request->query('filter', 'default');
+            $psort = (string) $request->query('psort', '5160');
+            $data = self::awardLabels($ctx, $filter, $psort);
+
+            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+        }
         if (str_starts_with($action, 'bottle-')) {
             $view = (string) $request->query('view', 'default');
             $psort = (string) $request->query('psort', '5160');
@@ -1109,5 +1120,228 @@ final class LabelsController extends Controller
         }
 
         return (bool) preg_match('([a-zA-Z])', $input);
+    }
+
+    /**
+     * Award / medal / winner-address labels — legacy output/labels.output.php
+     * go=judging_scores&action=awards, dispatched on filter: default =
+     * award-labels sheet, address = winner address labels, round = medal
+     * labels (round). Winner content is built by {@see winningLabels()}; the
+     * anonymised corpus has no scored entries, so the labels are empty but the
+     * route still streams the correct sheet + filename.
+     *
+     * @return array{view_name: string, view: array<string, mixed>, filename: string}
+     */
+    public static function awardLabels(TenantContext $ctx, string $filter, string $psort): array
+    {
+        if ($filter === 'address') {
+            $rows = DB::table('judging_scores as a')
+                ->join('brewing as b', 'b.id', '=', 'a.eid')
+                ->join('brewer as c', 'c.uid', '=', 'b.brewBrewerID')
+                ->whereNotNull('a.scorePlace')
+                ->select('b.brewBrewerID', 'c.brewerFirstName', 'c.brewerLastName',
+                    'c.brewerAddress', 'c.brewerCity', 'c.brewerState', 'c.brewerZip', 'c.brewerCountry')
+                ->orderBy('c.brewerLastName')->orderBy('c.brewerFirstName')
+                ->get();
+
+            $labels = [];
+            $seen = [];
+            foreach ($rows as $r) {
+                if (isset($seen[$r->brewBrewerID])) {
+                    continue;
+                }
+                $seen[$r->brewBrewerID] = true;
+                $country = $r->brewerCountry !== 'United States' ? (string) $r->brewerCountry : '';
+                $labels[] = [
+                    self::ascii(html_entity_decode($r->brewerFirstName.' '.$r->brewerLastName)),
+                    self::ascii(html_entity_decode((string) $r->brewerAddress)),
+                    self::ascii(html_entity_decode(trim(sprintf('%s, %s %s', $r->brewerCity, $r->brewerState, $r->brewerZip), ', '))),
+                    self::ascii(html_entity_decode($country)),
+                ];
+            }
+
+            return [
+                'view_name' => 'outputs.labels',
+                'view' => ['perSheet' => $psort === '3422' ? 24 : 30, 'labels' => $labels],
+                'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                    .'_Winner_Address_Labels'.($psort === '3422' ? '_Avery3422' : '_Avery5160').'.pdf',
+            ];
+        }
+
+        $labels = self::winningLabels($ctx, $filter);
+
+        if ($filter === 'round') {
+            return [
+                'view_name' => 'outputs.labels_round',
+                'view' => ['cells' => self::cellsFromLines($labels), 'psort' => $psort],
+                'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                    .'_Medal_Labels_'.ucwords($psort).'.pdf',
+            ];
+        }
+
+        return [
+            'view_name' => 'outputs.labels',
+            'view' => ['perSheet' => $psort === '3422' ? 24 : 30, 'labels' => $labels],
+            'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                .'_Award_Labels'.($psort === '3422' ? '_Avery3422' : '_Avery5160').'.pdf',
+        ];
+    }
+
+    /**
+     * Winner label text per prefsWinnerMethod (1 = category, 2 = subcategory,
+     * 3 = table) plus best-of-show rows — legacy output_labels_awards.db.php.
+     *
+     * @return list<list<string>>
+     */
+    public static function winningLabels(TenantContext $ctx, string $filter): array
+    {
+        $characterLimit = $filter === 'round' ? 18 : 31;
+        $stylesSelected = json_decode((string) $ctx->prefsStr('prefsSelectedStyles'), true) ?: [];
+        $styleSet = (string) $ctx->prefsStr('prefsStyleSet');
+        $method = (int) $ctx->prefsStr('prefsWinnerMethod');
+
+        $labels = [];
+
+        // Best-of-show rows.
+        $bos = DB::table('judging_scores_bos')->orderBy('scoreType')->orderBy('scorePlace')->get();
+        foreach ($bos as $rowBos) {
+            if ((string) $rowBos->scorePlace === '') {
+                continue;
+            }
+            $entry = DB::table('brewing')->where('id', $rowBos->eid)->first();
+            if ($entry === null) {
+                continue;
+            }
+            $typeName = (string) (DB::table('style_types')->where('id', $rowBos->scoreType)->value('styleTypeName') ?? '');
+            $labels[] = [
+                self::displayPlace((string) $rowBos->scorePlace, 1).' - Best of Show ('.$typeName.')',
+                self::ascii($entry->brewBrewerFirstName.' '.$entry->brewBrewerLastName),
+                "'".self::ascii(trim((string) $entry->brewName))."' ".self::ascii((string) $entry->brewStyle),
+            ];
+        }
+
+        if ($method === 1) {
+            $groups = [];
+            foreach (DB::table('styles')->where('brewStyleVersion', $styleSet)->orWhere('brewStyleOwn', 'custom')
+                ->get(['id', 'brewStyleGroup']) as $s) {
+                if (array_key_exists($s->id, $stylesSelected)) {
+                    $groups[] = $s->brewStyleGroup;
+                }
+            }
+            foreach (array_values(array_unique($groups)) as $group) {
+                $entryCount = DB::table('brewing')->where('brewCategorySort', $group)->where('brewReceived', '1')->count();
+                $scoreRows = DB::table('judging_scores as a')->join('brewing as b', 'b.id', '=', 'a.eid')
+                    ->join('brewer as c', 'c.uid', '=', 'b.brewBrewerID')
+                    ->where('b.brewCategorySort', $group)
+                    ->whereNot('a.scorePlace', '')->orderBy('a.scorePlace')
+                    ->select('a.scorePlace', 'b.brewName', 'b.brewCategorySort', 'b.brewSubCategory', 'b.brewStyle', 'c.brewerLastName', 'c.brewerFirstName', 'c.brewerClubs')
+                    ->get();
+                if ($entryCount > 0 && ! $scoreRows->isEmpty()) {
+                    foreach ($scoreRows as $r) {
+                        $labels[] = [
+                            self::displayPlace((string) $r->scorePlace, 1),
+                            self::styleCategoryDisplay((string) $r->brewCategorySort, $styleSet),
+                            self::truncate($r->brewerFirstName.' '.$r->brewerLastName, $characterLimit, '...'),
+                            "'".self::truncate(trim((string) $r->brewName), $characterLimit, '...')."'",
+                            self::truncate((string) $r->brewStyle, $characterLimit),
+                        ];
+                    }
+                }
+            }
+        } elseif ($method === 2) {
+            $groups = [];
+            foreach (DB::table('styles')->where('brewStyleVersion', $styleSet)->orWhere('brewStyleOwn', 'custom')
+                ->get(['id', 'brewStyleGroup', 'brewStyleNum', 'brewStyle']) as $s) {
+                if (array_key_exists($s->id, $stylesSelected)) {
+                    $groups[] = [$s->brewStyleGroup, $s->brewStyleNum, $s->brewStyle];
+                }
+            }
+            foreach (array_unique($groups, SORT_REGULAR) as [$group, $num, $name]) {
+                $entryCount = DB::table('brewing')->where('brewCategorySort', $group)->where('brewSubCategory', $num)->where('brewReceived', '1')->count();
+                $scoreRows = DB::table('judging_scores as a')->join('brewing as b', 'b.id', '=', 'a.eid')
+                    ->join('brewer as c', 'c.uid', '=', 'b.brewBrewerID')
+                    ->where('b.brewCategorySort', $group)->where('b.brewSubCategory', $num)
+                    ->whereNot('a.scorePlace', '')->orderBy('a.scorePlace')
+                    ->select('a.scorePlace', 'b.brewName', 'b.brewCategory', 'b.brewSubCategory', 'b.brewStyle', 'c.brewerLastName', 'c.brewerFirstName', 'c.brewerClubs')
+                    ->get();
+                if ($entryCount > 0 && ! $scoreRows->isEmpty()) {
+                    foreach ($scoreRows as $r) {
+                        $subcategory = (string) preg_replace('/[0-9]+/', '', (string) $r->brewSubCategory);
+                        $style = strtoupper((string) $r->brewCategory).$subcategory;
+                        if ($filter === 'round') {
+                            $labels[] = [
+                                self::displayPlace((string) $r->scorePlace, 1),
+                                self::truncate((string) $r->brewStyle, $characterLimit, '...'),
+                                self::truncate($r->brewerFirstName.' '.$r->brewerLastName, $characterLimit, '...'),
+                                "'".self::truncate(trim((string) $r->brewName), $characterLimit, '...')."'",
+                            ];
+                        } else {
+                            $labels[] = [
+                                self::displayPlace((string) $r->scorePlace, 1),
+                                $style.': '.self::truncate((string) $r->brewStyle, $characterLimit, '...'),
+                                self::truncate($r->brewerFirstName.' '.$r->brewerLastName, $characterLimit, '...'),
+                                "'".self::truncate(trim((string) $r->brewName), $characterLimit, '...')."'",
+                            ];
+                        }
+                    }
+                }
+            }
+        } else {
+            foreach (DB::table('judging_tables')->orderBy('tableNumber')->get() as $table) {
+                $scoreRows = DB::table('judging_scores')->where('scoreTable', $table->id)
+                    ->whereIn('scorePlace', ['1', '2', '3', '4', '5'])->orderBy('scorePlace')->get();
+                foreach ($scoreRows as $rowScores) {
+                    $entry = DB::table('brewing')->where('id', $rowScores->eid)->first();
+                    if ($entry === null) {
+                        continue;
+                    }
+                    $labels[] = [
+                        self::displayPlace((string) $rowScores->scorePlace, 1),
+                        self::truncate((string) $table->tableName, $characterLimit - 3),
+                        self::truncate($entry->brewBrewerFirstName.' '.$entry->brewBrewerLastName, $characterLimit, '...'),
+                        "'".self::truncate(trim((string) $entry->brewName), $characterLimit, '...')."'",
+                        self::truncate((string) $entry->brewStyle, $characterLimit, '...'),
+                    ];
+                }
+            }
+        }
+
+        return $labels;
+    }
+
+    /** display_place($place, 1) (common.lib.php:2659). */
+    private static function displayPlace(string $place, int $method): string
+    {
+        if ($method === 1) {
+            return match ($place) {
+                '1' => OutputFormat::ordinal($place),
+                '2' => OutputFormat::ordinal($place),
+                '3' => OutputFormat::ordinal($place),
+                '4' => OutputFormat::ordinal($place),
+                '5', 'HM' => 'HM',
+                default => 'N/A',
+            };
+        }
+
+        return OutputFormat::ordinal($place);
+    }
+
+    /**
+     * style_convert($group, 1) approximation — the award-label category line.
+     * The full legacy style_convert is not ported; this returns the group's
+     * brewStyleCategory name (unexercised on the anonymised corpus, which has
+     * no winners).
+     */
+    private static function styleCategoryDisplay(string $group, string $styleSet): string
+    {
+        $name = DB::table('styles')->where('brewStyleGroup', $group)->value('brewStyleCategory') ?? '';
+
+        return self::ascii((string) $name);
+    }
+
+    /** @param list<list<string>> $labels */
+    private static function cellsFromLines(array $labels): array
+    {
+        return array_map(static fn (array $lines): array => $lines, $labels);
     }
 }
