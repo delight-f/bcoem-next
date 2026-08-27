@@ -230,11 +230,25 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
         DB::table('judging_preferences')->where('id', 1)->update(['jPrefsQueued' => 'Y']);
         $data = PullsheetsController::build(TenantContext::load());
         $this->assertTrue($data['queued']);
-        $this->assertCount(1, $data['tables'][0]['flights']);
 
-        $flat = $data['tables'][0]['flights'][0]['rows'];
+        $table = $this->myTable($data, $this->tableId);
+        $this->assertCount(1, $table['flights']);
+
+        $flat = $table['flights'][0]['rows'];
         // Style 01A entries first, then 02B (judging number within style).
         $this->assertSame(['000001', '000002'], array_column($flat, 'judgingNo'));
+    }
+
+    /** @param  array{tables: list<array<string, mixed>>}  $data */
+    private function myTable(array $data, int $tableId): array
+    {
+        foreach ($data['tables'] as $t) {
+            if ((int) $t['id'] === $tableId) {
+                return $t;
+            }
+        }
+
+        self::fail('fixture table not found in build() payload');
     }
 
     public function test_mini_bos_empty_state_copy(): void
