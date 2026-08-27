@@ -1,6 +1,6 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
+    <p class="lead">{{ $ctx->contestStr('contestName') }} Judging Tables</p>
     <section class="container mt-6 mb-4">
-        <h1>Judging Tables</h1>
 
         {{-- Tables Competition/Planning Mode (judging_tables.admin.php:744-752).
              Legacy ships both lead texts + both buttons, then JS shows one
@@ -186,15 +186,16 @@
         @if ($tables->isEmpty())
             <p>No tables have been defined.</p>
         @else
-            <table class="table table-zebra table-bordered">
+            <table class="table table-responsive table-bordered">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Name</th>
+                        <th>Table #</th>
+                        <th>Table Name</th>
                         <th>Styles</th>
                         <th>Location</th>
-                        <th>Entry Limit</th>
-                        <th>Actions</th>
+                        <th>Received</th>
+                        <th>Scored</th>
+                        <th class="print:hidden">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -202,15 +203,28 @@
                         <tr>
                             <td>{{ $table->tableNumber }}</td>
                             <td>{{ $table->tableName }}</td>
-                            <td>{{ $table->tableStyles }}</td>
-                            <td>{{ $table->tableLocation }}</td>
-                            <td>{{ $table->tableEntryLimit ?? '' }}</td>
-                            <td class="print:hidden">
-                                <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}">Edit</a>
+                            <td>{{ $table->stylesLabel }}</td>
+                            <td>{{ $table->tableLocationName ?? '' }}</td>
+                            <td>{{ $table->receivedTotal }}</td>
+                            <td>{{ $table->scoredTotal }}</td>
+                            <td class="print:hidden" nowrap>
+                                {{-- Pullsheets by Entry/Judging Numbers (legacy planning-mode gate). --}}
+                                @if (! $planning)
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=entry&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                @else
+                                    <span class="fa fa-lg fa-print text-muted" data-toggle="tooltip" data-placement="top" title="Printing pullsheets is disabled in Tables Planning Mode"></span>
+                                @endif
+                                @if ($sessionCount > 1 && ! $planning)
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=judging&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Judging Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                @endif
+                                @if (! $obfuscate && ! $planning)
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the Entries with Additional Info Report for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-plus-square"></span></a>
+                                @endif
+                                <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}" data-toggle="tooltip" data-placement="top" title="Edit Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-pencil"></span></a>
                                 <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-link btn-sm p-0">Delete</button>
+                                    <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-toggle="tooltip" data-placement="top" title="Delete Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-trash-o"></span></button>
                                 </form>
                             </td>
                         </tr>

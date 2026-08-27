@@ -47,11 +47,55 @@ final class TableController extends Controller
 
         // jPrefsTablePlanning drives the mode alert + switch buttons
         // (judging_tables.admin.php:594-651).
-        $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
+               $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
+
+        $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
+
+        // Legacy get_table_info count_total / score_total per table
+        // (common.lib.php:1976-2020): received-entry count summed over the
+        // table's style ids (brewReceived=1 unless planning mode), and
+        // judging_scores rows at the table.
+        $styleCounts = DB::table('brewing')
+            ->selectRaw('brewCategorySort, brewSubCategory, COUNT(*) AS n')
+            ->when(! $planning, fn ($q) => $q->where('brewReceived', '1'))
+            ->groupBy('brewCategorySort', 'brewSubCategory')
+            ->get()
+            ->keyBy(fn ($r) => $r->brewCategorySort.'^'.$r->brewSubCategory);
+        $scoreCounts = DB::table('judging_scores')
+            ->selectRaw('scoreTable, COUNT(*) AS n')
+            ->groupBy('scoreTable')
+            ->pluck('n', 'scoreTable');
+        $locationNames = DB::table('judging_locations')->pluck('judgingLocName', 'id');
+        $tableStyleNames = DB::table('styles')
+            ->whereIn('id', collect($tables)->flatMap(fn ($t) => explode(',', (string) $t->tableStyles))->filter()->unique()->all())
+            ->get(['id', 'brewStyle', 'brewStyleGroup', 'brewStyleNum'])
+            ->keyBy('id');
+
+        $tables->transform(function ($t) use ($styleCounts, $scoreCounts, $tableStyleNames, $locationNames) {
+            $t->tableLocationName = ! empty($t->tableLocation)
+                ? (string) ($locationNames[(int) $t->tableLocation] ?? '')
+                : '';
+            $styleIds = array_filter(explode(',', (string) $t->tableStyles));
+            $t->receivedTotal = 0;
+            $t->stylesLabel = '';
+            $labels = [];
+            foreach ($styleIds as $sid) {
+                $sid = (int) $sid;
+                $style = $tableStyleNames[$sid] ?? null;
+                $labels[] = (string) ($style->brewStyle ?? $sid);
+                if ($style !== null) {
+                    $t->receivedTotal += (int) ($styleCounts[$style->brewStyleGroup.'^'.$style->brewStyleNum]->n ?? 0);
+                }
+            }
+            $t->stylesLabel = implode(', ', $labels);
+            $t->scoredTotal = (int) ($scoreCounts[$t->id] ?? 0);
+
+            return $t;
+        });
 
         return view('judging.config.tables', [
             'ctx' => TenantContext::load(),
-            'tables' => DB::table('judging_tables')->orderBy('tableNumber')->get(),
+                        'tables' => $tables,
             'planning' => $planning,
             // Print "By Location" items render only when >1 judging session
             // (legacy $totalRows_judging > 1, judging_tables.admin.php:799-813).
