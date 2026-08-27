@@ -64,6 +64,12 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
             if ($port === null || $port === '') {
                 continue; // "/" itself — nothing to redirect.
             }
+            if (str_contains($legacy, 'output.inc.php')) {
+                // output.inc.php entries are PDF link targets (labels,
+                // pullsheets, results) that exist in urls.txt purely as
+                // linkmap map entries — they are not redirect pages.
+                continue;
+            }
             $cases[] = [$legacy, $port];
         }
 

@@ -54,7 +54,7 @@
                                                     <div class="col col-lg-8 col-md-8 col-sm-8 col-xs-12 small">
                                                         <ul class="list-inline">
                                                             @foreach ($rowLinks as $item)
-                                                                @if (!empty($item['children']))
+                                                                @if (isset($item['children']))
                                                                     <li class="text-muted">
                                                                         <span class="text-muted">{{ $item['label'] }}</span>
                                                                         @if (($item['descriptor'] ?? 'labels per entry') !== '')

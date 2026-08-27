@@ -300,16 +300,31 @@ final class DashboardController extends Controller
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422')['children']);
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=3422')['children']);
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160&tb=received')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160&tb=received')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422&tb=received')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422&tb=received')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Category Only', $countFamily('Category Only', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL5275WR')['children']);
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=5160', 'Entry Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=5160', 'Judging Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=3422', 'Entry Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=3422', 'Judging Numbers');
             $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167', 'Quicksort — 6 Labels per Entry');
             $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167&tb=short', 'Quicksort — 3 Labels per Entry');
             $sortItems[] = ['Print Bottle Labels (PDF)', $bottle];
 
             // Print Box Labels (PDF).
             $box = [];
-            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=5160')['children']);
-            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=5160')['children']);
+            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables')['children']);
+            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges')['children']);
             $box[] = $family('A4 (Avery 3422) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422')['children']);
             $box[] = $family('A4 (Avery 3422) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422')['children']);
             $sortItems[] = ['Print Box Labels (PDF)', $box];
@@ -453,6 +468,12 @@ final class DashboardController extends Controller
             ]];
             $reportsItems[] = ['Pullsheets', [
                 $l('/admin/output/pullsheets', 'All By Table'),
+                $l('/admin/output/pullsheets?go=judging_tables&id=default&view=entry', 'All By Table - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=judging_tables&id=default', 'All By Table - Judging Numbers'),
+                $family('Mini-BOS per Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=default', (string) $t->tableNumber.' (Judging)')])->all(), ''),
+                $family('Mini-BOS per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=entry', (string) $t->judgingLocName.' (Entry)'), $l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=default', (string) $t->judgingLocName.' (Judging)')])->all(), ''),
+                $family('Judge Inventory per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory', (string) $t->judgingLocName), $l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory&sort=entry', (string) $t->judgingLocName.' (Entry)')])->all(), ''),
+                $family('Pro-Am per Style Type...', collect(range(1, 3))->flatMap(fn ($f) => $bosStyleTypes->map(fn ($t) => [$l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id.'&view=entry', $t->styleTypeName.' ('.$f.')'), $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id, $t->styleTypeName.' ('.$f.')')])->all())->flatten(1)->all(), ''),
             ]];
         }
 
@@ -464,6 +485,10 @@ final class DashboardController extends Controller
             $todo('Medal Labels (Round)', 'section=labels-admin&go=medals'),
         ]];
         $reportsItems[] = ['Address Labels', [
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Address Labels — Letter (All)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'Address Labels — A4 (All)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Address Labels — Letter (With Entries)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'Address Labels — A4 (With Entries)'),
             $l('/admin/output/labels?go=participants&action=address_labels', 'Address Labels'),
         ]];
         $reportsItems[] = ['Summaries', [
