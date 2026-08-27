@@ -51,7 +51,7 @@ final class ResultsController extends Controller
                 && ((int) ($ctx->prefs['prefsShowBestBrewer'] ?? 0) !== 0 || (int) ($ctx->prefs['prefsShowBestClub'] ?? 0) !== 0),
             'showWinners' => in_array($go, ['all', 'judging_scores'], true),
             'lead' => $go === 'all' ? sprintf(
-                '%d entries received from %d participants.',
+                'There were %d entries judged and %d registered participants, judges, and stewards.',
                 DB::table('brewing')->where('brewReceived', 1)->count(),
                 DB::table('brewer')->count(),
             ) : null,

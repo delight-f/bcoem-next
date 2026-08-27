@@ -17,8 +17,8 @@
 </head>
 <body>
 
-<h1>{{ $contestName }}</h1>
 @if ($lead !== null)
+    <h1>{{ $contestName }}</h1>
     <p class="lead">{{ $lead }}</p>
 @endif
 
