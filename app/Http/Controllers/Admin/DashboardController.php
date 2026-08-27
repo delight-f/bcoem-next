@@ -177,18 +177,19 @@ final class DashboardController extends Controller
     {
         $l = static fn (string $href, string $label): array => ['label' => $label, 'href' => $href];
         $todo = static fn (string $label, string $src): array => ['label' => $label, 'href' => null, 'todo' => 'TODO: legacy output — '.$src];
-        $family = static fn (string $label, array $children): array => ['label' => $label, 'children' => $children];
+        $family = static fn (string $label, array $children, string $descriptor = 'labels per entry'): array => ['label' => $label, 'children' => $children, 'descriptor' => $descriptor];
 
-        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown, where the
-        // port backend for the underlying label surface does not exist yet.
-        $countFamily = function (string $label, string $hrefTemplate) use ($todo): array {
-            $children = [];
-            for ($i = 1; $i <= 12; $i++) {
-                $children[] = ['label' => (string) $i, 'href' => null, 'todo' => $todo((string) $i, $hrefTemplate.'&sort='.$i)['todo']];
-            }
-
-            return ['label' => $label, 'children' => $children];
-        };
+        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown. The bottle
+        // and box label families all route through /admin/output/labels, so
+        // each count maps to the port route with the `section=labels-admin`
+        // segment dropped (it selects that route).
+        $countFamily = fn (string $label, string $hrefTemplate): array => [
+            'label' => $label,
+            'children' => collect(range(1, 12))->map(
+                fn (int $i): array => ['label' => (string) $i,
+                    'href' => '/admin/output/labels?'.str_replace('section=labels-admin&', '', $hrefTemplate).'&sort='.$i],
+            )->all(),
+        ];
 
         $level0 = $level === 0;
         $barcodes = $prefs['barcodes'];
@@ -301,6 +302,8 @@ final class DashboardController extends Controller
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167', 'Quicksort — 6 Labels per Entry');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167&tb=short', 'Quicksort — 3 Labels per Entry');
             $sortItems[] = ['Print Bottle Labels (PDF)', $bottle];
 
             // Print Box Labels (PDF).
@@ -411,12 +414,12 @@ final class DashboardController extends Controller
             ]];
         }
         $reportsItems[] = ['Judge Scoresheet Labels', [
-            $todo('Letter', 'section=labels-admin&go=participants&action=judging_labels&psort=5160'),
-            $todo('A4', 'section=labels-admin&go=participants&action=judging_labels&psort=3422'),
+            $l('/admin/output/labels?go=participants&action=judging_labels&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=participants&action=judging_labels&psort=3422', 'A4'),
         ]];
         if ($obfuscate === 0) {
             $reportsItems[] = ['Name Tags', [
-                $todo('Letter', 'section=labels-admin&go=participants&action=judging_nametags&psort=5395'),
+                $l('/admin/output/labels?go=participants&action=judging_nametags&psort=5395', 'Letter'),
             ]];
         }
 
@@ -435,11 +438,12 @@ final class DashboardController extends Controller
                 $l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers'),
                 $todo('For Table... (Judging)', 'bos-mat mini-bos per-table judging'),
             ]];
+        $bosStyleTypes = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
             $reportsItems[] = ['BOS Pullsheets', [
                 $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers'),
-                $todo('For Style Type...', 'pullsheets judging_scores_bos per-style'),
+                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all(), ''),
                 $l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers'),
-                $todo('For Style Type... (Judging)', 'pullsheets judging_scores_bos per-style judging'),
+                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all(), ''),
             ]];
             $reportsItems[] = ['BOS Cup Mats', [
                 $l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'),
@@ -460,7 +464,7 @@ final class DashboardController extends Controller
             $todo('Medal Labels (Round)', 'section=labels-admin&go=medals'),
         ]];
         $reportsItems[] = ['Address Labels', [
-            $todo('Address Labels', 'section=labels-admin&go=participants&action=address_labels'),
+            $l('/admin/output/labels?go=participants&action=address_labels', 'Address Labels'),
         ]];
         $reportsItems[] = ['Summaries', [
             $l('/admin/output/participant_summary', 'Participant Summaries'),

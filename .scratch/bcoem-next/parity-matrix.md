@@ -1,7 +1,9 @@
-# Parity DIFF triage matrix — run-20260827-012920
+# Parity DIFF triage matrix — run-20260827-210513
 
-Source run: `tools/parity/reports/run-20260826-213414/` (5 PASS, 45 DIFF, 18 skipped — unchanged totals; residual is C-class copy/styling + harness nav/login-state noise, plus `/admin/payments` data-500 from the port-only `payments` table missing in anon-base).
+Source run: `tools/parity/reports/run-20260827-210513/` (5 PASS, 45 DIFF, 18 skipped, 1760 missing links — totals unchanged from run-20260827-184905; residual is C-class copy/styling + harness nav/login-state noise, plus `/admin/payments` data-500 from the port-only `payments` table missing in anon-base).
 Classes: **A** broken function · **B** structural (section/control missing) · **C** styling/copy · **H** harness-noise or bad pairing.
+
+This cycle: **labels-admin** and **pullsheets** families are now ported to the `outputs.labels`/`outputs.pullsheets` routes and the admin dashboard links are wired to them (commits `c78230a`, `a962c35` for the bottle/required-info/quicksort/round/category-round/box/virtual-judge/nametag/judging-label matrix; `43eda64`, `5106eca` for pullsheets). The harness's `missing-links` metric stays at 1760 because `tools/parity/urls.txt` (its legacy→port inventory) contains no `includes/output.inc.php` PDF-link mappings — labels-admin/pullsheets URLs are therefore still reported `UNMAPPED` by `linkmap.php` regardless of the dashboard wiring; the PDF links are link targets, not crawlable HTML pages.
 
 ## Counts
 

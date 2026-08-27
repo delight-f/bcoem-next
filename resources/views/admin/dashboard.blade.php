@@ -57,9 +57,15 @@
                                                                 @if (!empty($item['children']))
                                                                     <li class="text-muted">
                                                                         <span class="text-muted">{{ $item['label'] }}</span>
-                                                                        <span class="text-muted">— labels per entry:</span>
+                                                                        @if (($item['descriptor'] ?? 'labels per entry') !== '')
+                                                                            <span class="text-muted">— {{ $item['descriptor'] }}:</span>
+                                                                        @endif
                                                                         @foreach ($item['children'] as $child)
-                                                                            <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                            @if (! empty($child['href']))
+                                                                                <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
+                                                                            @else
+                                                                                <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                            @endif
                                                                         @endforeach
                                                                     </li>
                                                                 @elseif (!empty($item['todo']))
