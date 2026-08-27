@@ -447,11 +447,12 @@ final class DashboardController extends Controller
                 $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers'),
             ]];
             $reportsItems[] = ['Mini-BOS Cup Mats', [
-                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank'),
+                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank (Mini-BOS)'),
+                $l('/admin/output/bos_mat?action=blank&view=pro-am', 'Blank (Pro-Am)'),
+                $l('/admin/output/bos_mat?action=blank', 'Blank'),
                 $l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers'),
-                $todo('For Table...', 'bos-mat mini-bos per-table'),
+                $family('For Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=mini-bos&view='.$t->id.'&filter=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/bos_mat?action=mini-bos&view='.$t->id, (string) $t->tableNumber.' (Judging)')])->all(), ''),
                 $l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers'),
-                $todo('For Table... (Judging)', 'bos-mat mini-bos per-table judging'),
             ]];
         $bosStyleTypes = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
             $reportsItems[] = ['BOS Pullsheets', [
@@ -462,9 +463,10 @@ final class DashboardController extends Controller
             ]];
             $reportsItems[] = ['BOS Cup Mats', [
                 $l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'),
-                $todo('For Style Type...', 'bos-mat per-style'),
+                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id.'&filter=entry', $t->styleTypeName))->all(), ''),
                 $l('/admin/output/bos_mat', 'All Style Types - Judging Numbers'),
-                $todo('For Style Type... (Judging)', 'bos-mat per-style judging'),
+                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all(), ''),
+                $family('Pro-Am...', collect(range(1, 3))->flatMap(fn ($sort) => $bosStyleTypes->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id.'&filter=entry', $t->styleTypeName.' ('.$sort.')'), $l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id, $t->styleTypeName.' ('.$sort.')')])->all())->all(), ''),
             ]];
             $reportsItems[] = ['Pullsheets', [
                 $l('/admin/output/pullsheets', 'All By Table'),
@@ -510,20 +512,40 @@ final class DashboardController extends Controller
             $l('/admin/output/post_judge_inventory', 'Without Scores'),
         ]];
         $reportsItems[] = ['BOS Results', [
-            $todo('Print', 'section=results&go=judging_scores_bos&action=print&tb=bos&view=default'),
+            $l('/admin/output/results?go=judging_scores_bos&action=print&tb=bos&view=default', 'Print'),
             $todo('PDF', 'section=export-results&go=judging_scores_bos&action=download&view=pdf'),
             $todo('HTML', 'section=export-results&go=judging_scores_bos&action=download&view=html'),
         ]];
         if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
             $reportsItems[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), [
-                $todo('Print', 'section=results&go=best&action=print&view=default'),
+                $l('/admin/output/results?go=best&action=print&filter=default&view=default', 'Print'),
+                $l('/admin/output/results?go=best&action=print&view=default', 'Print (No Filter)'),
             ]];
         }
+        $resultsLink = function (string $go, string $view, string $tb = '', string $psort = '', string $filter = '') use ($l): array {
+            $q = ['go' => $go, 'action' => 'print'];
+            if ($tb !== '') { $q['tb'] = $tb; }
+            if ($filter !== '') { $q['filter'] = $filter; }
+            if ($psort !== '') { $q['psort'] = $psort; }
+            $q['view'] = $view;
+            $label = trim($go.($tb ? ' | '.$tb : '').($filter ? ' | '.$filter : '').($psort ? ' | '.$psort : '').' | '.$view);
+
+            return $l('/admin/output/results?'.http_build_query($q), $label);
+        };
+        $reportLinks = [];
+        foreach (['judging_scores', 'all'] as $rg) {
+            foreach (['default', 'winners'] as $rv) {
+                foreach (['', 'scores'] as $rtb) {
+                    foreach (['', 'table-entry-count-asc', 'table-entry-count-desc'] as $rp) {
+                        $reportLinks[] = $resultsLink($rg, $rv, $rtb, $rp);
+                    }
+                }
+            }
+        }
+        $reportLinks[] = $l('/admin/output/results?go=judging_scores&action=print&filter=scores&view=winners', 'judging_scores | scores | winners (filter)');
+        $reportLinks[] = $l('/admin/output/results?go=judging_scores&action=print&filter=none&view=winners', 'judging_scores | none | winners (filter)');
         $reportsItems[] = ['Results ('.$this->resultsMethodLabel($prefs['winnerMethod']).')', [
-            $todo('All with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=default'),
-            $todo('All without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=default'),
-            $todo('Winners Only with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=winners'),
-            $todo('Winners Only without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=winners'),
+            ...$reportLinks,
             $todo('PDF report', 'section=export-results&go=judging_scores&action=default&tb=none&view=pdf'),
             $todo('HTML report', 'section=export-results&go=judging_scores&action=default&tb=none&view=html'),
         ]];
