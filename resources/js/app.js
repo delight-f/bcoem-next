@@ -198,3 +198,35 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('admin-offcanvas')?.classList.remove('in');
     }
 });
+
+// Legacy admin date picker (js_includes/app.min.js init):
+//   $('.date-time-picker-system').datetimepicker({format:'YYYY-MM-DD hh:mm A'})
+// jQuery + moment + bootstrap-datetimepicker 4.15.35 are loaded via CDN on the
+// admin layout head (includes/load_cdn_libraries_admin.inc.php). No-op elsewhere.
+if (window.jQuery && window.jQuery.fn && window.jQuery.fn.datetimepicker) {
+    window.jQuery('.date-time-picker-system').datetimepicker({ format: 'YYYY-MM-DD hh:mm A' });
+}
+
+// Admin session-expiry modals + auto-logout. Port of legacy
+// js_includes/autologout.min.js (index.legacy.php:302-311 wires session_end_*
+// globals); shown via the Bootstrap JS loaded on the admin head.
+if (window.bcoemAdminSession) {
+    const { endSeconds, redirect } = window.bcoemAdminSession;
+    let expiryShown = null;
+    setInterval(() => {
+        const remaining = endSeconds - Math.floor(Date.now() / 1000);
+        if (remaining <= 0) {
+            window.location.replace(redirect);
+            return;
+        }
+        if (!window.jQuery) return;
+        if (remaining <= 30 && expiryShown !== 30) {
+            if (expiryShown === 120) window.jQuery('#session-expire-warning').modal('hide');
+            window.jQuery('#session-expire-warning-30').modal('show');
+            expiryShown = 30;
+        } else if (remaining <= 120 && expiryShown !== 120) {
+            window.jQuery('#session-expire-warning').modal('show');
+            expiryShown = 120;
+        }
+    }, 1000);
+}

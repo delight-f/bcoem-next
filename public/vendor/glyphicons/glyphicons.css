@@ -1,0 +1,37 @@
+/* Bootstrap 3 Glyphicons — vendored for the eonasdan bootstrap-datetimepicker
+   4.15.35 stepper/toolbar icons (js_includes default `icons:` map uses the
+   BS3 `glyphicon` classes). The port does not load full bootstrap.min.css
+   (the app.css compat layer replaces it), so the Glyphicons font + the classes
+   the picker needs are provided here. Sourced from Bootstrap 3.3.7
+   (maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css). */
+@font-face {
+    font-family: 'Glyphicons Halflings';
+    src: url('glyphicons-halflings-regular.woff2') format('woff2'),
+         url('glyphicons-halflings-regular.woff') format('woff'),
+         url('glyphicons-halflings-regular.ttf') format('truetype');
+}
+
+.glyphicon {
+    position: relative;
+    top: 1px;
+    display: inline-block;
+    font-family: 'Glyphicons Halflings';
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.glyphicon-chevron-up:before { content: "\e113"; }
+.glyphicon-chevron-down:before { content: "\e114"; }
+.glyphicon-chevron-left:before { content: "\e079"; }
+.glyphicon-chevron-right:before { content: "\e080"; }
+.glyphicon-time:before { content: "\e023"; }
+.glyphicon-calendar:before { content: "\e109"; }
+.glyphicon-screenshot:before { content: "\e087"; }
+.glyphicon-trash:before { content: "\e020"; }
+.glyphicon-remove:before { content: "\e014"; }
+.glyphicon-ok:before { content: "\e013"; }
+.glyphicon-info-sign:before { content: "\e086"; }
+.glyphicon-exclamation-sign:before { content: "\e101"; }

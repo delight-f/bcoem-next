@@ -1,5 +1,35 @@
 <!DOCTYPE html>
-@php($isAdminSide = request()->is('admin') || request()->is('admin/*') || request()->is('backoffice*') || request()->is('eval*'))
+@php
+    $isAdminSide = request()->is('admin') || request()->is('admin/*') || request()->is('backoffice*') || request()->is('eval*');
+    // Legacy headers.inc.php:443-475 sets $label_admin = "Administration" then
+    // appends ": {nav label}" per go. Port admin routes map to that label here
+    // (a static map is fine per spec). The dashboard keeps its own chrome.
+    $adminRouteName = request()->route()?->getName();
+    $adminTitleMap = [
+        'admin.dashboard' => 'Dashboard',
+        'admin.upload_scoresheets' => 'Upload Scoresheets and Other Documents',
+        'admin.competition_info.edit' => 'Competition Info',
+        'admin.site_preferences.edit' => 'Website Preferences',
+        'admin.dates.edit' => 'Competition-Related Dates',
+        'admin.hero_images.index' => 'Upload Images',
+        'admin.upload.index' => 'Upload Images',
+        'admin.sponsors.index' => 'Sponsors',
+        'admin.contacts.index' => 'Contacts',
+        'admin.mods.index' => 'Custom Modules',
+        'admin.style_types.index' => 'Style Types',
+        'admin.styles.index' => 'Styles',
+        'admin.make_admin.edit' => 'Change User Level',
+        'admin.change_user_password.edit' => 'Change User Password',
+        'admin.send_test_email.show' => 'Send Test Email',
+    ];
+    $adminPageTitle = null;
+    if ($isAdminSide && str_starts_with((string) $adminRouteName, 'admin.') && $adminRouteName !== 'admin.dashboard') {
+        $suffix = $adminTitleMap[$adminRouteName] ?? null;
+        if ($suffix !== null) {
+            $adminPageTitle = 'Administration: ' . $suffix;
+        }
+    }
+@endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-theme="bcoem-brux" @endif>
 <head>
     <meta charset="utf-8">
@@ -9,6 +39,18 @@
     <title>{{ $ctx->contestStr('contestName') }} - Brew Competition Online Entry &amp; Management</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
+    @if ($isAdminSide)
+        {{-- Legacy admin date picker (includes/load_cdn_libraries_admin.inc.php):
+             eonasdan bootstrap-datetimepicker 4.15.35 + moment + jQuery + Bootstrap JS
+             (BS3 CSS is provided by the app.css compat layer, not the CDN). --}}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/css/bootstrap-datetimepicker.min.css">
+        {{-- BS3 Glyphicons for the picker's chevron/calendar steppers (vendored). --}}
+        <link rel="stylesheet" href="{{ asset('vendor/glyphicons/glyphicons.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.15.35/js/bootstrap-datetimepicker.min.js"></script>
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @if ($ctx->contestStr('contestName'))
@@ -86,12 +128,14 @@
                 </ul>
             </li>
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Entries, Payments, and Participants <span class="caret"></span></a>
+                <a href="#" class="dropdown-toggle" role="button">Entries{{ (int) $ctx->prefsStr('prefsPaypalIPN') === 1 ? ', Payments,' : '' }} and Participants <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
                     <li><a href="{{ url('/backoffice/count-by-style') }}">Entry Count By Style</a></li>
                     <li><a href="{{ url('/backoffice/count-by-substyle') }}">Entry Count By Sub-Style</a></li>
-                    <li><a href="{{ url('/admin/payments') }}">Manage Payments</a></li>
+                    @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
+                        <li><a href="{{ url('/admin/payments') }}">Manage Payments</a></li>
+                    @endif
                     <li><a href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
                     <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=judges">Assign Judges</a></li>
                     <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=stewards">Assign Stewards</a></li>
@@ -124,7 +168,7 @@
                 </ul>
             </li>
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Printing <span class="caret"></span></a>
+                <a href="#" class="dropdown-toggle" role="button">Reports <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/admin/judging/tables') }}?id=default">Table Cards</a></li>
                     <li><a href="{{ url('/admin/judging/tables') }}?view=entry&id=default">Pullsheets - Entry Numbers</a></li>
@@ -144,7 +188,7 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Preferences <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/site-preferences') }}">Website</a></li>
+                    <li><a href="{{ url('/admin/site-preferences') }}">General</a></li>
                     <li><a href="{{ url('/admin/judging/preferences') }}">Judging/Competition Organization</a></li>
                 </ul>
             </li>
@@ -322,12 +366,66 @@
     </dialog>
 @endguest
 <div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}">
+    @if ($adminPageTitle !== null)
+        {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
+             chrome (Administration: <label>) around the blade's own <p class="lead">. --}}
+        <div class="page-header">
+            <h1>{{ $adminPageTitle }}</h1>
+        </div>
+    @endif
     {{ $slot }}
 </div>
 
 <footer class="site-footer text-white justify-content-center container-fluid fixed bottom-0 pt-4 print:hidden">
     <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M 3.1.0 &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
 </footer>
+
+@if ($isAdminSide)
+    @auth
+        {{-- Legacy index.legacy.php:259-302 — the two session-expire modals are on
+             every admin page. Copy modal bodies verbatim (labels from
+             lang/en/en-US.lang.php:1782-1784, alert_text_090/091 at :1862-1863). --}}
+        <script>window.bcoemAdminSession = { endSeconds: {{ (int) (time() + (int) config('session.lifetime', 120) * 60) }}, lifetimeMin: {{ (int) config('session.lifetime', 120) }}, redirect: "{{ route('logout') }}" };</script>
+
+        <!-- Session Expiring Modal: 2 Minute Warning -->
+        <div class="modal fade" id="session-expire-warning" tabindex="-1" role="dialog" aria-labelledby="session-expire-warning-label">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="session-expire-warning-label">Session About To Expire</h4>
+              </div>
+              <div class="modal-body">
+                <p>Your session will expire in two minutes. Stay on the current page to finish your work before time expires. Need more time? Refresh this page to continue your current session (unsaved form data may be lost). Or, simply log out.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Stay Here</button>
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Session Expiring Modal: 30 Second Warning -->
+        <div class="modal fade" id="session-expire-warning-30" tabindex="-1" role="dialog" aria-labelledby="session-expire-warning-30-label">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="session-expire-warning-30-label">Session About To Expire</h4>
+              </div>
+              <div class="modal-body">
+                <p>Your session will expire in 30 seconds. You can refresh to continue your current session or log out.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    @endauth
+@endif
 
 </body>
 </html>
