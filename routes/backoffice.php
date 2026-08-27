@@ -34,6 +34,11 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('backoffice.entries.index');
     Route::post('/backoffice/entries/mark-all', [EntriesController::class, 'markAll'])
         ->name('backoffice.entries.mark_all');
+    // Legacy entries.admin.php single form wrapping the table: inline
+    // judging-number / paid / received / box / notes edits POST together
+    // (legacy saved each via AJAX save_column; the port saves the form).
+    Route::put('/backoffice/entries', [EntriesController::class, 'updateForm'])
+        ->name('backoffice.entries.update_form');
     Route::get('/backoffice/entries/{id}/edit', [EntriesController::class, 'edit'])
         ->name('backoffice.entries.edit');
     Route::put('/backoffice/entries/{id}', [EntriesController::class, 'update'])
