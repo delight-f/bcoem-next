@@ -83,7 +83,11 @@ export LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/"
 php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" \
     >"$REPORT/legacy-server.log" 2>&1 &
 LEGACY_PID=$!
-php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
+# -t public: the router's static branch serves real files from public/,
+# but when it returns false the built-in server resolves against the
+# docroot — without -t it uses the CWD and every Vite build asset 404s
+# (pages render unstyled and picker JS never runs in harness captures).
+php -S "127.0.0.1:$PORT_NEW" -t "$NEW_DIR/public" "$NEW_DIR/tools/parity/router-port.php" \
     >"$REPORT/new-server.log" 2>&1 &
 NEW_PID=$!
 sleep 2
