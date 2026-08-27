@@ -147,6 +147,11 @@ while IFS= read -r url; do
     legacy_url="${url%%|*}"; new_url="${url#*|}"
     [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
     legacy_url="${legacy_url#/}"; new_url="${new_url#/}"
+    # output.inc.php URLs are PDF link targets (labels, pullsheets, results),
+    # not crawlable HTML pages — they live in urls.txt purely as linkmap map
+    # entries so the harness can translate a legacy dashboard link to its port
+    # route. Fetching them here would compare two PDF binaries as text.
+    case "$legacy_url" in *output.inc.php*) continue;; esac
     curl -sL -b "$REPORT/jar-legacy-$role" -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
         > "$REPORT/$safe.legacy.code" \
         || { echo "SKIP (legacy error $(cat "$REPORT/$safe.legacy.code")) $url"; skipped=$((skipped+1)); continue; }
