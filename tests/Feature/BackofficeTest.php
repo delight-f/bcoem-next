@@ -246,7 +246,11 @@ final class BackofficeTest extends PublicSurfaceTestCase
         // Both screens render with the fixture visible.
         $this->get('/backoffice/participants')
             ->assertOk()
-            ->assertSee('P55 Entrant')
+                        // Legacy renders "Last, First" + city/state small line.
+            ->assertSee('Entrant, P55')
+            ->assertSee('Participant Status');
+        $this->get('/backoffice/participants?filter=judges')
+            ->assertOk()
             ->assertSee('Available Judges');
         $this->get('/backoffice/participants/'.self::ENTRANT_ID.'/edit')
             ->assertOk()

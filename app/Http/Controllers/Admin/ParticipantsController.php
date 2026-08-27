@@ -71,6 +71,8 @@ final class ParticipantsController extends Controller
                 'brewer.brewerSteward', 'brewer.brewerAssignment',
                 'brewer.brewerJudgeLocation', 'brewer.brewerJudgeID',
                 'brewer.brewerJudgeRank', 'brewer.brewerStewardLocation',
+                'brewer.brewerCity', 'brewer.brewerState', 'brewer.brewerPhone1',
+                'brewer.brewerBreweryName',
                 'users.userLevel', 'users.userCreated',
             ]);
 
@@ -94,6 +96,23 @@ final class ParticipantsController extends Controller
             ->selectRaw('brewBrewerID, COUNT(*) AS n')
             ->groupBy('brewBrewerID')
             ->pluck('n', 'brewBrewerID');
+
+        // "Entry Numbers" / "Judging Numbers" 6-digit CSV per participant
+        // (legacy with_entries row: sprintf("%06s", entry) lists).
+        $entryNumbers = DB::table('brewing')
+            ->select('brewBrewerID', 'id')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('brewBrewerID')
+            ->map(fn ($rows) => $rows->map(fn ($r) => sprintf('%06s', (string) $r->id))->implode(', '));
+        $judgingNumbers = DB::table('brewing')
+            ->select('brewBrewerID', 'brewJudgingNumber')
+            ->whereNotNull('brewJudgingNumber')
+            ->where('brewJudgingNumber', '!=', '')
+            ->orderBy('brewJudgingNumber')
+            ->get()
+            ->groupBy('brewBrewerID')
+            ->map(fn ($rows) => $rows->map(fn ($r) => sprintf('%06s', (string) $r->brewJudgingNumber))->implode(', '));
 
         $uids = $participants->pluck('uid')->all();
 
@@ -138,6 +157,8 @@ final class ParticipantsController extends Controller
             'ctx' => TenantContext::load(),
             'participants' => $participants,
             'entryCounts' => $entryCounts,
+            'entryNumbers' => $entryNumbers,
+            'judgingNumbers' => $judgingNumbers,
             'filter' => $filter,
             'q' => $q,
             'locationDisplay' => $locationDisplay,
