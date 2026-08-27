@@ -90,10 +90,35 @@ final class LabelsController extends Controller
         $ctx = TenantContext::load();
 
         $action = (string) $request->query('action', 'address_labels');
+        $go = (string) $request->query('go', '');
 
-        // Every bottle-label mode lives on the same /admin/output/labels
-        // route; the legacy (go=entries, action=…) switch is reproduced
-        // here. The address_labels mode keeps its original small block.
+        // go=judging_tables: box labels (no filter) and virtual judge
+        // labels (filter=judges) — legacy labels.output.php judging_tables
+        // branch.
+        if ($go === 'judging_tables') {
+            $filter = (string) $request->query('filter', 'default');
+            $sort = max(1, (int) $request->query('sort', '1'));
+            $psort = (string) $request->query('psort', '5160');
+            $data = $filter === 'judges'
+                ? self::virtualJudgeLabels($ctx, $psort, $sort)
+                : self::boxLabels($ctx, $psort, $sort);
+
+            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+        }
+
+        // go=participants judging_nametags / judging_labels (id=default).
+        if ($action === 'judging_nametags') {
+            $data = self::nametags($ctx);
+
+            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+        }
+
+        if ($action === 'judging_labels') {
+            $psort = (string) $request->query('psort', '5160');
+            $data = self::judgingLabels($ctx, $psort);
+
+            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+        }
         if (str_starts_with($action, 'bottle-')) {
             $view = (string) $request->query('view', 'default');
             $psort = (string) $request->query('psort', '5160');
@@ -741,5 +766,348 @@ final class LabelsController extends Controller
         }
 
         return $filename.'.pdf';
+    }
+
+    /**
+     * Box labels — go=judging_tables (no filter): one label per judging
+     * table with a big table-number cell, table name, location name and the
+     * style-number list, `sort` copies each (legacy labels.output.php
+     * judging_tables else branch).
+     *
+     * @return array{view_name: string, view: array<string, mixed>, filename: string}
+     */
+    public static function boxLabels(TenantContext $ctx, string $psort, int $sort): array
+    {
+        $styleSet = (string) $ctx->prefsStr('prefsStyleSet');
+
+        $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
+
+        $locationIds = $tables->pluck('tableLocation')->filter()->unique()->all();
+        $locations = $locationIds !== []
+            ? DB::table('judging_locations')->whereIn('id', $locationIds)->get()->keyBy('id')
+            : collect();
+
+        $styleIds = collect($tables)->flatMap(fn ($t) => array_filter(explode(',', (string) $t->tableStyles)))
+            ->filter()->unique()->values()->all();
+        $styles = $styleIds !== []
+            ? DB::table('styles')->whereIn('id', $styleIds)->get()->keyBy('id')
+            : collect();
+
+        $labels = [];
+        foreach ($tables as $t) {
+            $styleParts = [];
+            foreach (array_filter(explode(',', (string) $t->tableStyles)) as $sid) {
+                $style = $styles->get((int) $sid);
+                if ($style !== null) {
+                    $num = self::styleNumberConst((string) $style->brewStyleGroup, (string) $style->brewStyleNum, $styleSet);
+                    if ($num !== '') {
+                        $styleParts[] = $num;
+                    }
+                }
+            }
+            $stylesList = implode(', ', $styleParts);
+
+            $tableName = self::ascii(self::truncate(htmlspecialchars_decode((string) $t->tableName), 30));
+            $loc = $locations->get($t->tableLocation);
+            $location = '';
+            $grey = false;
+            if ($loc !== null) {
+                $location = self::ascii(self::truncate(htmlspecialchars_decode((string) $loc->judgingLocName), 30));
+                $grey = (int) $loc->judgingLocType === 1;
+            }
+
+            for ($i = 0; $i < $sort; $i++) {
+                $labels[] = [
+                    'number' => (string) $t->tableNumber,
+                    'name' => $tableName,
+                    'location' => $location,
+                    'styles' => $stylesList,
+                    'grey' => $grey,
+                ];
+            }
+        }
+
+        return [
+            'view_name' => 'outputs.labels_box',
+            'view' => ['perSheet' => $psort === '3422' ? 24 : 30, 'labels' => $labels],
+            'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                .'_Box_Labels'.($psort === '3422' ? '_Avery3422' : '_Avery5160').'.pdf',
+        ];
+    }
+
+    /**
+     * Virtual judge labels — go=judging_tables&filter=judges (legacy
+     * judging_tables judges branch): judges assigned to a virtual
+     * (judgingLocType=1) location get name, city/state and the
+     * "Table N"/"Tables N, M" assignment line, `sort` copies each.
+     *
+     * @return array{view_name: string, view: array<string, mixed>, filename: string}
+     */
+    public static function virtualJudgeLabels(TenantContext $ctx, string $psort, int $sort): array
+    {
+        $virtual = DB::table('judging_locations')->where('judgingLocType', 1)->get(['id'])
+            ->map(fn ($l) => ['id' => (int) $l->id, 'check' => 'Y-'.$l->id])->values()->all();
+
+        $brewers = DB::table('brewer')->where('brewerJudge', 'Y')->orderBy('brewerLastName')->get();
+
+        $labels = [];
+        foreach ($brewers as $b) {
+            $locations = array_filter(explode(',', (string) $b->brewerJudgeLocation));
+
+            $isVirtual = false;
+            foreach ($virtual as $v) {
+                if (in_array($v['check'], $locations, true)) {
+                    $isVirtual = true;
+                    break;
+                }
+            }
+            if (! $isVirtual) {
+                continue;
+            }
+
+            // judge_assignment(uid, locId) -> the tableNumber the judge has at
+            // that virtual location, or null when unassigned (legacy :196).
+            $tableNumbers = [];
+            foreach ($virtual as $v) {
+                if (! in_array($v['check'], $locations, true)) {
+                    continue;
+                }
+                $tableNumbers[] = DB::table('judging_assignments')
+                    ->join('judging_tables', 'judging_tables.id', '=', 'judging_assignments.assignTable')
+                    ->where('judging_assignments.bid', $b->uid)
+                    ->where('judging_assignments.assignLocation', $v['id'])
+                    ->value('judging_tables.tableNumber');
+            }
+
+            if ($tableNumbers !== []) {
+                $flight = '';
+                $count = 0;
+                foreach ($tableNumbers as $tn) {
+                    if ($tn !== null && $tn !== '') {
+                        $flight .= $tn.', ';
+                        $count++;
+                    }
+                }
+                $tableLine = self::ascii(rtrim(($count > 1 ? 'Tables ' : 'Table ').$flight, ', '));
+            } else {
+                $tableLine = 'Table: ______';
+            }
+
+            for ($i = 0; $i < $sort; $i++) {
+                $labels[] = [
+                    'name' => self::ascii($b->brewerFirstName.' '.$b->brewerLastName),
+                    'loc' => self::ascii($b->brewerCity.', '.$b->brewerState),
+                    'table' => $tableLine,
+                ];
+            }
+        }
+
+        return [
+            'view_name' => 'outputs.labels',
+            'view' => [
+                'perSheet' => $psort === '3422' ? 24 : 30,
+                'labels' => collect($labels)->map(fn ($l) => [$l['name'], $l['loc'], $l['table']])->all(),
+            ],
+            'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                .'_Virtual_Judge_Labels'.($psort === '3422' ? '_Avery3422' : '_Avery5160').'.pdf',
+        ];
+    }
+
+    /**
+     * All judge scoresheet labels — go=participants&action=judging_labels&id=default
+     * (legacy judging_labels id=default branch): a full sheet of labels per
+     * judge (24/30 copies), each with name, BJCP rank, secondary ranks and
+     * the lowercased email.
+     *
+     * @return array{view_name: string, view: array<string, mixed>, filename: string}
+     */
+    public static function judgingLabels(TenantContext $ctx, string $psort): array
+    {
+        $numberOfLabels = $psort === '3422' ? 24 : 30;
+        $characterLimit = 32 + 6; // legacy `+= 6` for Arial
+
+        $rows = DB::table('brewer')
+            ->join('staff', 'staff.uid', '=', 'brewer.uid')
+            ->where('staff.staff_judge', '1')
+            ->where('brewer.brewerJudge', 'Y')
+            ->select('brewer.id', 'brewer.brewerFirstName', 'brewer.brewerLastName',
+                'brewer.brewerJudgeID', 'brewer.brewerEmail', 'brewer.brewerJudgeRank',
+                'brewer.brewerJudgeMead', 'brewer.brewerJudgeCider', 'staff.uid')
+            ->orderBy('brewer.brewerLastName')
+            ->get();
+
+        $labels = [];
+        foreach ($rows as $r) {
+            $bjcpRank = explode(',', (string) $r->brewerJudgeRank);
+            $rank = self::bjcpRank($bjcpRank[0] ?? '', 2);
+            if (str_contains($rank, 'Non-BJCP Judge')
+                && (((string) $r->brewerJudgeMead === 'Y') || ((string) $r->brewerJudgeCider === 'Y'))) {
+                $rank = 'BJCP Cider or Mead Judge';
+            }
+
+            $judgeId = self::validateBjcpId((string) $r->brewerJudgeID)
+                ? ' ('.$r->brewerJudgeID.')' : '';
+            $rank .= strtoupper($judgeId);
+
+            $mead = '';
+            $cider = '';
+            $pro = '';
+            $certCicerone = '';
+            $advCicerone = '';
+            $mastCicerone = '';
+
+            if ((string) $r->brewerJudgeMead === 'Y') { $mead = 'Certified Mead Judge'; }
+            if (in_array('Certified Cider Guide', $bjcpRank, true)) { $cider = 'Certified Cider Guide'; }
+            if (in_array('Certified Pommelier', $bjcpRank, true)) { $cider = 'Certified Pommelier'; }
+            if ((string) $r->brewerJudgeCider === 'Y') { $cider = 'Certified Cider Judge'; }
+            if (in_array('Professional Brewer', $bjcpRank, true)) { $pro = 'Professional Brewer'; }
+            if (in_array('Certified Cicerone', $bjcpRank, true)) { $certCicerone = 'Certified Cicerone'; }
+            if (in_array('Advanced Cicerone', $bjcpRank, true)) { $advCicerone = 'Advanced Cicerone'; }
+            if (in_array('Master Cicerone', $bjcpRank, true)) { $mastCicerone = 'Master Cicerone'; }
+
+            $cicerone = [];
+            $other = [];
+            if ($mastCicerone !== '') { $cicerone[] = $mastCicerone; }
+            elseif ($mastCicerone === '' && $certCicerone === '' && $advCicerone !== '') { $cicerone[] = $advCicerone; }
+            elseif ($mastCicerone === '' && $advCicerone === '' && $certCicerone !== '') { $cicerone[] = $certCicerone; }
+
+            if ($mead !== '') { $other[] = $mead; }
+            if ($cider !== '') { $other[] = $cider; }
+            if ($pro !== '') { $other[] = $pro; }
+
+            if ($cicerone !== [] && $other !== []) { $otherCombined = array_merge($cicerone, $other); }
+            elseif ($cicerone !== [] && $other === []) { $otherCombined = $cicerone; }
+            elseif ($cicerone === [] && $other !== []) { $otherCombined = $other; }
+            else { $otherCombined = ''; }
+            $otherRanks = $otherCombined !== '' ? implode(', ', $otherCombined) : '';
+            $otherRanks = ltrim($otherRanks, ' ,');
+            $otherRanks = ltrim($otherRanks, ' , ');
+            $otherRanks = ltrim($otherRanks, ', ');
+            $otherRanks = ltrim($otherRanks, ',');
+
+            $firstName = html_entity_decode((string) $r->brewerFirstName);
+            $lastName = html_entity_decode((string) $r->brewerLastName);
+            $rankLine = self::truncate($rank, $characterLimit);
+            $otherLine = $otherRanks !== '' ? self::truncate($otherRanks, $characterLimit) : '';
+            $email = strtolower((string) $r->brewerEmail);
+
+            $labelLines = [$firstName.' '.$lastName, $rankLine];
+            if ($otherLine !== '') { $labelLines[] = $otherLine; }
+            $labelLines[] = $email;
+            $labelLines = array_map(fn ($l) => self::ascii($l), $labelLines);
+
+            for ($i = 0; $i < $numberOfLabels; $i++) {
+                $labels[] = $labelLines;
+            }
+        }
+
+        return [
+            'view_name' => 'outputs.labels',
+            'view' => ['perSheet' => $numberOfLabels, 'labels' => $labels],
+            'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                .'_All_Judge_Scoresheet_Labels'.($psort === '3422' ? '_Avery3422' : '_Avery5160').'.pdf',
+        ];
+    }
+
+    /**
+     * Judging nametags — go=participants&action=judging_nametags (legacy
+     * judging_nametags branch): one Avery 5395 nametag per staff brewer
+     * (judge/steward/staff/organizer) with name, role assignment and
+     * city/state.
+     *
+     * @return array{view_name: string, view: array<string, mixed>, filename: string}
+     */
+    public static function nametags(TenantContext $ctx): array
+    {
+        $rows = DB::table('brewer')
+            ->join('staff', 'staff.uid', '=', 'brewer.uid')
+            ->select('brewer.id', 'brewer.brewerFirstName', 'brewer.brewerLastName',
+                'brewer.brewerCity', 'brewer.brewerState',
+                'staff.staff_judge', 'staff.staff_steward', 'staff.staff_staff', 'staff.staff_organizer')
+            ->orderBy('brewer.brewerLastName')
+            ->get();
+
+        $labels = [];
+        foreach ($rows as $r) {
+            $isStaff = (($r->staff_judge == 1) || ($r->staff_steward == 1)
+                || ($r->staff_staff == 1) || ($r->staff_organizer == 1));
+            if (! $isStaff) {
+                continue;
+            }
+
+            $assignment = '';
+            if ($r->staff_judge == 1) { $assignment .= 'Judge, '; }
+            if ($r->staff_steward == 1) { $assignment .= 'Steward, '; }
+            if ($r->staff_staff == 1) { $assignment .= 'Staff, '; }
+            if ($r->staff_organizer == 1) { $assignment .= 'Organizer'; }
+            $assignment = rtrim($assignment, ', ');
+            $assignment = rtrim($assignment, ' ');
+            $assignment = rtrim($assignment, ',');
+
+            $location = ($r->brewerCity !== 'Anytown')
+                ? $r->brewerCity.', '.$r->brewerState : '';
+
+            $labels[] = [
+                'name' => self::ascii(html_entity_decode($r->brewerFirstName.' '.$r->brewerLastName)),
+                'assignment' => self::ascii(html_entity_decode($assignment)),
+                'location' => self::ascii(html_entity_decode($location)),
+            ];
+        }
+
+        return [
+            'view_name' => 'outputs.labels_nametag',
+            'view' => ['labels' => $labels],
+            'filename' => str_replace(' ', '_', (string) $ctx->contestStr('contestName'))
+                .'_Nametags_Avery5395.pdf',
+        ];
+    }
+
+    /** style_number_const(method 0, common.lib.php:4494) for a style set. */
+    private static function styleNumberConst(string $group, string $sub, string $styleSet): string
+    {
+        return match ($styleSet) {
+            'BA' => '',
+            'BJCP2021', 'BJCP2025' => ltrim($group, '0').self::styleSeparator($styleSet).ltrim($sub, '0'),
+            default => $group.self::styleSeparator($styleSet).$sub,
+        };
+    }
+
+    /** style_set_display_separator (mirrors PullsheetsController::styleSeparator). */
+    private static function styleSeparator(string $styleSet): string
+    {
+        return match ($styleSet) {
+            'AABC', 'AABC2022', 'AABC2025' => '.',
+            'NWCiderCup' => '-',
+            default => '',
+        };
+    }
+
+    /** bjcp_rank($rank, 2) (common.lib.php:2373). */
+    private static function bjcpRank(string $rank, int $method): string
+    {
+        if ($method === 2) {
+            return match ($rank) {
+                'None', '', 'Novice', 'Non-BJCP', 'Experienced' => 'Non-BJCP Judge',
+                'Professional Brewer', 'Beer Sommelier', 'Certified Cicerone',
+                'Master Cicerone', 'Judge with Sensory Training' => $rank,
+                default => 'BJCP '.$rank.' Judge',
+            };
+        }
+
+        return $rank;
+    }
+
+    /** validate_bjcp_id() (output.lib.php:291). */
+    private static function validateBjcpId(string $input): bool
+    {
+        if (preg_match('/^TEMP\d{4}$/i', $input)) {
+            return true;
+        }
+
+        if (strlen($input) !== 5) {
+            return false;
+        }
+
+        return (bool) preg_match('([a-zA-Z])', $input);
     }
 }
