@@ -1,0 +1,48 @@
+{{-- Round bottle labels — legacy output/labels.output.php
+     action=bottle-entry-round|bottle-judging-round|bottle-category-round.
+     Grid matches the Avery sheet: OL32 = 11x14 @ 12.7mm, OL5275WR =
+     9x12 @ 19.05mm; each label is a fixed-size square cell centered. --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Round Bottle Labels</title>
+<style>
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 7px; }
+    body { margin: 0; }
+    table { border-collapse: separate; border-spacing: 0; }
+    td { text-align: center; vertical-align: middle; overflow: hidden;
+         padding: 0; }
+    .page-break { page-break-after: always; }
+</style>
+</head>
+<body>
+@php
+    $cols = $psort === 'OL32' ? 11 : 9;
+    $rows = $psort === 'OL32' ? 14 : 12;
+    $cell = $psort === 'OL32' ? '12.7mm' : '19.05mm';
+    $size = $psort === 'OL32' ? '7px' : '9px';
+@endphp
+@foreach (array_chunk($cells, $cols * $rows) as $sheet)
+    <table style="width: {{ $cols * ($psort === 'OL32' ? 19.05 : 20.65) }}mm;">
+        @foreach (array_chunk($sheet, $cols) as $row)
+            <tr>
+                @foreach ($row as $cellLines)
+                    <td style="width: {{ $cell }}; height: {{ $cell }}; font-size: {{ $size }};">
+                        @foreach ($cellLines as $line)
+                            <div>{{ $line }}</div>
+                        @endforeach
+                    </td>
+                @endforeach
+                @for ($i = count($row); $i < $cols; $i++)
+                    <td style="width: {{ $cell }}; height: {{ $cell }};"></td>
+                @endfor
+            </tr>
+        @endforeach
+    </table>
+    @if (! $loop->last)
+        <div class="page-break"></div>
+    @endif
+@endforeach
+</body>
+</html>
