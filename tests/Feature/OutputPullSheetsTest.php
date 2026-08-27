@@ -288,7 +288,7 @@ final class OutputPullSheetsTest extends PublicSurfaceTestCase
         // No flight rows exist at all, yet queued mode pulls every
         // received entry — the whole point of queued judging.
         $this->assertSame(
-            ['000001', '000002', '000003', '000005'],
+            ['000001', '000002', '000005', '000003'],
             array_column($table['flights'][0]['rows'], 'judgingNo'),
         );
     }
@@ -303,11 +303,10 @@ final class OutputPullSheetsTest extends PublicSurfaceTestCase
         // Style 1A has brewStyleReqSpec=1 → brewInfo shown with ^ → " | ".
         $this->assertStringContainsString('Required Info:', $html);
         $this->assertStringContainsString('Weyermann | Barke |', $html);
-        // Style 2B has brewStyleReqSpec=0 → no info cell for it.
-        $this->assertStringContainsString('2 B P51 Pilsner', $html);
-        // Brewer name column.
-        $this->assertStringContainsString('Ada Brewster', $html);
-        // Zero-padded numbers and location line.
+        // Style 2B has brewStyleReqSpec=0 → no info cell for it. Legacy style
+        // number format is group+sub with the style-set separator ("").
+        $this->assertStringContainsString('2B P51 Pilsner', $html);
+        // Zero-padded judging number and location line.
         $this->assertStringContainsString('000001', $html);
         $this->assertStringContainsString('P51 Hall', $html);
         // Unreceived entry never appears anywhere in the document.

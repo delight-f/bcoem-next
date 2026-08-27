@@ -383,12 +383,12 @@ final class DashboardController extends Controller
         ]];
         if ($tables > 0 && $obfuscate === 0) {
             $reportsItems[] = ['Additional Info', [
-                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=all_entry_info&view=entry&id=default'),
-                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=all_entry_info&id=default'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers'),
             ]];
             $reportsItems[] = ['Judge Inventories', [
-                $todo('Entries for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J'),
-                $todo('Judging Numbers for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J&sort=entry'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J', 'Entries for Session...'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry', 'Judging Numbers for Session...'),
             ]];
         }
         $reportsItems[] = ['Table Cards', [
@@ -423,10 +423,10 @@ final class DashboardController extends Controller
         // During Judging (tables>0 && obfuscate 0).
         if ($tables > 0 && $obfuscate === 0) {
             $reportsItems[] = ['Mini-BOS Pullsheets', [
-                $todo('All - Entry Numbers', 'section=pullsheets&go=mini_bos&view=entry'),
-                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=judging_tables&view=entry&filter=mini_bos&id=default'),
-                $todo('All - Judging Numbers', 'section=pullsheets&go=mini_bos'),
-                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=judging_tables&filter=mini_bos&id=default'),
+                $l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
+                $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers'),
             ]];
             $reportsItems[] = ['Mini-BOS Cup Mats', [
                 $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank'),
@@ -436,9 +436,9 @@ final class DashboardController extends Controller
                 $todo('For Table... (Judging)', 'bos-mat mini-bos per-table judging'),
             ]];
             $reportsItems[] = ['BOS Pullsheets', [
-                $todo('All Style Types - Entry Numbers', 'section=pullsheets&go=judging_scores_bos&view=entry'),
+                $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers'),
                 $todo('For Style Type...', 'pullsheets judging_scores_bos per-style'),
-                $todo('All Style Types - Judging Numbers', 'section=pullsheets&go=judging_scores_bos'),
+                $l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers'),
                 $todo('For Style Type... (Judging)', 'pullsheets judging_scores_bos per-style judging'),
             ]];
             $reportsItems[] = ['BOS Cup Mats', [
