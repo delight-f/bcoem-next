@@ -116,6 +116,14 @@ final class ParticipantsController extends Controller
 
         $uids = $participants->pluck('uid')->all();
 
+        // Judge scoresheet-label gate (legacy brewer_assignment(): staff.staff_judge).
+        $staffJudge = $uids === [] ? [] : DB::table('staff')
+            ->where('staff_judge', 1)
+            ->whereIn('uid', $uids)
+            ->pluck('uid')
+            ->mapWithKeys(fn ($uid) => [$uid => true])
+            ->all();
+
         // "Assigned to Table(s)" (legacy table_assignments method 2=1):
         // judging_assignments ⋈ judging_tables per uid/role, "N - Name".
         $tableAssignments = $uids === [] ? collect() : DB::table('judging_assignments as ja')
@@ -155,6 +163,7 @@ final class ParticipantsController extends Controller
 
         return view('admin.participants', [
             'ctx' => TenantContext::load(),
+            'viewerLevel' => (int) ($request->user()?->userLevel ?? 2),
             'participants' => $participants,
             'entryCounts' => $entryCounts,
             'entryNumbers' => $entryNumbers,
@@ -163,6 +172,7 @@ final class ParticipantsController extends Controller
             'q' => $q,
             'locationDisplay' => $locationDisplay,
             'tableAssignments' => $tableAssignments,
+            'staffJudge' => $staffJudge,
             'judgeEntries' => $judgeEntries,
             'statusCounts' => $statusCounts,
         ]);

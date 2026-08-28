@@ -62,6 +62,13 @@ function extractLinks(string $html, string $host): array
 $legacyHtml = (string) file_get_contents($argv[1]);
 $newHtml = (string) file_get_contents($argv[2]);
 $host = '127.0.0.1';
+// The port renders destructive row actions as POST/DELETE forms (CSRF-safe)
+// where legacy used <a href> + JS confirm; count form actions as links so
+// functional parity is not flagged MISSING.
+if (preg_match_all('/<form[^>]+action=["\']([^"\']+)["\'][^>]*>(?:\s*<input[^>]+name="_method"[^>]+value="(DELETE|PUT|PATCH)")?/i', $newHtml, $fm)) {
+    $formLinks = '<a href="'.implode('"></a><a href="', array_map(fn ($h, $m) => $m === 'DELETE' ? $h : $h, $fm[1], $fm[2] ?: array_fill(0, count($fm[1]), ''))).'"></a>';
+    $newHtml .= $formLinks;
+}
 // Legacy emits commented-out navbar rows (nav.sec.php:356-362) whose hrefs
 // are not user-visible links. Strip comments before extraction so they
 // do not count as MISSING.

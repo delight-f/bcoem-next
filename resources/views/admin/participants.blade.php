@@ -100,9 +100,9 @@
                     </button>
                     <ul class="dropdown-menu">
                         @if ($filter === 'default')
-                            <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&psort=brewer_name">By Last Name</a></li>
+                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?psort=brewer_name') }}">By Last Name</a></li>
                             @if (! $proEdition)
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&psort=club">By Club</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?psort=club') }}">By Club</a></li>
                             @else
                                 <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&psort=organization">By Organization Name</a></li>
                             @endif
@@ -361,25 +361,33 @@
                                 @endif
                             </td>
                             <td class="print:hidden">
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
-                                @if ($level === 0 && $p->brewerEmail !== auth()->user()?->user_name)
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
-                                @else
-                                    <span style="margin-right: .4em"><span class="fa fa-lg fa-lock text-muted" data-toggle="tooltip" data-placement="top" title="You cannot change your own user level, {{ auth()->user()?->user_name }}."></span></span>
+                                @if ($viewerLevel === 0)
+                                    @if ($p->brewerEmail !== auth()->user()?->user_name)
+                                        <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
+                                    @else
+                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-lock text-muted" data-toggle="tooltip" data-placement="top" title="You cannot change your own user level, {{ auth()->user()?->user_name }}."></span></span>
+                                    @endif
+                                    @if ($p->brewerEmail !== auth()->user()?->user_name)
+                                        <span style="margin-right: .4em">
+                                            <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="inline" onsubmit="return confirm('Delete the participant account for {{ $displayName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete {{ $displayName }}'s account."><span class="fa fa-lg fa-trash-o"></span></button>
+                                            </form>
+                                        </span>
+                                    @else
+                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-trash-o text-muted" data-toggle="tooltip" data-placement="top" title="Silly, you cannot delete yourself, {{ auth()->user()?->user_name }}!"></span></span>
+                                    @endif
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/list/edit-account') }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/password') }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s password"><span class="fa fa-lg fa-key"></span></a></span>
                                 @endif
                                 <span style="margin-right: .4em"><a class="hide-loader" href="mailto:{{ $p->brewerEmail }}" data-toggle="tooltip" data-placement="top" title="Email {{ $displayName }} at {{ $p->brewerEmail }}"><span class="fa fa-lg fa-envelope"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="#" data-toggle="tooltip" data-placement="top" title="{{ $displayName }}'s phone number: {{ $p->brewerPhone1 }}"><span class="fa fa-lg fa-phone"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/entries?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
-                                @if ($level === 0 && $p->brewerEmail !== auth()->user()?->user_name)
-                                    <span style="margin-right: .4em">
-                                        <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="inline" onsubmit="return confirm('Delete the participant account for {{ $displayName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete {{ $displayName }}'s account."><span class="fa fa-lg fa-trash-o"></span></button>
-                                        </form>
-                                    </span>
-                                @else
-                                    <span style="margin-right: .4em"><span class="fa fa-lg fa-trash-o text-muted" data-toggle="tooltip" data-placement="top" title="Silly, you cannot delete yourself, {{ auth()->user()?->user_name }}!"></span></span>
+                                @if (str_contains((string) ($tableAssignments[$p->uid.'|J'] ?? ''), 'Judge') || ($staffJudge[$p->uid] ?? false))
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=5160') }}" data-toggle="tooltip" data-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - Letter (Avery 5160)"><span class="fa fa-lg fa-file"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=3422') }}" data-toggle="tooltip" data-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - A4 (Avery 3422)"><span class="fa fa-lg fa-file-text"></span></a></span>
                                 @endif
                             </td>
                         </tr>
