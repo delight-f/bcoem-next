@@ -203,13 +203,13 @@ final class DashboardController extends Controller
                 'Your competition&#39;s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
                 [
                     ['All Competition Dates', [$l('/admin/dates', 'Edit')]],
-                    ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload', 'Upload Logo')]],
+                    ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload?action=html', 'Upload Logo')]],
                     ['Contacts', [$l('/admin/contacts', 'Manage'), $l('/admin/contacts/create', 'Add')]],
                     ['Custom Categories', [$l('/admin/judging/special-best', 'Manage'), $l('/admin/judging/special-best/create', 'Add')]],
                     ['Drop-Off Locations', [$l('/admin/dropoff', 'Manage'), $l('/admin/dropoff/create', 'Add')]],
-                    ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations/create', 'Add')]],
+                    ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations?action=add', 'Add')]],
                     ['Non-Judging Sessions', [$l('/admin/judging/non-judging', 'Manage'), $l('/admin/judging/non-judging/create', 'Add')]],
-                    ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload', 'Upload Logos')]],
+                    ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload?action=html', 'Upload Logos')]],
                     ['Styles Accepted', [$l('/admin/styles', 'Manage'), $l('/admin/styles/create', 'Add')]],
                     ['Style Types', [$l('/admin/style-types', 'Manage'), $l('/admin/style-types/create', 'Add')]],
                 ],
@@ -218,7 +218,7 @@ final class DashboardController extends Controller
 
         // Entries, Payments, and Participants — legacy Entries/Payments and Participants.
         $entriesItems = [];
-        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
+        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage'), $l('/backoffice/entries?view=paid', 'Paid')]];
         if ($prefs['paypalIpn']) {
             $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
         }
@@ -228,7 +228,7 @@ final class DashboardController extends Controller
                 $participantLinks,
                 $l('/admin/judging/flights', 'Assign/Unassign Judges'),
                 $l('/admin/judging/flights', 'Assign/Unassign Stewards'),
-                $l('/admin/judging/flights', 'Assign/Unassign Staff'),
+                $l('/admin/judging/locations?action=assign&filter=staff', 'Assign/Unassign Staff'),
             );
         } else {
             array_push($participantLinks, $l('/admin/judging/flights', 'Assign/Unassign Judges'), $l('/admin/judging/flights', 'Assign/Unassign Stewards'));
@@ -343,7 +343,7 @@ final class DashboardController extends Controller
                 $l('/admin/judging/flights', 'Staff'),
             ]],
             ['Tables', array_merge(
-                [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
+                [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables?action=add', 'Add')],
                 $tables > 1 ? [$l('/admin/judging/flights', 'Assign Judges/Stewards')] : [],
             )],
             ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights', 'Add')]],
@@ -358,7 +358,7 @@ final class DashboardController extends Controller
         $scoreItems = [
             ['Scoresheets and Docs', [
                 $l('/admin/upload-scoresheets', 'Upload Multiple'),
-                $l('/admin/upload-scoresheets', 'Upload Individually'),
+                $l('/admin/upload-scoresheets?action=html', 'Upload Individually'),
             ]],
         ];
         if ($obfuscate === 0) {
@@ -385,8 +385,8 @@ final class DashboardController extends Controller
 
         // Before Judging.
         $reportsItems[] = ['Staff Availability', [
-            $todo('By Last Name', 'section=assignments&go=judging_assignments&filter=staff&view=name'),
-            $todo('By Non-Judging Session', 'section=assignments&go=judging_assignments&filter=staff'),
+            $l('/admin/output/assignments?filter=staff&view=name', 'By Last Name'),
+            $l('/admin/output/assignments?filter=staff', 'By Non-Judging Session'),
         ]];
         $reportsItems[] = ['Notes', [
             $l('/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'),
@@ -411,12 +411,12 @@ final class DashboardController extends Controller
         }
         $reportsItems[] = ['Table Cards', [
             $l('/admin/output/table_cards', 'All Tables'),
-            $todo('For Table...', 'table_choose("table-cards","judging_tables")'),
-            $todo('For Session...', 'table-cards judging_locations round'),
+            $l('/admin/output/table_cards?id=1', 'For Table...'),
+            $l('/admin/output/table_cards?go=judging_locations&location=1&round=1', 'For Session...'),
         ]];
         $reportsItems[] = ['Sign In Sheets', [
-            $todo('Judges', 'section=assignments&go=judging_assignments&filter=judges&view=sign-in'),
-            $todo('Stewards', 'section=assignments&go=judging_assignments&filter=stewards&view=sign-in'),
+            $l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
+            $l('/admin/output/assignments?filter=stewards&view=sign-in', 'Stewards'),
         ]];
         if ($tables > 0) {
             $reportsItems[] = ['Assignments', [
@@ -513,8 +513,8 @@ final class DashboardController extends Controller
         ]];
         $reportsItems[] = ['BOS Results', [
             $l('/admin/output/results?go=judging_scores_bos&action=print&tb=bos&view=default', 'Print'),
-            $todo('PDF', 'section=export-results&go=judging_scores_bos&action=download&view=pdf'),
-            $todo('HTML', 'section=export-results&go=judging_scores_bos&action=download&view=html'),
+            $l('/admin/output/results?go=judging_scores_bos&action=download&view=pdf', 'PDF'),
+            $l('/admin/output/results?go=judging_scores_bos&action=download&view=html', 'HTML'),
         ]];
         if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
             $reportsItems[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), [
@@ -546,8 +546,8 @@ final class DashboardController extends Controller
         $reportLinks[] = $l('/admin/output/results?go=judging_scores&action=print&filter=none&view=winners', 'judging_scores | none | winners (filter)');
         $reportsItems[] = ['Results ('.$this->resultsMethodLabel($prefs['winnerMethod']).')', [
             ...$reportLinks,
-            $todo('PDF report', 'section=export-results&go=judging_scores&action=default&tb=none&view=pdf'),
-            $todo('HTML report', 'section=export-results&go=judging_scores&action=default&tb=none&view=html'),
+            $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf', 'PDF report'),
+            $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=html', 'HTML report'),
         ]];
 
         $right = [['Reports', 'fa-file',
@@ -558,28 +558,28 @@ final class DashboardController extends Controller
         // Data Exports.
         $dataExportItems = [];
         $emailCsv = [
-            $todo('Available Judges', 'section=export-emails&go=csv&filter=avail_judges&action=email'),
-            $todo('Available Stewards', 'section=export-emails&go=csv&filter=avail_stewards&action=email'),
-            $todo('Assigned Judges', 'section=export-emails&go=csv&filter=judges&action=email'),
-            $todo('Assigned Stewards', 'section=export-emails&go=csv&filter=stewards&action=email'),
-            $todo('Available and Assigned Staff', 'section=export-emails&go=csv&filter=staff&action=email'),
+            $l('/admin/output/export?go=csv&filter=avail_judges&action=email', 'Available Judges'),
+            $l('/admin/output/export?go=csv&filter=avail_stewards&action=email', 'Available Stewards'),
+            $l('/admin/output/export?go=csv&filter=judges&action=email', 'Assigned Judges'),
+            $l('/admin/output/export?go=csv&filter=stewards&action=email', 'Assigned Stewards'),
+            $l('/admin/output/export?go=csv&filter=staff&action=email', 'Available and Assigned Staff'),
         ];
         $participantCsv = [
-            $todo('All Participants', 'section=export-participants&go=csv'),
-            $todo('Winners: Limited Data', 'section=export-entries&go=csv&tb=winners'),
-            $todo('Winners: Circuit Data', 'section=export-entries&go=csv&tb=circuit'),
-            $todo('Winners: Master Homebrewer Program Member Data', 'section=export-entries&go=csv&tb=circuit&filter=mhp'),
+            $l('/admin/output/export?go=csv&action=participants', 'All Participants'),
+            $l('/admin/output/export?go=csv&tb=winners', 'Winners: Limited Data'),
+            $l('/admin/output/export?go=csv&tb=circuit', 'Winners: Circuit Data'),
+            $l('/admin/output/export?filter=mhp&go=csv&tb=circuit', 'Winners: Master Homebrewer Program Member Data'),
         ];
         $entriesCsv = [
             $l('/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'),
             $l('/admin/output/export?go=csv', 'All Entries: Limited Data'),
-            $todo('All Entries: Limited Data with Participant Contact Info', 'section=export-entries&go=csv&tb=brewer_contact_info'),
-            $todo('Paid Entries', 'section=export-entries&go=csv&tb=paid&view=all'),
-            $todo('Paid & Received Entries', 'section=export-entries&go=csv&tb=paid'),
-            $todo('Paid Entries Not Received', 'section=export-entries&go=csv&tb=paid&view=not_received'),
-            $todo('Non-Paid Entries', 'section=export-entries&go=csv&tb=nopay&view=all'),
-            $todo('Non-Paid & Received Entries', 'section=export-entries&go=csv&tb=nopay'),
-            $todo('Entries with Required & Optional Info', 'section=export-entries&go=csv&action=required&tb=required'),
+            $l('/admin/output/export?go=csv&tb=brewer_contact_info', 'All Entries: Limited Data with Participant Contact Info'),
+            $l('/admin/output/export?go=csv&tb=paid&view=all', 'Paid Entries'),
+            $l('/admin/output/export?go=csv&tb=paid', 'Paid & Received Entries'),
+            $l('/admin/output/export?go=csv&tb=paid&view=not_received', 'Paid Entries Not Received'),
+            $l('/admin/output/export?go=csv&tb=nopay&view=all', 'Non-Paid Entries'),
+            $l('/admin/output/export?go=csv&tb=nopay', 'Non-Paid & Received Entries'),
+            $l('/admin/output/export?action=required&go=csv&tb=required', 'Entries with Required & Optional Info'),
         ];
         $dataExportItems[] = ['Email Addresses and Associated Contact Data (CSV)', $emailCsv];
         $dataExportItems[] = ['Participant Data (CSV)', $participantCsv];
