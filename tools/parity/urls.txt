@@ -570,6 +570,8 @@ anon|index.php?section=entry|/
 admin|index.php?section=entry|/
 admin|index.php?section=pay|/pay
 # Offcanvas quick-register + logout + home shapes (admin-nav.pub.php).
+admin|includes/process.inc.php?section=logout&action=logout|/
+anon|includes/process.inc.php?section=logout&action=logout|/
 admin|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
 admin|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick
 admin|index.php?section=admin&go=judge&action=register|/register/judge
