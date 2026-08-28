@@ -11,13 +11,11 @@ anon|index.php?section=register&go=entrant|/register/entrant
 anon|index.php?section=register&go=judge|/register/judge
 anon|index.php?section=register&go=steward|/register/steward
 anon|index.php?section=login&go=password&action=forgot|/forgot-password
-#
 # ── Entrant (logged in, userLevel 2) ──
 entrant|index.php?section=list|/list
 entrant|index.php?section=brew&action=add|/brew
 entrant|index.php?section=pay|/pay
 entrant|index.php?section=brewer&action=account|/list/edit-account
-#
 # ── Admin (userLevel 0) — config ──
 admin|index.php?section=admin|/admin
 admin|index.php?section=admin&go=dates|/admin/dates
@@ -34,7 +32,6 @@ admin|index.php?section=admin&go=style_types|/admin/style-types
 admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
 admin|index.php?section=admin&go=hero_images|/admin/hero-images
 admin|index.php?section=admin&go=mods|/admin/mods
-#
 # ── Admin — entries & participants ──
 admin|index.php?section=admin&go=entries|/backoffice/entries
 admin|index.php?section=admin&go=count_by_style|/backoffice/count-by-style
@@ -45,7 +42,6 @@ admin|index.php?section=admin&go=participants&filter=judges|/backoffice/particip
 admin|index.php?section=admin&go=participants&filter=stewards|/backoffice/participants?filter=stewards
 admin|index.php?section=admin&go=checkin|/admin/judging/checkin
 admin|index.php?section=admin&go=send_test_email|/admin/send-test-email
-#
 # ── Admin — organizing & scoring ──
 admin|index.php?section=admin&go=judging_tables|/admin/judging/tables
 admin|index.php?section=admin&go=judging_flights|/admin/judging/flights
@@ -55,14 +51,12 @@ admin|index.php?section=admin&go=judging_scores_bos|/admin/judging/bos
 admin|index.php?section=admin&go=special_best_data|/admin/judging/special-best-data
 admin|index.php?section=admin&go=upload_scoresheets|/admin/upload-scoresheets
 admin|index.php?section=evaluation&go=default&filter=default&view=admin|/eval
-#
 # ── Admin — preferences tabs ──
 admin|index.php?section=admin&go=preferences|/admin/site-preferences
 admin|index.php?section=admin&go=preferences&action=entries|/admin/site-preferences/entries
 admin|index.php?section=admin&go=preferences&action=email|/admin/site-preferences/email
 admin|index.php?section=admin&go=preferences&action=payment|/admin/site-preferences/payment
 admin|index.php?section=admin&go=preferences&action=best|/admin/site-preferences/best
-#
 # ── Admin — data management ──
 admin|index.php?section=admin&go=archive|/admin/archive
 admin|index.php?section=admin&go=user|/admin/purge
@@ -543,16 +537,17 @@ admin|includes/output.inc.php?go=judging_scores&action=print&view=winners&sectio
 admin|includes/output.inc.php?go=judging_scores_bos&action=print&tb=bos&view=default&section=results|/admin/output/results?action=print&go=judging_scores_bos&tb=bos&view=default
 
 # Admin nav (sections/nav.sec.php) — off-canvas Admin Essentials Menu link mappings.
-admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?action=assign&filter=judges
-admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?action=assign&filter=stewards
 admin|index.php?section=admin&go=judging&action=assign&filter=bos|/admin/judging/tables?action=assign&filter=bos
 admin|index.php?section=admin&go=judging&action=assign&filter=staff|/admin/judging/tables?action=assign&filter=staff
+admin|index.php?section=admin&go=judging&action=assign&filter=staff&view=yes|/admin/judging/tables?action=assign&filter=staff&view=yes
+admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?action=assign&filter=judges
+admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?action=assign&filter=stewards
 admin|index.php?section=admin&go=judging_tables&action=assign|/admin/judging/tables?action=assign
 admin|index.php?section=admin&go=upload|/admin/upload
 admin|index.php?section=admin&go=archive&action=add|/admin/archive?action=add
 admin|index.php?section=brewer&go=account&action=edit|/list/edit-account
 admin|index.php?section=user&go=account&action=username|/list/edit-account
-admin|index.php?section=user&go=account&action=password|/list/edit-account
+admin|index.php?section=user&go=account&action=password|/user/password
 admin|index.php?section=admin&go=evaluation&filter=default&view=admin|/eval
 anon|index.php?section=volunteers|/volunteers
 anon|index.php?section=contact|/contact
@@ -571,8 +566,8 @@ anon|index.php?section=user&go=account&action=username&id=1|/list/edit-account
 anon|index.php?section=user&go=account&action=password&id=1|/user/password
 anon|index.php?section=brewer&go=account&action=edit&id=1|/list/edit-account
 anon|index.php?section=pay|/pay
-anon|index.php?section=entry|/#entry-info
-admin|index.php?section=entry|/#entry-info
+anon|index.php?section=entry|/
+admin|index.php?section=entry|/
 admin|index.php?section=pay|/pay
 # Offcanvas quick-register + logout + home shapes (admin-nav.pub.php).
 admin|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
@@ -580,43 +575,41 @@ admin|index.php?section=admin&go=steward&action=register&view=quick|/register/st
 admin|index.php?section=admin&go=judge&action=register|/register/judge
 admin|index.php?section=admin&go=steward&action=register|/register/steward
 admin|index.php?section=admin&go=entrant&action=register|/register/entrant
-admin|includes/process.inc.php?section=logout&action=logout|/
-anon|includes/process.inc.php?section=logout&action=logout|/
 anon|/|/
 admin|/|/
 anon|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
 anon|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick
 
 # Per-participant row action mappings (admin/participants.admin.php:241-290).
-admin|index.php?section=admin&go=make_admin&id=1|/backoffice/participants?bid=1
+admin|index.php?section=admin&go=make_admin&id=1|/backoffice/participants/1/edit
 admin|index.php?section=admin&go=brewer&action=edit&filter=1&id=1|/backoffice/participants/1/edit
 admin|index.php?section=admin&go=change_user_password&action=edit&id=1|/user/password
 admin|index.php?section=admin&go=user&action=username&filter=admin&id=1|/list/edit-account
-admin|index.php?section=admin&go=entries&action=add&filter=1|/brew?bid=1
+admin|index.php?section=admin&go=entries&action=add&filter=1|/brew?filter=1
 admin|includes/process.inc.php?section=admin&go=participants&dbTable=brewer&action=delete&id=1|/backoffice/participants/1
-admin|index.php?section=admin&go=make_admin&id=2|/backoffice/participants?bid=2
+admin|index.php?section=admin&go=make_admin&id=2|/backoffice/participants/2/edit
 admin|index.php?section=admin&go=brewer&action=edit&filter=2&id=2|/backoffice/participants/2/edit
 admin|index.php?section=admin&go=change_user_password&action=edit&id=2|/user/password
 admin|index.php?section=admin&go=user&action=username&filter=admin&id=2|/list/edit-account
-admin|index.php?section=admin&go=entries&action=add&filter=2|/brew?bid=2
+admin|index.php?section=admin&go=entries&action=add&filter=2|/brew?filter=2
 admin|includes/process.inc.php?section=admin&go=participants&dbTable=brewer&action=delete&id=2|/backoffice/participants/2
-admin|index.php?section=admin&go=make_admin&id=3|/backoffice/participants?bid=3
+admin|index.php?section=admin&go=make_admin&id=3|/backoffice/participants/3/edit
 admin|index.php?section=admin&go=brewer&action=edit&filter=3&id=3|/backoffice/participants/3/edit
 admin|index.php?section=admin&go=change_user_password&action=edit&id=3|/user/password
 admin|index.php?section=admin&go=user&action=username&filter=admin&id=3|/list/edit-account
-admin|index.php?section=admin&go=entries&action=add&filter=3|/brew?bid=3
+admin|index.php?section=admin&go=entries&action=add&filter=3|/brew?filter=3
 admin|includes/process.inc.php?section=admin&go=participants&dbTable=brewer&action=delete&id=3|/backoffice/participants/3
-admin|index.php?section=admin&go=make_admin&id=4|/backoffice/participants?bid=4
+admin|index.php?section=admin&go=make_admin&id=4|/backoffice/participants/4/edit
 admin|index.php?section=admin&go=brewer&action=edit&filter=4&id=4|/backoffice/participants/4/edit
 admin|index.php?section=admin&go=change_user_password&action=edit&id=4|/user/password
 admin|index.php?section=admin&go=user&action=username&filter=admin&id=4|/list/edit-account
-admin|index.php?section=admin&go=entries&action=add&filter=4|/brew?bid=4
+admin|index.php?section=admin&go=entries&action=add&filter=4|/brew?filter=4
 admin|includes/process.inc.php?section=admin&go=participants&dbTable=brewer&action=delete&id=4|/backoffice/participants/4
-admin|index.php?section=admin&go=make_admin&id=5|/backoffice/participants?bid=5
+admin|index.php?section=admin&go=make_admin&id=5|/backoffice/participants/5/edit
 admin|index.php?section=admin&go=brewer&action=edit&filter=5&id=5|/backoffice/participants/5/edit
 admin|index.php?section=admin&go=change_user_password&action=edit&id=5|/user/password
 admin|index.php?section=admin&go=user&action=username&filter=admin&id=5|/list/edit-account
-admin|index.php?section=admin&go=entries&action=add&filter=5|/brew?bid=5
+admin|index.php?section=admin&go=entries&action=add&filter=5|/brew?filter=5
 admin|includes/process.inc.php?section=admin&go=participants&dbTable=brewer&action=delete&id=5|/backoffice/participants/5
 admin|index.php?section=admin&go=participants&filter=with_entries|/backoffice/participants?filter=with_entries
 admin|includes/output.inc.php?section=admin&go=participants&action=print&view=default&psort=brewer_name|/admin/output/participant_summary?psort=brewer_name
@@ -671,7 +664,6 @@ admin|includes/output.inc.php?section=sorting&go=cheat&filter=default|/admin/out
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&action=default&filter=default&view=default&id=1|/admin/output/table_cards?id=1
 admin|includes/output.inc.php?section=table-cards&go=judging_locations&location=1&round=1|/admin/output/table_cards?go=judging_locations&location=1&round=1
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sorting-tables&view=master-list|/admin/output/table_cards?psort=sorting-tables&view=master-list
-admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sorting-placards&view=master-list|/admin/output/table_cards?psort=sorting-placards&view=master-list
 admin|includes/output.inc.php?section=inventory|/admin/output/post_judge_inventory
 admin|includes/output.inc.php?section=inventory&go=scores|/admin/output/post_judge_inventory
 admin|includes/output.inc.php?section=summary|/admin/output/participant_summary
@@ -703,16 +695,12 @@ admin|index.php?section=admin&go=non-judging&action=add|/admin/judging/non-judgi
 admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables/create
 admin|index.php?section=admin&go=judging&action=add|/admin/judging/locations?action=add
 admin|index.php?section=admin&go=dropoff&action=add|/admin/dropoff/create
-admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
 admin|index.php?section=admin&go=upload_scoresheets&action=html|/admin/upload-scoresheets?action=html
 admin|index.php?section=admin&go=entries&view=paid|/backoffice/entries?view=paid
 admin|index.php?section=admin&go=contest_info|/admin/competition-info
 admin|index.php?section=admin&go=checkin&filter=box-paid|/admin/judging/checkin?filter=box-paid
 admin|index.php?section=admin&go=judging_flights&action=assign&filter=rounds|/admin/judging/flights?action=assign&filter=rounds
 admin|index.php?section=admin&go=judging_scores&action=add&id=1|/admin/judging/scores?action=add
-admin|index.php?section=admin&action=assign&go=judging&filter=staff|/admin/judging/locations?action=assign&filter=staff
-admin|index.php?section=admin&action=assign&go=judging&filter=staff&view=yes|/admin/judging/locations?action=assign&filter=staff&view=yes
-admin|index.php?section=admin&action=assign&go=judging&filter=bos|/admin/judging/locations?action=assign&filter=bos
 # Entries page: row edit/delete, entry-form prints, category/bid filters,
 # mark-all/generate/purge process actions, entries print psort variants.
 admin|index.php?section=admin&go=entries&action=edit&bid=3&id=1&view=21-B|/backoffice/entries/1/edit
@@ -760,7 +748,6 @@ admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=table&tb=view|/admin/output/assignments?filter=judges&tb=view&view=table
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=name&tb=view|/admin/output/assignments?filter=stewards&tb=view&view=name
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=table&tb=view|/admin/output/assignments?filter=stewards&tb=view&view=table
-admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables/create
 admin|index.php?section=admin&go=style_types&action=edit&id=1|/admin/style-types/1/edit
 admin|index.php?section=admin&go=style_types&action=edit&id=2|/admin/style-types/2/edit
 admin|index.php?section=admin&go=style_types&action=edit&id=3|/admin/style-types/3/edit
@@ -778,7 +765,6 @@ admin|images/label_anon.png|/images/label_anon.png
 admin|images/label_anon_barcode.png|/images/label_anon_barcode.png
 admin|images/label_anon_large_number.png|/images/label_anon_large_number.png
 admin|images/label_anon_large_number_barcode.png|/images/label_anon_large_number_barcode.png
-admin|qr.php|/admin/judging/checkin
 admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_id|/admin/output/participant_summary?filter=judges&psort=judge_id
 admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_rank|/admin/output/participant_summary?filter=judges&psort=judge_rank
 admin|includes/output.inc.php?section=admin&go=participants&filter=stewards&action=print&view=default|/admin/output/participant_summary?filter=stewards&psort=brewer_name
