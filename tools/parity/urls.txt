@@ -543,10 +543,10 @@ admin|includes/output.inc.php?go=judging_scores&action=print&view=winners&sectio
 admin|includes/output.inc.php?go=judging_scores_bos&action=print&tb=bos&view=default&section=results|/admin/output/results?action=print&go=judging_scores_bos&tb=bos&view=default
 
 # Admin nav (sections/nav.sec.php) — off-canvas Admin Essentials Menu link mappings.
-admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?filter=judges
-admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?filter=stewards
-admin|index.php?section=admin&go=judging&action=assign&filter=bos|/admin/judging/tables?filter=bos
-admin|index.php?section=admin&go=judging&action=assign&filter=staff|/admin/judging/tables?filter=staff
+admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?action=assign&filter=judges
+admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?action=assign&filter=stewards
+admin|index.php?section=admin&go=judging&action=assign&filter=bos|/admin/judging/tables?action=assign&filter=bos
+admin|index.php?section=admin&go=judging&action=assign&filter=staff|/admin/judging/tables?action=assign&filter=staff
 admin|index.php?section=admin&go=judging_tables&action=assign|/admin/judging/tables?action=assign
 admin|index.php?section=admin&go=upload|/admin/upload
 admin|index.php?section=admin&go=archive&action=add|/admin/archive?action=add
@@ -554,8 +554,6 @@ admin|index.php?section=brewer&go=account&action=edit|/list/edit-account
 admin|index.php?section=user&go=account&action=username|/list/edit-account
 admin|index.php?section=user&go=account&action=password|/list/edit-account
 admin|index.php?section=admin&go=evaluation&filter=default&view=admin|/eval
-admin|qr.php|/admin/judging/checkin
-admin|index.php?section=admin&go=qr|/admin/judging/checkin
 anon|index.php?section=volunteers|/volunteers
 anon|index.php?section=contact|/contact
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&id=default|/admin/output/table_cards?id=default
@@ -576,3 +574,15 @@ anon|index.php?section=pay|/pay
 anon|index.php?section=entry|/#entry-info
 admin|index.php?section=entry|/#entry-info
 admin|index.php?section=pay|/pay
+# Offcanvas quick-register + logout + home shapes (admin-nav.pub.php).
+admin|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
+admin|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick
+admin|index.php?section=admin&go=judge&action=register|/register/judge
+admin|index.php?section=admin&go=steward&action=register|/register/steward
+admin|index.php?section=admin&go=entrant&action=register|/register/entrant
+admin|includes/process.inc.php?section=logout&action=logout|/
+anon|includes/process.inc.php?section=logout&action=logout|/
+anon|/|/
+admin|/|/
+anon|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
+anon|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick

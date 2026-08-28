@@ -62,6 +62,11 @@ function extractLinks(string $html, string $host): array
 $legacyHtml = (string) file_get_contents($argv[1]);
 $newHtml = (string) file_get_contents($argv[2]);
 $host = '127.0.0.1';
+// Legacy emits commented-out navbar rows (nav.sec.php:356-362) whose hrefs
+// are not user-visible links. Strip comments before extraction so they
+// do not count as MISSING.
+$legacyHtml = preg_replace('/<!--.*?-->/s', '', $legacyHtml);
+$newHtml = preg_replace('/<!--.*?-->/s', '', $newHtml);
 
 // Inventory: legacy query-URL (normalized) => port path.
 $map = [];
@@ -77,7 +82,13 @@ foreach (file($argv[3], FILE_IGNORE_NEW_LINES) as $line) {
     $lp = parse_url($legacy);
     parse_str($lp['query'] ?? '', $q);
     ksort($q);
-    $map[canonPath($lp['path'] ?? '/').'?'.http_build_query($q)] = canonPath($port);
+    // No-query legacy links (e.g. bare "/") key as "/" not "/?" — mirror
+    // extractLinks' key form so lookups hit.
+    $mapKey = canonPath($lp['path'] ?? '/');
+    if ($q !== []) {
+        $mapKey .= '?'.http_build_query($q);
+    }
+    $map[$mapKey] = canonPath($port);
 }
 
 $legacyLinks = extractLinks($legacyHtml, $host);
