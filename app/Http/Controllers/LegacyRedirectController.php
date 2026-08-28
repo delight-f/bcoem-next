@@ -44,8 +44,8 @@ final class LegacyRedirectController extends Controller
         'login|password|' => ['/forgot-password'],
         'past-winners||' => ['/'],
         'entry||' => ['/', [], 302],
-        'contact||' => ['/', [], 302],
-        'volunteers||' => ['/', [], 302],
+        'contact||' => ['/', [], 302],'contact||' => ['/contact', [], 302],
+        'volunteers||' => ['/', [], 302],'volunteers||' => ['/volunteers', [], 302],
         'sponsors||' => ['/', [], 302],
         'competition||' => ['/', [], 302],
 

@@ -142,10 +142,21 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
 
     public function test_legacy_only_section_bounces_temporarily_home(): void
     {
-        $response = $this->get('/index.php?section=contact');
+        $response = $this->get('/index.php?section=sponsors');
 
         $response->assertStatus(302);
         $this->assertSame('/', $response->headers->get('Location'));
+    }
+
+    public function test_volunteers_and_contact_sections_redirect_to_standalone_pages(): void
+    {
+        $this->get('/index.php?section=volunteers')
+            ->assertStatus(302)
+            ->assertRedirect('/volunteers');
+
+        $this->get('/index.php?section=contact')
+            ->assertStatus(302)
+            ->assertRedirect('/contact');
     }
 
     public function test_login_post_via_process_inc_is_307_to_login(): void

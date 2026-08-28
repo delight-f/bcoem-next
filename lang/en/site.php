@@ -307,4 +307,20 @@ return [
     'fyi_reg_will_close' => 'Registration will close',
     'fyi_js_open' => ':roles registration is open.',
     'fyi_js_close' => ':roles registration will close :date.',
+    // ── Volunteers standalone page (legacy volunteers.sec.php) ──
+    'volunteer_logged_in' => 'Since you have already registered, access your account to see if you have volunteered to be a judge or steward.','volunteer_logged_in' => 'Since you have already registered, <a href=":link">access your account</a> to see if you have volunteered to be a judge or steward.',
+    'volunteer_not_registered' => 'If you have <em>not</em> registered and are willing to be a judge or steward, please register.',
+    'volunteer_register_on' => 'If you are willing to judge or steward, please return to register on or after',
+    'volunteer_staff_nudge' => 'If you would like to volunteer to be a competition staff member, please register or update your account to indicate that you wish to be a part of the competition staff.',
+    'volunteer_staff_sessions' => 'Staff can indicate their availability for the following non-judging sessions:',
+
+    // ── Contact form (legacy contact.sec.php + process_contacts.inc.php) ──
+    'contact_use_form' => 'Use the form below to contact a competition official. All fields with a star are required.',
+    'contact_to' => 'Contact',
+    'contact_subject' => 'Subject',
+    'contact_message' => 'Message',
+    'contact_send_message' => 'Send Message',
+    'contact_sent' => 'Additionally, a copy has been sent to the email address you provided.',
+    'contact_send_another' => 'Would you like to send another message?',
+    'contact_form_required' => 'Not all required fields have been filled out or selected. Required fields that are missing values are indicated with a star.',
 ];
