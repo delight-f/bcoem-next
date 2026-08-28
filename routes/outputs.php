@@ -13,6 +13,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         'shipping_label', 'entry', 'participant_summary',
         'participant_entries_list', 'post_judge_inventory', 'judge_notes',
         'assignments', 'staff_points', 'styles', 'maps', 'dropoff', 'print',
+        'entries_print',
         'results', 'bos_mat', 'scoresheets', 'export',
     ] as $output) {
         // Register only controllers that exist: lets the route file load

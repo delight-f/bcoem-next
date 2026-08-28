@@ -93,13 +93,13 @@
                             </button>
                             <ul class="dropdown-menu">
                                 {{-- TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=* --}}
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=entry_number">By Entry Number</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_number') }}">By Entry Number</a></li>
                                 @if ($obfuscate)
-                                    <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=judging_number">By Judging Number</a></li>
+                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=judging_number') }}">By Judging Number</a></li>
                                 @endif
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=category">By Style</a></li>
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=brewer_name">{{ $proEdition ? 'By Organization Name' : 'By Brewer Last Name' }}</a></li>
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=entry_name">By Entry Name</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=category') }}">By Style</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=brewer_name') }}">{{ $proEdition ? 'By Organization Name' : 'By Brewer Last Name' }}</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_name') }}">By Entry Name</a></li>
                             </ul>
                         </div>
                         @if ($entryStatus['totalCount'] > $limit && $filter === 'default')
@@ -109,13 +109,13 @@
                                     <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&view=all&psort=entry_number">By Entry Number</a></li>
+                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_number') }}">By Entry Number</a></li>
                                     @if ($obfuscate)
-                                        <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&view=all&psort=judging_number">By Judging Number</a></li>
+                                        <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=judging_number') }}">By Judging Number</a></li>
                                     @endif
-                                    <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&view=all&psort=category">By Style</a></li>
-                                    <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&view=all&psort=brewer_name">By Brewer Last Name</a></li>
-                                    <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&view=all&psort=entry_name">By Entry Name</a></li>
+                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=category') }}">By Style</a></li>
+                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=brewer_name') }}">By Brewer Last Name</a></li>
+                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_name') }}">By Entry Name</a></li>
                                 </ul>
                             </div>
                         @endif
@@ -321,7 +321,7 @@
                                 @endif
                             </td>
                             <td nowrap>
-                                {{ $styleLabel }} {{ $entry->brewStyle }}
+                                <a href="{{ url('/backoffice/entries?filter='.$entry->brewCategorySort) }}" data-toggle="tooltip" data-placement="top" title="See only the category {{ ltrim($entry->brewCategorySort, '0') }} entries">{{ $styleLabel }}: {{ $entry->brewStyle }}</a>
                             </td>
                             <td class="hidden-xs hidden-sm">{{ $name }}</td>
                             @if (! $proEdition)
@@ -357,6 +357,7 @@
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-trash-o"></span></button>
                                 </form>
+                                <a class="hide-loader" href="{{ url('/admin/output/entry?bid='.($entry->uid ?? $entry->brewBrewerID).'&filter=admin&id='.$entry->id) }}" data-toggle="tooltip" data-placement="top" title="Print the Entry Forms for &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-print"></span></a>
                                 <a class="hide-loader" href="mailto:{{ $entry->brewBrewerEmail ?? '' }}" data-toggle="tooltip" data-placement="top" title="Email the entry&rsquo;s owner, {{ $name }}, at {{ $entry->brewBrewerEmail ?? '' }}"><span class="fa fa-lg fa-envelope"></span></a>
                             </td>
                         </tr>
