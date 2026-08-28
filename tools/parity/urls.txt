@@ -700,7 +700,7 @@ admin|index.php?section=admin&go=style_types&action=add|/admin/style-types/creat
 admin|index.php?section=admin&go=sponsors&action=add|/admin/sponsors/create
 admin|index.php?section=admin&go=special_best&action=add|/admin/judging/special-best/create
 admin|index.php?section=admin&go=non-judging&action=add|/admin/judging/non-judging/create
-admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables?action=add
+admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables/create
 admin|index.php?section=admin&go=judging&action=add|/admin/judging/locations?action=add
 admin|index.php?section=admin&go=dropoff&action=add|/admin/dropoff/create
 admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
@@ -749,3 +749,36 @@ admin|includes/process.inc.php?section=admin&go=entries&action=generate_judging_
 admin|includes/process.inc.php?section=admin&go=entries&action=generate_judging_numbers&sort=legacy|/backoffice/entries/mark-all
 admin|includes/process.inc.php?action=purge&go=unpaid|/backoffice/entries/mark-all
 admin|includes/process.inc.php?action=purge&go=unconfirmed|/backoffice/entries/mark-all
+# Judging tables page: assign/flight row actions, per-table assign links,
+# assignments tb=view variants.
+admin|index.php?section=admin&go=judging_flights&filter=define&action=edit&id=1|/admin/judging/flights?action=edit&filter=define&id=1
+admin|index.php?section=admin&action=assign&go=judging_tables&filter=judges&id=1|/admin/judging/tables?action=assign&filter=judges&id=1
+admin|index.php?section=admin&action=assign&go=judging_tables&filter=stewards&id=1|/admin/judging/tables?action=assign&filter=stewards&id=1
+admin|index.php?section=admin&go=judging_tables&action=edit&id=1|/admin/judging/tables/1/edit
+admin|includes/process.inc.php?section=admin&go=judging_tables&filter=default&dbTable=judging_tables&action=delete&id=1|/admin/judging/tables/1
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name&tb=view|/admin/output/assignments?filter=judges&tb=view&view=name
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=table&tb=view|/admin/output/assignments?filter=judges&tb=view&view=table
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=name&tb=view|/admin/output/assignments?filter=stewards&tb=view&view=name
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=table&tb=view|/admin/output/assignments?filter=stewards&tb=view&view=table
+admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables/create
+admin|index.php?section=admin&go=style_types&action=edit&id=1|/admin/style-types/1/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=2|/admin/style-types/2/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=3|/admin/style-types/3/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=5|/admin/style-types/5/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=6|/admin/style-types/6/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=7|/admin/style-types/7/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=8|/admin/style-types/8/edit
+admin|index.php?section=admin&go=style_types&action=edit&id=9|/admin/style-types/9/edit
+admin|includes/process.inc.php?action=edit&go=combine&dbTable=style_types|/admin/style-types
+admin|images/label_standard.png|/images/label_standard.png
+admin|images/label_standard_large_number.png|/images/label_standard_large_number.png
+admin|images/label_standard_barcode.png|/images/label_standard_barcode.png
+admin|images/label_standard_large_number_barcode.png|/images/label_standard_large_number_barcode.png
+admin|images/label_anon.png|/images/label_anon.png
+admin|images/label_anon_barcode.png|/images/label_anon_barcode.png
+admin|images/label_anon_large_number.png|/images/label_anon_large_number.png
+admin|images/label_anon_large_number_barcode.png|/images/label_anon_large_number_barcode.png
+admin|qr.php|/admin/judging/checkin
+admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_id|/admin/output/participant_summary?filter=judges&psort=judge_id
+admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_rank|/admin/output/participant_summary?filter=judges&psort=judge_rank
+admin|includes/output.inc.php?section=admin&go=participants&filter=stewards&action=print&view=default|/admin/output/participant_summary?filter=stewards&psort=brewer_name

@@ -109,10 +109,10 @@
                         @elseif ($filter === 'with_entries')
                             <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&filter=with_entries">{{ $proEdition ? 'By Organization Name' : 'By Entrant Last Name' }}</a></li>
                         @elseif ($filter === 'judges')
-                            <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_id">By Judge ID</a></li>
-                            <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_rank">By Judge Rank</a></li>
+                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_id') }}">By Judge ID</a></li>
+                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_rank') }}">By Judge Rank</a></li>
                         @elseif ($filter === 'stewards')
-                            <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&filter=stewards&action=print&view=default">By Last Name</a></li>
+                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=stewards&psort=brewer_name') }}">By Last Name</a></li>
                         @endif
                     </ul>
                 </div>

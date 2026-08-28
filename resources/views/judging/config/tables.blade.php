@@ -44,10 +44,10 @@
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'judges']) }}" title="View Assignments by Name">Judge Assignments By Last Name</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'judges']) }}" title="View Assignments by Table">Judge Assignments By Table</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'stewards']) }}" title="View Assignments by Name">Steward Assignments By Last Name</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'stewards']) }}" title="View Assignments by Table">Steward Assignments By Table</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'judges']) }}&view=name&tb=view" title="View Assignments by Name">Judge Assignments By Last Name</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'judges']) }}&view=table&tb=view" title="View Assignments by Table">Judge Assignments By Table</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'stewards']) }}&view=name&tb=view" title="View Assignments by Name">Steward Assignments By Last Name</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ route('outputs.assignments', ['filter' => 'stewards']) }}&view=table&tb=view" title="View Assignments by Table">Steward Assignments By Table</a></li>
                     <li class="small"><a class="dropdown-item" data-open-modal="availJudgeModal">Judges Not Assigned to a Table</a></li>
                     <li class="small"><a class="dropdown-item" data-open-modal="availStewardModal">Stewards Not Assigned to a Table</a></li>
                 </ul>
@@ -210,17 +210,20 @@
                             <td class="print:hidden" nowrap>
                                 {{-- Pullsheets by Entry/Judging Numbers (legacy planning-mode gate). --}}
                                 @if (! $planning)
-                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=entry&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}&view=entry&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
                                 @else
                                     <span class="fa fa-lg fa-print text-muted" data-toggle="tooltip" data-placement="top" title="Printing pullsheets is disabled in Tables Planning Mode"></span>
                                 @endif
                                 @if ($sessionCount > 1 && ! $planning)
-                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=judging&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Judging Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}&view=judging&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the pullsheet by Judging Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
                                 @endif
                                 @if (! $obfuscate && ! $planning)
                                     <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Print the Entries with Additional Info Report for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-plus-square"></span></a>
                                 @endif
                                 <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}" data-toggle="tooltip" data-placement="top" title="Edit Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-pencil"></span></a>
+                                <a href="{{ url('/admin/judging/flights?filter=define&action=edit&id='.$table->id) }}" data-toggle="tooltip" data-placement="top" title="Add/edit flights for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-send"></span></a>
+                                <a href="{{ url('/admin/judging/tables?action=assign&filter=judges&id='.$table->id) }}" data-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-lock"></span></a>
+                                <a href="{{ url('/admin/judging/tables?action=assign&filter=stewards&id='.$table->id) }}" data-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
                                 <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')

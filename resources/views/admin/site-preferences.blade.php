@@ -333,6 +333,18 @@
                                 <option value="{{ $val }}" @selected($p('prefsEntryForm') === $val)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <span class="help-block">
+                            <a class="btn btn-xs btn-info hide-loader" data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard.png') }}" data-caption="Standard">Examples</a>
+                        </span>
+                        <div class="hidden">
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number.png') }}" data-caption="Standard - Larger Printed Number and Style">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_barcode.png') }}" data-caption="Standard with Barcode/QR Code">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number_barcode.png') }}" data-caption="Standard - Larger Printed Number and Style with Barcode/QR Code">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_anon.png') }}" data-caption="Anonymous - Smaller Printed Entry Number">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_anon_barcode.png') }}" data-caption="Anonymous - Smaller Printed Entry Number with Barcode/QR Code">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_anon_large_number.png') }}" data-caption="Anonymous - Larger Printed Entry Number">Link</a>
+                            <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_anon_large_number_barcode.png') }}" data-caption="Anonymous - Larger Printed Entry Number with Barcode/QR Code">Link</a>
+                        </div>
                     </div>
                 </div>
                 <div class="mb-4 row">
