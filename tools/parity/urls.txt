@@ -562,3 +562,17 @@ admin|includes/output.inc.php?section=table-cards&go=judging_tables&id=default|/
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sorting-placards&view=master-list|/admin/output/table_cards?psort=sorting-placards&view=master-list
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sorting-tables|/admin/output/table_cards?psort=sorting-tables
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=table-cards|/admin/output/table_cards?psort=table-cards
+# User dropdown account links (nav.sec.php:135-155, build_public_url shapes with id).
+admin|index.php?section=brewer&go=account&action=edit&id=1|/list/edit-account
+admin|index.php?section=brewer&go=account&action=edit&id=2|/list/edit-account
+admin|index.php?section=user&go=account&action=username&id=1|/list/edit-account
+admin|index.php?section=user&go=account&action=username&id=2|/list/edit-account
+admin|index.php?section=user&go=account&action=password&id=1|/user/password
+admin|index.php?section=user&go=account&action=password&id=2|/user/password
+anon|index.php?section=user&go=account&action=username&id=1|/list/edit-account
+anon|index.php?section=user&go=account&action=password&id=1|/user/password
+anon|index.php?section=brewer&go=account&action=edit&id=1|/list/edit-account
+anon|index.php?section=pay|/pay
+anon|index.php?section=entry|/#entry-info
+admin|index.php?section=entry|/#entry-info
+admin|index.php?section=pay|/pay

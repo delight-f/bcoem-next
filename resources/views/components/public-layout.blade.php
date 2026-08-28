@@ -297,6 +297,8 @@
                                 @endif
                                 <li class="small"><hr class="dropdown-divider"></li>
                                 <li class="small"><a class="dropdown-item" href="{{ url('/list/edit-account') }}">{{ __('site.edit_account') }}</a></li>
+                                <li class="small"><a class="dropdown-item" href="{{ url('/list/edit-account') }}">{{ __('site.change_email') }}</a></li>
+                                <li class="small"><a class="dropdown-item" href="{{ url('/user/password') }}">{{ __('site.change_password') }}</a></li>
                             </ul>
                         </div>
                         <form method="post" action="{{ route('logout') }}">
