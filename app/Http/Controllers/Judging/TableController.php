@@ -122,8 +122,29 @@ final class TableController extends Controller
             'usedNumbers' => $this->usedNumbers(),
             'locations' => $this->sessionLocations(),
             'styles' => $this->activeStyles(),
+            'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => $this->nextTableNumber(),
         ]);
+    }
+
+    /**
+     * style id => assigned table row (legacy get_table_info 'assigned',
+     * common.lib.php:1900: first table whose tableStyles list contains it).
+     *
+     * @return array<int, object{id: int, tableNumber: string, tableName: string}>
+     */
+    private function styleAssignments(): array
+    {
+        $out = [];
+        DB::table('judging_tables')
+            ->get(['id', 'tableNumber', 'tableName', 'tableStyles'])
+            ->each(function ($t) use (&$out) {
+                foreach (array_filter(explode(',', (string) $t->tableStyles), 'strlen') as $sid) {
+                    $out[(int) $sid] ??= (object) ['id' => (int) $t->id, 'tableNumber' => (string) $t->tableNumber, 'tableName' => (string) $t->tableName];
+                }
+            });
+
+        return $out;
     }
 
     public function store(Request $request): RedirectResponse
@@ -154,6 +175,7 @@ final class TableController extends Controller
             'usedNumbers' => array_diff($this->usedNumbers(), [(int) $table->tableNumber]),
             'locations' => $this->sessionLocations(),
             'styles' => $this->activeStyles(),
+            'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => null,
         ]);
     }

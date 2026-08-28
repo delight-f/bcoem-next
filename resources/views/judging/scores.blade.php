@@ -22,7 +22,8 @@
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ($tables as $table)
-                            <li class="small"><a href="{{ route('admin.judging.scores.edit', ['table' => $table->id]) }}">Table {{ $table->tableNumber }}: {{ $table->tableName }}</a></li>
+                            @php($hasScores = in_array((int) $table->id, $scoredTableIds ?? [], true))
+                            <li class="small"><a href="{{ url('/admin/judging/scores') }}?action={{ $hasScores ? 'edit' : 'add' }}&id={{ $table->id }}">Table {{ $table->tableNumber }}: {{ $table->tableName }}</a></li>
                         @endforeach
                     </ul>
                 </div>
@@ -30,10 +31,9 @@
 
             @if (count($bosTypes) > 0)
                 {{-- Position 4: Print Button Dropdown Group (id == "default").
-                    Legacy items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>;
-                    the port pullsheet output is all-tables only, so the
-                    per-style-type targets have no route yet. --}}
-                {{-- TODO: legacy output --}}
+                    Legacy items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>
+                    (judging_scores.admin.php); the port pullsheet output
+                    dispatches the same shape. --}}
                 <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
                     <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-print"></span> Print...
@@ -41,7 +41,7 @@
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ($bosTypes as $type)
-                            <li class="small"><a class="disabled" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
+                            <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $type->id]) }}" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
                         @endforeach
                     </ul>
                 </div>

@@ -161,20 +161,20 @@
                     </div>
                     <div class="bcoem-sidebar-panel">
                         <strong class="text-info">Assigned Stewards</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=stewards') }}">{{ $status['stewardsAssigned'] }}</a></span>
+                        <span class="pull-right"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards" data-toggle="tooltip" data-placement="top" title="View assigned stewards">{{ $status['stewardsAssigned'] }}</a></span>
                     </div>
                     <div class="bcoem-sidebar-panel">
                         <strong class="text-info">Available Staff</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/participants?filter=staff') }}">{{ $status['staff'] }}</a></span>
+                        <span class="pull-right"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff&view=yes" data-toggle="tooltip" data-placement="top" title="View available staff">{{ $status['staff'] }}</a></span>
                     </div>
                     <div class="bcoem-sidebar-panel">
                         <strong class="text-info">Assigned Staff</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=staff') }}">{{ $status['staffAssigned'] }}</a></span>
+                        <span class="pull-right"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-toggle="tooltip" data-placement="top" title="View assigned staff">{{ $status['staffAssigned'] }}</a></span>
                     </div>
                     @if ($status['organizer'] !== null)
                         <div class="bcoem-sidebar-panel">
                             <strong class="text-info">Organizer</strong>
-                            <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=staff') }}">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
+                            <span class="pull-right"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-toggle="tooltip" data-placement="top" title="View assigned staff and organizer">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
                         </div>
                     @endif
                     @foreach ([
@@ -214,6 +214,7 @@
                 <div class="modal-box">
                     <h3 class="text-lg font-bold">{{ $title }}</h3>
                     <p>{{ $help }}</p>
+                    @if (! empty($helpHtml[$title] ?? null)) {!! $helpHtml[$title] !!} @endif
                     <div class="modal-action">
                         <form method="dialog"><button class="btn">Close</button></form>
                     </div>

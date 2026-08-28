@@ -4,7 +4,6 @@
 # port paths are clean URLs.
 #
 # ── Anonymous public ──
-anon|/
 anon|index.php?section=past-winners&go=demoarchive|/past-winners/demoarchive
 anon|index.php?section=login|/login
 anon|index.php?section=register&go=entrant|/register/entrant
@@ -14,7 +13,6 @@ anon|index.php?section=login&go=password&action=forgot|/forgot-password
 # ── Entrant (logged in, userLevel 2) ──
 entrant|index.php?section=list|/list
 entrant|index.php?section=brew&action=add|/brew
-entrant|index.php?section=pay|/pay
 entrant|index.php?section=brewer&action=account|/list/edit-account
 # ── Admin (userLevel 0) — config ──
 admin|index.php?section=admin|/admin
@@ -25,6 +23,8 @@ admin|index.php?section=admin&go=contacts&action=add|/admin/contacts/create
 admin|index.php?section=admin&go=special_best|/admin/judging/special-best
 admin|index.php?section=admin&go=dropoff|/admin/dropoff
 admin|index.php?section=admin&go=judging|/admin/judging/locations
+admin|index.php?section=admin&go=judging&action=edit&id=1|/admin/judging/locations/1/edit
+admin|includes/process.inc.php?section=admin&go=judging&dbTable=judging_locations&action=delete&id=1|/admin/judging/locations/1
 admin|index.php?section=admin&go=non-judging|/admin/judging/non-judging
 admin|index.php?section=admin&go=sponsors|/admin/sponsors
 admin|index.php?section=admin&go=styles|/admin/styles
@@ -44,10 +44,14 @@ admin|index.php?section=admin&go=checkin|/admin/judging/checkin
 admin|index.php?section=admin&go=send_test_email|/admin/send-test-email
 # ── Admin — organizing & scoring ──
 admin|index.php?section=admin&go=judging_tables|/admin/judging/tables
+admin|index.php?section=admin&go=judging_tables&dbTable=default|/admin/judging/tables
 admin|index.php?section=admin&go=judging_flights|/admin/judging/flights
 admin|index.php?section=admin&go=judging_preferences|/admin/judging/preferences
 admin|index.php?section=admin&go=judging_scores|/admin/judging/scores
 admin|index.php?section=admin&go=judging_scores_bos|/admin/judging/bos
+admin|index.php?section=admin&go=judging_scores_bos&action=enter&filter=1|/admin/judging/bos/1/edit
+admin|index.php?section=admin&go=judging_scores_bos&action=enter&filter=2|/admin/judging/bos/2/edit
+admin|index.php?section=admin&go=judging_scores_bos&action=enter&filter=3|/admin/judging/bos/3/edit
 admin|index.php?section=admin&go=special_best_data|/admin/judging/special-best-data
 admin|index.php?section=admin&go=upload_scoresheets|/admin/upload-scoresheets
 admin|index.php?section=evaluation&go=default&filter=default&view=admin|/eval
@@ -556,28 +560,19 @@ admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sortin
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=sorting-tables|/admin/output/table_cards?psort=sorting-tables
 admin|includes/output.inc.php?section=table-cards&go=judging_tables&psort=table-cards|/admin/output/table_cards?psort=table-cards
 # User dropdown account links (nav.sec.php:135-155, build_public_url shapes with id).
-admin|index.php?section=brewer&go=account&action=edit&id=1|/list/edit-account
 admin|index.php?section=brewer&go=account&action=edit&id=2|/list/edit-account
-admin|index.php?section=user&go=account&action=username&id=1|/list/edit-account
 admin|index.php?section=user&go=account&action=username&id=2|/list/edit-account
-admin|index.php?section=user&go=account&action=password&id=1|/user/password
 admin|index.php?section=user&go=account&action=password&id=2|/user/password
 anon|index.php?section=user&go=account&action=username&id=1|/list/edit-account
 anon|index.php?section=user&go=account&action=password&id=1|/user/password
 anon|index.php?section=brewer&go=account&action=edit&id=1|/list/edit-account
-anon|index.php?section=pay|/pay
-anon|index.php?section=entry|/
 admin|index.php?section=entry|/
 admin|index.php?section=pay|/pay
 # Offcanvas quick-register + logout + home shapes (admin-nav.pub.php).
-admin|includes/process.inc.php?section=logout&action=logout|/
 anon|includes/process.inc.php?section=logout&action=logout|/
-admin|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
-admin|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick
 admin|index.php?section=admin&go=judge&action=register|/register/judge
 admin|index.php?section=admin&go=steward&action=register|/register/steward
 admin|index.php?section=admin&go=entrant&action=register|/register/entrant
-anon|/|/
 admin|/|/
 anon|index.php?section=admin&go=judge&action=register&view=quick|/register/judge?view=quick
 anon|index.php?section=admin&go=steward&action=register&view=quick|/register/steward?view=quick
@@ -674,16 +669,6 @@ admin|includes/output.inc.php?section=dropoff|/admin/output/dropoff
 admin|includes/process.inc.php?action=publish|/admin/results?action=publish
 # Assignments view/location variants: AssignmentsController documents the
 # divergence (single canonical roster); all views map to the roster.
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=table|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=location|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=table|/admin/output/assignments?filter=stewards
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=location|/admin/output/assignments?filter=stewards
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=name|/admin/output/assignments?filter=stewards
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&location=1&view=name|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&location=1&view=table|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&location=1&view=name|/admin/output/assignments?filter=stewards
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&location=1&view=table|/admin/output/assignments?filter=stewards
 admin|includes/output.inc.php?section=notes&go=org_notes|/admin/output/judge_notes?go=org_notes
 admin|includes/output.inc.php?section=notes&go=admin|/admin/output/judge_notes?go=admin
 admin|includes/output.inc.php?section=notes&go=allergens|/admin/output/judge_notes?go=allergens
@@ -695,14 +680,14 @@ admin|index.php?section=admin&go=sponsors&action=add|/admin/sponsors/create
 admin|index.php?section=admin&go=special_best&action=add|/admin/judging/special-best/create
 admin|index.php?section=admin&go=non-judging&action=add|/admin/judging/non-judging/create
 admin|index.php?section=admin&go=judging_tables&action=add|/admin/judging/tables/create
-admin|index.php?section=admin&go=judging&action=add|/admin/judging/locations?action=add
+admin|index.php?section=admin&go=judging&action=add|/admin/judging/locations/create
 admin|index.php?section=admin&go=dropoff&action=add|/admin/dropoff/create
 admin|index.php?section=admin&go=upload_scoresheets&action=html|/admin/upload-scoresheets?action=html
 admin|index.php?section=admin&go=entries&view=paid|/backoffice/entries?view=paid
 admin|index.php?section=admin&go=contest_info|/admin/competition-info
 admin|index.php?section=admin&go=checkin&filter=box-paid|/admin/judging/checkin?filter=box-paid
-admin|index.php?section=admin&go=judging_flights&action=assign&filter=rounds|/admin/judging/flights?action=assign&filter=rounds
-admin|index.php?section=admin&go=judging_scores&action=add&id=1|/admin/judging/scores?action=add
+admin|index.php?section=admin&go=judging_flights&action=assign&filter=rounds|/admin/judging/flights/rounds
+admin|index.php?section=admin&go=judging_scores&action=add&id=1|/admin/judging/scores?action=add&id=1
 # Entries page: row edit/delete, entry-form prints, category/bid filters,
 # mark-all/generate/purge process actions, entries print psort variants.
 admin|index.php?section=admin&go=entries&action=edit&bid=3&id=1&view=21-B|/backoffice/entries/1/edit

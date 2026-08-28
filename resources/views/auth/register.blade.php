@@ -12,6 +12,35 @@
         @if (! $allowed)
             <p class="text-xl font-light">{{ __('site.registration_closed') }}</p>
         @else
+            @if ($adminRegister ?? false)
+                {{-- Legacy register.sec.php:334-362 — admin register chrome:
+                     All Participants back button + standard/quick register
+                     dropdowns (judge/steward), admin-form hrefs. --}}
+                <div class="bcoem-admin-element hidden-print mb-4">
+                    <div class="btn-group" role="group">
+                        <a class="btn btn-default" href="{{ url('/backoffice/participants') }}"><span class="fa fa-arrow-circle-left"></span> All Participants</a>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default dropdown-toggle">
+                            <span class="fa fa-plus-circle"></span> Register Judge/Steward (Standard)
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="{{ (! $quickView && $go === 'judge') ? 'disabled' : '' }}"><a href="{{ url('/register/judge') }}">Judge</a></li>
+                            <li class="{{ (! $quickView && $go === 'steward') ? 'disabled' : '' }}"><a href="{{ url('/register/steward') }}">Steward</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-default dropdown-toggle">
+                            <span class="fa fa-plus-circle"></span> Register Judge/Steward (Quick)
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="{{ ($quickView && $go === 'judge') ? 'disabled' : '' }}"><a href="{{ url('/register/judge') }}?view=quick">Judge</a></li>
+                            <li class="{{ ($quickView && $go === 'steward') ? 'disabled' : '' }}"><a href="{{ url('/register/steward') }}?view=quick">Steward</a></li>
+                        </ul>
+                    </div>
+                </div>
+            @endif
+
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link {{ $go === 'entrant' ? 'active' : '' }}"

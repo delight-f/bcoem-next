@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 @php
-    $isAdminSide = request()->is('admin') || request()->is('admin/*') || request()->is('backoffice*') || request()->is('eval*');
+    // Legacy renders the admin chrome whenever the dispatch ran through
+    // section=admin with userLevel<=1 (index.legacy.php:87) — including
+    // pages whose port URL is public-shaped: register (quick-register
+    // links), brew add/edit (admin entry add), list/edit-account and
+    // user/password (admin editing another user). Chrome therefore keys
+    // on the viewer's level for those paths, not the path alone.
+    $isAdminSide = request()->is('admin') || request()->is('admin/*') || request()->is('backoffice*') || request()->is('eval*')
+        || (auth()->check() && (int) auth()->user()->userLevel <= 1
+            && (request()->is('register') || request()->is('register/*')
+                || request()->is('brew') || request()->is('brew/*')
+                || request()->is('list/edit-account') || request()->is('user/password')));
     // Legacy headers.inc.php:443-475 sets $label_admin = "Administration" then
     // appends ": {nav label}" per go. Port admin routes map to that label here
     // (a static map is fine per spec). The dashboard keeps its own chrome.
@@ -197,7 +207,7 @@
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
                     <li><a href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
-                    <li><a class="disabled" aria-disabled="true" title="TODO: legacy output — index.php?section=admin&amp;action=assign&amp;go=judging&amp;filter=bos">Add BOS Judges</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">Add BOS Judges</a></li>
                 </ul>
             </li>
             <li class="dropdown">

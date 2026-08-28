@@ -16,8 +16,13 @@
                 'long',
             );
 
+            // Legacy judging_flights.admin.php:346-347: the location line
+            // links "defined for this location" to the location editor
+            // (go=judging&action=edit&id=N).
+            $locEdit = url('/admin/judging/locations/'.$location->id.'/edit');
+
             return e($location->judgingLocName).($date ? ' &ndash; '.$date : '')
-                .' ('.$rounds.' '.$noun.' defined for this location)';
+                .' ('.$rounds.' '.$noun.' <a href="'.e($locEdit).'" data-toggle="tooltip" data-placement="top" title="Edit the '.e($location->judgingLocName).' location">defined for this location</a>)';
         };
     @endphp
     <section class="container mt-6 mb-4">
@@ -33,7 +38,11 @@
             @csrf
             @foreach ($rows as $row)
                 @php($table = $row['table'])
-                <h4>Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}</h4>
+                <h4>Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}
+                    @if ($row['location'] !== null)
+                        <small><a href="{{ url('/admin/judging/flights') }}?action=edit&filter=define&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Define/Edit the {{ $table->tableName }} Flights"><span class="fa fa-lg fa-pencil-square-o"></span></a></small>
+                    @endif
+                </h4>
                 <p><strong>Location:</strong> {!! $locationLine($row['location']) !!}</p>
 
                 @if ($row['flights'] === [])

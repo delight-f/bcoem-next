@@ -27,10 +27,9 @@
             @endif
 
             {{-- Position 4: Print Button Dropdown Group. Legacy per-style-type
-                items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>;
-                the port pullsheet output is all-tables only, so those targets
-                have no route yet. The Cup Mats outputs exist. --}}
-            {{-- TODO: legacy output --}}
+                items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>
+                (judging_scores_bos.admin.php:107); the port pullsheet output
+                dispatches the same shape. The Cup Mats outputs exist. --}}
             <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
                 <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-print"></span> Print...
@@ -38,7 +37,7 @@
                 </button>
                 <ul class="dropdown-menu">
                     @foreach ($types as $type)
-                        <li class="small"><a class="disabled" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
+                        <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $type->id]) }}" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
                     @endforeach
                     <li class="small"><a href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
                     <li class="small"><a href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>

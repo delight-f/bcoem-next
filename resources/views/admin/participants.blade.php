@@ -84,10 +84,10 @@
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li class="small"><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=judges">Judges</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=bos">BOS Judges</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=stewards">Stewards</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=staff">Staff</a></li>
+                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Judges</a></li>
+                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">BOS Judges</a></li>
+                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Stewards</a></li>
+                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff">Staff</a></li>
                         <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign">Judges/Stewards to Tables</a></li>
                     </ul>
                 </div>
@@ -347,7 +347,16 @@
                                     <td class="print:hidden">{{ $p->brewerJudgeID }}</td>
                                     <td>{{ $p->brewerJudgeRank }}</td>
                                 @endif
-                                <td>{{ $tableAssignments[$p->uid.'|'.($filter === 'judges' ? 'J' : 'S')] ?? '' }}</td>
+                                <td>
+                                    @foreach ($tableAssignments[$p->uid.'|'.($filter === 'judges' ? 'J' : 'S')] ?? [] as $i => $t)
+                                        @if ($i !== 0),&nbsp;@endif
+                                        @if ($filter === 'judges')
+                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges&id={{ $t['id'] }}" data-toggle="tooltip" title="Assign/Unassign Judges to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                        @else
+                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards&id={{ $t['id'] }}" data-toggle="tooltip" title="Assign/Unassign Stewards to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                        @endif
+                                    @endforeach
+                                </td>
                                 <td class="print:hidden">
                                     @foreach ($judgeEntries[$p->uid] ?? collect() as $i => $e)
                                         @if ($i !== 0), @endif
@@ -361,7 +370,7 @@
                                 @endif
                             </td>
                             <td class="print:hidden">
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
                                 @if ($viewerLevel === 0)
                                     @if ($p->brewerEmail !== auth()->user()?->user_name)

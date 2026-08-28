@@ -67,6 +67,8 @@ final class RegisterController extends Controller
             'ctx' => $ctx,
             'go' => $go,
             'allowed' => $allowed,
+            'adminRegister' => $adminRegister,
+            'quickView' => $request->query('view') === 'quick',
             'registrationOpen' => $registrationOpen,
             'judgeOpen' => $judgeOpen,
             'judgingStarted' => $windows->firstJudgingDate !== null && time() > $windows->firstJudgingDate,

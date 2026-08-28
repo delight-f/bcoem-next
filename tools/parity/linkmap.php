@@ -37,6 +37,14 @@ function extractLinks(string $html, string $host): array
         // Raw HTML hrefs are entity-encoded (&amp;); unescape before parsing
         // so &amp;-variants canonicalize to the same key as a real '&' query.
         $href = html_entity_decode($href, ENT_QUOTES, 'UTF-8');
+        // Legacy judging_flights.admin.php:342 emits an unquoted-space href
+        // ("...&id=1 data-toggle="tooltip"") — the capture runs to the next
+        // quote, dragging an attribute fragment into the URL. Trim at the
+        // first space: an href never legitimately contains one.
+        $sp = strpos($href, ' ');
+        if ($sp !== false) {
+            $href = substr($href, 0, $sp);
+        }
         if (preg_match('/^(mailto:|javascript:|#|tel:)/i', $href)) {
             continue;
         }

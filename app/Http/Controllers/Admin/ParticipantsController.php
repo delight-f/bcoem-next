@@ -131,11 +131,12 @@ final class ParticipantsController extends Controller
             ->whereIn('ja.bid', $uids)
             ->whereIn('ja.assignment', ['J', 'S'])
             ->orderBy('ja.assignTable')
-            ->get(['ja.bid', 'ja.assignment', 'jt.tableNumber', 'jt.tableName'])
+            ->get(['ja.bid', 'ja.assignment', 'jt.id as tableId', 'jt.tableNumber', 'jt.tableName'])
             ->groupBy(fn ($r) => $r->bid.'|'.$r->assignment)
-            ->map(fn ($rows) => $rows
-                ->map(fn ($r) => trim((string) $r->tableNumber).' - '.$r->tableName)
-                ->implode(', '));
+            ->map(fn ($rows) => $rows->map(fn ($r) => [
+                'id' => (string) $r->tableId,
+                'label' => trim((string) $r->tableNumber).' - '.$r->tableName,
+            ]));
 
         // "Has Entries In..." (legacy judge_entries): distinct category+
         // subcategory of the participant's entries, linked to the entries

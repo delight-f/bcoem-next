@@ -64,7 +64,21 @@ final class DashboardController extends Controller
 
         $sections = $this->sections((int) $user->userLevel, (int) $user->userAdminObfuscate, $prefs, $counts);
 
+        $helpHtml = [
+            'Organizing' => implode('', [
+                '<p>Organization in BCOE&amp;M begins with assigning individual participants as a <a href="'.url('/admin/judging/tables').'?action=assign&filter=staff">staff</a> member and/or <a href="'.url('/admin/judging/tables').'?action=assign&filter=judges">judge</a> or <a href="'.url('/admin/judging/tables').'?action=assign&filter=stewards">steward</a>. This builds a pool of available participants to assign to various duties in the competition.</p>',
+                '<p>Once assignments have been given, the next steps are to:</p>',
+                '<ol>',
+                '<li><a href="'.url('/admin/judging/tables').'">Define tables</a> where specific sub-styles will be judged.</li>',
+                '<li>Add flights to tables (if queued judging is disabled).</li>',
+                '<li>Assign <a href="'.url('/admin/judging/flights').'?action=assign&filter=rounds">tables to rounds</a>.</li>',
+                '<li>Assign judges and stewards to tables (and flights, if applicable).</li>',
+                '</ol>',
+            ]),
+        ];
+
         return view('admin.dashboard', [
+            'helpHtml' => $helpHtml,
             'left' => $sections['left'],
             'right' => $sections['right'],
             'status' => $this->status($ctx, $windows, $now),
@@ -226,12 +240,16 @@ final class DashboardController extends Controller
         if ($level0) {
             array_push(
                 $participantLinks,
-                $l('/admin/judging/flights', 'Assign/Unassign Judges'),
-                $l('/admin/judging/flights', 'Assign/Unassign Stewards'),
-                $l('/admin/judging/locations?action=assign&filter=staff', 'Assign/Unassign Staff'),
+                $l('/admin/judging/tables?action=assign&filter=judges', 'Assign/Unassign Judges'),
+                $l('/admin/judging/tables?action=assign&filter=stewards', 'Assign/Unassign Stewards'),
+                $l('/admin/judging/tables?action=assign&filter=staff', 'Assign/Unassign Staff'),
             );
         } else {
-            array_push($participantLinks, $l('/admin/judging/flights', 'Assign/Unassign Judges'), $l('/admin/judging/flights', 'Assign/Unassign Stewards'));
+            array_push(
+                $participantLinks,
+                $l('/admin/judging/tables?action=assign&filter=judges', 'Assign/Unassign Judges'),
+                $l('/admin/judging/tables?action=assign&filter=stewards', 'Assign/Unassign Stewards'),
+            );
         }
         $entriesItems[] = ['Participants', $participantLinks];
         $entriesItems[] = ['Register', [
@@ -338,16 +356,16 @@ final class DashboardController extends Controller
         // Organizing.
         $orgItems = [
             ['Assign/Unassign', [
-                $l('/admin/judging/flights', 'Judges'),
-                $l('/admin/judging/flights', 'Stewards'),
-                $l('/admin/judging/flights', 'Staff'),
+                $l('/admin/judging/tables?action=assign&filter=judges', 'Judges'),
+                $l('/admin/judging/tables?action=assign&filter=stewards', 'Stewards'),
+                $l('/admin/judging/tables?action=assign&filter=staff', 'Staff'),
             ]],
             ['Tables', array_merge(
-                [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables?action=add', 'Add')],
-                $tables > 1 ? [$l('/admin/judging/flights', 'Assign Judges/Stewards')] : [],
+                [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
+                $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
             )],
             ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights', 'Add')]],
-            ['BOS Judges', [$l('/admin/judging/bos', 'Add')]],
+            ['BOS Judges', [$l('/admin/judging/tables?action=assign&filter=bos', 'Add')]],
         ];
         $left[] = ['Organizing', 'fa-tasks',
             'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
@@ -369,6 +387,15 @@ final class DashboardController extends Controller
             $scoreLinks[] = $todo('Import Scores', 'import_scores.eval.php modal');
         }
         $scoreItems[] = ['Scores', $scoreLinks];
+        // "Add Scores to..." dropdown (legacy score_table_choose,
+        // lib/admin.lib.php:445): per-table add/edit link.
+        $scoreAddItems = DB::table('judging_tables')->orderBy('tableNumber')
+            ->get(['id', 'tableNumber', 'tableName'])
+            ->map(fn ($t) => $l('/admin/judging/scores?action=add&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))
+            ->all();
+        if ($scoreAddItems !== []) {
+            $scoreItems[] = ['Add Scores to...', $scoreAddItems];
+        }
         if ($level0 || $obfuscate === 0) {
             $scoreItems[] = ['BOS Entries and Places', [$l('/admin/judging/bos', 'Manage')]];
         }
