@@ -484,7 +484,10 @@
                             <input class="radio" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
-                        {{-- TODO: legacy send_test_email.admin.php fires a test email via AJAX on save; that handler is not ported (out of scope). --}}
+                        {{-- Legacy sends the test email directly from
+                             send_test_email.admin.php (fancybox iframe);
+                             ported as SendTestEmailController. --}}
+                        <a data-fancybox data-type="iframe" class="modal-window-link hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Email Preferences</button>

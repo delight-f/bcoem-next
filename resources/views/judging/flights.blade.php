@@ -15,7 +15,7 @@
                     <ul class="dropdown-menu">
                         @foreach ($tables as $t)
                             <li class="small"><a class="dropdown-item"
-                                 href="{{ route('admin.judging.flights.show', ['id' => $t->id]) }}">Table {{ $t->tableNumber }}: {{ $t->tableName }}</a></li>
+                                 href="{{ route('admin.judging.flights.show', ['id' => $t->id]) }}?filter=define">Table {{ $t->tableNumber }}: {{ $t->tableName }}</a></li>
                         @endforeach
                     </ul>
                 </div>

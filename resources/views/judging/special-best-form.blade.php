@@ -2,6 +2,7 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="container mt-6 mb-4">
         <h1>Custom Categories: {{ $isEdit ? 'Edit' : 'Add' }} a Custom Category</h1>
+        <p class="mt-2"><a class="btn btn-outline btn-secondary btn-sm" href="{{ url('/admin/judging/special-best/create') }}"><span class="fa fa-plus-circle"></span> Add a Custom Category</a></p>
 
         @if ($errors->any())
             <div class="alert alert-error">

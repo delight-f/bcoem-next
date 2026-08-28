@@ -295,7 +295,14 @@
                                 <a href="{{ url('/backoffice/entries?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries.">Entry Numbers</a>: {{ $entryNumbers[$p->uid] ?? '' }}<br>Judging Numbers: {{ $judgingNumbers[$p->uid] ?? '' }}
                             </td>
                             <td class="print:hidden">
-                                <a class="hide-loader" href="{{ url('/backoffice/entries?bid='.$p->uid) }}" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries."><span class="fa fa-lg fa-beer"></span></a>
+                                {{-- Legacy with_entries row (participants.admin.php): full action
+                                     icon set — edit account, delete account, edit user level,
+                                     add entry, list entries. --}}
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account information."><span class="fa fa-lg fa-pencil"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Delete {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account." data-confirm="Are you sure you want to delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone."><span class="fa fa-lg fa-trash-o"></span></a></span>
+                                <span style="margin-right: .4em"><a href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}"><span class="fa fa-lg fa-beer"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/entries?bid='.$p->uid) }}" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries."><span class="fa fa-lg fa-list"></span></a></span>
                             </td>
                         </tr>
                     @else

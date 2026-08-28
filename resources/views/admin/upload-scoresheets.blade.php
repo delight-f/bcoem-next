@@ -11,6 +11,8 @@
              plain multi-file input; legacy's Dropzone drag-and-drop has no
              port dependency, so it is kept as-is (no JS added for dropzone
              parity). --}}
+        <p class="lead">The <a href="{{ url('/admin/upload-scoresheets?action=html') }}">single file upload function</a> is also available as an alternative to this multiple file uploader.</p>
+
         <p>For entrants to be able to view their scoresheets, each PDF should:</p>
         <ul style="margin-bottom: 30px;" class="list-disc">
             <li>Contain all judges' scoresheets and other documentation (cover sheet, etc.) in <strong>a single file</strong>.</li>

@@ -72,6 +72,7 @@ final class LegacyRedirectController extends Controller
         'admin|contest_info|' => ['/admin/competition-info'],
         'admin|brewer|edit' => ['/backoffice/participants', ['filter', 'id'], 301],
         'admin|contacts|' => ['/admin/contacts'],
+        'admin|mods|add' => ['/admin/mods/create'],
         'admin|contacts|add' => ['/admin/contacts/create'],
         'admin|special_best|' => ['/admin/judging/special-best'],
         'admin|special_best|add' => ['/admin/judging/special-best/create'],
@@ -95,8 +96,8 @@ final class LegacyRedirectController extends Controller
 
         // ── Admin — entries & participants ──
         'admin|entries|' => ['/backoffice/entries'],
-        'admin|count_by_style|' => ['/backoffice/count-by-style'],
-        'admin|count_by_substyle|' => ['/backoffice/count-by-substyle'],
+        'admin|count_by_style|' => ['/backoffice/count-by-style', ['filter'], 301],
+        'admin|count_by_substyle|' => ['/backoffice/count-by-substyle', ['filter'], 301],
         'admin|payments|' => ['/admin/payments'],
         'admin|participants|' => ['/backoffice/participants', ['filter']],
         'admin|checkin|' => ['/admin/judging/checkin', ['filter'], 301],
@@ -108,7 +109,6 @@ final class LegacyRedirectController extends Controller
         'admin|judging_tables|assign' => ['/admin/judging/tables', ['action', 'filter', 'id'], 301],
         'admin|judging_flights|' => ['/admin/judging/flights'],
         'admin|judging_flights|assign' => ['/admin/judging/flights', ['action', 'filter'], 301],
-        'admin|judging_flights|edit' => ['/admin/judging/flights', ['action', 'filter', 'id'], 301],
         'admin|judging_preferences|' => ['/admin/judging/preferences'],
         'admin|judging_scores|' => ['/admin/judging/scores'],
         'admin|judging_scores|add' => ['/admin/judging/scores', ['action'], 301],
@@ -279,6 +279,24 @@ final class LegacyRedirectController extends Controller
             // add-form (legacy score_table_choose add-vs-edit).
             if ($section === 'admin' && $go === 'judging_scores' && $action === 'add' && $id !== '') {
                 return ['/admin/judging/scores', ['action', 'id'], 301];
+            }
+            // ?section=brew&go=entries&action=add&id=N -> the brew form
+            // seeded for participant N (port's canonical filter param —
+            // legacy 'id' becomes 'filter'; built literally so redirect()
+            // doesn't re-append the original id).
+            if ($section === 'brew' && $go === 'entries' && $action === 'add' && $id !== '') {
+                return ['/brew?filter='.$id, [], 301];
+            }
+            // ?section=admin&go=contacts&action=edit&id=N -> edit that
+            // contact (legacy contacts row pencil).
+            if ($section === 'admin' && $go === 'contacts' && $action === 'edit' && $id !== '') {
+                return ["/admin/contacts/{$id}/edit", [], 301];
+            }
+            // ?section=admin&go=judging_flights&filter=define&action=edit
+            // &id=N -> the table's define-flights form.
+            $filter = (string) $request->query('filter', '');
+            if ($section === 'admin' && $go === 'judging_flights' && $action === 'edit' && $filter === 'define') {
+                return ["/admin/judging/flights/{$id}", ['filter'], 301];
             }
         }
 

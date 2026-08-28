@@ -36,9 +36,31 @@
                     <a class="btn btn-primary" href="{{ url('/eval') }}"><i class="fa fa-gavel me-2"></i>{{ __('site.judging_dashboard') }}</a>
                 @endif
             </div>
+
+            {{-- Legacy brewer_info.sec.php:445 — judge scoresheet-label row
+                 (Avery 5160 / Avery 3422) renders when the viewer is a
+                 judge. --}}
+            @if (($info['brewer']->brewerJudge ?? '') === 'Y')
+                <div class="bcoem-account-info d-print-none"><strong>&nbsp;</strong>
+                    <div>Print your judging scoresheet labels
+                        <a class="hide-loader" href="{{ route('outputs.labels', ['action' => 'judging_labels', 'go' => 'participants', 'id' => $info['brewer']->id, 'psort' => 5160]) }}" data-toggle="tooltip" title="Avery 5160">Letter</a>
+                        <a class="hide-loader" href="{{ route('outputs.labels', ['action' => 'judging_labels', 'go' => 'participants', 'id' => $info['brewer']->id, 'psort' => 3422]) }}" data-toggle="tooltip" title="Avery 3422">A4</a>
+                    </div>
+                </div>
+            @endif
             @include('public.partials.glance', ['cards' => $glance, 'stacked' => true])
         </div>
     </div>
+
+    {{-- Legacy mobile-only sticky button stack (brewer_entries.pub.php):
+         d-md-none grid; the Add Entry href always carries the brewer id. --}}
+    <section class="mb-3 d-block d-sm-block d-md-none">
+        <div class="d-grid gap-2 mb-5 d-print-none">
+            <a class="btn btn-primary {{ $windows->entry === App\Support\Tenant\WindowState::Before ? 'disabled' : '' }}" href="{{ url('/brew?filter='.$info['brewer']->id) }}"><i class="fa fa-plus-circle me-2"></i>Add Entry</a>
+            <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees"><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
+            <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>Edit Account</a>
+        </div>
+    </section>
 
     <section id="entries" class="pb-4">
         <h2>{{ __('site.entries') }}</h2>

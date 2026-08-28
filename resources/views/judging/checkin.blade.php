@@ -3,6 +3,7 @@
     :show-hero="false"
 >
     <section class="landing-page-section mt-6 mb-4">
+            <div class="bcoem-admin-element mb-4"><a href="{{ url('/admin/judging/checkin?filter=box-paid') }}" class="btn btn-xs btn-primary">Switch View to Entry/Judging Numbers, Box, and Paid Entries</a></div>
         <h1>{{ $ctx->contestStr('contestName') }}: Check-In Entries with a Barcode Reader/Scanner</h1>
 
         @if (request('ok') !== null)

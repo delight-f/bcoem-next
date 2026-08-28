@@ -3,6 +3,15 @@
     <section class="container mt-6 mb-4">
         <h1>{{ $nonJudging ? 'Non-Judging Sessions' : 'Judging Sessions' }}: {{ $isEdit ? 'Edit' : 'Add' }} a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</h1>
 
+        {{-- Legacy control row (judging_locations.admin.php:229-236):
+            back-to-sessions plus (edit view) the add-session shortcut. --}}
+        <div class="mb-4 flex flex-wrap gap-2">
+            <a class="btn btn-secondary" href="{{ route('admin.judging.locations.index') }}"><span class="fa fa-arrow-circle-left"></span> All Judging Sessions</a>
+            @if ($isEdit)
+                <a class="btn btn-outline btn-secondary" href="{{ route('admin.judging.locations.create') }}"><span class="fa fa-plus-circle"></span> Add a Judging Session</a>
+            @endif
+        </div>
+
         @if ($errors->any())
             <div class="alert alert-error">
                 <ul class="mb-0">

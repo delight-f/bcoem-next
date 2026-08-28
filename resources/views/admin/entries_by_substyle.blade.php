@@ -7,7 +7,7 @@
         @if ($filter === 'no_zeros')
             <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-substyle') }}">Show Sub-Styles with Zero Entries</a>
         @else
-            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-substyle', ['filter' => 'no_zeros']) }}">Hide Sub-Styles with Zero Entries</a>
+            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-substyle?filter=no_zeros') }}">Hide Sub-Styles with Zero Entries</a>
         @endif
 
         <h3>Breakdown By Sub-Style</h3>

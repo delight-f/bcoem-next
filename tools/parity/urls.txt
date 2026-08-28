@@ -19,6 +19,8 @@ admin|index.php?section=admin|/admin
 admin|index.php?section=admin&go=dates|/admin/dates
 admin|index.php?section=admin&go=contest_info&action=edit|/admin/competition-info
 admin|index.php?section=admin&go=contacts|/admin/contacts
+admin|index.php?section=admin&go=contacts&action=edit&id=1|/admin/contacts/1/edit
+admin|includes/process.inc.php?section=admin&go=contacts&dbTable=contacts&action=delete&id=1|/admin/contacts/1
 admin|index.php?section=admin&go=contacts&action=add|/admin/contacts/create
 admin|index.php?section=admin&go=special_best|/admin/judging/special-best
 admin|index.php?section=admin&go=dropoff|/admin/dropoff
@@ -28,14 +30,14 @@ admin|includes/process.inc.php?section=admin&go=judging&dbTable=judging_location
 admin|index.php?section=admin&go=non-judging|/admin/judging/non-judging
 admin|index.php?section=admin&go=sponsors|/admin/sponsors
 admin|index.php?section=admin&go=styles|/admin/styles
+admin|index.php?section=admin&go=style_types&action=add|/admin/style-types/create
 admin|index.php?section=admin&go=style_types|/admin/style-types
 admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
 admin|index.php?section=admin&go=hero_images|/admin/hero-images
 admin|index.php?section=admin&go=mods|/admin/mods
+admin|index.php?section=admin&go=mods&action=add|/admin/mods/create
 # ── Admin — entries & participants ──
 admin|index.php?section=admin&go=entries|/backoffice/entries
-admin|index.php?section=admin&go=count_by_style|/backoffice/count-by-style
-admin|index.php?section=admin&go=count_by_substyle|/backoffice/count-by-substyle
 admin|index.php?section=admin&go=payments|/admin/payments
 admin|index.php?section=admin&go=participants|/backoffice/participants
 admin|index.php?section=admin&go=participants&filter=judges|/backoffice/participants?filter=judges
@@ -44,8 +46,8 @@ admin|index.php?section=admin&go=checkin|/admin/judging/checkin
 admin|index.php?section=admin&go=send_test_email|/admin/send-test-email
 # ── Admin — organizing & scoring ──
 admin|index.php?section=admin&go=judging_tables|/admin/judging/tables
-admin|index.php?section=admin&go=judging_tables&dbTable=default|/admin/judging/tables
 admin|index.php?section=admin&go=judging_flights|/admin/judging/flights
+admin|index.php?section=admin&go=judging_flights&filter=define&action=edit&id=1|/admin/judging/flights/1?filter=define
 admin|index.php?section=admin&go=judging_preferences|/admin/judging/preferences
 admin|index.php?section=admin&go=judging_scores|/admin/judging/scores
 admin|index.php?section=admin&go=judging_scores_bos|/admin/judging/bos
@@ -547,7 +549,6 @@ admin|index.php?section=admin&go=judging&action=assign&filter=staff&view=yes|/ad
 admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?action=assign&filter=judges
 admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?action=assign&filter=stewards
 admin|index.php?section=admin&go=judging_tables&action=assign|/admin/judging/tables?action=assign
-admin|index.php?section=admin&go=upload|/admin/upload
 admin|index.php?section=admin&go=archive&action=add|/admin/archive?action=add
 admin|index.php?section=brewer&go=account&action=edit|/list/edit-account
 admin|index.php?section=user&go=account&action=username|/list/edit-account
@@ -641,7 +642,10 @@ admin|includes/output.inc.php?section=staff&go=judging_assignments&action=downlo
 admin|includes/output.inc.php?section=export-staff&go=judging_assignments&action=download&filter=default&view=pdf|/admin/output/assignments?filter=stewards
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff|/admin/output/assignments?filter=staff
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff&view=name|/admin/output/assignments?filter=staff&view=name
-admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges|/admin/output/assignments?filter=judges
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name&tb=view|/admin/output/assignments?filter=judges&view=name&tb=view
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=table&tb=view|/admin/output/assignments?filter=judges&view=table&tb=view
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=name&tb=view|/admin/output/assignments?filter=stewards&view=name&tb=view
+admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=stewards&view=table&tb=view|/admin/output/assignments?filter=stewards&view=table&tb=view
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name|/admin/output/assignments?filter=judges&view=name
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=table|/admin/output/assignments?filter=judges&view=table
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=sign-in|/admin/output/assignments?filter=judges&view=sign-in
@@ -699,9 +703,6 @@ admin|includes/process.inc.php?section=admin&go=entries&filter=default&dbTable=b
 admin|includes/output.inc.php?section=entry-form-multi&action=print&id=1&bid=3&filter=admin|/admin/output/entry?bid=3&filter=admin&id=1
 admin|includes/output.inc.php?section=entry-form-multi&action=print&id=2&bid=3&filter=admin|/admin/output/entry?bid=3&filter=admin&id=2
 admin|includes/output.inc.php?section=entry-form-multi&action=print&id=3&bid=5&filter=admin|/admin/output/entry?bid=5&filter=admin&id=3
-admin|index.php?section=admin&go=entries&filter=21|/backoffice/entries?filter=21
-admin|index.php?section=admin&go=entries&filter=15|/backoffice/entries?filter=15
-admin|index.php?section=admin&go=entries&filter=02|/backoffice/entries?filter=02
 admin|index.php?section=admin&go=entries&bid=3|/backoffice/entries?bid=3
 admin|index.php?section=admin&go=entries&bid=5|/backoffice/entries?bid=5
 admin|includes/output.inc.php?section=admin&go=entries&action=print&psort=entry_number|/admin/output/entries_print?psort=entry_number
@@ -726,7 +727,6 @@ admin|includes/process.inc.php?action=purge&go=unpaid|/backoffice/entries/mark-a
 admin|includes/process.inc.php?action=purge&go=unconfirmed|/backoffice/entries/mark-all
 # Judging tables page: assign/flight row actions, per-table assign links,
 # assignments tb=view variants.
-admin|index.php?section=admin&go=judging_flights&filter=define&action=edit&id=1|/admin/judging/flights?action=edit&filter=define&id=1
 admin|index.php?section=admin&action=assign&go=judging_tables&filter=judges&id=1|/admin/judging/tables?action=assign&filter=judges&id=1
 admin|index.php?section=admin&action=assign&go=judging_tables&filter=stewards&id=1|/admin/judging/tables?action=assign&filter=stewards&id=1
 admin|index.php?section=admin&go=judging_tables&action=edit&id=1|/admin/judging/tables/1/edit
@@ -755,3 +755,23 @@ admin|images/label_anon_large_number_barcode.png|/images/label_anon_large_number
 admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_id|/admin/output/participant_summary?filter=judges&psort=judge_id
 admin|includes/output.inc.php?section=admin&go=participants&filter=judges&action=print&view=default&psort=judge_rank|/admin/output/participant_summary?filter=judges&psort=judge_rank
 admin|includes/output.inc.php?section=admin&go=participants&filter=stewards&action=print&view=default|/admin/output/participant_summary?filter=stewards&psort=brewer_name
+admin|index.php?section=admin&go=entries&filter=02|/backoffice/entries?filter=02
+admin|index.php?section=admin&go=entries&filter=15|/backoffice/entries?filter=15
+admin|index.php?section=admin&go=entries&filter=21|/backoffice/entries?filter=21
+admin|index.php?section=admin&go=count_by_style|/backoffice/count-by-style
+admin|index.php?section=admin&go=count_by_substyle|/backoffice/count-by-substyle
+admin|index.php?section=admin&go=upload|/admin/upload
+admin|index.php?section=admin&go=upload&action=html|/admin/upload?action=html
+admin|index.php?section=admin&go=judging_tables&dbTable=default|/admin/judging/tables
+admin|index.php?section=admin&action=assign&go=judging_tables&filter=judges&id=1|/admin/judging/tables?action=assign&filter=judges&id=1
+admin|index.php?section=admin&action=assign&go=judging_tables&filter=stewards&id=1|/admin/judging/tables?action=assign&filter=stewards&id=1
+admin|includes/output.inc.php?section=admin&go=participants&action=print&view=default&filter=with_entries|/admin/output/participants?filter=with_entries&view=default
+admin|qr.php|/admin/judging/checkin
+admin|user_images/sample_logo.png|/user_images/sample_logo.png
+admin|includes/process.inc.php?action=delete&go=image&filter=sample_logo.png&view=default|/admin/upload/delete?action=delete&filter=sample_logo.png&go=image&view=default
+admin|index.php?section=brew&go=entries&action=add&id=1|/brew?filter=1
+admin|includes/process.inc.php?section=admin&go=entries&filter=02&dbTable=brewing&action=delete&id=2|/backoffice/entries/2
+admin|index.php?section=admin&go=count_by_style&filter=no_zeros|/backoffice/count-by-style?filter=no_zeros
+admin|index.php?section=admin&go=count_by_substyle&filter=no_zeros|/backoffice/count-by-substyle?filter=no_zeros
+admin|/admin/send_test_email.admin.php?csrf=4210adcd54d604a94490cdc849fa886515f2158bb111c9088ed53056aef310d9|/admin/send-test-email
+admin|includes/process.inc.php?section=admin&go=entries&filter=21&dbTable=brewing&action=delete&id=1|/backoffice/entries/1

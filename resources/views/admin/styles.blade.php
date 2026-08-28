@@ -108,6 +108,7 @@
                                 <option value="{{ $type->id }}" @selected((string) ($row->brewStyleType ?? '') === (string) $type->id)>{{ $type->styleTypeName }}</option>
                             @endforeach
                         </select>
+                        <span class="help-block"><a class="btn btn-sm btn-primary" href="{{ url('/admin/style-types/create') }}"><span class="fa fa-plus-circle"></span> Add a Style Type</a></span>
                     </div>
                 </div>
                 @foreach ([

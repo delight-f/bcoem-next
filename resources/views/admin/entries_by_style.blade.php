@@ -7,7 +7,7 @@
         @if ($filter === 'no_zeros')
             <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-style') }}">Show Categories with Zero Entries</a>
         @else
-            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-style', ['filter' => 'no_zeros']) }}">Hide Categories with Zero Entries</a>
+            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-style?filter=no_zeros') }}">Hide Categories with Zero Entries</a>
         @endif
 
         @if ($rows->isNotEmpty())
