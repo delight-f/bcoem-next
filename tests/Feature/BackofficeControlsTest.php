@@ -178,10 +178,11 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
             // Participant jump select.
             ->assertSee('Add an Entry For...')
             ->assertSee('Entrant, P56')
-            // Print dropdowns stay disabled links (TODO: legacy output).
+            // Print dropdowns link the ported entries print view
+            // (outputs entries_print: 5 psort orders, all view modes).
             ->assertSee('Print Current View...')
             ->assertSee('By Entry Number')
-            ->assertSee('aria-disabled="true"', false)
+            ->assertSee('entries_print', false)
             // Admin Actions dropdown.
             ->assertSee('Admin Actions')
             ->assertSee('Mark All as Paid')

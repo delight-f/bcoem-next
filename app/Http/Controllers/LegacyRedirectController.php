@@ -79,7 +79,7 @@ final class LegacyRedirectController extends Controller
         'admin|dropoff|add' => ['/admin/dropoff/create'],
         'admin|judging|' => ['/admin/judging/locations'],
         
-        'admin|judging|add' => ['/admin/judging/locations', ['action'], 301],
+        'admin|judging|add' => ['/admin/judging/locations/create'],
         'admin|non-judging|' => ['/admin/judging/non-judging'],
         'admin|non-judging|add' => ['/admin/judging/non-judging/create'],
         'admin|sponsors|' => ['/admin/sponsors'],
@@ -270,6 +270,16 @@ final class LegacyRedirectController extends Controller
             if ($section === 'admin' && $go === 'judging_tables' && $action === 'edit') {
                 return ["/admin/judging/tables/{$id}/edit", [], 301];
             }
+            // ?section=admin&go=judging&action=edit&id=N -> edit that
+            // location (legacy judging_locations.admin.php row pencil).
+            if ($section === 'admin' && $go === 'judging' && $action === 'edit' && $id !== '') {
+                return ["/admin/judging/locations/{$id}/edit", [], 301];
+            }
+            // ?section=admin&go=judging_scores&action=add&id=N -> scores
+            // add-form (legacy score_table_choose add-vs-edit).
+            if ($section === 'admin' && $go === 'judging_scores' && $action === 'add' && $id !== '') {
+                return ['/admin/judging/scores', ['action', 'id'], 301];
+            }
         }
 
         if ($id === '' || ! ctype_digit($id)) {
@@ -277,6 +287,16 @@ final class LegacyRedirectController extends Controller
             // filters — the port's assign UI lives on the tables page).
             if ($section === 'admin' && $go === 'judging' && $action === 'assign') {
                 return ['/admin/judging/tables', ['action', 'filter', 'view'], 301];
+            }
+            // judging_flights assign rounds -> the rounds page.
+            $f = (string) $request->query('filter', '');
+            if ($section === 'admin' && $go === 'judging_flights' && $action === 'assign' && $f === 'rounds') {
+                return ['/admin/judging/flights/rounds', [], 301];
+            }
+            // ?section=admin&go=judging_scores_bos&action=enter&filter=N
+            // -> edit the BOS places form for style type N.
+            if ($section === 'admin' && $go === 'judging_scores_bos' && $action === 'enter' && $f !== '') {
+                return ["/admin/judging/bos/{$f}/edit", [], 301];
             }
         }
 
