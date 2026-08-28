@@ -23,12 +23,24 @@
         'admin.send_test_email.show' => 'Send Test Email',
     ];
     $adminPageTitle = null;
-    if ($isAdminSide && str_starts_with((string) $adminRouteName, 'admin.') && $adminRouteName !== 'admin.dashboard') {
-        $suffix = $adminTitleMap[$adminRouteName] ?? null;
-        if ($suffix !== null) {
-            $adminPageTitle = 'Administration: ' . $suffix;
-        }
+    // Admin off-canvas nav (legacy sections/nav.sec.php) conditions: full-menu
+    // sections need userLevel==0, reporting rows need userAdminObfuscate==0,
+    // BOS/results rows need judging started, eval row needs prefsEval==1.
+    $adminNavLevel0 = auth()->check() && (int) auth()->user()->userLevel === 0;
+    $adminNavObfuscate = auth()->check() ? (int) (auth()->user()->userAdminObfuscate ?? 0) : 0;
+    $adminNavJudgingStarted = false;
+    if ($isAdminSide && auth()->check()) {
+        $adminNavWindows = \App\Support\Tenant\Windows::derive($ctx, time());
+        $adminNavJudgingStarted = $adminNavWindows->firstJudgingDate !== null && time() > $adminNavWindows->firstJudgingDate;
     }
+    // nav.sec.php:223-231 — Scoring rows need userLevel==0 OR userAdminObfuscate==0;
+    // the eval row additionally needs prefsEval==1.
+    $adminNavScoring = $adminNavLevel0 || $adminNavObfuscate === 0;
+    $adminNavEval = (int) $ctx->prefsStr('prefsEval') === 1;
+    // nav.sec.php:201-207 — barcode/QR checkin rows need userAdminObfuscate==0 AND
+    // prefsEntryForm in barcode_qrcode_array (constants.inc.php:560 = every form id).
+    $adminNavBarcode = $adminNavObfuscate === 0
+        && in_array((string) $ctx->prefsStr('prefsEntryForm'), ['0', '2', 'N', 'C', '3', '4', '5', '6', '1'], true);
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-theme="bcoem-brux" @endif>
 <head>
@@ -109,6 +121,9 @@
                                 <li role="separator" class="divider"></li>
                                 <li><a href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
                                 <li><a href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
+                                <li><a href="{{ url('/list') }}#entries" tabindex="-1">{{ __('site.entries') }}</a></li>
+                                <li><a href="{{ url('/user/password') }}" tabindex="-1">{{ __('site.change_password') }}</a></li>
+                                <li><a href="{{ url('/pay') }}" tabindex="-1">{{ __('site.pay') }}</a></li>
                                 <li role="separator" class="divider"></li>
                                 <li>
                                     <form method="post" action="{{ route('logout') }}">
@@ -148,7 +163,7 @@
                     <li><a href="{{ url('/admin/sponsors') }}">Manage Sponsors</a></li>
                     <li><a href="{{ url('/admin/styles') }}">Manage Styles Accepted</a></li>
                     <li><a href="{{ url('/admin/style-types') }}">Manage Style Types</a></li>
-                    <li><a href="{{ url('/admin/hero-images') }}">Upload Logo Images</a></li>
+                    <li><a href="{{ url('/admin/upload') }}">Upload Logo Images</a></li>
                 </ul>
             </li>
             <li class="dropdown">
@@ -161,8 +176,8 @@
                         <li><a href="{{ url('/admin/payments') }}">Manage Payments</a></li>
                     @endif
                     <li><a href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
-                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=judges">Assign Judges</a></li>
-                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=stewards">Assign Stewards</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Assign Judges</a></li>
+                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Assign Stewards</a></li>
                     <li><a href="{{ url('/register/judge') }}?view=quick">Quick Register a Judge</a></li>
                     <li><a href="{{ url('/register/steward') }}?view=quick">Quick Register Steward</a></li>
                 </ul>
@@ -171,7 +186,10 @@
                 <a href="#" class="dropdown-toggle" role="button">Sorting <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/backoffice/entries') }}">Manually</a></li>
-                    <li><a href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
+                    @if ($adminNavBarcode)
+                        <li><a href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
+                        <li><a class="hide-loader" href="{{ url('/admin/judging/checkin') }}" target="_blank">Entry Check-in Via Mobile Devices <span class="fa fa-external-link"></span></a></li>
+                    @endif
                 </ul>
             </li>
             <li class="dropdown">
@@ -179,29 +197,42 @@
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
                     <li><a href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
+                    <li><a class="disabled" aria-disabled="true" title="TODO: legacy output — index.php?section=admin&amp;action=assign&amp;go=judging&amp;filter=bos">Add BOS Judges</a></li>
                 </ul>
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Scoring <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/judging/locations') }}?action=assign&filter=bos">Add BOS Judges</a></li>
                     <li><a href="{{ url('/admin/upload-scoresheets') }}">Upload Scoresheets</a></li>
-                    <li><a href="{{ url('/eval') }}">Manage Entry Evaluations</a></li>
-                    <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
-                    <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
+                    @if ($adminNavScoring)
+                        @if ($adminNavEval)
+                            <li><a href="{{ url('/eval') }}">Manage Entry Evaluations</a></li>
+                        @endif
+                        <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
+                        <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
+                    @endif
                 </ul>
             </li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Reports <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/judging/tables') }}?id=default">Table Cards</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?view=entry&id=default">Pullsheets - Entry Numbers</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?id=default">Pullsheets - Judging Numbers</a></li>
-                    <li><a href="{{ url('/admin/judging/bos') }}">BOS Pullsheets</a></li>
-                    <li><a href="{{ url('/admin/judging/scores') }}?action=print&filter=score">Winners with Scores</a></li>
-                    <li><a href="{{ url('/admin/judging/scores') }}?action=print&filter=none">Winners without Scores</a></li>
+                    <li><a href="{{ url('/admin/output/table_cards') }}?id=default">Table Cards</a></li>
+                    @if ($adminNavObfuscate === 0)
+                        <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default&view=entry">Pullsheets - Entry Numbers</a></li>
+                        <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default">Pullsheets - Judging Numbers</a></li>
+                        @if ($adminNavJudgingStarted)
+                            <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_scores_bos">BOS Pullsheets</a></li>
+                            <li><a href="{{ url('/admin/output/bos_mat') }}">BOS Cup Mats - Judging Numbers</a></li>
+                            <li><a href="{{ url('/admin/output/bos_mat') }}?filter=entry">BOS Cup Mats - Entry Numbers</a></li>
+                        @endif
+                    @endif
+                    @if ($adminNavJudgingStarted)
+                        <li><a href="{{ url('/admin/output/results') }}?action=print&filter=scores&go=judging_scores&view=winners">Winners with Scores</a></li>
+                        <li><a href="{{ url('/admin/output/results') }}?action=print&filter=none&go=judging_scores&view=winners">Winners without Scores</a></li>
+                    @endif
                 </ul>
             </li>
+            @if ($adminNavLevel0)
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" role="button">Data Management <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
@@ -213,9 +244,15 @@
                 <a href="#" class="dropdown-toggle" role="button">Preferences <span class="caret"></span></a>
                 <ul class="dropdown-menu navmenu-nav">
                     <li><a href="{{ url('/admin/site-preferences') }}">General</a></li>
+                    <li><a href="{{ url('/admin/site-preferences/entries') }}">Entry</a></li>
+                    <li><a href="{{ url('/admin/site-preferences/email') }}">Email Sending</a></li>
+                    <li><a href="{{ url('/admin/site-preferences/payment') }}">Currency and Payment</a></li>
+                    <li><a href="{{ url('/admin/site-preferences/best') }}">Best Brewer and/or Club</a></li>
                     <li><a href="{{ url('/admin/judging/preferences') }}">Judging/Competition Organization</a></li>
                 </ul>
             </li>
+            @endif
+            <li><a class="hide-loader" href="https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues" target="_blank">Report an Issue</a>
         </ul>
     </div>
 @else
