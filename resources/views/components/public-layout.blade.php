@@ -282,7 +282,7 @@
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#entry-info' : url('/').'#entry-info' }}">{{ __('site.entry_info') }}</a>
                     @endif
                     @if ($sponsorsVisible ?? false)
-                        <a class="nav-item nav-link" href="{{ $onLanding ? '#sponsors' : url('/').'#sponsors' }}">{{ __('site.sponsors') }}</a>
+                        <a class="nav-item nav-link" href="{{ $onLanding ? '#sponsors' : url('/sponsors') }}">{{ __('site.sponsors') }}</a>
                     @endif
                     <a class="nav-item nav-link" href="{{ $onLanding ? '#contact' : url('/').'#contact' }}">{{ __('site.contact') }}</a>
 

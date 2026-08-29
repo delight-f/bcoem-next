@@ -34,6 +34,7 @@ Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->
 // POST (legacy includes/process.inc.php?dbTable=contacts&action=email).
 Route::get('/volunteers', [PublicController::class, 'volunteers'])->name('volunteers');
 Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::get('/sponsors', [PublicController::class, 'sponsors'])->name('sponsors');
 Route::post('/contact', [PublicController::class, 'contactStore'])->name('contact.store');
 
 // Auth (Phase 3 / Slice B). Login lives at clean /login (canonical); the

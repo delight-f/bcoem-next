@@ -131,6 +131,16 @@ final class PublicController extends Controller
                 : null,
             'judgingStarted' => $judgingStarted,
             'sponsorsVisible' => $sponsorsVisible,
+            'sponsors' => DB::table('sponsors')->orderBy('id')->get(),
+            'logos' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
+            'logoFor' => static function (object $sponsor): string {
+                $image = (string) $sponsor->sponsorImage;
+                if ($image !== '' && is_file(public_path('user_images/'.$image))) {
+                    return asset('user_images/'.$image);
+                }
+
+                return asset('images/no_image.png');
+            },
             'glance' => $this->glanceCards($ctx, $windows, $langLong, $request->user() !== null),
             'heroImage' => self::heroImage($ctx),
             'salutation' => $salutation,
@@ -252,6 +262,46 @@ final class PublicController extends Controller
             'ctx' => $ctx,
             'mode' => $ctx->prefsStr('prefsContact'),
             'contacts' => DB::table('contacts')->orderBy('id')->get(),
+            'judgingStarted' => $judgingStarted,
+            'sponsorsVisible' => $sponsorsVisible,
+            'futureJudgingSessions' => $windows->futureJudgingSessions,
+            'salutation' => $this->publicSalutation($request, $ctx),
+        ]);
+    }
+
+    /**
+     * Legacy ?section=sponsors (sections/sponsors.sec.php): standalone
+     * sponsors page. Same gate as the landing sponsors section —
+     * prefsSponsors=Y and at least one sponsor row.
+     */
+    public function sponsors(Request $request): View|RedirectResponse
+    {
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $now = time();
+
+        $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
+            && (int) DB::table('sponsors')->count() > 0;
+        if (! $sponsorsVisible) {
+            return redirect('/');
+        }
+
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $logos = $ctx->prefsStr('prefsSponsorLogos') === 'Y';
+        $logoFor = static function (object $sponsor) use ($logos): string {
+            $image = (string) $sponsor->sponsorImage;
+            if ($image !== '' && is_file(public_path('user_images/'.$image))) {
+                return asset('user_images/'.$image);
+            }
+
+            return asset('images/no_image.png');
+        };
+
+        return view('public.sponsors', [
+            'ctx' => $ctx,
+            'sponsors' => DB::table('sponsors')->orderBy('id')->get(),
+            'logos' => $logos,
+            'logoFor' => $logoFor,
             'judgingStarted' => $judgingStarted,
             'sponsorsVisible' => $sponsorsVisible,
             'futureJudgingSessions' => $windows->futureJudgingSessions,

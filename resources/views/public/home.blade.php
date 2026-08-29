@@ -26,6 +26,8 @@
 
     @includeUnless($judgingStarted, 'public.partials.volunteers')
 
+    @includeWhen($sponsorsVisible, 'public.partials.sponsors-landing')
+
     <section id="contact" class="landing-page-section pb-4 print:hidden">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>
         @include('public.partials.contacts')

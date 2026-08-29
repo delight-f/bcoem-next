@@ -323,4 +323,6 @@ return [
     'contact_sent' => 'Additionally, a copy has been sent to the email address you provided.',
     'contact_send_another' => 'Would you like to send another message?',
     'contact_form_required' => 'Not all required fields have been filled out or selected. Required fields that are missing values are indicated with a star.',
+    'visit' => 'Visit',
+    'no_website' => 'No Website',
 ];
