@@ -543,11 +543,11 @@ admin|includes/output.inc.php?go=judging_scores&action=print&view=winners&sectio
 admin|includes/output.inc.php?go=judging_scores_bos&action=print&tb=bos&view=default&section=results|/admin/output/results?action=print&go=judging_scores_bos&tb=bos&view=default
 
 # Admin nav (sections/nav.sec.php) — off-canvas Admin Essentials Menu link mappings.
-admin|index.php?section=admin&go=judging&action=assign&filter=bos|/admin/judging/tables?action=assign&filter=bos
-admin|index.php?section=admin&go=judging&action=assign&filter=staff|/admin/judging/tables?action=assign&filter=staff
-admin|index.php?section=admin&go=judging&action=assign&filter=staff&view=yes|/admin/judging/tables?action=assign&filter=staff&view=yes
-admin|index.php?section=admin&go=judging&action=assign&filter=judges|/admin/judging/tables?action=assign&filter=judges
-admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/admin/judging/tables?action=assign&filter=stewards
+admin|index.php?section=admin&go=judging&action=assign&filter=bos|/backoffice/participants?filter=bos
+admin|index.php?section=admin&go=judging&action=assign&filter=staff|/backoffice/participants?filter=staff
+admin|index.php?section=admin&go=judging&action=assign&filter=staff&view=yes|/backoffice/participants?filter=staff&view=yes
+admin|index.php?section=admin&go=judging&action=assign&filter=judges|/backoffice/participants?filter=judges
+admin|index.php?section=admin&go=judging&action=assign&filter=stewards|/backoffice/participants?filter=stewards
 admin|index.php?section=admin&go=judging_tables&action=assign|/admin/judging/tables?action=assign
 admin|index.php?section=admin&go=archive&action=add|/admin/archive?action=add
 admin|index.php?section=brewer&go=account&action=edit|/list/edit-account

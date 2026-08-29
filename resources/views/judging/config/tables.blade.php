@@ -33,6 +33,28 @@
         <p class="print:hidden">
             <a class="btn btn-primary" href="{{ route('admin.judging.tables.create') }}">Add a Table</a>
         </p>
+
+        {{-- Legacy assign-pool screen cross-nav (judging_locations.admin.php
+             515-561): the ?action=assign URLs redirect here, so this page
+             carries the pool screen's participants/assign-family nav. --}}
+        <div class="bcoem-admin-element hidden-print mb-3">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="fa fa-users"></span> Assign Roles...
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants') }}">All Participants</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=judges') }}">Judges</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=bos') }}">BOS Judges</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=stewards') }}">Stewards</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=staff') }}">Staff</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards&view=sessions') }}">Judging Session List</a></li>
+                </ul>
+            </div>
+        </div>
         {{-- Legacy control set: View... + Print... dropdowns
              (judging_tables.admin.php:777-822). Assignment items map to the
              existing port outputs; the "Not Assigned to a Table" items open

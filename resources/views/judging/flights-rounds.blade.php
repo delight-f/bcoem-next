@@ -40,7 +40,7 @@
                 @php($table = $row['table'])
                 <h4>Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}
                     @if ($row['location'] !== null)
-                        <small><a href="{{ url('/admin/judging/flights') }}?action=edit&filter=define&id={{ $table->id }}" data-toggle="tooltip" data-placement="top" title="Define/Edit the {{ $table->tableName }} Flights"><span class="fa fa-lg fa-pencil-square-o"></span></a></small>
+                        <small><a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-toggle="tooltip" data-placement="top" title="Define/Edit the {{ $table->tableName }} Flights"><span class="fa fa-lg fa-pencil-square-o"></span></a></small>
                     @endif
                 </h4>
                 <p><strong>Location:</strong> {!! $locationLine($row['location']) !!}</p>
