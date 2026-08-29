@@ -638,18 +638,18 @@ final class DashboardController extends Controller
             // Data Management.
             $dataMgmtItems = [];
             $dataMgmtItems[] = ['Integrity', [
-                $todo('Clean-Up Data', 'cleanUp modal'),
+                $l('/admin/purge?flow=cleanup', 'Clean-Up Data'),
             ]];
             $dataMgmtItems[] = ['Entries', [
-                $todo('Confirm All Unconfirmed', 'confirmAll modal'),
-                $todo('Purge All Unconfirmed', 'purgeUnconfirmed modal'),
-                $todo('Purge All Unpaid', 'purgeUnpaid modal'),
+                $l('/admin/purge?flow=confirmed', 'Confirm All Unconfirmed'),
+                $l('/admin/purge?flow=unconfirmed', 'Purge All Unconfirmed'),
+                $l('/admin/purge?flow=unpaid', 'Purge All Unpaid'),
             ]];
             $dataMgmtItems[] = ['Purge', [
-                $l('/admin/purge', 'Entries'),
-                $todo('Payments', 'purgePayments modal'),
-                $todo('Participants', 'purgeParticipants modal'),
-                $todo('Judging Tables', 'purgeTables modal'),
+                $l('/admin/purge?flow=entries', 'Entries'),
+                $l('/admin/purge?flow=payments', 'Payments'),
+                $l('/admin/purge?flow=participants', 'Participants'),
+                $l('/admin/purge?flow=tables', 'Judging Tables'),
             ]];
             $dataMgmtItems[] = ['Archives', [
                 $l('/admin/archive', 'Manage'),

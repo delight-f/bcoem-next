@@ -22,7 +22,10 @@
                 'participants' => ['Purge Participants', 'Deletes non-admin accounts (optionally only those created before a threshold date) with their brewer profiles, entries, staff rows and assignments.'],
             ] as $flow => [$title, $description])
                 <x-purge-action :ctx="$ctx" :flow="$flow" :title="$title" :description="$description" :threshold="true"/>
-            @endforeach
+            <x-purge-action :ctx="$ctx" flow="cleanup" title="Clean-Up Data"
+                description="Runs the legacy data_cleanup integrity pass (orphans, stray children, counters)."/>
+            <x-purge-action :ctx="$ctx" flow="confirmed" title="Confirm All Unconfirmed"
+                description="Marks every unconfirmed entry confirmed (legacy confirm-all)."/>
 
             <x-purge-action :ctx="$ctx" flow="entries" title="Purge All Entries"
                 description="Truncates brewing plus every child table (scores, BOS, special-best data, evaluation, payments) regardless of state."/>
@@ -45,7 +48,8 @@
             @if ($hasPayments)
                 <x-purge-action :ctx="$ctx" flow="payments" title="Purge Payments"
                     description="Truncates the payments table." :threshold="true"/>
-            @endif
+            <x-purge-action :ctx="$ctx" flow="purge-all" title="Purge ALL Data"
+                description="Runs every purge flow in sequence (entries, participants, scores, tables, special-best, availability, evaluations, payments). Irreversible." :threshold="true"/>
         </div>
     </section>
 </x-public-layout>

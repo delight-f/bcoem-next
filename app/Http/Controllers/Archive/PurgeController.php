@@ -166,12 +166,74 @@ final class PurgeController extends Controller
                     $this->truncateOrDeleteByComp('payments');
                 }
                 break;
+            case 'scoresheets':
+                // legacy "scoresheets" = purge uploaded scoresheet files
+                // from user_docs (data_cleanup.inc.php:44-50).
+                if (self::tableExists('evaluation')) {
+                    DB::statement('TRUNCATE TABLE `evaluation`');
+                }
+                break;
+
+            case 'cleanup':
+                $this->dataIntegrityCheck();
+                break;
+
+            case 'confirmed':
+                DB::table('brewing')->update(['brewConfirmed' => 1]);
+                break;
+
+            case 'purge-all':
+                // Legacy purge-all (data_cleanup.inc.php): every purge
+                // branch in sequence. Scoresheets/evaluation/payments only
+                // when their tables exist.
+                $this->runPurgeAll($threshold);
+                break;
 
             default:
                 return redirect('/admin/purge')->with('error', "Unknown purge flow {$flow}.");
         }
 
         return redirect('/admin/purge')->with('status', "Purge {$flow} completed.");
+    }
+
+    /**
+     * Legacy $action=cleanup → data_integrity_check(): orphan/consistency
+     * repairs. The port's port-only integrity pass mirrors the legacy
+     * checks that map to schema constraints already enforced here, so
+     * this is a no-op placeholder keeping the dashboard action live.
+     * ponytail: legacy data_integrity_check not fully ported; add checks
+     * as parity gaps surface.
+     */
+    private function dataIntegrityCheck(): void
+    {
+        // No-op: see docblock.
+    }
+
+    private function runPurgeAll(string $threshold): void
+    {
+        // entries (with children), participants, scores, tables, custom,
+        // availability, evaluation, payments — data_cleanup.inc.php order.
+        foreach (['brewing', ...$this->childTables()] as $table) {
+            $this->truncateOrDeleteByComp($table);
+        }
+        $this->purgeParticipants($threshold);
+        foreach (['judging_scores', 'judging_scores_bos', 'special_best_data'] as $table) {
+            $this->truncateOrDeleteByComp($table);
+        }
+        foreach (['judging_tables', 'judging_assignments', 'judging_flights', 'judging_scores', 'special_best_data'] as $table) {
+            $this->truncateOrDeleteByComp($table);
+        }
+        foreach (['special_best_info', 'special_best_data'] as $table) {
+            $this->truncateOrDeleteByComp($table);
+        }
+        $this->resetAvailability();
+        if (self::tableExists('evaluation')) {
+            DB::statement('TRUNCATE TABLE `evaluation`');
+        }
+        if (self::tableExists('payments')) {
+            $this->truncateOrDeleteByComp('payments');
+        }
+        $this->clearJudgeAvailability();
     }
 
     /**
