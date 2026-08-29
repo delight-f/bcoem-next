@@ -4,7 +4,7 @@
      fallback), text. --}}
 <x-public-layout :ctx="$ctx" :show-hero="false" :salutation="$salutation"
     :judging-started="$judgingStarted" :future-judging-sessions="$futureJudgingSessions"
-    :sponsors-visible="$sponsorsVisible">
+    :sponsors-visible="$sponsorsVisible" :with-sidebar="true">
     <section id="sponsors" class="landing-page-section pb-4">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.sponsors') }}</h1></header>
         <div class="row">

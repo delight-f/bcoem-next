@@ -6,7 +6,7 @@
      ported (ponytail: ContactMail docblock). --}}
 <x-public-layout :ctx="$ctx" :show-hero="false" :salutation="$salutation"
     :judging-started="$judgingStarted" :future-judging-sessions="$futureJudgingSessions"
-    :sponsors-visible="$sponsorsVisible">
+    :sponsors-visible="$sponsorsVisible" :with-sidebar="true">
     <section id="contact" class="landing-page-section pb-4">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>
 

@@ -446,7 +446,16 @@
             <h1>{{ $adminPageTitle }}</h1>
         </div>
     @endif
-    {{ $slot }}
+    @if (($withSidebar ?? false) && ! $isAdminSide)
+        <div class="row g-4">
+            <div class="col col-lg-9 col-md-8 col-sm-12 col-xs-12">
+                {{ $slot }}
+            </div>
+            <x-public-sidebar :ctx="$ctx" />
+        </div>
+    @else
+        {{ $slot }}
+    @endif
 </div>
 
 <footer class="site-footer text-white justify-content-center container-fluid fixed bottom-0 pt-4 print:hidden">
