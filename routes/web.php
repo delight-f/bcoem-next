@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrewController;
+use App\Http\Controllers\ChangeEmailController;
 use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
@@ -43,6 +44,12 @@ Route::post('/contact', [PublicController::class, 'contactStore'])->name('contac
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+
+// Legacy ?section=user&action=username: the distinct change-email page
+// (restored per PARITY-007 — the merged /list/edit-account form keeps
+// working, but legacy deep links and the admin-side flow target this).
+Route::get('/user/username', [ChangeEmailController::class, 'show'])->middleware('auth')->name('user.username');
+Route::post('/user/username', [ChangeEmailController::class, 'store'])->middleware('auth');
 
 // Registration (P3.1b). Legacy: ?section=register&go={entrant|judge|steward};
 // clean /register is the canonical URL.

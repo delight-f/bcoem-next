@@ -56,12 +56,12 @@ final class LegacyRedirectController extends Controller
         'brewer||account' => ['/list/edit-account'],
 
         // ?section=user&go=account&action=password → the authenticated
-        // change-password page; username/account variants fold into the
-        // merged account form (the port merged legacy's email change into
-        // /list/edit-account).
+        // change-password page; action=username → the restored distinct
+        // change-email page (/user/username, keeps filter/id for the
+        // admin-change-another-user flow).
         'user||' => ['/list'],
         'user|account|password' => ['/user/password'],
-        'user|account|username' => ['/list/edit-account'],
+        'user|account|username' => ['/user/username', ['filter', 'id'], 301],
         'brewer|account|edit' => ['/list/edit-account'],
         'user|account|' => ['/list/edit-account'],
 
@@ -140,7 +140,7 @@ final class LegacyRedirectController extends Controller
         // control (P3.2a); change_user_password: port password page.
         'admin|make_admin|' => ['/backoffice/participants', [], 301],
         'admin|change_user_password|edit' => ['/user/password'],
-        'admin|user|username' => ['/list/edit-account'],
+        'admin|user|username' => ['/user/username', ['filter', 'id'], 301],
         // entries add for participant N -> the brew form seeded with that
         // participant (legacy go=entries&action=add&filter=N).
         'admin|entries|add' => ['/brew', ['filter'], 301],

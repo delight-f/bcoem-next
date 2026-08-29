@@ -325,4 +325,8 @@ return [
     'contact_form_required' => 'Not all required fields have been filled out or selected. Required fields that are missing values are indicated with a star.',
     'visit' => 'Visit',
     'no_website' => 'No Website',
+    'new_email' => 'New Email',
+    'are_you_sure' => 'Are You Sure?',
+    'sure_required' => 'Please check this box if you wish to proceed with changing your email address.',
+    'email_invalid' => 'A new email address is required and must be in valid form.',
 ];

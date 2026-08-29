@@ -209,7 +209,7 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
         $this->get('/index.php?section=user&go=account&action=password&id=1')
             ->assertRedirect('/user/password');
         $this->get('/index.php?section=user&go=account&action=username&id=1')
-            ->assertRedirect('/list/edit-account');
+            ->assertRedirect('/user/username?id=1');
     }
 
     private function closeEntryWindow(): void
