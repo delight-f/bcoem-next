@@ -246,6 +246,7 @@ final class DashboardController extends Controller
                 $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
                 $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
                 $l('/backoffice/participants?filter=staff', 'Assign/Unassign Staff'),
+                $l('/backoffice/participants?filter=staff&view=yes', 'Assign/Unassign Staff (Interested Only)'),
             );
         } else {
             array_push(
