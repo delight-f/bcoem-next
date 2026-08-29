@@ -52,11 +52,10 @@
                                 <div id="dashboard-{{ Str::slug($title) }}" class="panel panel-default">
                                     <div class="panel-heading">
                                         <h4 class="panel-title">
-                                            <a href="#" class="panel-collapse-toggle" data-target="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}
-                                                <a href="#" role="button" data-open-modal="help-{{ $side }}-{{ $loop->index }}"
-                                                    onclick="event.stopPropagation()"
-                                                    aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a><span class="fa {{ $icon }} pull-right"></span>
-                                            </a>
+                                            <a href="#" class="panel-collapse-toggle" data-target="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}<span class="fa {{ $icon }} pull-right"></span></a>
+                                            <a href="#" role="button" data-open-modal="help-{{ $side }}-{{ $loop->index }}"
+                                                onclick="event.stopPropagation()"
+                                                aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
                                         </h4>
                                     </div>
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="panel-collapse">
@@ -90,10 +89,10 @@
                                                                 @else
                                                                     <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
                                                                 @endif
+                                                        @endforeach
                                                         </ul>
                                                     </div>
                                                 </div>
-                                            @endforeach
                                             @endforeach
                                         </div>
                                     </div>
