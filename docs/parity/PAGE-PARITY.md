@@ -169,3 +169,15 @@ Align gates.
 | Public sidebar panels | sidebar.sec.php (anon sections) |
 | Numeric error sections | rendered via index.pub.php with salutation treatment |
 | `ppv.php` | UNKNOWN purpose — investigate before porting |
+
+## Judging-preferences field matrix (audited 2026-08-30)
+
+Port blade `judging/config/preferences.blade.php` vs legacy
+`admin/judging_preferences.admin.php`, field-by-field on names + option
+values: **no divergence**. `jPrefsScoresheet` renders 1-4 with the four
+legacy labels inside the prefsEval=1 block (matching
+process_judging_preferences.inc.php's conditional write); remaining
+fields (jPrefsQueued Y/N, prefsDisplaySpecial J/E, prefsEval 0/1, cap
+fields, rounds 1-5) all match. Form plumbing differs only where legacy
+scaffolding (form1, user_session_token, Submit, relocate) is framework
+noise.
