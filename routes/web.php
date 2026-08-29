@@ -67,6 +67,11 @@ Route::get('/qr', [App\Http\Controllers\QrCheckinController::class, 'show'])->na
 Route::post('/qr/password-check', [App\Http\Controllers\QrCheckinController::class, 'authenticate'])->name('qr.authenticate');
 Route::post('/qr/checkin', [App\Http\Controllers\QrCheckinController::class, 'store'])->name('qr.checkin');
 
+// Awards reveal.js presentation (legacy awards.php, PARITY-001).
+// Public gate: judging past + all windows closed + prefsDisplayWinners=Y +
+// delay passed; admins always. ?view= white|black|blue, ?go= table-*.
+Route::get('/awards', [App\Http\Controllers\AwardsController::class, 'show'])->name('awards.show');
+
 // Brewer profile form 0 — account & contact edit (P3.2a). Legacy:
 // ?section=brewer&action=edit&go=account behind a login gate.
 Route::get('/list/edit-account', [BrewerController::class, 'showEdit'])

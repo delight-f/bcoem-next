@@ -31,6 +31,11 @@
                         <a class="btn btn-info btn-sm btn-block" href="#" data-open-modal="post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
                     </div>
                 @endif
+                @if ($status['judgingStarted'] && $status['winnerMethodTable'])
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <button type="button" class="btn btn-info btn-sm btn-block" data-open-modal="presentationLaunch">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></button>
+                    </div>
+                @endif
                 @if ($status['showBest'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
                         <button type="button" class="btn btn-info btn-sm btn-block" data-open-modal="preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
@@ -298,7 +303,38 @@
         </dialog>
     @endif
 
-    {{-- Publish Results confirm (legacy process.inc.php?action=publish). --}}
+    {{-- Launch Awards Presentation modal (legacy #presentationLaunch,
+        default.admin.php:519-560): 4 methods × 3 themes link table. --}}
+    @if ($status['judgingStarted'] && $status['winnerMethodTable'])
+        <dialog id="presentationLaunch" class="modal">
+            <div class="modal-box max-w-3xl">
+                <h3 class="text-lg font-bold">Launch Awards Presentation</h3>
+                <p>PowerPoint-style presentation of placing entries and Best of Show winner(s). Intended to be projected or screen-shared during your awards ceremony.</p>
+                <p><strong>Only Admin-level users can access the presentation before results are published.</strong></p>
+                <table class="table table-striped table-bordered mt-4">
+                    <thead><tr><th>Method</th><th>Available Themes</th></tr></thead>
+                    <tbody>
+                        @foreach ([
+                            ['By Table Number', ''],
+                            ['By Table Number – Table/Medal Group Name Only', 'go=table-name-only'],
+                            ['By Table/Medal Group Entry Count – Ascending', 'go=table-entry-count-asc'],
+                            ['By Table/Medal Group Entry Count – Descending', 'go=table-entry-count-desc'],
+                        ] as [$method, $qs])
+                            <tr>
+                                <td>{{ $method }}</td>
+                                <td>
+                                    <a href="{{ url('/awards'.($qs !== '' ? '?'.$qs : '')) }}" target="_blank" rel="noopener">Light</a> |
+                                    <a href="{{ url('/awards?'.($qs !== '' ? $qs.'&' : '').'view=black') }}" target="_blank" rel="noopener">Dark</a> |
+                                    <a href="{{ url('/awards?'.($qs !== '' ? $qs.'&' : '').'view=blue') }}" target="_blank" rel="noopener">Blue-Green</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form></div>
+            </div>
+        </dialog>
+    @endif
     @if (! $status['winnersPublished'])
         <dialog id="publish-results" class="modal">
             <div class="modal-box">

@@ -31,6 +31,7 @@ final class PostJudgeInventoryController extends Controller
         }
 
         $ctx = TenantContext::load();
+        $baSet = $ctx->prefsStr('prefsStyleSet') === 'BA';
         $withScores = $request->query('go') === 'scores';
 
         // One row per entry in legacy; keyBy mirrors that (last row wins).
