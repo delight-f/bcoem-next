@@ -55,7 +55,7 @@
                 <label for="contestCheckInPassword" class="col-sm-4 col-form-label">QR Code Log On Password</label>
                 <div class="col-sm-9">
                     <input class="input input-bordered" id="contestCheckInPassword" name="contestCheckInPassword" type="password">
-                    <span class="help-block">Leave blank to clear (stored hashed).</span>
+                    <span class="help-block">Leave blank to clear (stored hashed). For use with the <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function.</span>
                 </div>
             </div>
 

@@ -198,7 +198,7 @@
                     <li><a href="{{ url('/backoffice/entries') }}">Manually</a></li>
                     @if ($adminNavBarcode)
                         <li><a href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
-                        <li><a class="hide-loader" href="{{ url('/admin/judging/checkin') }}" target="_blank">Entry Check-in Via Mobile Devices <span class="fa fa-external-link"></span></a></li>
+                        <li><a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">Entry Check-in Via Mobile Devices <span class="fa fa-external-link"></span></a></li>
                     @endif
                 </ul>
             </li>

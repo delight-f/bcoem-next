@@ -335,6 +335,9 @@
                         </select>
                         <span class="help-block">
                             <a class="btn btn-xs btn-info hide-loader" data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard.png') }}" data-caption="Standard">Examples</a>
+                            <p class="mt-2">Both label types are available with or without a barcode and QR code corresponding to the unique identification number.</p>
+                            <p>The Barcode options are intended to be used with a USB barcode scanner and the <a class="hide-loader" href="{{ url('/admin/judging/checkin') }}">barcode entry check-in function</a>.</p>
+                            <p>The QR code options are intended to be used with a mobile device and <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR code entry check-in function</a> (requires a QR code reading app).</p>
                         </span>
                         <div class="hidden">
                             <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number.png') }}" data-caption="Standard - Larger Printed Number and Style">Link</a>
