@@ -398,6 +398,20 @@ final class DashboardController extends Controller
         if ($scoreAddItems !== []) {
             $scoreItems[] = ['Add Scores to...', $scoreAddItems];
         }
+        // "Add Entries to..." dropdown (legacy score_custom_winning_choose,
+        // lib/admin.lib.php:474): per special-best category, add when no
+        // data rows exist yet, edit otherwise.
+        $customEntries = DB::table('special_best_info')->orderBy('sbi_name')
+            ->get(['id', 'sbi_name'])
+            ->map(function ($sbi) use ($l): array {
+                $has = DB::table('special_best_data')->where('sid', $sbi->id)->exists();
+
+                return ['label' => (string) $sbi->sbi_name,
+                    'href' => '/admin/judging/special-best-data?action='.($has ? 'edit' : 'add').'&id='.$sbi->id];
+            })->all();
+        if ($customEntries !== []) {
+            $scoreItems[] = $family('Add Entries to...', $customEntries, '');
+        }
         if ($level0 || $obfuscate === 0) {
             $scoreItems[] = ['BOS Entries and Places', [$l('/admin/judging/bos', 'Manage')]];
         }
@@ -448,7 +462,9 @@ final class DashboardController extends Controller
             $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Sorting Tables (Master List)'),
             $l('/admin/output/table_cards?id=1', 'For Table...'),
             $family('For Table (choose)...', $tableCardPerTable, ''),
-            $l('/admin/output/table_cards?go=judging_locations&location=1&round=1', 'For Session...'),
+            $family('For Session...', DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => collect(range(1, max(1, (int) $loc->judgingRounds)))
+                    ->map(fn (int $round) => $l('/admin/output/table_cards?go=judging_locations&location='.$loc->id.'&round='.$round, (string) $loc->judgingLocName.' - Round '.$round)))->all(), ''),
         ]];
         $reportsItems[] = ['Sign In Sheets', [
             $l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
@@ -516,10 +532,24 @@ final class DashboardController extends Controller
                 $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all(), ''),
                 $family('Pro-Am...', collect(range(1, 3))->flatMap(fn ($sort) => $bosStyleTypes->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id.'&filter=entry', $t->styleTypeName.' ('.$sort.')'), $l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id, $t->styleTypeName.' ('.$sort.')')])->all())->all(), ''),
             ]];
+        // Legacy ps_loc_* session dropdowns: per-location × per-round
+        // children, entry/judging number variants.
+        $sessionEntry = [];
+        $sessionJudging = [];
+        foreach (DB::table('judging_locations')->orderBy('id')->get() as $loc) {
+            foreach (range(1, max(1, (int) $loc->judgingRounds)) as $round) {
+                $name = (string) $loc->judgingLocName.' - Round '.$round;
+                $sessionEntry[] = $l('/admin/output/pullsheets?go=judging_locations&view=entry&location='.$loc->id.'&round='.$round, $name);
+                $sessionJudging[] = $l('/admin/output/pullsheets?go=judging_locations&view=default&location='.$loc->id.'&round='.$round, $name);
+            }
+        }
             $reportsItems[] = ['Pullsheets', [
                 $l('/admin/output/pullsheets', 'All By Table'),
                 $l('/admin/output/pullsheets?go=judging_tables&id=default&view=entry', 'All By Table - Entry Numbers'),
-                $l('/admin/output/pullsheets?go=judging_tables&id=default', 'All By Table - Judging Numbers'),
+                $family('Entry Numbers for Session...', $sessionEntry, ''),
+                $family('Judging Numbers for Session...', $sessionJudging, ''),
+                $family('Judging Numbers for Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()
+                    ->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, (string) $t->tableNumber))->all(), ''),
                 $family('Mini-BOS per Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=default', (string) $t->tableNumber.' (Judging)')])->all(), ''),
                 $family('Mini-BOS per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=entry', (string) $t->judgingLocName.' (Entry)'), $l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=default', (string) $t->judgingLocName.' (Judging)')])->all(), ''),
                 $family('Judge Inventory per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory', (string) $t->judgingLocName), $l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory&sort=entry', (string) $t->judgingLocName.' (Entry)')])->all(), ''),
