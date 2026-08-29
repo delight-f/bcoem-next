@@ -56,6 +56,11 @@ Route::post('/entries/{id}', [EntriesController::class, 'destroy'])
     ->name('entries.destroy')
     ->middleware('auth');
 
+// Publish Results (legacy process.inc.php?action=publish): releases winners
+// publicly and forces all future deadlines closed. Lands /admin?msg=36.
+Route::post('/admin/results/publish', [App\Http\Controllers\Admin\PublishResultsController::class, 'store'])
+    ->name('admin.results.publish')->middleware('auth');
+
 // Brewer profile form 0 — account & contact edit (P3.2a). Legacy:
 // ?section=brewer&action=edit&go=account behind a login gate.
 Route::get('/list/edit-account', [BrewerController::class, 'showEdit'])

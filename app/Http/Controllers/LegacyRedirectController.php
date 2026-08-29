@@ -177,7 +177,7 @@ final class LegacyRedirectController extends Controller
         'check_discount' => ['/brew', 302],
         'convert_bjcp' => ['/admin/styles', 302],
         'archive' => ['/admin/archive', 302],
-        'publish' => ['/admin/archive', 302],
+        'publish' => ['/admin', 302],  // legacy process.inc.php?action=publish — the POST /admin/results/publish surface is the port equivalent (PARITY-003)
         'email' => ['/backoffice/entries', 302],
         'paypal' => ['/admin/payments', 302],
         'dates' => ['/admin/dates', 302],

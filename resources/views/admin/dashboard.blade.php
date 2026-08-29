@@ -16,6 +16,16 @@
                 <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
                     <a class="btn btn-info btn-sm btn-block" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
                 </div>
+                @if (request('msg') === '36')
+                    <div class="col-12">
+                        <div class="alert alert-success"><strong>Results are published.</strong></div>
+                    </div>
+                @endif
+                @if (! $status['winnersPublished'])
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <button type="button" class="btn btn-warning btn-sm btn-block" data-open-modal="publish-results">Publish Results <span class="fa fa-lg fa-bullhorn"></span></button>
+                    </div>
+                @endif
                 @if ($status['postCompTasks'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
                         <a class="btn btn-info btn-sm btn-block" href="#" data-open-modal="post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
@@ -283,6 +293,23 @@
                 @endif
                 <div class="modal-action">
                     <form method="dialog"><button class="btn btn-error">Close</button></form>
+                </div>
+            </div>
+        </dialog>
+    @endif
+
+    {{-- Publish Results confirm (legacy process.inc.php?action=publish). --}}
+    @if (! $status['winnersPublished'])
+        <dialog id="publish-results" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">Publish Results</h3>
+                <p class="py-4">Publishes winners publicly and closes the competition. All future deadlines (registration, entry, judge, judging) are snapped to now. <strong>Cannot be undone.</strong></p>
+                <div class="modal-action">
+                    <form method="dialog"><button class="btn">Cancel</button></form>
+                    <form method="POST" action="{{ route('admin.results.publish') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-warning">Publish Now</button>
+                    </form>
                 </div>
             </div>
         </dialog>

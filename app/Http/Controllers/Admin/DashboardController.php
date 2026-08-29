@@ -169,6 +169,7 @@ final class DashboardController extends Controller
             'judgingStarted' => $judgingStarted,
             'judgingPast' => $judgingPast,
             'postCompTasks' => ! $judgingPast && $now >= (int) ($ctx->prefsStr('prefsWinnerDelay') ?: 0),
+            'winnersPublished' => ($ctx->prefsStr('prefsDisplayWinners') ?? 'N') === 'Y',
             'showBest' => ((int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0
                 || (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0) && $judgingStarted,
             'bestBrewers' => $judgingStarted ? ResultsRepository::current()->bestBrewers(
