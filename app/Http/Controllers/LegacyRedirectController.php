@@ -264,6 +264,11 @@ final class LegacyRedirectController extends Controller
             if ($section === 'admin' && $go === 'brewer' && $action === 'edit' && $id !== '') {
                 return ["/backoffice/participants/{$id}/edit", [], 301];
             }
+            // ?section=brewer&go=admin&action=edit&filter=1&id=N — admin
+            // editing another participant's account (pool/list pencils).
+            if ($section === 'brewer' && $go === 'admin' && $action === 'edit') {
+                return ["/backoffice/participants/{$id}/edit", [], 301];
+            }
             if ($section === 'admin' && $go === 'style_types' && $action === 'edit' && $id !== '') {
                 return ["/admin/style-types/{$id}/edit", [], 301];
             }

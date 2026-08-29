@@ -26,6 +26,9 @@ use Illuminate\Support\Facades\Route;
 // recognized legacy section renders home as before.
 Route::get('/', LegacyRedirectController::class)->name('home.legacy');
 Route::get('/index.php', LegacyRedirectController::class);
+// Legacy awards.php → /awards (301, query preserved) — the awards
+// presentation shipped as a top-level legacy file, so old links land here.
+Route::get('/awards.php', fn (\Illuminate\Http\Request $r) => new \Illuminate\Http\RedirectResponse('/awards'.($r->getQueryString() ? '?'.$r->getQueryString() : ''), 301));
 Route::get('/list', [PublicController::class, 'list'])->name('list');
 // Legacy served archives as ?section=past-winners&go={suffix}; the suffix is a
 // table-name fragment and is sanitized to alphanumerics in the repository.
