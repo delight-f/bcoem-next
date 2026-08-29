@@ -387,7 +387,7 @@ final class DashboardController extends Controller
         }
         $scoreLinks = [$l('/admin/judging/scores', 'Manage')];
         if ($prefs['eval']) {
-            $scoreLinks[] = $todo('Import Scores', 'import_scores.eval.php modal');
+            $scoreLinks[] = ['label' => 'Import Scores', 'href' => '/eval/import-scores'];
         }
         $scoreItems[] = ['Scores', $scoreLinks];
         // "Add Scores to..." dropdown (legacy score_table_choose,

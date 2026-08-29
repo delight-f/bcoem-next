@@ -142,6 +142,8 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/judging/preferences', 'Judging/Competition Organization'],
             ['/admin/mods', 'Manage'],
             ['/admin/mods/create', 'Add'],
+            // Scoring — eval import (un-stubbed PARITY-014 tail)
+            ['/eval/import-scores', 'Import Scores'],
         ];
     }
 
