@@ -10,7 +10,7 @@
         || (auth()->check() && (int) auth()->user()->userLevel <= 1
             && (request()->is('register') || request()->is('register/*')
                 || request()->is('brew') || request()->is('brew/*')
-                || request()->is('list/edit-account') || request()->is('user/password')));
+                || request()->is('list/edit-account') || request()->is('user/password') || request()->is('user/username')));
     // Legacy headers.inc.php:443-475 sets $label_admin = "Administration" then
     // appends ": {nav label}" per go. Port admin routes map to that label here
     // (a static map is fine per spec). The dashboard keeps its own chrome.
@@ -131,7 +131,7 @@
                                 <li role="separator" class="divider"></li>
                                 <li><a href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
                                 <li><a href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
-                                <li><a href="{{ url('/list') }}#entries" tabindex="-1">{{ __('site.entries') }}</a></li>
+                                <li><a href="{{ url('/user/username?id='.auth()->id()) }}" tabindex="-1">{{ __('site.change_email') }}</a></li>
                                 <li><a href="{{ url('/user/password') }}" tabindex="-1">{{ __('site.change_password') }}</a></li>
                                 <li><a href="{{ url('/pay') }}" tabindex="-1">{{ __('site.pay') }}</a></li>
                                 <li role="separator" class="divider"></li>

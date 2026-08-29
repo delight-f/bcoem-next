@@ -66,7 +66,7 @@ final class DashboardController extends Controller
 
         $helpHtml = [
             'Organizing' => implode('', [
-                '<p>Organization in BCOE&amp;M begins with assigning individual participants as a <a href="'.url('/admin/judging/tables').'?action=assign&filter=staff">staff</a> member and/or <a href="'.url('/admin/judging/tables').'?action=assign&filter=judges">judge</a> or <a href="'.url('/admin/judging/tables').'?action=assign&filter=stewards">steward</a>. This builds a pool of available participants to assign to various duties in the competition.</p>',
+                '<p>Organization in BCOE&amp;M begins with assigning individual participants as a <a href="'.url('/backoffice/participants?filter=staff').'">staff</a> member and/or <a href="'.url('/backoffice/participants?filter=judges').'">judge</a> or <a href="'.url('/backoffice/participants?filter=stewards').'">steward</a>. This builds a pool of available participants to assign to various duties in the competition.</p>',
                 '<p>Once assignments have been given, the next steps are to:</p>',
                 '<ol>',
                 '<li><a href="'.url('/admin/judging/tables').'">Define tables</a> where specific sub-styles will be judged.</li>',
@@ -243,15 +243,15 @@ final class DashboardController extends Controller
         if ($level0) {
             array_push(
                 $participantLinks,
-                $l('/admin/judging/tables?action=assign&filter=judges', 'Assign/Unassign Judges'),
-                $l('/admin/judging/tables?action=assign&filter=stewards', 'Assign/Unassign Stewards'),
-                $l('/admin/judging/tables?action=assign&filter=staff', 'Assign/Unassign Staff'),
+                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
+                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
+                $l('/backoffice/participants?filter=staff', 'Assign/Unassign Staff'),
             );
         } else {
             array_push(
                 $participantLinks,
-                $l('/admin/judging/tables?action=assign&filter=judges', 'Assign/Unassign Judges'),
-                $l('/admin/judging/tables?action=assign&filter=stewards', 'Assign/Unassign Stewards'),
+                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
+                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
             );
         }
         $entriesItems[] = ['Participants', $participantLinks];
@@ -368,7 +368,7 @@ final class DashboardController extends Controller
                 $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
             )],
             ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights/rounds', 'Assign Tables to Rounds'), $l('/admin/judging/flights', 'Add')]],
-            ['BOS Judges', [$l('/admin/judging/tables?action=assign&filter=bos', 'Add')]],
+            ['BOS Judges', [$l('/backoffice/participants?filter=bos', 'Add')]],
         ];
         $left[] = ['Organizing', 'fa-tasks',
             'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
@@ -624,6 +624,8 @@ final class DashboardController extends Controller
                 $resultsFamily('Winners Only with Scores', 'judging_scores', 'winners', true),
                 $resultsFamily('All without Scores', 'judging_scores', 'default', false),
                 $resultsFamily('Winners Only without Scores', 'judging_scores', 'winners', false),
+                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf', 'PDF'),
+                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=html', 'HTML'),
             ]];
             $reportsItems[] = ['All Results ('.$methodLabel.' - Single Report)', [
                 $resultsFamily('All with Scores', 'all', 'default', true),
