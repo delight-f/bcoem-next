@@ -104,10 +104,10 @@
                             @if (! $proEdition)
                                 <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?psort=club') }}">By Club</a></li>
                             @else
-                                <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&psort=organization">By Organization Name</a></li>
+                                <li class="small"><a class="hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&psort=organization') }}">By Organization Name</a></li>
                             @endif
                         @elseif ($filter === 'with_entries')
-                            <li class="small"><a class="disabled" aria-disabled="true" title="TODO: legacy output — includes/output.inc.php?section=admin&go=participants&action=print&view=default&filter=with_entries">{{ $proEdition ? 'By Organization Name' : 'By Entrant Last Name' }}</a></li>
+                            <li class="small"><a class="hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&filter=with_entries') }}">{{ $proEdition ? 'By Organization Name' : 'By Entrant Last Name' }}</a></li>
                         @elseif ($filter === 'judges')
                             <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_id') }}">By Judge ID</a></li>
                             <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_rank') }}">By Judge Rank</a></li>

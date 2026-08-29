@@ -4,6 +4,23 @@
 
         <p><a href="{{ route('admin.judging.bos.index') }}">&larr; All BOS Entries and Places</a></p>
 
+        {{-- Legacy judging_scores_bos.admin.php:98-112 — Print dropdown
+             renders in list and enter modes: BOS pullsheets per BOS type
+             + BOS cup mats. --}}
+        <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="fa fa-print"></span> Print...
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                @foreach ($types as $t)
+                    <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $t->id]) }}" title="Print the {{ $t->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $t->styleTypeName }}</a></li>
+                @endforeach
+                <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader" href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
+                <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader" href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>
+            </ul>
+        </div>
+
         @if (count($rows) === 0)
             <p>No entries are eligible.</p>
         @else

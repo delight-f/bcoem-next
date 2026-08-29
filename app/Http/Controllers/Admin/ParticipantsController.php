@@ -162,6 +162,31 @@ final class ParticipantsController extends Controller
             'stewards' => DB::table('brewer')->where('brewerSteward', 'Y')->count(),
         ];
 
+        // Legacy ?action=print (participants.admin.php:52-160): the same
+        // filtered list with a print-oriented column set, rendered for
+        // the browser print dialog (fancybox iframe target). psort drives
+        // the ordering (participants.admin.php:95-99).
+        if ($request->query('action') === 'print') {
+            $psort = (string) ($request->query('psort') ?? 'brewer_name');
+            $sorted = match ($psort) {
+                'club' => $participants->sortBy('brewerClubs')->values(),
+                'organization' => $participants->sortBy('brewerBreweryName')->values(),
+                default => $participants->sortBy('brewerLastName')->values(),
+            };
+
+            return view('admin.participants-print', [
+                'ctx' => TenantContext::load(),
+                'participants' => $sorted,
+                'filter' => $filter,
+                'q' => $q,
+                'psort' => $psort,
+                'locationDisplay' => $locationDisplay,
+                'tableAssignments' => $tableAssignments,
+                'staffJudge' => $staffJudge,
+                'judgeEntries' => $judgeEntries,
+            ]);
+        }
+
         return view('admin.participants', [
             'ctx' => TenantContext::load(),
             'viewerLevel' => (int) ($request->user()?->userLevel ?? 2),
