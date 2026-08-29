@@ -284,7 +284,7 @@ final class DashboardController extends Controller
         $checkIn = [$l('/backoffice/entries', 'Manually')];
         if ($obfuscate === 0) {
             if ($barcodes) {
-                $checkIn[] = $todo('Via Mobile Devices', 'qr.php not ported');
+                $checkIn[] = ['label' => 'Via Mobile Devices', 'href' => '/qr', 'target' => '_blank'];
             }
             $checkIn[] = $l('/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)');
             $checkIn[] = $l('/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)');

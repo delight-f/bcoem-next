@@ -83,7 +83,7 @@
                                                                 @elseif (!empty($item['todo']))
                                                                     <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
                                                                 @else
-                                                                    <li><a href="{{ url($item['href']) }}">{{ $item['label'] }}</a></li>
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
                                                                 @endif
                                                         </ul>
                                                     </div>
