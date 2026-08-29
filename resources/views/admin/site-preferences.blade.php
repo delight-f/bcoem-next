@@ -186,6 +186,7 @@
                             <input class="radio" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="prefsSEF" value="N" id="sefN" @checked($p('prefsSEF') !== 'Y')><label class="form-check-label" for="sefN">Disable</label></div>
+                        <span class="help-block">If you enable this and receive 404 errors, navigate to the login screen at <a class="hide-loader" href="{{ url('/login') }}" target="_blank" rel="noopener">{{ url('/login') }}</a> to log back in and &ldquo;turn off&rdquo; this feature.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">

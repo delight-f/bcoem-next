@@ -224,7 +224,7 @@ final class DashboardController extends Controller
                     ['Contacts', [$l('/admin/contacts', 'Manage'), $l('/admin/contacts/create', 'Add')]],
                     ['Custom Categories', [$l('/admin/judging/special-best', 'Manage'), $l('/admin/judging/special-best/create', 'Add')]],
                     ['Drop-Off Locations', [$l('/admin/dropoff', 'Manage'), $l('/admin/dropoff/create', 'Add')]],
-                    ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations?action=add', 'Add')]],
+                    ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations/create', 'Add')]],
                     ['Non-Judging Sessions', [$l('/admin/judging/non-judging', 'Manage'), $l('/admin/judging/non-judging/create', 'Add')]],
                     ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload?action=html', 'Upload Logos')]],
                     ['Styles Accepted', [$l('/admin/styles', 'Manage'), $l('/admin/styles/create', 'Add')]],
@@ -367,7 +367,7 @@ final class DashboardController extends Controller
                 [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
                 $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
             )],
-            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights', 'Add')]],
+            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights/rounds', 'Assign Tables to Rounds'), $l('/admin/judging/flights', 'Add')]],
             ['BOS Judges', [$l('/admin/judging/tables?action=assign&filter=bos', 'Add')]],
         ];
         $left[] = ['Organizing', 'fa-tasks',
@@ -568,10 +568,10 @@ final class DashboardController extends Controller
             $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4'),
         ]];
         $reportsItems[] = ['Address Labels', [
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'Address Labels — A4 (All)'),
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Address Labels — Letter (With Entries)'),
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'Address Labels — A4 (With Entries)'),
-            $l('/admin/output/labels?go=participants&action=address_labels', 'Address Labels'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Letter (All Participants)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'A4 (All Participants)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Letter (With Entries)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'A4 (With Entries)'),
         ]];
         $reportsItems[] = ['Summaries', [
             $l('/admin/output/participant_summary', 'Participant Summaries'),

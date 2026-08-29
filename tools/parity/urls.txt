@@ -638,8 +638,8 @@ admin|includes/output.inc.php?section=export-results&go=judging_scores_bos&actio
 admin|includes/output.inc.php?section=export-results&go=judging_scores_bos&action=download&filter=default&view=html|/admin/output/results?action=print&go=judging_scores_bos&tb=bos&view=default
 admin|includes/output.inc.php?section=export-results&go=judging_scores&action=default&tb=none&view=pdf|/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf
 admin|includes/output.inc.php?section=export-results&go=judging_scores&action=default&tb=none&view=html|/admin/output/results?action=default&go=judging_scores&tb=none&view=html
-admin|includes/output.inc.php?section=staff&go=judging_assignments&action=download&filter=default&view=default|/admin/output/assignments?filter=judges
-admin|includes/output.inc.php?section=export-staff&go=judging_assignments&action=download&filter=default&view=pdf|/admin/output/assignments?filter=stewards
+admin|includes/output.inc.php?section=staff&go=judging_assignments&action=download&filter=default&view=default|/admin/output/staff_points
+admin|includes/output.inc.php?section=export-staff&go=judging_assignments&action=download&filter=default&view=pdf|/admin/output/staff_points?action=download&view=pdf
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff|/admin/output/assignments?filter=staff
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff&view=name|/admin/output/assignments?filter=staff&view=name
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name&tb=view|/admin/output/assignments?filter=judges&view=name&tb=view
