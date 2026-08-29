@@ -11,16 +11,16 @@ P3 = content divergence; P4 = visual polish. Size: S/M/L.
 | PARITY-003 | P1 | M | Route | Port `process.inc.php?action=publish` (Publish Results): POST route setting prefsResultsReturned + releasing public winners; dashboard button + popover; fix PROCESS_MAP `publish` → wrong `/admin/archive` placeholder | button absent; PROCESS_MAP line 180 |
 | PARITY-004 | P1 | S | Nav | Emit `participants?filter=judges/stewards`, `entries?filter=N`, staff-assign links on judging assign pages | 4 MISSING × 5 assign corpus pages |
 | PARITY-005 | P1 | S | Nav | `/backoffice/participants?filter=judges\|stewards` reachable from assign nav | same evidence |
-| PARITY-006 | P2 | M | Layout | Render public anon sidebar (`sidebar.sec.php` 9 panels) on section pages | port anon pages hero-only |
-| PARITY-007 | P2 | S | Nav/Form | Decide: restore distinct change-email page (`user&action=username`) or keep merged account form (documented) | GET_MAP comment |
+| PARITY-006 | ✓done | M | Layout | Render public anon sidebar (`sidebar.sec.php` 9 panels) on section pages — P2 Slice 7 (`public-sidebar` component) | 
+| PARITY-007 | ✓done | S | Nav/Form | Restored distinct change-email page (`/user/username`) — P2 Slice 5; merged form also remains | GET_MAP row |
 | PARITY-008 | P3 | S | Page | Contact page: match legacy empty rendering when contacts disabled/absent | 200B vs 492B text streams |
 | PARITY-009 | P3 | S | Page | Volunteers page: gate text on prefsVolunteers/judging window like legacy | stream diff |
 | PARITY-010 | P4 | S | Visual | Pixel-level button/input audit (daisyUI vs BS3/BS5 sizing/radius); screenshot pass owed | VISUAL-PARITY |
 | PARITY-011 | P3 | L | Test | Browser journey tests (5 flows listed in INTERACTION-PARITY) | none exist |
-| PARITY-012 | P2 | S | Route | Sponsors: create `/sponsors` page (or retarget GET_MAP `'sponsors\|\|'` to `/#sponsors` — current target 404s) | GET_MAP line 47 |
+| PARITY-012 | ✓done | S | Route | Sponsors: created `/sponsors` page + landing sponsors section — P2 Slice 1 | GET_MAP line 47 |
 | PARITY-013 | P1 | L | Component | Restore dashboard dropdown menus (53 of 63 flattened): per-table/session/style-type/round `<button class="dropdown-toggle">` menus — "For Table…", "For Session…", "Numbers for Session…", "Winners for Session…", "Add Entries to…" — data queryable as `Add Scores to...` already proves | dashboard raw diff |
 | PARITY-014 | P1 | M | Component | Replace 19 dead TODO spans: JN-regen modals ×3, purge/confirm flows ×6, help modals ×9, qr.php link, Import Scores | dashboard raw |
-| PARITY-015 | P2 | M | Component | Results card: legacy link labels ("All with Scores for Table...") + per-method matrix from prefsWinnerMethod × number-kind × table | dashboard raw |
+| PARITY-015 | ✓done | M | Component | Results card: legacy link matrix + method labels from constants.inc.php — P2 Slice 3 | dashboard raw |
 | PARITY-016 | P2 | S | Nav | Dashboard assignments: emit per-session variants (location=N view=name/table, view=location) | 6 missing hrefs |
 | PARITY-017 | P2 | S | Nav | Table-cards: add `psort=sorting-tables{&view=master-list}` + per-table `go&action=default&id=N` links | 3 missing hrefs |
 | PARITY-018 | P2 | S | Nav | Output variants: export-results BOS download pdf/html, export-staff download, staff print, inventory go=scores | 5 missing hrefs |
