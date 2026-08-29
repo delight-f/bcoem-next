@@ -79,6 +79,7 @@ final class DashboardController extends Controller
 
         return view('admin.dashboard', [
             'helpHtml' => $helpHtml,
+            'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],
             'status' => $this->status($ctx, $windows, $now),
@@ -685,15 +686,15 @@ final class DashboardController extends Controller
         // More Help (legacy dashboard-help panel).
         $helpItems = [
             ['How Do I...', [
-                $todo('Competition Preparation', 'help modal #dashboard-help-modal-comp-prep'),
-                $todo('Entries and Participants', 'help modal #dashboard-help-modal-entries-participants'),
-                $todo('Entry Sorting', 'help modal #dashboard-help-modal-sorting'),
-                $todo('Organizing', 'help modal #dashboard-help-modal-organizing'),
-                $todo('Scoring', 'help modal #dashboard-help-modal-scoring'),
-                $todo('Preferences', 'help modal #dashboard-help-modal-preferences'),
-                $todo('Reports', 'help modal #dashboard-help-modal-reports'),
-                $todo('Data Exports', 'help modal #dashboard-help-modal-data-exports'),
-                $todo('Data Management', 'help modal #dashboard-help-modal-data-mgmt'),
+                ['label' => 'Competition Preparation', 'modal' => 'dashboard-help-modal-comp-prep'],
+                ['label' => 'Entries and Participants', 'modal' => 'dashboard-help-modal-entries-participants'],
+                ['label' => 'Entry Sorting', 'modal' => 'dashboard-help-modal-sorting'],
+                ['label' => 'Organizing', 'modal' => 'dashboard-help-modal-organizing'],
+                ['label' => 'Scoring', 'modal' => 'dashboard-help-modal-scoring'],
+                ['label' => 'Preferences', 'modal' => 'dashboard-help-modal-preferences'],
+                ['label' => 'Reports', 'modal' => 'dashboard-help-modal-reports'],
+                ['label' => 'Data Exports', 'modal' => 'dashboard-help-modal-data-exports'],
+                ['label' => 'Data Management', 'modal' => 'dashboard-help-modal-data-mgmt'],
                 ['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose'],
             ]],
         ];

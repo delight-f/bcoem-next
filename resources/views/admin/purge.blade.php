@@ -48,8 +48,10 @@
             @if ($hasPayments)
                 <x-purge-action :ctx="$ctx" flow="payments" title="Purge Payments"
                     description="Truncates the payments table." :threshold="true"/>
+            @endif
             <x-purge-action :ctx="$ctx" flow="purge-all" title="Purge ALL Data"
                 description="Runs every purge flow in sequence (entries, participants, scores, tables, special-best, availability, evaluations, payments). Irreversible." :threshold="true"/>
+            @endforeach
         </div>
     </section>
 </x-public-layout>

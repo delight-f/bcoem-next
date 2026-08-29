@@ -68,15 +68,17 @@
                                                                             @endif
                                                                         @endforeach
                                                                     </li>
+                                                                @elseif (!empty($item['modal']))
+                                                                    <li><a href="#" role="button" data-open-modal="{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
                                                                 @elseif (!empty($item['todo']))
                                                                     <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
                                                                 @else
                                                                     <li><a href="{{ url($item['href']) }}">{{ $item['label'] }}</a></li>
                                                                 @endif
-                                                            @endforeach
                                                         </ul>
                                                     </div>
                                                 </div>
+                                            @endforeach
                                             @endforeach
                                         </div>
                                     </div>
@@ -285,4 +287,5 @@
             </div>
         </dialog>
     @endif
+    @include('admin.partials.dashboard-help-modals')
 </x-public-layout>
