@@ -41,6 +41,11 @@ Route::put('/admin/judging/locations/{id}', [LocationController::class, 'update'
     ->name('admin.judging.locations.update')->middleware('auth');
 Route::delete('/admin/judging/locations/{id}', [LocationController::class, 'destroy'])
     ->name('admin.judging.locations.destroy')->middleware('auth');
+// Regenerate all judging numbers (legacy regenerate.ajax.php /
+// generate_judging_numbers; methods: default|legacy|identical).
+use App\Http\Controllers\Judging\RegenerateNumbersController;
+Route::post('/admin/judging/regenerate-numbers', [RegenerateNumbersController::class, '__invoke'])
+    ->name('admin.judging.regenerate_numbers')->middleware('auth');
 
 // Same controller/table; non-judging rows are judgingLocType=2 and the
 // form drops type/rounds. kind selects list filter + validation shape.

@@ -270,9 +270,9 @@ final class DashboardController extends Controller
         $sortItems = [];
         if ($obfuscate === 0) {
             $sortItems[] = ['Regenerate', [
-                $todo('Judging Numbers (Random)', 'go=... js regen modal'),
-                $todo('Judging Numbers (With Style Number Prefix)', 'go=... js regen modal'),
-                $todo('Judging Numbers (Same as Entry Numbers)', 'go=... js regen modal'),
+                ['label' => 'Judging Numbers (Random)', 'modal' => 'jn-random-modal'],
+                ['label' => 'Judging Numbers (With Style Number Prefix)', 'modal' => 'jn-style-modal'],
+                ['label' => 'Judging Numbers (Same as Entry Numbers)', 'modal' => 'jn-entry-modal'],
             ]];
             if ($barcodes) {
                 $sortItems[] = ['Using Barcodes/QR Codes?', [

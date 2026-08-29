@@ -287,5 +287,30 @@
             </div>
         </dialog>
     @endif
+    {{-- JN regenerate confirms (legacy jn-random/jn-style/jn-entry modals). --}}
+    @foreach ([
+        ['jn-random-modal', 'Random Judging Numbers', 'default',
+            'Assigns a new random six-digit judging number (digits 1–9) to every entry. Existing numbers and scoresheets are not re-matched — regenerate before judging starts.'],
+        ['jn-style-modal', 'Style-Prefixed Judging Numbers', 'legacy',
+            'Assigns per-category sequence numbers (e.g. 21-001) continuing each category’s current sequence.'],
+        ['jn-entry-modal', 'Judging Numbers = Entry Numbers', 'identical',
+            'Sets every judging number to the zero-padded entry id.'],
+    ] as [$id, $title, $method, $blurb])
+        <dialog id="{{ $id }}" class="modal">
+            <div class="modal-box">
+                <h3 class="text-lg font-bold">{{ $title }}</h3>
+                <p class="py-4">{{ $blurb }}</p>
+                <p class="text-error text-sm">This wipes and reassigns ALL judging numbers. Cannot be undone.</p>
+                <div class="modal-action">
+                    <form method="dialog"><button class="btn">Cancel</button></form>
+                    <form method="POST" action="{{ route('admin.judging.regenerate_numbers') }}">
+                        @csrf
+                        <input type="hidden" name="method" value="{{ $method }}">
+                        <button type="submit" class="btn btn-error">Regenerate Now</button>
+                    </form>
+                </div>
+            </div>
+        </dialog>
+    @endforeach
     @include('admin.partials.dashboard-help-modals')
 </x-public-layout>
