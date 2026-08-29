@@ -1,5 +1,8 @@
 {{-- Judge/steward assignment roster + bull pen (legacy assignments.output.php). --}}
 <h1>{{ $roleLabel }} Assignments<br><small>{{ $contestName }}</small></h1>
+@if (! empty($sessionHeader))
+    <h4>{{ $sessionHeader }}</h4>
+@endif
 
 @if (count($rows) > 0)
     <table width="100%" border="1" cellpadding="4" cellspacing="0">

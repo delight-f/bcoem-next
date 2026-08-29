@@ -436,9 +436,16 @@ final class DashboardController extends Controller
                 $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry', 'Judging Numbers for Session...'),
             ]];
         }
+        $tableCardPerTable = DB::table('judging_tables')->orderBy('tableNumber')->get()
+            ->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all();
         $reportsItems[] = ['Table Cards', [
             $l('/admin/output/table_cards', 'All Tables'),
+            $l('/admin/output/table_cards?psort=sorting-placards', 'Sorting Placards'),
+            $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards (Master List)'),
+            $l('/admin/output/table_cards?psort=sorting-tables', 'Sorting Tables'),
+            $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Sorting Tables (Master List)'),
             $l('/admin/output/table_cards?id=1', 'For Table...'),
+            $family('For Table (choose)...', $tableCardPerTable, ''),
             $l('/admin/output/table_cards?go=judging_locations&location=1&round=1', 'For Session...'),
         ]];
         $reportsItems[] = ['Sign In Sheets', [
@@ -446,13 +453,25 @@ final class DashboardController extends Controller
             $l('/admin/output/assignments?filter=stewards&view=sign-in', 'Stewards'),
         ]];
         if ($tables > 0) {
+            $judgeSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => [
+                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
+                ])->all();
+            $stewardSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => [
+                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
+                ])->all();
             $reportsItems[] = ['Assignments', [
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Last Name'),
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Table'),
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Session'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards Last Name'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Table'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Session'),
+                $l('/admin/output/assignments?filter=judges&view=name', 'All Judges By Last Name'),
+                $l('/admin/output/assignments?filter=judges&view=table', 'All Judges By Table'),
+                $l('/admin/output/assignments?filter=judges&view=location', 'All Judges By Session'),
+                $family('Judges for Session...', $judgeSessionLinks, ''),
+                $l('/admin/output/assignments?filter=stewards&view=name', 'All Stewards Last Name'),
+                $l('/admin/output/assignments?filter=stewards&view=table', 'All Stewards By Table'),
+                $l('/admin/output/assignments?filter=stewards&view=location', 'All Stewards By Session'),
+                $family('Stewards for Session...', $stewardSessionLinks, ''),
             ]];
         }
         $reportsItems[] = ['Judge Scoresheet Labels', [
@@ -515,11 +534,7 @@ final class DashboardController extends Controller
             $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=5160', 'Letter'),
             $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4'),
         ]];
-        $reportsItems[] = ['Medal Labels (Round)', [
-            $l('/admin/output/labels?go=judging_scores&action=awards&filter=round&psort=5293', '5293'),
-        ]];
         $reportsItems[] = ['Address Labels', [
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Address Labels — Letter (All)'),
             $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'Address Labels — A4 (All)'),
             $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Address Labels — Letter (With Entries)'),
             $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'Address Labels — A4 (With Entries)'),
@@ -533,9 +548,10 @@ final class DashboardController extends Controller
         ]];
         $reportsItems[] = ['BJCP Points', [
             $l('/admin/output/staff_points', 'Print'),
+            $l('/admin/output/staff_points?action=download&view=pdf', 'PDF'),
         ]];
         $reportsItems[] = ['Inventory', [
-            $l('/admin/output/post_judge_inventory', 'With Scores'),
+            $l('/admin/output/post_judge_inventory?go=scores', 'With Scores'),
             $l('/admin/output/post_judge_inventory', 'Without Scores'),
         ]];
         $reportsItems[] = ['BOS Results', [
@@ -637,7 +653,7 @@ final class DashboardController extends Controller
             ]];
             $dataMgmtItems[] = ['Archives', [
                 $l('/admin/archive', 'Manage'),
-                $l('/admin/archive', 'Archive Current Data'),
+                $l('/admin/archive?action=add', 'Archive Current Data'),
             ]];
             $right[] = ['Data Management', 'fa-archive',
                 'Actions to help maintain the data collected by your installation including various archive and purge functions.',

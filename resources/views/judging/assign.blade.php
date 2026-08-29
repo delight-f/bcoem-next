@@ -7,6 +7,12 @@
             <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}">Stewards</a>
         </p>
 
+        <nav class="mb-4 text-sm">
+            <a href="{{ url('/backoffice/participants') }}">All Participants</a> |
+            <a href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a> |
+            <a href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a>
+        </nav>
+
         @if ($flights->isEmpty())
             <p>No flights have been defined for this table yet. Define flights first.</p>
         @elseif ($rows === [])
