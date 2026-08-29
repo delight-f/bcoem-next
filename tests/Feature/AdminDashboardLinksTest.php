@@ -195,4 +195,22 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             );
         }
     }
+
+    /** PARITY-015: legacy results matrix labels + hrefs by winner method. */
+    public function test_results_matrix_matches_legacy_labels(): void
+    {
+        $this->primeTables();
+        $response = $this->get('/admin');
+        $response->assertOk();
+
+        // Method 0 (default fixture): both categories, four families each.
+        $response->assertSee('Results (By Table/Medal Group)', false)
+            ->assertSee('All Results (By Table/Medal Group - Single Report)', false)
+            ->assertSee('All with Scores...', false)
+            ->assertSee('Winners Only with Scores...', false)
+            ->assertSee('All without Scores...', false)
+            ->assertSee('Winners Only without Scores...', false)
+            ->assertSee('By Table/Medal Group Entry Count - Ascending', false)
+            ->assertSee('go=all&amp;action=print&amp;tb=scores&amp;view=default', false);
+    }
 }

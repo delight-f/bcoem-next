@@ -598,33 +598,47 @@ final class DashboardController extends Controller
                 $l('/admin/output/results?go=best&action=print&view=default', 'Print (No Filter)'),
             ]];
         }
-        $resultsLink = function (string $go, string $view, string $tb = '', string $psort = '', string $filter = '') use ($l): array {
-            $q = ['go' => $go, 'action' => 'print'];
-            if ($tb !== '') { $q['tb'] = $tb; }
-            if ($filter !== '') { $q['filter'] = $filter; }
-            if ($psort !== '') { $q['psort'] = $psort; }
-            $q['view'] = $view;
-            $label = trim($go.($tb ? ' | '.$tb : '').($filter ? ' | '.$filter : '').($psort ? ' | '.$psort : '').' | '.$view);
+        // default.admin.php:1998-2110 — the results matrix. Method 0
+        // (table/medal group): four dropdown families per category (with
+        // scores / winners-only-with-scores via tb=scores; the without-
+        // scores pair without tb), each with the three sort orders. Two
+        // categories: "Results" (go=judging_scores) and "All Results -
+        // Single Report" (go=all). Other methods: four flat links.
+        $resultsFamily = static function (string $label, string $go, string $view, bool $tb) use ($l): array {
+            $base = '/admin/output/results?go='.$go.'&action=print'.($tb ? '&tb=scores' : '').'&view='.$view;
 
-            return $l('/admin/output/results?'.http_build_query($q), $label);
+            return [
+                'label' => $label.'...',
+                'descriptor' => '',
+                'children' => [
+                    $l($base, 'By Table Number'),
+                    $l($base.'&psort=table-entry-count-asc', 'By Table/Medal Group Entry Count - Ascending'),
+                    $l($base.'&psort=table-entry-count-desc', 'By Table/Medal Group Entry Count - Descending'),
+                ],
+            ];
         };
-        $reportLinks = [];
-        foreach (['judging_scores', 'all'] as $rg) {
-            foreach (['default', 'winners'] as $rv) {
-                foreach (['', 'scores'] as $rtb) {
-                    foreach (['', 'table-entry-count-asc', 'table-entry-count-desc'] as $rp) {
-                        $reportLinks[] = $resultsLink($rg, $rv, $rtb, $rp);
-                    }
-                }
-            }
+        $methodLabel = $this->resultsMethodLabel($prefs['winnerMethod']);
+        if ($prefs['winnerMethod'] === 0) {
+            $reportsItems[] = ['Results ('.$methodLabel.')', [
+                $resultsFamily('All with Scores', 'judging_scores', 'default', true),
+                $resultsFamily('Winners Only with Scores', 'judging_scores', 'winners', true),
+                $resultsFamily('All without Scores', 'judging_scores', 'default', false),
+                $resultsFamily('Winners Only without Scores', 'judging_scores', 'winners', false),
+            ]];
+            $reportsItems[] = ['All Results ('.$methodLabel.' - Single Report)', [
+                $resultsFamily('All with Scores', 'all', 'default', true),
+                $resultsFamily('Winners Only with Scores', 'all', 'winners', true),
+                $resultsFamily('All without Scores', 'all', 'default', false),
+                $resultsFamily('Winners Only without Scores', 'all', 'winners', false),
+            ]];
+        } else {
+            $reportsItems[] = ['Results ('.$methodLabel.')', [
+                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=default', 'All with Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners', 'Winners Only with Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print', 'All without Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print&view=winners', 'Winners Only without Scores'),
+            ]];
         }
-        $reportLinks[] = $l('/admin/output/results?go=judging_scores&action=print&filter=scores&view=winners', 'judging_scores | scores | winners (filter)');
-        $reportLinks[] = $l('/admin/output/results?go=judging_scores&action=print&filter=none&view=winners', 'judging_scores | none | winners (filter)');
-        $reportsItems[] = ['Results ('.$this->resultsMethodLabel($prefs['winnerMethod']).')', [
-            ...$reportLinks,
-            $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf', 'PDF report'),
-            $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=html', 'HTML report'),
-        ]];
 
         $right = [['Reports', 'fa-file',
             'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
@@ -738,16 +752,13 @@ final class DashboardController extends Controller
         return ['left' => $left, 'right' => $right];
     }
 
-    /** Legacy $results_method[$_SESSION['prefsWinnerMethod']] label. */
+    /** Legacy $results_method (constants.inc.php:594). */
     private function resultsMethodLabel(int $method): string
     {
         return match ($method) {
-            1 => 'Winners Only',
-            2 => 'Winners Only No Scores',
-            3 => 'Entry Order',
-            4 => 'Average Score',
-            5 => 'Highest Score',
-            default => 'All with Scores',
+            1 => 'By Style',
+            2 => 'By Sub-Style',
+            default => 'By Table/Medal Group',
         };
     }
 }
