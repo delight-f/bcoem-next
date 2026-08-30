@@ -502,7 +502,12 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
         $this->get('/admin/dropoff')->assertOk()->assertSeeText('Render Spot');
         $this->get('/admin/dropoff/create')->assertOk();
 
-        $this->get('/admin/judging/tables')->assertOk()->assertSeeText('Render Table');
+        // The mode banner is visible text; the switch-button help lives in
+        // the tooltip title attribute, so assert against the raw HTML.
+        $tablesHtml = (string) $this->get('/admin/judging/tables')->assertOk()->getContent();
+        self::assertStringContainsString('Render Table', $tablesHtml);
+        self::assertStringContainsString('Your installation is currently in Tables Competition Mode', $tablesHtml);
+        self::assertStringContainsString('When the Tables Competition Mode function is enabled', $tablesHtml);
         $this->get('/admin/judging/tables/create')->assertOk();
         $this->get('/admin/judging/tables/'.$tableId.'/edit')->assertOk();
 

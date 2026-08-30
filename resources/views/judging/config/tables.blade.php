@@ -24,11 +24,20 @@
             <button type="button" id="table-planning-button" class="btn btn-primary">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Planning</strong> Mode
             </button>
+            {{-- judging_tables.admin.php:749-752 — popover on the mode switch;
+                 CSS tooltip carries the same help text. --}}
+            <span class="fa fa-question-circle text-secondary" style="cursor: help"
+                data-toggle="tooltip" data-placement="right" data-tooltip="true"
+                title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received."></span>
         </div>
         <div id="tables-competition-mode" class="print:hidden" @if (! $planning) hidden @endif>
             <button type="button" id="tables-competition-button" class="btn btn-primary">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Competition</strong> Mode
             </button>
+            {{-- judging_tables.admin.php:754-756 — popover on the mode switch. --}}
+            <span class="fa fa-question-circle text-secondary" style="cursor: help"
+                data-toggle="tooltip" data-placement="right" data-tooltip="true"
+                title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
         </div>
         <p class="print:hidden">
             <a class="btn btn-primary" href="{{ route('admin.judging.tables.create') }}">Add a Table</a>

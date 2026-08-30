@@ -10,6 +10,9 @@
         <header class="landing-page-section-header py-2"><h1>{{ __('site.register') }}</h1></header>
 
         @if (! $allowed)
+            {{-- Legacy redirects to the reg_closed section (pub/reg_closed.pub.php:32):
+                 "Thanks and Good Luck To All Who Entered the {contest}!" --}}
+            <h2>{{ __('site.thanks_good_luck') }} {{ $ctx->contestStr('contestName') }}!</h2>
             <p class="text-xl font-light">{{ __('site.registration_closed') }}</p>
         @else
             @if ($adminRegister ?? false)
