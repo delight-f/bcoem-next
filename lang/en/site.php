@@ -81,6 +81,7 @@ return [
     'edition_pro' => 'Pro Competition Edition',
     'log_in' => 'Log In',
     'error_label' => 'Error',
+    'auto_log_out' => 'Auto Log Out in',
     'log_in_to_enter' => 'Log In to Enter',
     'close' => 'Close',
     'login_problem' => 'Sorry, there was a problem with your last login attempt.',

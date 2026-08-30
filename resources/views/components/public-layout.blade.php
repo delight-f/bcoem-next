@@ -307,8 +307,23 @@
                                 @endif
                                 <li class="small"><hr class="dropdown-divider"></li>
                                 <li class="small"><a class="dropdown-item" href="{{ url('/list/edit-account') }}">{{ __('site.edit_account') }}</a></li>
-                                <li class="small"><a class="dropdown-item" href="{{ url('/list/edit-account') }}">{{ __('site.change_email') }}</a></li>
+                                <li class="small"><a class="dropdown-item" href="{{ url('/user/username?id='.auth()->id()) }}">{{ __('site.change_email') }}</a></li>
                                 <li class="small"><a class="dropdown-item" href="{{ url('/user/password') }}">{{ __('site.change_password') }}</a></li>
+                                @if ((int) $ctx->prefsStr('prefsEval') === 1
+                                    && \Illuminate\Support\Facades\DB::table('staff')->where('uid', auth()->id())->value('staff_judge') == 1
+                                    && \Illuminate\Support\Facades\DB::table('brewer')->where('uid', auth()->id())->value('brewerJudge') === 'Y'
+                                    && time() > (int) ($ctx->judgingStr('jPrefsJudgingOpen') ?: 0))
+                                    {{-- pub/nav.pub.php:180-183 — Judging Dashboard link, disabled on
+                                         the eval section itself. --}}
+                                    <li class="small"><a class="dropdown-item {{ request()->is('eval*') ? 'disabled' : '' }}" href="{{ url('/eval') }}">{{ __('site.judging_dashboard') }}</a></li>
+                                @endif
+                                <li class="small"><hr class="dropdown-divider"></li>
+                                <li class="small" style="font-size: .75em;">
+                                    {{-- pub/nav.pub.php:189 — "Auto Log Out in <span id=session-end>" countdown
+                                         footer. The countdown ticks via session-end JS (legacy nav.pub.php);
+                                         static fallback text without the timer. --}}
+                                    <span class="dropdown-item-text text-body-secondary">{{ __('site.auto_log_out') }} <span id="session-end"></span></span>
+                                </li>
                             </ul>
                         </div>
                         <form method="post" action="{{ route('logout') }}">
