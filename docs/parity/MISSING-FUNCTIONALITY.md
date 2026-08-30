@@ -33,11 +33,16 @@ Legacy capabilities with no port equivalent, ranked by user impact.
 
 ## Open gaps (P2 residuals, 2026-08-29)
 
-- `?section=admin&go=participants&action=add` — legacy renders a full
-  add-participant form (participants.admin.php:765+); the port's
-  /backoffice/participants has no create surface (participants are
-  created via self-registration only). Admin-driven participant
-  creation is unported.
+- ~~`?section=admin&go=participants&action=add`~~ — CLOSED 2026-08-30
+  (P3 Slice 2): the legacy Register dropdown (participants.admin.php:583
+  -587) is ported verbatim into /backoffice/participants (Register...
+  → A Participant / A Judge (Standard) / A Steward (Standard) / Judge
+  (Quick) / Steward (Quick)); each routes through /register/{go}, where
+  an authenticated admin bypasses the registration window gates and the
+  store creates users + brewer + staff rows then redirects
+  /backoffice/participants?msg=1. Admin-driven participant creation is
+  ported; the standalone participants.admin.php:765 email/password form
+  is replaced by the combined register form (documented replacement).
 - The 13 `awards.php*` linkmap rows and the
   `send_test_email.admin.php?csrf=` row are legacy-URL-shape noise on
   mapped surfaces (`/awards`, `/admin/send-test-email` both exist);
