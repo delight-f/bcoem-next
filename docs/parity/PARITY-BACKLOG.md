@@ -29,7 +29,7 @@ P3 = content divergence; P4 = visual polish. Size: S/M/L.
 | PARITY-021 | P3 | M | Interaction | Restore tooltips (public), loader overlay, sticky-home, animate.css entrances | COMPONENT/INTERACTION |
 | PARITY-022 | P3 | S | Route | Error pages 404 etc. rendered in-site with salutation treatment | index.pub.php numeric sections |
 | PARITY-023 | P3 | M | Component | DataTables parity: legacy styles + judging_scores_bos (admin), 10 pub/*.php surfaces (bestbrewer/bos/…) client sort/pagination | grep dataTable |
-| PARITY-024 | P3 | M | Component | jQuery-UI sortable row reordering on 28 admin pages — audit + replicate drag ordering | grep sortable |
+| PARITY-024 | ✓done | M | Component | Sortable rows — RESOLVED: no jQuery-UI sortable in legacy; the 28 'sortable' grep hits are DataTables `id="sortable"` table ids (client sort → PARITY-023/Slice 9). Flight reorder is a form POST (`action=reorder_flight_entries`, ported → FlightController + GET_MAP row). No drag-reorder to port. | grep sortable |
 | PARITY-025 | P3 | S | Unknown | Resolve U1-U20 list (ppv.php, maintenance, mods rendering, tom-select, …) | LEGACY-UNKNOWN-BEHAVIOUR |
 
 ## Deliberate replacements (no action)
