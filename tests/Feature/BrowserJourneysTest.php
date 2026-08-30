@@ -43,6 +43,12 @@ final class BrowserJourneysTest extends PublicSurfaceTestCase
     {
         DB::table('brewing')->where('brewBrewerID', 1)->delete();
         DB::table('users')->where('user_name', self::EMAIL)->delete();
+        // Flow-2 admin user (9401): must not leak into other suites that
+        // also use id 9401 (JudgeSignupTest) — was a Duplicate-entry
+        // primary-key failure in the full-suite gate.
+        DB::table('staff')->where('uid', 9401)->delete();
+        DB::table('brewer')->where('uid', 9401)->delete();
+        DB::table('users')->where('id', 9401)->delete();
         DB::table('contest_info')->where('id', 1)->update($this->origContest);
         parent::tearDown();
     }
