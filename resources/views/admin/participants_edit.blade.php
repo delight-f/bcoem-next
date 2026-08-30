@@ -88,13 +88,55 @@
                 </div>
             </div>
 
+            {{-- Account security section (pub/brewer_form_0.pub.php:154-187:
+                 Change Security Question/Answer? + Q/A fields; the admin
+                 password reset is process_users.inc.php change_user_password). --}}
+            <hr>
             <div class="mb-4 row">
-                <label for="brewerBreweryName" class="col-sm-4 col-form-label">Brewery Name (Pro)</label>
+                <label class="col-sm-4 col-form-label"><strong>Change Security Question/Answer?</strong></label>
                 <div class="col-sm-9">
-                    <input class="input input-bordered" id="brewerBreweryName" name="brewerBreweryName"
-                           value="{{ old('brewerBreweryName', $participant->brewerBreweryName) }}">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="change-security-1" name="changeSecurity" value="Y">
+                        <label class="form-check-label" for="change-security-1">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="change-security-0" name="changeSecurity" value="N" checked>
+                        <label class="form-check-label" for="change-security-0">No</label>
+                    </div>
                 </div>
             </div>
+
+            <div id="security-question-change">
+                <div class="mb-4 row">
+                    <label for="security" class="col-sm-4 col-form-label">Security Question</label>
+                    <div class="col-sm-9">
+                        <select class="select select-bordered" id="security" name="userQuestion">
+                            <option value="">-- Select --</option>
+                            <option value="What is your favorite all-time beer to drink?" {{ old('userQuestion', $user->userQuestion ?? '') === 'What is your favorite all-time beer to drink?' ? 'selected' : '' }}>What is your favorite all-time beer to drink?</option>
+                            <option value="What is the name of your first pet?" {{ old('userQuestion', $user->userQuestion ?? '') === 'What is the name of your first pet?' ? 'selected' : '' }}>What is the name of your first pet?</option>
+                            <option value="In what city were you born?" {{ old('userQuestion', $user->userQuestion ?? '') === 'In what city were you born?' ? 'selected' : '' }}>In what city were you born?</option>
+                            <option value="What is your mother's maiden name?" {{ old('userQuestion', $user->userQuestion ?? '') === "What is your mother's maiden name?" ? 'selected' : '' }}>What is your mother's maiden name?</option>
+                            <option value="What was the name of your elementary school?" {{ old('userQuestion', $user->userQuestion ?? '') === 'What was the name of your elementary school?' ? 'selected' : '' }}>What was the name of your elementary school?</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="userQuestionAnswer" class="col-sm-4 col-form-label">Security Answer</label>
+                    <div class="col-sm-9">
+                        <input class="input input-bordered" id="userQuestionAnswer" name="userQuestionAnswer" type="text"
+                               value="{{ old('userQuestionAnswer') }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4 row">
+                <label for="password" class="col-sm-4 col-form-label">Reset Password</label>
+                <div class="col-sm-9">
+                    <input class="input input-bordered" id="password" name="password" type="password" placeholder="Leave blank to keep current password">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Participant</button>
 
             <button type="submit" class="btn btn-primary">Save Participant</button>
             <a class="btn btn-link" href="{{ url('/backoffice/participants') }}">Cancel</a>

@@ -215,9 +215,13 @@ final class ParticipantsController extends Controller
             return redirect('/backoffice/participants?msg=not-found');
         }
 
+        // Account row for the security-question/password section.
+        $user = DB::table('users')->where('id', $uid)->first();
+
         return view('admin.participants_edit', [
             'ctx' => TenantContext::load(),
             'participant' => $participant,
+            'user' => $user,
         ]);
     }
 
@@ -244,6 +248,27 @@ final class ParticipantsController extends Controller
             array_keys($data),
             array_map(self::blankToNull(...), array_values($data)),
         ));
+
+        // Account security section (brewer_form_0.pub.php:154-187 +
+        // process_brewer.inc.php:709-732: changeSecurity=Y updates the
+        // security Q/A; process_users.inc.php change_user_password resets
+        // the password). Both are admin-only.
+        $userUpdates = [];
+        if ($request->input('changeSecurity') === 'Y') {
+            $question = $request->validate(['userQuestion' => ['required', 'string']])['userQuestion'];
+            $userUpdates['userQuestion'] = $question;
+            if ($request->filled('userQuestionAnswer')) {
+                $userUpdates['userQuestionAnswer'] = app('hash')->make((string) $request->input('userQuestionAnswer'));
+            }
+        }
+        $newPassword = (string) $request->input('password', '');
+        if ($newPassword !== '') {
+            $userUpdates['password'] = app('hash')->make($newPassword);
+            $userUpdates['userCreated'] = now()->format('Y-m-d H:i:s');
+        }
+        if ($userUpdates !== []) {
+            DB::table('users')->where('id', $uid)->update($userUpdates);
+        }
 
         return redirect('/backoffice/participants?msg=updated');
     }

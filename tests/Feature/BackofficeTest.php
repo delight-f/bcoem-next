@@ -255,6 +255,30 @@ final class BackofficeTest extends PublicSurfaceTestCase
         $this->get('/backoffice/participants/'.self::ENTRANT_ID.'/edit')
             ->assertOk()
             ->assertSee(self::ENTRANT_EMAIL);
+        // Account security section (P4 Slice 4 residual): the edit form
+        // carries the Change Security Question/Answer + Reset Password
+        // fields legacy renders (brewer_form_0.pub.php:154-187).
+        $editHtml = (string) $this->get('/backoffice/participants/'.self::ENTRANT_ID.'/edit')->getContent();
+        self::assertStringContainsString('Change Security Question/Answer?', $editHtml);
+        self::assertStringContainsString('name="userQuestion"', $editHtml);
+        self::assertStringContainsString('name="userQuestionAnswer"', $editHtml);
+        self::assertStringContainsString('name="password"', $editHtml);
+
+        // PUT with changeSecurity=Y + a new password updates the user row
+        // (process_brewer.inc.php:709-732, process_users.inc.php
+        // change_user_password).
+        $this->put('/backoffice/participants/'.self::ENTRANT_ID, [
+            'brewerFirstName' => 'Entrant',
+            'brewerLastName' => 'P55',
+            'brewerEmail' => self::ENTRANT_EMAIL,
+            'changeSecurity' => 'Y',
+            'userQuestion' => 'What is the name of your first pet?',
+            'userQuestionAnswer' => 'rex',
+            'password' => 'new-pass-123',
+        ])->assertRedirect('/backoffice/participants?msg=updated');
+        self::assertSame('What is the name of your first pet?', DB::table('users')->where('id', self::ENTRANT_ID)->value('userQuestion'));
+        self::assertTrue(app('hash')->check('rex', (string) DB::table('users')->where('id', self::ENTRANT_ID)->value('userQuestionAnswer')));
+        self::assertTrue(app('hash')->check('new-pass-123', (string) DB::table('users')->where('id', self::ENTRANT_ID)->value('password')));
         // Self-delete guard.
         $this->delete('/backoffice/participants/'.self::ADMIN_ID)
             ->assertRedirect('/backoffice/participants?msg=self');
