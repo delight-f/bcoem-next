@@ -80,6 +80,7 @@ final class AwardsController extends Controller
             'bosSlides' => $this->bosSlides($ctx, $repo),
             'proEdition' => (int) $ctx->prefsStr('prefsProEdition') === 1,
             'styleSet' => (string) $ctx->prefsStr('prefsStyleSet'),
+            'today' => now()->format((string) ($ctx->prefsStr('prefsDateFormat') ?: 'F j, Y')),
         ]);
     }
 

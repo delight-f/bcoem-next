@@ -55,8 +55,24 @@ final class AwardsPresentationTest extends AdminScreensTestCase
         self::assertStringContainsString('AWRD Test Table', $html);
         self::assertStringContainsString('Best of Show', $html);
         self::assertStringContainsString('Thank You', $html);
-        self::assertStringContainsString('By The Numbers', $html);
+        self::assertStringNotContainsString('Thank You!', $html);
+        self::assertStringContainsString('By the Numbers', $html);
+        self::assertStringNotContainsString('By The Numbers', $html);
+        self::assertStringContainsString('Congratulations to All Medal Winners', $html);
         self::assertStringContainsString('Awrdbrewer Testerson', $html);
+    }
+
+    public function test_deck_matches_legacy_text_constants(): void
+    {
+        $this->seedWinners();
+
+        $html = (string) $this->get('/awards')->getContent();
+        // Hidden scoring-methodology modal (awards.php:1102-1133).
+        self::assertStringContainsString('Scoring Methodology', $html);
+        self::assertStringContainsString('Each placing entry is given the following points:', $html);
+        self::assertStringContainsString('1st Place:', $html);
+        self::assertStringContainsString('2nd Place:', $html);
+        self::assertStringContainsString('3rd Place:', $html);
     }
 
     public function test_theme_and_sort_params(): void

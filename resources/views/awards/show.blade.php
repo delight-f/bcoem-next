@@ -78,7 +78,7 @@
 
         {{-- Stats slide --}}
         <section>
-            <h1 style="margin:0;padding:0" class="tight">By The Numbers</h1>
+            <h1 style="margin:0;padding:0" class="tight">By the Numbers</h1>
             @if ($stats['entries'] > 0 || $stats['entrants'] > 0)
                 <p>
                     @if ($stats['entries'] > 0)<span style="margin-right: 15px;" class="fragment" data-fragment-index="1"><i class="fa fa-beer"></i> {{ $stats['entries'] }} Entries</span>@endif
@@ -115,7 +115,9 @@
                         <div class="fragment justify-left small" data-fragment-index="{{ $w->fh }}">{{ $w->entry }} ({{ $w->style }})</div>
                     </div>
                 @empty
-                    <p>No winning entries.</p>
+                    {{-- awards.php:206 — legacy winners_text_007
+                         "There are no winning entries at this table." --}}
+                    <p>There are no winning entries at this table.</p>
                 @endforelse
             </section>
         @endforeach
@@ -140,16 +142,39 @@
             </section>
         @endforeach
 
-        {{-- Thank-you slide --}}
+        {{-- Thank-you slide (awards.php:1322-1323) --}}
         <section>
-            <h1 style="margin:0;padding:0" class="r-fit-text">Thank You!</h1>
-            <h3 style="margin:0;padding:0">Congratulations to the winners!</h3>
+            <h1 style="margin:0;padding:0" class="r-fit-text">Thank You</h1>
+            <h3 style="margin:0;padding:0">Congratulations to All Medal Winners</h3>
             @if (! empty($contestLogo))
                 <div class="logo-image"><img height="200" src="{{ url('user_images/'.$contestLogo) }}" alt=""></div>
             @endif
         </section>
     </div>
-    <div class="footer">{{ $contestName }} - Awards</div>
+    {{-- awards.php:1331 footer: contest - label_awards - current_date_display.
+         Current date in prefsDateFormat (fetch-time, like legacy). --}}
+    <div class="footer">{{ $contestName }} - Awards - {{ $today }}</div>
+</div>
+
+{{-- Hidden scoring-methodology modal (awards.php:1102-1133 #scoring-method) --}}
+<div style="display: none; height: 75%; width: 75%;" class="fancy" id="scoring-method">
+    <h2 class="fancy-h2">Scoring Methodology</h2>
+    @if ((int) $ctx->prefsStr('prefsScoringCOA') === 1)
+        <p class="bold-text">COA scoring is used for this competition.</p>
+    @else
+        <p class="bold-text">Each placing entry is given the following points:</p>
+        <ul class="fancy-list">
+            <li>1st Place: {{ $ctx->prefsStr('prefsFirstPlacePts') }}</li>
+            <li>2nd Place: {{ $ctx->prefsStr('prefsSecondPlacePts') }}</li>
+            <li>3rd Place: {{ $ctx->prefsStr('prefsThirdPlacePts') }}</li>
+            @if ((int) $ctx->prefsStr('prefsFourthPlacePts') > 0)
+                <li>4th Place: {{ $ctx->prefsStr('prefsFourthPlacePts') }}</li>
+            @endif
+            @if ((int) $ctx->prefsStr('prefsHMPts') > 0)
+                <li>Honorable Mention: {{ $ctx->prefsStr('prefsHMPts') }}</li>
+            @endif
+        </ul>
+    @endif
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/notes/notes.min.js"></script>
