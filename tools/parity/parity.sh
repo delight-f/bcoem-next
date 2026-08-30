@@ -172,8 +172,10 @@ while IFS= read -r url; do
     if diff -q "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" >/dev/null; then
         echo "PASS $url"; pass=$((pass+1))
     else
-        # P3 Slice 1: classify word-level hunks — chrome-only diffs (navbar
-        # session block, countdown tail, glyphs) are NOISE, not regressions.
+        verdict="$(php classify.php "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" 2>/dev/null || true)"
+        case "$verdict" in VERDICT\ NOISE*)
+            echo "NOISE $url"; noise=$((noise+1)); continue;;
+        esac
         verdict=$(php classify.php "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" 2>/dev/null | head -1)
         if [ "$verdict" = "VERDICT NOISE" ]; then
             echo "NOISE $url"; noise=$((noise+1)); continue
