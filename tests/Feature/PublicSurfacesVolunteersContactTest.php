@@ -17,16 +17,26 @@ use Illuminate\Support\Facades\Mail;
  */
 final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
 {
+    /** @var array<string, mixed> */
+    private array $origContest = [];
+
     protected function setUp(): void
     {
         parent::setUp();
         // anon-base fixture: contacts display in list mode. Reset each run
         // so the Y-mode tests do not leak prefsContact into the N-mode ones.
         DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'N']);
+        // Snapshot contest_info: the volunteers body test mutates it.
+        $row = DB::table('contest_info')->where('id', 1)->first();
+        $this->origContest = $row === null ? [] : (array) $row;
     }
+
     protected function tearDown(): void
     {
         DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'N']);
+        if ($this->origContest !== []) {
+            DB::table('contest_info')->where('id', 1)->update($this->origContest);
+        }
         parent::tearDown();
     }
 
@@ -39,18 +49,18 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
                 'If you have registered, log in and then choose Edit Account from the My Account menu indicated by the icon on the top menu.',
                 'Staff',
                 'If you would like to volunteer to be a competition staff member, please register or update your account to indicate that you wish to be a part of the competition staff.',
-                'Other Volunteer Info',
-                'Volunteer information coming soon!',
-            ]);
+            ])
+            // The test DB's contestVolunteers is empty, so the Other
+            // Volunteer Info block must be absent (legacy renders nothing
+            // when the body is empty — no coming-soon fallback, Slice 4).
+            ->assertDontSee('Other Volunteer Info');
     }
     public function test_volunteers_page_other_info_block_from_body_only(): void
     {
         // Legacy volunteers.sec.php:62-74: the "Other Volunteer Info"
         // header + body render only when contestVolunteers is non-empty;
-        // there is no fallback text (P3 Slice 4, PARITY-009). The anon-base
-        // fixture ships a contestVolunteers body ("coming soon!"), so the
-        // header + body render — but only because the body exists; an empty
-        // body must render neither.
+        // there is no fallback text (P3 Slice 4, PARITY-009).
+        DB::table('contest_info')->where('id', 1)->update(['contestVolunteers' => '<p>Volunteer information coming soon!</p>']);
         $html = $this->get('/volunteers')->assertOk()->getContent();
         $this->assertStringContainsString('Other Volunteer Info', $html);
         $this->assertStringContainsString('Volunteer information coming soon!', $html);
@@ -59,6 +69,10 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         $html = $this->get('/volunteers')->assertOk()->getContent();
         $this->assertStringNotContainsString('Other Volunteer Info', $html);
         $this->assertStringNotContainsString('coming soon', $html);
+
+        // Restore the fixture body — this test mutates shared contest_info
+        // and must not leak into the next test in the run.
+        DB::table('contest_info')->where('id', 1)->update(['contestVolunteers' => '<p>Volunteer information coming soon!</p>']);
     }
 
     public function test_contact_page_lists_officials_when_mode_n(): void

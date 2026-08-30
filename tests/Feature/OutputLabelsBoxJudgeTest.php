@@ -260,9 +260,17 @@ final class OutputLabelsBoxJudgeTest extends TestCase
 
         $data = LabelsController::judgingLabels($this->ctx(), '5160');
         $this->assertStringContainsString('_All_Judge_Scoresheet_Labels_Avery5160.pdf', $data['filename']);
-        $label = $data['view']['labels'][0];
-        $this->assertContains(self::PREFIX.'First '.self::PREFIX.'Last', $label);
-        $this->assertContains('BJCP Certified Judge', $label);
-        $this->assertContains(strtolower(self::PREFIX).'.judge@brewingcompetitions.com', $label);
+        // The baseline DB has staff judges whose names sort before P52jLast,
+        // so locate the seeded judge by name rather than index [0].
+        $labels = array_map(
+            static fn (array $l): string => implode('|', $l),
+            $data['view']['labels'],
+        );
+        $seeded = collect($labels)->first(
+            static fn (string $l): bool => str_contains($l, self::PREFIX.'First '.self::PREFIX.'Last'),
+        );
+        $this->assertNotNull($seeded, 'seeded judge label missing from '.count($labels).' labels');
+        $this->assertStringContainsString('BJCP Certified Judge', $seeded);
+        $this->assertStringContainsString(strtolower(self::PREFIX).'.judge@brewingcompetitions.com', $seeded);
     }
 }
