@@ -46,9 +46,9 @@ h1 pattern, panels, navbar-inverse, Jasny off-canvas right menu.
 | Hero band + salutation band + print-only h1 | PASS |
 | Footer fixed dark with BCOE&M version line | PASS |
 | Admin 9/3 dashboard row (col-lg-9 + sidebar) | PASS |
-| Public anon sidebar col-lg-3 | **FAIL — not rendered** (PARITY-006) |
-| animate.css entrance animations | MISSING |
-| daisyUI radius 0.25rem vs BS3 4px / BS5 0.375rem | close; buttons/inputs not pixel-audited |
+| Public anon sidebar col-lg-3 | PASS — rendered via `public-sidebar` (PARITY-006, P2 Slice 7) |
+| animate.css entrance animations | **MISSING → P3 Slice 8**: `reveal-element` fade-in via IntersectionObserver in app.js (not animate.css, but entrance animation parity); CSS tooltips + loader + sticky-home added |
+| daisyUI radius 0.25rem vs BS3 4px / BS5 0.375rem | close; buttons/inputs not pixel-audited — screenshot pass owed (PARITY-010) |
 
 ## Public/admin theme split — CORRECT in port
 
@@ -58,10 +58,19 @@ two-theme split — `bcoem` (public, default-3 palette) / `bcoem-brux` (admin,
 bruxellensis Materials palette) — matches the legacy selection exactly.
 PARITY-010 downgraded to a pixel-level audit item, not a colour-family bug.
 
-## Screenshot pass still required
-Audit §5 requires controlled same-viewport/same-data screenshots. Queue
-(browser relay against both local apps on the anon-base corpus):
-home, list, brew, pay, contact, volunteers, register×3, login, admin
-dashboard, preferences×5, entries, participants, judging ×7, scores, BOS,
-eval dashboard + scoresheet. Until then visual parity is UNVERIFIED, only
-structural/text parity is evidenced.
+## Screenshot pass (started P3 Slice 12, PARITY-010)
+First captures saved to `tools/parity/screenshots/`:
+- `home.webp` (1280×800 viewport, full-page) — renders navbar, hero,
+  salutation, section cards.
+- `admin-dashboard.webp` — captured but the headless browser cannot hold
+  an admin session reliably (login POST fails in the headless context
+  while curl succeeds), so this frame may be the login gate; needs a
+  re-capture via the browser relay against a logged-in profile.
+
+Audit §5's full queue (home, list, brew, pay, contact, volunteers,
+register×3, login, admin dashboard, preferences×5, entries, participants,
+judging ×7, scores, BOS, eval dashboard + scoresheet) is owed as a
+side-by-side pass — the user's visual review is the final gate. Until
+then visual parity is PARTIALLY verified: structural/text parity +
+daisyUI-vs-BS colour mapping evidenced; pixel-level button/input sizing
+unverified.
