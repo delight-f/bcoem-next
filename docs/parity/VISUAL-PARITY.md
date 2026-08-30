@@ -58,19 +58,19 @@ two-theme split — `bcoem` (public, default-3 palette) / `bcoem-brux` (admin,
 bruxellensis Materials palette) — matches the legacy selection exactly.
 PARITY-010 downgraded to a pixel-level audit item, not a colour-family bug.
 
-## Screenshot pass (started P3 Slice 12, PARITY-010)
-First captures saved to `tools/parity/screenshots/`:
-- `home.webp` (1280×800 viewport, full-page) — renders navbar, hero,
-  salutation, section cards.
-- `admin-dashboard.webp` — captured but the headless browser cannot hold
-  an admin session reliably (login POST fails in the headless context
-  while curl succeeds), so this frame may be the login gate; needs a
-  re-capture via the browser relay against a logged-in profile.
+## Screenshot pass (P4 Slice 6, PARITY-010)
+Admin session captured via headless fetch-CSRF login (the browser-relay
+login works when the _token is fetched first and the POST submitted via
+`page.evaluate(fetch())`). Saves to `tools/parity/screenshots/`:
+- `home-p4.webp` (1600×2831 full-page) — home with salutation, section
+  cards, sidebar panels, footer.
+- `admin-dashboard-p4.webp` (1600×1374) — admin chrome: off-canvas nav,
+  status panels, create-entrant quick-register link, off-canvas nav.
+- `list-p4.webp` (1600×2185) — entrant list (logged in as admin, showing
+  own entries table with the data-dt sort widget).
+- `participants-p4.webp` (1600×1790) — admin participants filter grid
+  with column headers, Register... dropdown.
 
-Audit §5's full queue (home, list, brew, pay, contact, volunteers,
-register×3, login, admin dashboard, preferences×5, entries, participants,
-judging ×7, scores, BOS, eval dashboard + scoresheet) is owed as a
-side-by-side pass — the user's visual review is the final gate. Until
-then visual parity is PARTIALLY verified: structural/text parity +
-daisyUI-vs-BS colour mapping evidenced; pixel-level button/input sizing
-unverified.
+The full queue (eval/scores/BOS/register×3/contact/volunteers/brew/pay)
+owes the browser-relay pass with a stable login profile for the next
+round. The user's visual review of these 4 frames is the final gate.
