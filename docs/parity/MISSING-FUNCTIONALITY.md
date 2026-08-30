@@ -47,3 +47,8 @@ Legacy capabilities with no port equivalent, ranked by user impact.
   `send_test_email.admin.php?csrf=` row are legacy-URL-shape noise on
   mapped surfaces (`/awards`, `/admin/send-test-email` both exist);
   the redirect `/awards.php` route keeps old bookmarks working.
+- Custom modules (`prefsUseMods=Y`): legacy include-renders
+  `mods/*.php` files on public pages (mods_top/bottom.inc.php); the
+  port stores mods as DB rows with the admin CRUD but does not
+  include-render them — deliberate replacement (arbitrary PHP include
+  is an RCE boundary). Recorded U6 (LEGACY-UNKNOWN-BEHAVIOUR).
