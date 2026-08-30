@@ -14,12 +14,7 @@
             <p>{!! __('site.contact_sent') !!} <a href="{{ url('/contact') }}">{{ __('site.contact_send_another') }}</a></p>
         @endif
 
-        @if ($mode === 'X')
-            <p>{{ __('site.contacts_disabled') }}</p>
-            @if ($ctx->contestStr('contestHostWebsite'))
-                <p><a class="hide-loader" href="{{ $ctx->contestStr('contestHostWebsite') }}" target="_blank" rel="noopener">{{ __('site.website') }}</a></p>
-            @endif
-        @elseif ($mode === 'N' || $mode === 'Y')
+        @if ($mode === 'N' || $mode === 'Y')
             @if ($contacts->isEmpty())
                 <p>{{ __('site.no_contacts') }}</p>
             @elseif ($mode === 'N')

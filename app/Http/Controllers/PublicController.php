@@ -345,27 +345,20 @@ final class PublicController extends Controller
     }
 
     /**
-     * The landing-page salutation (Welcome {name} + interest line) that
-     * legacy index.pub.php renders on every public page. Mirrors home()'s
-     * inline build for the standalone volunteers/contact surfaces.
+     * Section-page salutation for standalone public surfaces (volunteers,
+     * contact, sponsors). Legacy index.pub.php:106-111 renders for
+     * non-default sections: the contest-name h1 plus the logged-in
+     * "Welcome {name}!" line. The interest line is landing-only
+     * (default/maintenance/numeric sections, index.pub.php:129-135), so
+     * it must NOT appear here.
      */
     private function publicSalutation(Request $request, TenantContext $ctx): string
     {
-        $salutation = '';
+        $salutation = '<h1 class="fw-bold animate__animated animate__fadeInDown">'.e($ctx->contestStr('contestName')).'</h1>';
         if ($request->user() !== null) {
             $firstName = DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '';
             $salutation .= '<p class="landing-page-salutation">'.self::t('site.welcome').' '.e($firstName).'!</p>';
         }
-        $host = e($ctx->contestStr('contestHost') ?? '');
-        $website = $ctx->contestStr('contestHostWebsite');
-        $hostHtml = $website !== null && $website !== ''
-            ? '<a class="hide-loader" href="'.e($website).'" target="_blank">'.$host.'</a>'
-            : $host;
-        $salutation .= '<p class="lead landing-page-salutation fw-light"><small>'
-            .self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
-            .' '.self::t('site.organized_by').' '.$hostHtml
-            .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
-            .'.</small></p>';
 
         return $salutation;
     }

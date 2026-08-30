@@ -66,6 +66,29 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
             ->assertSee('Use the form below to contact a competition official. All fields with a star are required.')
             ->assertSee('Send Message');
     }
+    public function test_contact_page_renders_empty_when_mode_x(): void
+    {
+        // Legacy contact.sec.php has no prefsContact == "X" branch — a
+        // disabled contact surface renders NOTHING in the section (P3
+        // Slice 3, PARITY-008; previously the port emitted a
+        // "Display of competition contacts has been disabled" paragraph
+        // the legacy page does not have).
+        DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'X']);
+
+        $response = $this->get('/contact')->assertOk();
+        $this->assertStringNotContainsString('Display of competition contacts has been disabled', $response->getContent());
+    }
+
+    public function test_contact_page_uses_section_salutation_not_interest_line(): void
+    {
+        // Legacy index.pub.php:106-111: non-default sections render the
+        // contest-name h1 (+ Welcome when logged in); the "Thank you for
+        // your interest..." interest line is landing-only (129-135).
+        $response = $this->get('/contact')->assertOk();
+        $html = $response->getContent();
+        $this->assertStringContainsString('<h1', $html);
+        $this->assertStringNotContainsString('Thank you for your interest in the', $html);
+    }
 
     public function test_contact_form_submits_and_sends_mail(): void
     {
