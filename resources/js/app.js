@@ -297,3 +297,84 @@ const stickyHome = document.getElementById('sticky-home');
 window.addEventListener('scroll', () => {
     stickyHome.classList.toggle('show', window.scrollY > window.innerHeight);
 }, { passive: true });
+// ── DataTables parity (PARITY-023): client-side column sort + pagination
+// for <table data-dt>. Legacy uses the DataTables jQuery plugin on admin
+// participants/entries/styles/BOS + public winners surfaces; this is a
+// dependency-free equivalent: click a header to sort (toggle asc/desc),
+// a pager footer splits long tables at data-dt-page rows (default 25).
+// Opt-in via the attribute so server-rendered tables stay untouched.
+document.querySelectorAll('table[data-dt]').forEach((table) => {
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if (!thead || !tbody) return;
+    const rows = [...tbody.querySelectorAll('tr')];
+    if (rows.length <= 1) return;
+    const pageSize = parseInt(table.getAttribute('data-dt-page') || '25', 10);
+
+    let sortCol = -1;
+    let sortDir = 1;
+    let page = 0;
+
+    const render = () => {
+        const start = page * pageSize;
+        rows.forEach((row, i) => {
+            row.style.display = (i >= start && i < start + pageSize) ? '' : 'none';
+        });
+        const pager = table.nextElementSibling;
+        if (!pager?.classList.contains('data-dt-pager')) return;
+        const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+        pager.innerHTML = '';
+        const prev = document.createElement('button');
+        prev.type = 'button';
+        prev.textContent = '‹';
+        prev.disabled = page === 0;
+        prev.addEventListener('click', () => { if (page > 0) { page--; render(); } });
+        pager.appendChild(prev);
+        const info = document.createElement('span');
+        info.className = 'data-dt-info';
+        info.textContent = `${start + 1}–${Math.min(start + pageSize, rows.length)} of ${rows.length}`;
+        pager.appendChild(info);
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.textContent = '›';
+        next.disabled = page >= pages - 1;
+        next.addEventListener('click', () => { if (page < pages - 1) { page++; render(); } });
+        pager.appendChild(next);
+    };
+
+    [...thead.querySelectorAll('th')].forEach((th, col) => {
+        if (th.getAttribute('data-no-sort') !== null) return;
+        th.classList.add('data-dt-sortable');
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            if (sortCol === col) sortDir *= -1;
+            else { sortCol = col; sortDir = 1; }
+            const colRows = rows.filter((r) => r.cells[col]);
+            const get = (r) => (r.cells[col].textContent || '').trim().toLowerCase();
+            colRows.sort((a, b) => {
+                const av = get(a);
+                const bv = get(b);
+                const an = parseFloat(av);
+                const bn = parseFloat(bv);
+                if (!isNaN(an) && !isNaN(bn)) return (an - bn) * sortDir;
+                return av.localeCompare(bv) * sortDir;
+            });
+            rows.sort((a, b) => {
+                const ia = colRows.indexOf(a);
+                const ib = colRows.indexOf(b);
+                return (ia === -1 ? 1e9 : ia) - (ib === -1 ? 1e9 : ib);
+            });
+            rows.forEach((r) => tbody.appendChild(r));
+            page = 0;
+            render();
+        });
+    });
+
+    if (rows.length > pageSize) {
+        const pager = document.createElement('div');
+        pager.className = 'data-dt-pager';
+        pager.setAttribute('aria-label', 'Table pagination');
+        table.after(pager);
+    }
+    render();
+});
