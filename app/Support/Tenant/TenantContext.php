@@ -58,12 +58,21 @@ final class TenantContext
     /** prefsCurrency code -> symbol (legacy common.lib currency map). */
     public function currencySymbol(): string
     {
+        // Legacy currency_info(...,1) (lib/common.lib.php:662-698): the
+        // DISPLAYED symbol per prefsCurrency — AUD/CAD/HKD/NZD/SGD/TWD/MXN
+        // all render as plain "$" with a currency CODE, not a prefixed
+        // "A$"/"C$" literal. The raw pref is the option value, not the
+        // symbol. Match the switch exactly (symbol side of "^").
         $pref = $this->prefsStr('prefsCurrency') ?? '$';
 
         return match ($pref) {
             'pound' => '£', 'czkoruna' => 'Kč', 'euro' => '€',
+            'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'M$' => '$',
             'Ft' => 'Ft', 'shekel' => '₪', 'yen' => '¥',
-            'nkr', 'kr' => 'kr',
+            'nkr', 'kr', 'skr' => 'kr',
+            'RM' => 'RM', 'R' => 'R', 'p.' => 'p.',
+            'phpeso' => '₱', 'pol' => 'zł', 'sfranc' => '₣',
+            'baht' => '฿', 'tlira' => '₺', 'rupee' => '₹', 'krw' => '₩',
             default => $pref,
         };
     }

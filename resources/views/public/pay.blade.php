@@ -32,7 +32,8 @@
                 {{ __('site.pay_fees_marked_paid') }}</small></p>
         @else
             <p class="text-xl font-light">
-                <small>{{ __('site.pay_fees_are') }} <strong>{{ number_format((float) $fee, 2) }}</strong> {{ __('site.pay_per_entry') }}.</small>
+                {{-- pay.pub.php:80 — symbol prepended: {symbol}{amount} per entry --}}
+                <small>{{ __('site.pay_fees_are') }} <strong>{{ $ctx->currencySymbol() }}{{ number_format((float) $fee, 2) }}</strong> {{ __('site.pay_per_entry') }}.</small>
             </p>
             <p class="text-xl font-light">
                 <small>{{ __('site.pay_total_due') }} <strong>{{ number_format((float) $total, 2) }}</strong>.</small>
