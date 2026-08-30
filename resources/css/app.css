@@ -1518,3 +1518,77 @@ html {
         font-family: inherit;
     }
 }
+/* INTERACTION-PARITY: CSS tooltip, loader overlay, sticky back-to-top
+   (legacy Bootstrap tooltip init + #loader-submit + #sticky-home). */
+[data-toggle="tooltip"], [data-tooltip="true"] {
+    position: relative;
+}
+.bcoem-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    max-width: 240px;
+    padding: .35rem .6rem;
+    border-radius: .375rem;
+    background: #212529;
+    color: #fff;
+    font-size: .75rem;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    pointer-events: none;
+}
+[data-toggle="tooltip"]:hover .bcoem-tooltip,
+[data-toggle="tooltip"]:focus .bcoem-tooltip,
+[data-tooltip="true"]:hover .bcoem-tooltip,
+[data-tooltip="true"]:focus .bcoem-tooltip {
+    display: block;
+}
+
+.loader-submit {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(255, 255, 255, .7);
+    cursor: wait;
+}
+.loader-submit.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.loader-submit.show::after {
+    content: '';
+    width: 3rem;
+    height: 3rem;
+    border: .3rem solid rgba(0, 0, 0, .2);
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: bcoem-spin .8s linear infinite;
+}
+@keyframes bcoem-spin {
+    to { transform: rotate(360deg); }
+}
+
+.sticky-home {
+    display: none;
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1500;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #212529;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .3);
+    text-decoration: none;
+}
+.sticky-home:hover { color: #fff; text-decoration: none; }
+.sticky-home.show { display: flex; }

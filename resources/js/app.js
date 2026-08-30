@@ -245,3 +245,55 @@ if (window.bcoemAdminSession) {
         }
     }, 1000);
 }
+// ── Tooltips (INTERACTION-PARITY; legacy $('[data-toggle="tooltip"]').tooltip()).
+// Bootstrap JS is loaded on admin pages only; a CSS tooltip works on every
+// surface (public + admin). Title-bearing [data-toggle=tooltip] /
+// [data-tooltip=true] elements get a .bcoem-tooltip on hover/focus.
+document.querySelectorAll('[data-toggle="tooltip"], [data-tooltip="true"]').forEach((el) => {
+    const title = el.getAttribute('title') || el.getAttribute('data-original-title');
+    if (!title || el.getAttribute('data-bcoem-tooltip')) return;
+    el.setAttribute('data-bcoem-tooltip', '1');
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('aria-label', title);
+    const tip = document.createElement('span');
+    tip.className = 'bcoem-tooltip';
+    tip.textContent = title;
+    el.appendChild(tip);
+});
+
+// ── Loader overlay (INTERACTION-PARITY; legacy #loader-submit). .hide-loader
+// links/buttons show a brief overlay before navigating; #loader-submit element
+// (if present) is toggled. Public pages have no #loader-submit, so a fixed
+// overlay is created on demand.
+if (!document.getElementById('loader-submit')) {
+    const loader = document.createElement('div');
+    loader.id = 'loader-submit';
+    loader.className = 'loader-submit';
+    loader.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(loader);
+}
+const loaderEl = document.getElementById('loader-submit');
+document.querySelectorAll('.hide-loader').forEach((el) => {
+    if (el.getAttribute('data-hide-loader')) return;
+    el.setAttribute('data-hide-loader', '1');
+    el.addEventListener('click', () => {
+        if (el.getAttribute('target') === '_blank') return;
+        loaderEl.classList.add('show');
+    });
+});
+
+// ── Sticky back-to-top (INTERACTION-PARITY; legacy #sticky-home). A fixed
+// "back to top" link appears after scrolling past the hero.
+if (!document.getElementById('sticky-home')) {
+    const sticky = document.createElement('a');
+    sticky.id = 'sticky-home';
+    sticky.className = 'sticky-home';
+    sticky.href = '#top';
+    sticky.setAttribute('aria-label', 'Back to top');
+    sticky.innerHTML = '<i class="fa fa-chevron-up"></i>';
+    document.body.appendChild(sticky);
+}
+const stickyHome = document.getElementById('sticky-home');
+window.addEventListener('scroll', () => {
+    stickyHome.classList.toggle('show', window.scrollY > window.innerHeight);
+}, { passive: true });
