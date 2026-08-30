@@ -25,12 +25,15 @@ $signatures = [
     // Navbar session block: legacy renders its full logged-in navbar
     // (Toggle navigation Home <email> ... Log Out [Auto Log Out in N])
     // where the port emits only the compact user menu, or vice versa.
-    // Match the side that is a pure deletion/insertion beginning with
-    // the navbar anchor and ending in Log Out (optionally the countdown).
     'navbar_session' => static function (string $a, string $b): bool {
-        $nav = '/^(?:Toggle navigation )?Home \S+@\S+.*Log Out(?: Auto Log Out in \S+)?$/';
-        return (trim($a) === '' && preg_match($nav, trim($b)) === 1)
-            || (trim($b) === '' && preg_match($nav, trim($a)) === 1);
+        // Two-sided form: legacy "Toggle navigation Home <email> ... Log Out"
+        // vs port "Home <email> ... Log Out" (or one side empty). Both
+        // sides carry the same anchored navbar; only the stub prefix and
+        // chrome word order differ.
+        $nav = '/^(?:Toggle navigation )?Home \S+@\S+.*Log Out/';
+        $aNav = preg_match($nav, trim($a)) === 1;
+        $bNav = preg_match($nav, trim($b)) === 1;
+        return ($aNav && $bNav) || (trim($a) === '' && $bNav) || (trim($b) === '' && $aNav);
     },
     // Session countdown tail.
     'auto_logout' => static function (string $a, string $b): bool {
