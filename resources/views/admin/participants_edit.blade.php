@@ -103,6 +103,8 @@
                         <input class="form-check-input" type="radio" id="change-security-0" name="changeSecurity" value="N" checked>
                         <label class="form-check-label" for="change-security-0">No</label>
                     </div>
+                    {{-- brewer_text_044 (en-US.lang.php:1943) --}}
+                    <div class="help-block">Do you wish to change your security question and/or answer?</div>
                 </div>
             </div>
 
