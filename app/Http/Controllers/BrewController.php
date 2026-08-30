@@ -524,7 +524,9 @@ final class BrewController extends Controller
             ? ltrim((string) $style->brewStyleNum, '0')
             : (string) $style->brewStyleNum;
 
-        return $group.'.'.$num.': '.$style->brewStyle;
+        // Legacy label format (lib/common.lib.php:1803-1805):
+        // ltrim(brewStyleGroup,"0").brewStyleNum — e.g. "1A", no dot/colon.
+        return $group.$num.': '.$style->brewStyle;
     }
 
     /**

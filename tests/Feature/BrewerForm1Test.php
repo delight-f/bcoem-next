@@ -125,6 +125,16 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
             ->assertSee('name="brewerMHP"', false)
             ->assertSee('Opt out');
     }
+    public function test_style_labels_match_legacy_format(): void
+    {
+        // Legacy renders style options as ltrim(brewStyleGroup,'0').
+        // brewStyleNum — "1A", no dot/colon (lib/common.lib.php:1803-1805).
+        // Regression: the port rendered "1.A: " until P4 Slice 2.
+        $this->login();
+        $html = (string) $this->get('/brew')->assertOk()->getContent();
+        $this->assertStringContainsString('1A:', $html);
+        $this->assertStringNotContainsString('1.A:', $html);
+    }
 
     public function test_corpus_club_round_trips_byte_for_byte(): void
     {
