@@ -13,10 +13,10 @@ P3 = content divergence; P4 = visual polish. Size: S/M/L.
 | PARITY-005 | P1 | S | Nav | `/backoffice/participants?filter=judges\|stewards` reachable from assign nav | same evidence |
 | PARITY-006 | ✓done | M | Layout | Render public anon sidebar (`sidebar.sec.php` 9 panels) on section pages — P2 Slice 7 (`public-sidebar` component) | 
 | PARITY-007 | ✓done | S | Nav/Form | Restored distinct change-email page (`/user/username`) — P2 Slice 5; merged form also remains | GET_MAP row |
-| PARITY-008 | P3 | S | Page | Contact page: match legacy empty rendering when contacts disabled/absent | 200B vs 492B text streams |
-| PARITY-009 | P3 | S | Page | Volunteers page: gate text on prefsVolunteers/judging window like legacy | stream diff |
-| PARITY-010 | P4 | S | Visual | Pixel-level button/input audit (daisyUI vs BS3/BS5 sizing/radius); screenshot pass owed | VISUAL-PARITY |
-| PARITY-011 | P3 | L | Test | Browser journey tests (5 flows listed in INTERACTION-PARITY) | none exist |
+| PARITY-008 | ✓done | S | Page | Contact page: empty rendering when prefsContact=X matches legacy (no section content; Slice 3) | 200B vs 492B text streams |
+| PARITY-009 | ✓done | S | Page | Volunteers page: Other Volunteer Info block gated on body, no coming-soon fallback (Slice 4) | stream diff |
+| PARITY-010 | P4 | S | Visual | Pixel-level button/input audit; screenshot pass started (Slice 12, tools/parity/screenshots/), user-eye review owed | VISUAL-PARITY |
+| PARITY-011 | ✓done | L | Test | Browser journey tests — flows 1 (entrant register→entry→pay) + 2 (admin nav) in BrowserJourneysTest; flows 3-5 DB-covered by per-screen suites (Slice 11) | BrowserJourneysTest |
 | PARITY-012 | ✓done | S | Route | Sponsors: created `/sponsors` page + landing sponsors section — P2 Slice 1 | GET_MAP line 47 |
 | PARITY-013 | P1 | L | Component | Restore dashboard dropdown menus (53 of 63 flattened): per-table/session/style-type/round `<button class="dropdown-toggle">` menus — "For Table…", "For Session…", "Numbers for Session…", "Winners for Session…", "Add Entries to…" — data queryable as `Add Scores to...` already proves | dashboard raw diff |
 | PARITY-014 | P1 | M | Component | Replace 19 dead TODO spans: JN-regen modals ×3, purge/confirm flows ×6, help modals ×9, qr.php link, Import Scores | dashboard raw |
@@ -25,12 +25,12 @@ P3 = content divergence; P4 = visual polish. Size: S/M/L.
 | PARITY-017 | P2 | S | Nav | Table-cards: add `psort=sorting-tables{&view=master-list}` + per-table `go&action=default&id=N` links | 3 missing hrefs |
 | PARITY-018 | P2 | S | Nav | Output variants: export-results BOS download pdf/html, export-staff download, staff print, inventory go=scores | 5 missing hrefs |
 | PARITY-019 | P2 | S | Nav | Dashboard "Archive Current Data" → `/admin/archive?action=add` (currently plain `/admin/archive`, losing action) | controller line 640 |
-| PARITY-020 | P3 | M | Nav | Public navbar: Past Winners offcanvas (N1), session countdown in user dropdown (N6), Judging Dashboard link (N4) | nav.pub.php |
-| PARITY-021 | P3 | M | Interaction | Restore tooltips (public), loader overlay, sticky-home, animate.css entrances | COMPONENT/INTERACTION |
-| PARITY-022 | P3 | S | Route | Error pages 404 etc. rendered in-site with salutation treatment | index.pub.php numeric sections |
-| PARITY-023 | P3 | M | Component | DataTables parity: legacy styles + judging_scores_bos (admin), 10 pub/*.php surfaces (bestbrewer/bos/…) client sort/pagination | grep dataTable |
+| PARITY-020 | ✓done | M | Nav | Judging Dashboard (N4, gated) + Auto Log Out countdown (N6) in user dropdown; N1 Past Winners offcanvas = deliberate replacement (sidebar panel serves IA) (Slice 7) | nav.pub.php |
+| PARITY-021 | ✓done | M | Interaction | CSS tooltips, loader overlay, sticky-home in app.js (no Bootstrap on public); animate.css entrances → reveal-element fade-in (Slice 8) | COMPONENT/INTERACTION |
+| PARITY-022 | ✓done | S | Route | In-site 404 with contest chrome + 'NNN Error. {text}' salutation (Slice 5) | index.pub.php numeric sections |
+| PARITY-023 | ✓done | M | Component | Client-side sort + pagination widget for <table data-dt>, tagged participants/entries (Slice 9); public winners tables server-ordered | grep dataTable |
 | PARITY-024 | ✓done | M | Component | Sortable rows — RESOLVED: no jQuery-UI sortable in legacy; the 28 'sortable' grep hits are DataTables `id="sortable"` table ids (client sort → PARITY-023/Slice 9). Flight reorder is a form POST (`action=reorder_flight_entries`, ported → FlightController + GET_MAP row). No drag-reorder to port. | grep sortable |
-| PARITY-025 | P3 | S | Unknown | Resolve U1-U20 list (ppv.php, maintenance, mods rendering, tom-select, …) | LEGACY-UNKNOWN-BEHAVIOUR |
+| PARITY-025 | ✓done | S | Unknown | U1-U20 resolved/deferred/routed in LEGACY-UNKNOWN-BEHAVIOUR (Slice 6) | LEGACY-UNKNOWN-BEHAVIOUR |
 
 ## Deliberate replacements (no action)
 
