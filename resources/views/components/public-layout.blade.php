@@ -382,7 +382,7 @@
     <dialog id="login-modal" class="modal">
         <div class="modal-box max-w-2xl">
             <h1 class="text-lg font-bold mb-4">{{ __('site.log_in') }}</h1>
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
                 <div class="alert alert-error mb-4">
                     <ul class="mb-0">
                         @foreach ($errors->all() as $error)

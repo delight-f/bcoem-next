@@ -80,6 +80,7 @@ return [
     'edition_amateur' => 'Amateur Competition Edition',
     'edition_pro' => 'Pro Competition Edition',
     'log_in' => 'Log In',
+    'error_label' => 'Error',
     'log_in_to_enter' => 'Log In to Enter',
     'close' => 'Close',
     'login_problem' => 'Sorry, there was a problem with your last login attempt.',
