@@ -35,12 +35,12 @@
             @endif
         @endunless
 
-        <h2>{{ __('site.other_volunteer_info') }}</h2>
+        {{-- volunteers.sec.php: the Other Volunteer Info block renders only
+             when contestVolunteers is non-empty — no fallback text. --}}
         @php($body = \App\Support\Tenant\ContestRules::renderText($ctx->contestStr('contestVolunteers')))
         @if ($body !== '')
+            <h2>{{ __('site.other_volunteer_info') }}</h2>
             {!! $body !!}
-        @else
-            <p>{{ __('site.volunteer_coming_soon') }}</p>
         @endif
     </section>
 </x-public-layout>

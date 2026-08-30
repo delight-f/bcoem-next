@@ -43,6 +43,23 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
                 'Volunteer information coming soon!',
             ]);
     }
+    public function test_volunteers_page_other_info_block_from_body_only(): void
+    {
+        // Legacy volunteers.sec.php:62-74: the "Other Volunteer Info"
+        // header + body render only when contestVolunteers is non-empty;
+        // there is no fallback text (P3 Slice 4, PARITY-009). The anon-base
+        // fixture ships a contestVolunteers body ("coming soon!"), so the
+        // header + body render — but only because the body exists; an empty
+        // body must render neither.
+        $html = $this->get('/volunteers')->assertOk()->getContent();
+        $this->assertStringContainsString('Other Volunteer Info', $html);
+        $this->assertStringContainsString('Volunteer information coming soon!', $html);
+
+        DB::table('contest_info')->where('id', 1)->update(['contestVolunteers' => '']);
+        $html = $this->get('/volunteers')->assertOk()->getContent();
+        $this->assertStringNotContainsString('Other Volunteer Info', $html);
+        $this->assertStringNotContainsString('coming soon', $html);
+    }
 
     public function test_contact_page_lists_officials_when_mode_n(): void
     {
