@@ -138,6 +138,7 @@ fi
 
 pass=0; fail=0; skipped=0
 link_missing=0
+noise=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
     safe="$(echo "$url" | tr '/?=&|' '_____')"
@@ -171,6 +172,12 @@ while IFS= read -r url; do
     if diff -q "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" >/dev/null; then
         echo "PASS $url"; pass=$((pass+1))
     else
+        # P3 Slice 1: classify word-level hunks — chrome-only diffs (navbar
+        # session block, countdown tail, glyphs) are NOISE, not regressions.
+        verdict=$(php classify.php "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" 2>/dev/null | head -1)
+        if [ "$verdict" = "VERDICT NOISE" ]; then
+            echo "NOISE $url"; noise=$((noise+1)); continue
+        fi
         diff -u "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" > "$REPORT/$safe.content-diff" || true
         diff "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" > "$REPORT/$safe.markup-diff" || true
         # Link-map (DIFF pairs only — cheap): MISSING links in the port page
@@ -187,6 +194,6 @@ while IFS= read -r url; do
 done < urls.txt
 
 echo
-echo "== parity report: $pass pass, $fail fail/diff, $skipped skipped, $link_missing missing links =="
+echo "== parity report: $pass pass, $fail fail/diff, $noise noise, $skipped skipped, $link_missing missing links =="
 echo "== artifacts: $REPORT =="
 [ "$fail" -eq 0 ]
