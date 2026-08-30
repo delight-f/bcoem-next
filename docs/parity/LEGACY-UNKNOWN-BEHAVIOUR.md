@@ -23,10 +23,10 @@ Resolved during P3 Slice 6 (2026-08-30). Disposition legend:
 | U11 | Delete confirmations per CRUD page | **RESOLVED** — port has 18 `confirm()` guards across admin blades (sponsors/entries/styles/mods/contacts/participants/...), matching legacy's confirm-before-destroy pattern. |
 | U12 | Help icon (`bcoem_help()`) per admin section | **RESOLVED (deliberate replacement)** — legacy navbar right-side fa-question-circle opens a per-section help modal (nav.sec.php:389-392, help.lib.php). Port covers help content contextually: dashboard help modals (P1, PARITY-014), per-field popovers on entries (P2). The navbar-level per-section icon is not replicated; in-page contextual help replaces it. |
 | U13 | Sticky home + scroll-indicator + smooth anchor | **→ Slice 8** (PARITY-021). |
-| U14 | Archive offcanvas triggers on live scabs data | **DEFERRED** — corpus has demoarchive only; needs a real scabs DB copy to verify archiveSuffix-driven conditions. |
-| U15 | Language toggle scope for scabs | **DEFERRED** — pref-driven; needs organiser confirmation whether scabs serves non-English users. |
+| U14 | Archive offcanvas triggers on live scabs data | **DEFERRED (P4 Slice 7 re-confirmed)** — corpus has demoarchive only; needs a real scabs DB copy to verify archiveSuffix-driven conditions. |
+| U15 | Language toggle scope for scabs | **DEFERRED (P4 Slice 7 re-confirmed)** — pref-driven; needs organiser confirmation whether scabs serves non-English users. |
 | U16 | DataTables public side (10 pub/*.php surfaces) | **→ Slice 9** (PARITY-023). |
 | U17 | `maps.output.php` port controller binding | **RESOLVED** — `php artisan route:list` shows `GET|HEAD admin/output/maps .. outputs.maps › Output\MapsController@__invoke`; the `..` in the earlier dump was a display artifact. |
 | U18 | Session countdown on public side (dropdown footer) | **→ Slice 7** (PARITY-020) — session-expire modals already present (public-layout 467-500); the "Auto Log Out in N" countdown in the user dropdown is the residual (nav.pub.php:189). |
 | U19 | Judging Dashboard dropdown link conditions | **→ Slice 7** (PARITY-020) — eval row exists with prefsEval gate (public-layout:49); exact brewer_assignment() conditions to verify there. |
-| U20 | `custom_competition_info.pub.php` drop-in | **DEFERRED** — file-based drop-in; check scabs deploy bundle (external). |
+| U20 | `custom_competition_info.pub.php` drop-in | **DEFERRED (P4 Slice 7 re-confirmed)** — file-based drop-in; check scabs deploy bundle (external). |

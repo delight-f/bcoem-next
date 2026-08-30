@@ -15,7 +15,7 @@ P3 = content divergence; P4 = visual polish. Size: S/M/L.
 | PARITY-007 | ✓done | S | Nav/Form | Restored distinct change-email page (`/user/username`) — P2 Slice 5; merged form also remains | GET_MAP row |
 | PARITY-008 | ✓done | S | Page | Contact page: empty rendering when prefsContact=X matches legacy (no section content; Slice 3) | 200B vs 492B text streams |
 | PARITY-009 | ✓done | S | Page | Volunteers page: Other Volunteer Info block gated on body, no coming-soon fallback (Slice 4) | stream diff |
-| PARITY-010 | P4 | S | Visual | Pixel-level button/input audit; screenshot pass started (Slice 12, tools/parity/screenshots/), user-eye review owed | VISUAL-PARITY |
+| PARITY-010 | P4 | S | Visual | Screenshot pass — 4 captures in tools/parity/screenshots/ (P4 Slice 6); user's visual review of the frames is the final gate. Pixel-level button/input sizing unverified until then | VISUAL-PARITY |
 | PARITY-011 | ✓done | L | Test | Browser journey tests — flows 1 (entrant register→entry→pay) + 2 (admin nav) in BrowserJourneysTest; flows 3-5 DB-covered by per-screen suites (Slice 11) | BrowserJourneysTest |
 | PARITY-012 | ✓done | S | Route | Sponsors: created `/sponsors` page + landing sponsors section — P2 Slice 1 | GET_MAP line 47 |
 | PARITY-013 | P1 | L | Component | Restore dashboard dropdown menus (53 of 63 flattened): per-table/session/style-type/round `<button class="dropdown-toggle">` menus — "For Table…", "For Session…", "Numbers for Session…", "Winners for Session…", "Add Entries to…" — data queryable as `Add Scores to...` already proves | dashboard raw diff |
