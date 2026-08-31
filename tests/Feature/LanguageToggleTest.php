@@ -20,6 +20,14 @@ final class LanguageToggleTest extends PublicSurfaceTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        DB::table('users')->where('user_name', 'assign.admin@brewingcompetitions.com')->delete();
+        DB::table('users')->insert([
+            'user_name' => 'assign.admin@brewingcompetitions.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('bcoem'),
+            'userLevel' => '1',
+            'userCreated' => '2024-01-01 00:00:01',
+            'userAdminObfuscate' => 0,
+        ]);
         DB::table('preferences')->where('id', 1)->update([
             'prefsLanguageToggle' => 'N',
             'prefsLanguageOptions' => null,

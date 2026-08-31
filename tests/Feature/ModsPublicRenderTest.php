@@ -34,6 +34,14 @@ final class ModsPublicRenderTest extends PublicSurfaceTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        DB::table('users')->where('user_name', 'assign.admin@brewingcompetitions.com')->delete();
+        DB::table('users')->insert([
+            'user_name' => 'assign.admin@brewingcompetitions.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('bcoem'),
+            'userLevel' => '1',
+            'userCreated' => '2024-01-01 00:00:01',
+            'userAdminObfuscate' => 0,
+        ]);
         DB::table('mods')->where('mod_name', 'P527 Test Mod')->delete();
         DB::table('preferences')->where('id', 1)->update(['prefsUseMods' => 'N']);
     }
