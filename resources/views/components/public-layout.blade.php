@@ -16,6 +16,51 @@
     // pub/nav.pub.php:109 "Other Info" nav link). NULL/empty = absent,
     // mirroring legacy's file_exists() gate.
     $contestInfoExtra = trim((string) ($ctx->contestStr('contestInfoExtra') ?? ''));
+    // PARITY-027: safe public mods render — legacy include-renders
+    // mods/*.php files (index.pub.php:357+618); the port renders the
+    // DB-stored mod_description (informational mods) at the same
+    // placement points with the same gating, without PHP include (RCE
+    // boundary). Legacy gates (includes/db/mods.db.php:54-108 +
+    // mods_top/bottom.inc.php): prefsUseMods=Y, mod_enable=1,
+    // mod_permission >= userLevel (0 uber / 1 admin / 2 all) — legacy
+    // renders when mod_permission >= user_level, so a higher-numbered
+    // (less-restrictive) mod shows to lower-level users too, EXCEPT the
+    // strict admin-gated semantics below — display_section map
+    // (default/rules/volunteers/sponsors/contact/pay ->1, register->6,
+    // list->8, admin->9), mod_display_rank == page_location (1=before
+    // core, 2=after core).
+    $modsTop = [];
+    $modsBottom = [];
+    if ($ctx->prefsStr('prefsUseMods') === 'Y' && ! $isAdminSide) {
+        $modsUserLevel = auth()->check() ? (int) auth()->user()->userLevel : 2;
+        $modsSection = 1;
+        if (request()->is('register') || request()->is('register/*')) {
+            $modsSection = 6;
+        } elseif (request()->is('list') || request()->is('list/*')) {
+            $modsSection = 8;
+        }
+        foreach (DB::table('mods')->orderBy('mod_rank')->get() as $mod) {
+            if ((int) $mod->mod_enable !== 1 || (int) $mod->mod_type !== 0) {
+                continue;
+            }
+            $extend = (int) $mod->mod_extend_function;
+            if ($extend !== $modsSection && $extend !== 0) {
+                continue;
+            }
+            if ((int) $mod->mod_permission < $modsUserLevel) {
+                continue;
+            }
+            $content = trim((string) ($mod->mod_description ?? ''));
+            if ($content === '') {
+                continue;
+            }
+            if ((int) $mod->mod_display_rank === 1) {
+                $modsTop[] = $content;
+            } elseif ((int) $mod->mod_display_rank === 2) {
+                $modsBottom[] = $content;
+            }
+        }
+    }
     // Legacy headers.inc.php:443-475 sets $label_admin = "Administration" then
     // appends ": {nav label}" per go. Port admin routes map to that label here
     // (a static map is fine per spec). The dashboard keeps its own chrome.
@@ -463,6 +508,14 @@
         </div>
     </dialog>
 @endguest
+    @if (! empty($modsTop))
+        {{-- index.pub.php:357 — mods_top.inc.php render point (before core). --}}
+        <section id="mods-top" class="landing-page-section pb-3">
+            @foreach ($modsTop as $modContent)
+                <div class="mod mb-3">{!! $modContent !!}</div>
+            @endforeach
+        </section>
+    @endif
 <div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}">
     @if ($adminPageTitle !== null)
         {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
@@ -487,6 +540,14 @@
         </div>
     @else
         {{ $slot }}
+    @endif
+    @if (! empty($modsBottom))
+        {{-- index.pub.php:618 — mods_bottom.inc.php render point (after core). --}}
+        <section id="mods-bottom" class="landing-page-section pt-3">
+            @foreach ($modsBottom as $modContent)
+                <div class="mod mb-3">{!! $modContent !!}</div>
+            @endforeach
+        </section>
     @endif
 </div>
 
