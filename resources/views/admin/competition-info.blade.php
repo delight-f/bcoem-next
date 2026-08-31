@@ -149,10 +149,15 @@
                     <div id="search-club-list-results-div"></div>
                 </div>
             </div>
-            <div class="mb-4 row">
-                <label for="contestWinnerLink" class="col-sm-4 col-form-label">Past Winners Link</label>
-                <div class="col-sm-9"><input class="input input-bordered" id="contestWinnerLink" name="contestWinnerLink" type="text" value="{{ $contest['contestWinnerLink'] ?? '' }}"></div>
-            </div>
++            <div class="mb-4 row">
++                <label for="contestInfoExtra" class="col-sm-4 col-form-label">Other Info</label>
++                <div class="col-sm-9">
++                    <textarea class="textarea textarea-bordered w-full" id="contestInfoExtra" name="contestInfoExtra" rows="4">{{ $contest['contestInfoExtra'] ?? '' }}</textarea>
++                    <div class="form-text">Optional extra competition-info block (PARITY-028: the legacy <code>custom_competition_info.pub.php</code> drop-in, DB-stored). When set, it renders on the landing page's competition-info surface and adds an "Other Info" nav link. HTML is allowed.</div>
++                </div>
++            </div>
+
+            <button type="submit" class="btn btn-primary">Save Competition Info</button>
 
             <button type="submit" class="btn btn-primary">Save Competition Info</button>
         </form>

@@ -11,6 +11,11 @@
             && (request()->is('register') || request()->is('register/*')
                 || request()->is('brew') || request()->is('brew/*')
                 || request()->is('list/edit-account') || request()->is('user/password') || request()->is('user/username')));
+    // PARITY-028: DB-stored equivalent of the legacy
+    // custom_competition_info.pub.php drop-in (index.pub.php:405 +
+    // pub/nav.pub.php:109 "Other Info" nav link). NULL/empty = absent,
+    // mirroring legacy's file_exists() gate.
+    $contestInfoExtra = trim((string) ($ctx->contestStr('contestInfoExtra') ?? ''));
     // Legacy headers.inc.php:443-475 sets $label_admin = "Administration" then
     // appends ": {nav label}" per go. Port admin routes map to that label here
     // (a static map is fine per spec). The dashboard keeps its own chrome.
@@ -284,6 +289,11 @@
                     @if ($sponsorsVisible ?? false)
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#sponsors' : url('/sponsors') }}">{{ __('site.sponsors') }}</a>
                     @endif
+                    @if ($contestInfoExtra !== '')
+                        {{-- pub/nav.pub.php:109 — "Other Info" link when the
+                             custom competition-info block is present. --}}
+                        <a class="nav-item nav-link" href="{{ $onLanding ? '#custom-competition-info' : url('/').'#custom-competition-info' }}">{{ __('site.other_info') }}</a>
+                    @endif
                     <a class="nav-item nav-link" href="{{ $onLanding ? '#contact' : url('/').'#contact' }}">{{ __('site.contact') }}</a>
 
                     @if(Auth::check())
@@ -460,6 +470,13 @@
         <div class="page-header">
             <h1>{{ $adminPageTitle }}</h1>
         </div>
+    @endif
+    @if ($contestInfoExtra !== '' && ! $isAdminSide)
+        {{-- index.pub.php:405 — the optional custom-competition-info section,
+             legacy id custom-competition-info, rendered above the slot. --}}
+        <section id="custom-competition-info" class="landing-page-section pb-3">
+            {!! $contestInfoExtra !!}
+        </section>
     @endif
     @if (($withSidebar ?? false) && ! $isAdminSide)
         <div class="row g-4">
