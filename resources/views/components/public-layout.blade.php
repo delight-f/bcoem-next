@@ -17,7 +17,7 @@
     // mirroring legacy's file_exists() gate.
     $contestInfoExtra = trim((string) ($ctx->contestStr('contestInfoExtra') ?? ''));
     // PARITY-027: safe public mods render — legacy include-renders
-    // mods/*.php files (index.pub.php:357+618); the port renders the
+    // mods .php files (index.pub.php:357+618); the port renders the
     // DB-stored mod_description (informational mods) at the same
     // placement points with the same gating, without PHP include (RCE
     // boundary). Legacy gates (includes/db/mods.db.php:54-108 +
@@ -323,7 +323,9 @@
                 <input type="checkbox" id="nav-toggle" class="peer hidden">
                 <label for="nav-toggle" class="btn btn-ghost btn-square md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
                 <section id="nav-menu" class="md:ms-auto w-full md:w-auto flex-col md:flex-row items-start md:items-center hidden peer-checked:flex md:flex">
-                    @php($onLanding = request()->routeIs('home'))
+                    @php
+                        $onLanding = request()->routeIs('home');
+                    @endphp
                     @if (! ($judgingStarted ?? false))
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#rules' : url('/').'#rules' }}">{{ __('site.rules') }}</a>
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#volunteers' : url('/').'#volunteers' }}">{{ __('site.volunteers') }}</a>
@@ -341,12 +343,58 @@
                     @endif
                     <a class="nav-item nav-link" href="{{ $onLanding ? '#contact' : url('/').'#contact' }}">{{ __('site.contact') }}</a>
 
+                    {{-- pub/nav.pub.php:130-152 — runtime language toggle:
+                         globe dropdown, gated on prefsLanguageToggle=Y +
+                         >1 option. ?lang= sets a 30-day userLanguage cookie. --}}
+                    @php
+                        $langToggle = $ctx->prefsStr('prefsLanguageToggle');
+                        $langOptions = json_decode((string) ($ctx->prefsStr('prefsLanguageOptions') ?? ''), true);
+                        if (! is_array($langOptions)) {
+                            $langOptions = \App\Support\Tenant\Language::availableCodes();
+                        }
+                        $langNames = [
+                            'en-US' => 'English (US)',
+                            'en-GB' => 'English (UK)',
+                            'cs-CZ' => 'Čeština',
+                            'es-419' => 'Español',
+                            'fr-FR' => 'Français',
+                            'hu-HU' => 'Magyar',
+                            'pt-BR' => 'Português (BR)',
+                        ];
+                        $langCurrent = app()->getLocale() === 'en'
+                            ? ((string) ($ctx->prefsStr('prefsLanguage') ?: 'en-US'))
+                            : strtoupper(substr(app()->getLocale(), 0, 2)).'-'.ucfirst(app()->getLocale());
+                        $langMenu = array_filter($langOptions, fn ($c) => isset($langNames[$c]));
+                    @endphp
+                    @if ($langToggle === 'Y' && count($langMenu) > 1)
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false" title="Language"><i class="fa fa-lg fa-fw fa-globe"></i></a>
+                            <ul class="dropdown-menu dropdown-menu-end" data-bs-theme="dark">
+                                @foreach ($langMenu as $langCode)
+                                    @php
+                                        $langActive = $langCode === $langCurrent;
+                                        $langUrl = url()->current();
+                                        $langSep = str_contains($langUrl, '?') ? '&' : '?';
+                                        $langUrl .= $langSep.'lang='.$langCode;
+                                    @endphp
+                                    <li class="small">
+                                        <a class="dropdown-item {{ $langActive ? 'active' : '' }}" href="{{ $langUrl }}">
+                                            @if ($langActive)<i class="fa fa-check text-success me-1"></i>@endif{{ $langNames[$langCode] }}
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     @if(Auth::check())
                         @if (auth()->user()->isAdmin())
                             <a class="nav-item nav-link" href="{{ url('/admin') }}">{{ __('site.admin_short') }}</a>
                         @endif
                         {{-- pub/nav.pub.php: fa-user dropdown + flat logout icon --}}
-                        @php($navWindows = \App\Support\Tenant\Windows::derive($ctx, time()))
+                        @php
+                            $navWindows = \App\Support\Tenant\Windows::derive($ctx, time());
+                        @endphp
                         <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><i class="fa fa-lg fa-fw fa-user"></i></a>
                             <ul class="dropdown-menu dropdown-menu-end">
