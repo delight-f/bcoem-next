@@ -851,79 +851,67 @@ html {
     height: 1px;
     opacity: 1;
 }
-.navmenu {
+/* ---- Admin Essentials off-canvas (Bootstrap 5 offcanvas, issue 6) ----
+   The admin offcanvas keeps the brux dark look: .admin-topbar (unlayered)
+   provides the gradient; these rules shape the BS5 offcanvas panel + its
+   collapse groups. */
+.admin-nav-offcanvas {
     width: 300px;
-    height: 100%;
-    overflow-y: auto;
-    position: fixed;
-    top: 0;
-    z-index: 1040;
-    padding-top: 50px;
-    display: none;
-}
-.navmenu-fixed-right {
-    /* .admin-topbar sets left:0 for the top bar; without left:auto
-       the panel anchors screen-left instead of right. */
-    left: auto;
-    right: 0;
-}
-.navmenu.in {
-    display: block;
-}
-.navmenu-brand {
-    padding: 10px 15px;
-    font-size: 18px;
-    line-height: 20px;
-}
-.navmenu .nav > li > a {
-    color: #bec8d8;
-    padding: 10px 15px;
-}
-.navmenu .nav > li > a:hover,
-.navmenu .nav > li > a:focus {
+    background: #303E4B;
+    background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
     color: #DFE4EC;
-    background-color: transparent;
 }
-.navmenu .navmenu-nav {
-    padding-left: 0;
-    margin-bottom: 0;
-    list-style: none;
-}
-.navmenu .navmenu-nav > li > a {
-    display: block;
-    padding: 10px 15px;
-    color: #bec8d8;
-}
-.navmenu .navmenu-nav > li > a:hover,
-.navmenu .navmenu-nav > li > a:focus {
+.admin-nav-offcanvas .offcanvas-header {
+    border-bottom: 1px solid rgba(223, 228, 236, 0.15);
     color: #DFE4EC;
-    background-color: #303E4B;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
-.navmenu .navmenu-nav .dropdown-menu {
-    position: static;
-    float: none;
-    width: auto;
-    margin-top: 0;
-    background-color: transparent;
-    border: 0;
-    box-shadow: none;
-    display: none;
-    padding: 0 0 0 15px;
-}
-.navmenu .navmenu-nav > li.open > .dropdown-menu {
-    display: block;
-}
-.navmenu .navmenu-nav .dropdown-menu > li {
+.admin-nav-offcanvas .offcanvas-title {
+    font-family: "Merriweather", Georgia, serif;
+    font-weight: 800;
+    font-size: 1rem;
     margin: 0;
+    padding: 0;
 }
-.navmenu .navmenu-nav .dropdown-menu > li > a {
+.admin-nav-offcanvas .offcanvas-body {
+    padding-top: 0.5rem;
+}
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link {
+    color: #bec8d8;
+    padding: 10px 15px;
+}
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link:hover,
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link:focus {
+    color: #DFE4EC;
+    background-color: transparent;
+}
+.admin-nav-offcanvas .admin-oc-subnav {
+    padding-left: 15px;
+}
+.admin-nav-offcanvas .admin-oc-subnav .nav-link {
     color: #bec8d8;
     padding: 4px 15px;
     line-height: 20px;
+    font-size: 0.9rem;
 }
-.navmenu .navmenu-nav .dropdown-menu > li > a:hover {
+.admin-nav-offcanvas .admin-oc-subnav .nav-link:hover,
+.admin-nav-offcanvas .admin-oc-subnav .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
+}
+.admin-nav-offcanvas .oc-group-toggle::after {
+    content: "";
+    display: inline-block;
+    margin-left: 0.35em;
+    vertical-align: 0.15em;
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-left: 0.3em solid transparent;
+    transition: transform 0.2s ease;
+}
+.admin-nav-offcanvas .oc-group-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
 }
 .bcoem-admin-menu-disabled {
     color: #acc0c7 !important;

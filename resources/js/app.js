@@ -173,32 +173,8 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
         });
 })();
 
-// Admin Essentials offcanvas (pub/admin-nav.pub.php:383 data-toggle="offcanvas"
-// without Bootstrap JS): the trigger toggles .in on the navmenu panel.
-const offcanvasToggle = document.getElementById('admin-offcanvas-open');
-if (offcanvasToggle) {
-    offcanvasToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('admin-offcanvas')?.classList.toggle('in');
-    });
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('admin-offcanvas');
-        if (panel?.classList.contains('in')
-            && !panel.contains(e.target)
-            && e.target !== offcanvasToggle
-            && !offcanvasToggle.contains(e.target)) {
-            panel.classList.remove('in');
-        }
-    });
-}
-document.getElementById('admin-offcanvas-close')?.addEventListener('click', () => {
-    document.getElementById('admin-offcanvas')?.classList.remove('in');
-});
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        document.getElementById('admin-offcanvas')?.classList.remove('in');
-    }
-});
+// Admin Essentials offcanvas is driven by Bootstrap 5 data-api
+// (data-bs-toggle="offcanvas" on the trigger, data-bs-dismiss on close).
 
 // Modern admin date picker (flatpickr, loaded via CDN on the admin layout head
 // only — public pages neither load flatpickr nor render these inputs). Matches

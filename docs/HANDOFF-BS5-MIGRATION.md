@@ -12,7 +12,8 @@ fresh agent to pick up the migration at issue #3.
 | #3 | Expand: load real Bootstrap 5 beside shim stack + preserve palettes | **CLOSED (completed)** — see Implementation log below |
 | #4 | Public daisy purge | **CLOSED (completed)** — see Implementation log below |
 | #5 | Admin chrome: top inverse navbar to BS5 | **CLOSED (completed)** — see Implementation log below |
-| #6–#13 | Offcanvas, page frame, session modals, view batches A–C, contract, docs+visual gate | OPEN (#6 next) |
+| #6 | Admin chrome: Admin Essentials offcanvas to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #7–#13 | Page frame, session modals, view batches A–C, contract, docs+visual gate | OPEN (#7 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 

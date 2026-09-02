@@ -63,12 +63,13 @@ final class AdminTopbarBs5Test extends DuskTestCase
             $this->assertStringContainsString('Log Out', $items, 'logout row missing from the user dropdown');
             $this->assertStringContainsString('My Account', $items, 'account row missing from the user dropdown');
 
-            // The (still-BS3 until issue 6) Admin Essentials offcanvas still opens.
+            // The (now BS5) Admin Essentials offcanvas still opens.
             $browser->click('#admin-offcanvas-open');
-            $state = $browser->script(
-                "return JSON.stringify({in: document.getElementById('admin-offcanvas').classList.contains('in')});"
+            $browser->pause(700);
+            $shown = $browser->script(
+                "return document.getElementById('admin-offcanvas').classList.contains('show');"
             )[0];
-            $this->assertStringContainsString('"in":true', $state, 'offcanvas navmenu did not open from its trigger');
+            $this->assertTrue((bool) $shown, 'offcanvas did not open from its trigger');
         });
     }
 }

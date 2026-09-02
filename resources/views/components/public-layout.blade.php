@@ -194,7 +194,7 @@
                             </ul>
                         </li>
                         @if (auth()->user()->isAdmin())
-                            <li class="nav-item"><a class="nav-link" href="#" id="admin-offcanvas-open" role="button"><i class="fa fa-chevron-circle-left"></i> {{ __('site.admin_short') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#" id="admin-offcanvas-open" data-bs-toggle="offcanvas" data-bs-target="#admin-offcanvas" role="button"><i class="fa fa-chevron-circle-left"></i> {{ __('site.admin_short') }}</a></li>
                         @endif
                     @endauth
                 </ul>
@@ -202,118 +202,136 @@
         </div>
     </nav>
 
-    <div class="admin-topbar navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas" id="admin-offcanvas">
-        <div class="navmenu-brand disabled off-canvas-header d-flex justify-content-between align-items-center">
-            <span>Admin Essentials Menu</span>
-            <button type="button" id="admin-offcanvas-close" class="btn-close btn-close-white" aria-label="Close Admin Essentials menu"></button>
+    <div class="offcanvas offcanvas-end admin-nav-offcanvas" tabindex="-1" id="admin-offcanvas" aria-labelledby="admin-offcanvas-label">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="admin-offcanvas-label">Admin Essentials Menu</h5>
+            <button type="button" id="admin-offcanvas-close" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close Admin Essentials menu"></button>
         </div>
-        <ul class="nav navmenu-nav">
-            <li class="disabled"><a href="#"><em class="bcoem-admin-menu-disabled">This menu contains only essential functions. Select <strong>Admin Dashboard</strong> for all options.</em></a></li>
-            <li><a href="{{ url('/admin') }}">Admin Dashboard</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Competition Preparation <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/dates') }}">Edit All Competition Dates</a></li>
-                    <li><a href="{{ url('/admin/competition-info') }}">Edit Competition Info</a></li>
-                    <li><a href="{{ url('/admin/contacts') }}">Manage Contacts</a></li>
-                    <li><a href="{{ url('/admin/judging/special-best') }}">Manage Custom Categories</a></li>
-                    <li><a href="{{ url('/admin/dropoff') }}">Manage Drop-Off Locations</a></li>
-                    <li><a href="{{ url('/admin/judging/locations') }}">Manage Judging Sessions</a></li>
-                    <li><a href="{{ url('/admin/judging/non-judging') }}">Manage Non-Judging Sessions</a></li>
-                    <li><a href="{{ url('/admin/sponsors') }}">Manage Sponsors</a></li>
-                    <li><a href="{{ url('/admin/styles') }}">Manage Styles Accepted</a></li>
-                    <li><a href="{{ url('/admin/style-types') }}">Manage Style Types</a></li>
-                    <li><a href="{{ url('/admin/upload') }}">Upload Logo Images</a></li>
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Entries{{ (int) $ctx->prefsStr('prefsPaypalIPN') === 1 ? ', Payments,' : '' }} and Participants <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
-                    <li><a href="{{ url('/backoffice/count-by-style') }}">Entry Count By Style</a></li>
-                    <li><a href="{{ url('/backoffice/count-by-substyle') }}">Entry Count By Sub-Style</a></li>
-                    @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
-                        <li><a href="{{ url('/admin/payments') }}">Manage Payments</a></li>
-                    @endif
-                    <li><a href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Assign Judges</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Assign Stewards</a></li>
-                    <li><a href="{{ url('/register/judge') }}?view=quick">Quick Register a Judge</a></li>
-                    <li><a href="{{ url('/register/steward') }}?view=quick">Quick Register Steward</a></li>
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Sorting <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/backoffice/entries') }}">Manually</a></li>
-                    @if ($adminNavBarcode)
-                        <li><a href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
-                        <li><a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">Entry Check-in Via Mobile Devices <span class="fa fa-external-link"></span></a></li>
-                    @endif
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Organizing <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
-                    <li><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">Add BOS Judges</a></li>
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Scoring <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/upload-scoresheets') }}">Upload Scoresheets</a></li>
-                    @if ($adminNavScoring)
-                        @if ($adminNavEval)
-                            <li><a href="{{ url('/eval') }}">Manage Entry Evaluations</a></li>
-                        @endif
-                        <li><a href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
-                        <li><a href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
-                    @endif
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Reports <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/output/table_cards') }}?id=default">Table Cards</a></li>
-                    @if ($adminNavObfuscate === 0)
-                        <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default&view=entry">Pullsheets - Entry Numbers</a></li>
-                        <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default">Pullsheets - Judging Numbers</a></li>
-                        @if ($adminNavJudgingStarted)
-                            <li><a href="{{ url('/admin/output/pullsheets') }}?go=judging_scores_bos">BOS Pullsheets</a></li>
-                            <li><a href="{{ url('/admin/output/bos_mat') }}">BOS Cup Mats - Judging Numbers</a></li>
-                            <li><a href="{{ url('/admin/output/bos_mat') }}?filter=entry">BOS Cup Mats - Entry Numbers</a></li>
-                        @endif
-                    @endif
-                    @if ($adminNavJudgingStarted)
-                        <li><a href="{{ url('/admin/output/results') }}?action=print&filter=scores&go=judging_scores&view=winners">Winners with Scores</a></li>
-                        <li><a href="{{ url('/admin/output/results') }}?action=print&filter=none&go=judging_scores&view=winners">Winners without Scores</a></li>
-                    @endif
-                </ul>
-            </li>
-            @if ($adminNavLevel0)
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Data Management <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/archive') }}">Manage Archives</a></li>
-                    <li><a href="{{ url('/admin/archive') }}?action=add">Archive Current Data</a></li>
-                </ul>
-            </li>
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" role="button">Preferences <span class="caret"></span></a>
-                <ul class="dropdown-menu navmenu-nav">
-                    <li><a href="{{ url('/admin/site-preferences') }}">General</a></li>
-                    <li><a href="{{ url('/admin/site-preferences/entries') }}">Entry</a></li>
-                    <li><a href="{{ url('/admin/site-preferences/email') }}">Email Sending</a></li>
-                    <li><a href="{{ url('/admin/site-preferences/payment') }}">Currency and Payment</a></li>
-                    <li><a href="{{ url('/admin/site-preferences/best') }}">Best Brewer and/or Club</a></li>
-                    <li><a href="{{ url('/admin/judging/preferences') }}">Judging/Competition Organization</a></li>
-                </ul>
-            </li>
-            @endif
-            <li><a class="hide-loader" href="https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues" target="_blank">Report an Issue</a>
-        </ul>
+        <div class="offcanvas-body">
+            <p class="bcoem-admin-menu-disabled small">This menu contains only essential functions. Select <strong>Admin Dashboard</strong> for all options.</p>
+            <ul class="nav flex-column admin-oc-nav">
+                <li class="nav-item"><a class="nav-link" href="{{ url('/admin') }}">Admin Dashboard</a></li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g1" aria-expanded="false" role="button">Competition Preparation</a>
+                    <div class="collapse" id="oc-g1">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/dates') }}">Edit All Competition Dates</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/competition-info') }}">Edit Competition Info</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/contacts') }}">Manage Contacts</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/special-best') }}">Manage Custom Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/dropoff') }}">Manage Drop-Off Locations</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/locations') }}">Manage Judging Sessions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/non-judging') }}">Manage Non-Judging Sessions</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/sponsors') }}">Manage Sponsors</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/styles') }}">Manage Styles Accepted</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/style-types') }}">Manage Style Types</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/upload') }}">Upload Logo Images</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g2" aria-expanded="false" role="button">Entries{{ (int) $ctx->prefsStr('prefsPaypalIPN') === 1 ? ', Payments,' : '' }} and Participants</a>
+                    <div class="collapse" id="oc-g2">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/count-by-style') }}">Entry Count By Style</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/count-by-substyle') }}">Entry Count By Sub-Style</a></li>
+                            @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/payments') }}">Manage Payments</a></li>
+                            @endif
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Assign Judges</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Assign Stewards</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/register/judge') }}?view=quick">Quick Register a Judge</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/register/steward') }}?view=quick">Quick Register Steward</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g3" aria-expanded="false" role="button">Sorting</a>
+                    <div class="collapse" id="oc-g3">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/entries') }}">Manually</a></li>
+                            @if ($adminNavBarcode)
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/checkin') }}">Entry Check-in Via Barcode Scanner</a></li>
+                                <li class="nav-item"><a class="hide-loader nav-link" href="{{ url('/qr') }}" target="_blank" rel="noopener">Entry Check-in Via Mobile Devices <span class="fa fa-external-link"></span></a></li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g4" aria-expanded="false" role="button">Organizing</a>
+                    <div class="collapse" id="oc-g4">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">Add BOS Judges</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g5" aria-expanded="false" role="button">Scoring</a>
+                    <div class="collapse" id="oc-g5">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/upload-scoresheets') }}">Upload Scoresheets</a></li>
+                            @if ($adminNavScoring)
+                                @if ($adminNavEval)
+                                    <li class="nav-item"><a class="nav-link" href="{{ url('/eval') }}">Manage Entry Evaluations</a></li>
+                                @endif
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/scores') }}">Manage Scores</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/bos') }}">Manage BOS Entries and Places</a></li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g6" aria-expanded="false" role="button">Reports</a>
+                    <div class="collapse" id="oc-g6">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/table_cards') }}?id=default">Table Cards</a></li>
+                            @if ($adminNavObfuscate === 0)
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default&view=entry">Pullsheets - Entry Numbers</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default">Pullsheets - Judging Numbers</a></li>
+                                @if ($adminNavJudgingStarted)
+                                    <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/pullsheets') }}?go=judging_scores_bos">BOS Pullsheets</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/bos_mat') }}">BOS Cup Mats - Judging Numbers</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/bos_mat') }}?filter=entry">BOS Cup Mats - Entry Numbers</a></li>
+                                @endif
+                            @endif
+                            @if ($adminNavJudgingStarted)
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/results') }}?action=print&filter=scores&go=judging_scores&view=winners">Winners with Scores</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/results') }}?action=print&filter=none&go=judging_scores&view=winners">Winners without Scores</a></li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
+                @if ($adminNavLevel0)
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g7" aria-expanded="false" role="button">Data Management</a>
+                    <div class="collapse" id="oc-g7">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/archive') }}">Manage Archives</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/archive') }}?action=add">Archive Current Data</a></li>
+                        </ul>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g8" aria-expanded="false" role="button">Preferences</a>
+                    <div class="collapse" id="oc-g8">
+                        <ul class="nav flex-column admin-oc-subnav">
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/site-preferences') }}">General</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/site-preferences/entries') }}">Entry</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/site-preferences/email') }}">Email Sending</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/site-preferences/payment') }}">Currency and Payment</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/site-preferences/best') }}">Best Brewer and/or Club</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/preferences') }}">Judging/Competition Organization</a></li>
+                        </ul>
+                    </div>
+                </li>
+                @endif
+                <li class="nav-item"><a class="hide-loader nav-link" href="https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues" target="_blank">Report an Issue</a></li>
+            </ul>
+        </div>
     </div>
 @else
     <header id="home" class="site-header">
