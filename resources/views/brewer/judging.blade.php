@@ -7,7 +7,7 @@
         <h1>{{ __('site.judging_preferences') }}</h1>
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -25,8 +25,8 @@
             @if ($canEditJudge)
                 <section id="judge-preferences" class="mb-6">
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>{{ __('site.judge') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>{{ __('site.judge') }}</strong></label>
+                        <div class="col-md-9">
                             <div class="form-check form-check-inline">
                                 <input class="radio" type="radio" name="brewerJudge" value="Y" id="brewerJudgeY"
                                        @checked($brewer->brewerJudge === 'Y')>
@@ -42,16 +42,16 @@
                     </div>
 
                     <div class="mb-4 row">
-                        <label for="brewerJudgeID" class="col-sm-3 col-form-label"><strong>{{ __('site.bjcp_id') }}</strong></label>
-                        <div class="col-sm-9">
-                            <input class="input input-bordered" id="brewerJudgeID" name="brewerJudgeID" type="text"
+                        <label for="brewerJudgeID" class="col-md-3 col-form-label"><strong>{{ __('site.bjcp_id') }}</strong></label>
+                        <div class="col-md-9">
+                            <input class=" form-control" id="brewerJudgeID" name="brewerJudgeID" type="text"
                                    value="{{ old('brewerJudgeID', $brewer->brewerJudgeID) }}">
                         </div>
                     </div>
 
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>BJCP {{ __('site.bjcp_mead') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>BJCP {{ __('site.bjcp_mead') }}</strong></label>
+                        <div class="col-md-9">
                             <div class="form-check form-check-inline">
                                 <input class="radio" type="radio" name="brewerJudgeMead" value="Y" id="meadY"
                                        @checked($brewer->brewerJudgeMead === 'Y')>
@@ -67,8 +67,8 @@
                     </div>
 
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>BJCP {{ __('site.bjcp_cider') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>BJCP {{ __('site.bjcp_cider') }}</strong></label>
+                        <div class="col-md-9">
                             <div class="form-check form-check-inline">
                                 <input class="radio" type="radio" name="brewerJudgeCider" value="Y" id="ciderY"
                                        @checked($brewer->brewerJudgeCider === 'Y')>
@@ -84,8 +84,8 @@
                     </div>
 
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>{{ __('site.bjcp_rank') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>{{ __('site.bjcp_rank') }}</strong></label>
+                        <div class="col-md-9">
                             @foreach ($ranks as $i => $rank)
                                 <div class="form-check form-check-inline">
                                     <input class="radio" type="radio" name="brewerJudgeRank[]"
@@ -100,8 +100,8 @@
                     </div>
 
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>{{ __('site.designations') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>{{ __('site.designations') }}</strong></label>
+                        <div class="col-md-9">
                             @foreach (array_slice($ranks, 12) as $i => $designation)
                                 <div class="form-check form-check-inline">
                                     <input class="checkbox" type="checkbox" name="brewerJudgeRank[]"
@@ -115,9 +115,9 @@
                     </div>
 
                     <div class="mb-4 row">
-                        <label for="brewerJudgeExp" class="col-sm-3 col-form-label"><strong>{{ __('site.competitions_judged') }}</strong></label>
-                        <div class="col-sm-9">
-                            <select class="select select-bordered" name="brewerJudgeExp" id="brewerJudgeExp" required>
+                        <label for="brewerJudgeExp" class="col-md-3 col-form-label"><strong>{{ __('site.competitions_judged') }}</strong></label>
+                        <div class="col-md-9">
+                            <select class=" form-select" name="brewerJudgeExp" id="brewerJudgeExp" required>
                                 @foreach ($experience as $exp)
                                     <option value="{{ $exp }}" @selected(old('brewerJudgeExp', $brewer->brewerJudgeExp ?? '') === $exp)>{{ $exp }}</option>
                                 @endforeach
@@ -130,8 +130,8 @@
                         <fieldset class="mb-4">
                             <legend class="col-form-label pt-0"><strong>{{ __('site.preferred_styles') }}</strong></legend>
                             <div class="row">
-                                <div class="col-sm-6">
-                                    <p class="text-sm text-error"><strong>{{ __('site.likes_note') }}</strong></p>
+                                <div class="col-md-6">
+                                    <p class="text-sm text-danger"><strong>{{ __('site.likes_note') }}</strong></p>
                                     @foreach ($styles as $style)
                                         <div class="form-check">
                                             <input class="checkbox" type="checkbox" name="brewerJudgeLikes[]"
@@ -141,8 +141,8 @@
                                         </div>
                                     @endforeach
                                 </div>
-                                <div class="col-sm-6">
-                                    <p class="text-sm text-error"><strong>{{ __('site.dislikes_note') }}</strong></p>
+                                <div class="col-md-6">
+                                    <p class="text-sm text-danger"><strong>{{ __('site.dislikes_note') }}</strong></p>
                                     @foreach ($styles as $style)
                                         <div class="form-check">
                                             <input class="checkbox" type="checkbox" name="brewerJudgeDislikes[]"
@@ -161,9 +161,9 @@
                             <legend class="col-form-label pt-0"><strong>{{ __('site.judging_availability') }}</strong></legend>
                             @foreach ($locations as $loc)
                                 <div class="mb-2 row">
-                                    <label class="col-sm-3 col-form-label">{{ $loc->judgingLocName }}</label>
-                                    <div class="col-sm-9">
-                                        <select class="select select-bordered" name="brewerJudgeLocation[]" aria-label="{{ $loc->judgingLocName }}">
+                                    <label class="col-md-3 col-form-label">{{ $loc->judgingLocName }}</label>
+                                    <div class="col-md-9">
+                                        <select class=" form-select" name="brewerJudgeLocation[]" aria-label="{{ $loc->judgingLocName }}">
                                             <option value="Y-{{ $loc->id }}" @selected(in_array('Y-'.$loc->id, $judgeLocations, true))>{{ __('site.yes') }}</option>
                                             <option value="N-{{ $loc->id }}" @selected(! in_array('Y-'.$loc->id, $judgeLocations, true))>{{ __('site.no') }}</option>
                                         </select>
@@ -179,8 +179,8 @@
             @if ($canEditSteward)
                 <section id="steward-preferences" class="mb-6">
                     <div class="mb-4 row">
-                        <label class="col-sm-3 col-form-label"><strong>{{ __('site.stewarding') }}</strong></label>
-                        <div class="col-sm-9">
+                        <label class="col-md-3 col-form-label"><strong>{{ __('site.stewarding') }}</strong></label>
+                        <div class="col-md-9">
                             <div class="form-check form-check-inline">
                                 <input class="radio" type="radio" name="brewerSteward" value="Y" id="stewardY"
                                        @checked($brewer->brewerSteward === 'Y')>
@@ -200,9 +200,9 @@
                             <legend class="col-form-label pt-0"><strong>{{ __('site.stewarding_availability') }}</strong></legend>
                             @foreach ($locations as $loc)
                                 <div class="mb-2 row">
-                                    <label class="col-sm-3 col-form-label">{{ $loc->judgingLocName }}</label>
-                                    <div class="col-sm-9">
-                                        <select class="select select-bordered" name="brewerStewardLocation[]" aria-label="{{ $loc->judgingLocName }}">
+                                    <label class="col-md-3 col-form-label">{{ $loc->judgingLocName }}</label>
+                                    <div class="col-md-9">
+                                        <select class=" form-select" name="brewerStewardLocation[]" aria-label="{{ $loc->judgingLocName }}">
                                             <option value="Y-{{ $loc->id }}" @selected(in_array('Y-'.$loc->id, $stewardLocations, true))>{{ __('site.yes') }}</option>
                                             <option value="N-{{ $loc->id }}" @selected(! in_array('Y-'.$loc->id, $stewardLocations, true))>{{ __('site.no') }}</option>
                                         </select>
@@ -216,8 +216,8 @@
 
             <section id="staff-preferences" class="mb-6">
                 <div class="mb-4 row">
-                    <label class="col-sm-3 col-form-label"><strong>{{ __('site.staffing') }}</strong></label>
-                    <div class="col-sm-9">
+                    <label class="col-md-3 col-form-label"><strong>{{ __('site.staffing') }}</strong></label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
                             <input class="radio" type="radio" name="brewerStaff" value="Y" id="staffY"
                                    @checked($brewer->brewerStaff === 'Y')>
@@ -234,8 +234,8 @@
 
             <section id="judge-steward-waiver" class="mb-6">
                 <div class="mb-4 row">
-                    <label class="col-sm-3 col-form-label"><strong>{{ __('site.waiver') }}</strong></label>
-                    <div class="col-sm-9">
+                    <label class="col-md-3 col-form-label"><strong>{{ __('site.waiver') }}</strong></label>
+                    <div class="col-md-9">
                         <p>{{ __('site.waiver_voluntary_text') }}</p>
                         <div class="form-check">
                             <input class="checkbox" type="checkbox" name="brewerJudgeWaiver" value="Y"
@@ -243,7 +243,7 @@
                             <label class="form-check-label" for="brewerJudgeWaiver">{{ __('site.waiver_accept') }}</label>
                         </div>
                         @error('brewerJudgeWaiver')
-                            <div class="text-error">{{ $message }}</div>
+                            <div class="text-danger">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -251,9 +251,9 @@
 
             <section id="organizer-notes" class="mb-6">
                 <div class="mb-4 row">
-                    <label for="brewerJudgeNotes" class="col-sm-3 col-form-label"><strong>{{ __('site.organizer_notes') }}</strong></label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerJudgeNotes" name="brewerJudgeNotes" type="text"
+                    <label for="brewerJudgeNotes" class="col-md-3 col-form-label"><strong>{{ __('site.organizer_notes') }}</strong></label>
+                    <div class="col-md-9">
+                        <input class=" form-control" id="brewerJudgeNotes" name="brewerJudgeNotes" type="text"
                                value="{{ old('brewerJudgeNotes', $brewer->brewerJudgeNotes) }}">
                         <div class="form-text">{{ __('site.organizer_notes_text') }}</div>
                     </div>

@@ -18,32 +18,32 @@
     : [])
 
 <div class="mb-4 row">
-    <label for="brewerName" class="col-sm-3 col-form-label"><strong>{{ __('site.brewer') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="brewerName" class="col-md-3 col-form-label"><strong>{{ __('site.brewer') }}</strong></label>
+    <div class="col-md-9">
         <input type="text" readonly class="form-control" id="brewerName"
                value="{{ ($entry->brewBrewerFirstName ?? $brewer->brewerFirstName ?? '').' '.($entry->brewBrewerLastName ?? $brewer->brewerLastName ?? '') }}">
     </div>
 </div>
 
 <div class="mb-4 row">
-    <label for="brewCoBrewer" class="col-sm-3 col-form-label"><strong>{{ __('site.co_brewer') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="brewCoBrewer" class="col-md-3 col-form-label"><strong>{{ __('site.co_brewer') }}</strong></label>
+    <div class="col-md-9">
         <input class="form-control" id="brewCoBrewer" name="brewCoBrewer" type="text"
                value="{{ old('brewCoBrewer', $entry->brewCoBrewer ?? '') }}">
     </div>
 </div>
 
 <div class="mb-4 row">
-    <label for="brewName" class="col-sm-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.entry_name') }} *</strong></label>
-    <div class="col-sm-9">
+    <label for="brewName" class="col-md-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.entry_name') }} *</strong></label>
+    <div class="col-md-9">
         <input class="form-control" id="brewName" name="brewName" type="text" required autofocus
                value="{{ old('brewName', $entry->brewName ?? '') }}">
         @error('brewName')<div class="text-danger">{{ $message }}</div>@enderror
     </div>
 </div>
 <div class="mb-4 row">
-    <label for="brewStyle" class="col-sm-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.style') }} *</strong></label>
-    <div class="col-sm-9">
+    <label for="brewStyle" class="col-md-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.style') }} *</strong></label>
+    <div class="col-md-9">
         <select class="form-select" name="brewStyle" id="brewStyle" required>
             <option value="">{{ __('site.select_style') }}</option>
             @foreach ($styles as $style)
@@ -69,14 +69,14 @@
 </div>
 
 <div id="specialInfo" class="mb-4 row @unless ($variantFlags !== null && trim((string) ($variantFlags->brewStyleEntry ?? '')) !== '') hidden @endunless">
-    <div class="offset-sm-3 col-sm-9">
+    <div class="offset-md-3 col-md-9">
         <p class="alert alert-teal" id="specialInfoText">{{ $variantFlags->brewStyleEntry ?? '' }}</p>
     </div>
 </div>
 
 <div id="special" class="mb-4 row @unless ($variantFlags !== null && (int) $variantFlags->brewStyleReqSpec === 1) hidden @endunless">
-    <label for="brewInfo" class="col-sm-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.required_info') }} *</strong></label>
-    <div class="col-sm-9">
+    <label for="brewInfo" class="col-md-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.required_info') }} *</strong></label>
+    <div class="col-md-9">
         <textarea class="form-control" rows="8" name="brewInfo" id="brewInfo"
                   maxlength="{{ $charLimit }}">{{ old('brewInfo', $entry->brewInfo ?? '') }}</textarea>
         <div class="form-text">{{ $charLimit }}{{ __('site.character_limit') }}<span id="countInfo">{{ mb_strlen(old('brewInfo', $entry->brewInfo ?? '')) }}</span></div>
@@ -85,8 +85,8 @@
 </div>
 
 <div id="optional" class="mb-4 row @unless ($variantFlags !== null && in_array(ltrim((string) $variantFlags->brewStyleGroup, '0').'-'.$variantFlags->brewStyleNum, $optionalStyles, true)) hidden @endunless">
-    <label for="brewInfoOptional" class="col-sm-3 col-form-label"><strong>{{ __('site.optional_info') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="brewInfoOptional" class="col-md-3 col-form-label"><strong>{{ __('site.optional_info') }}</strong></label>
+    <div class="col-md-9">
         <textarea class="form-control" rows="4" name="brewInfoOptional"
                   id="brewInfoOptional" maxlength="{{ $charLimit }}">{{ old('brewInfoOptional', $entry->brewInfoOptional ?? '') }}</textarea>
         <div class="form-text">{{ $charLimit }}{{ __('site.character_limit') }}<span id="countInfoOptional">{{ mb_strlen(old('brewInfoOptional', $entry->brewInfoOptional ?? '')) }}</span></div>
@@ -156,8 +156,8 @@
         </div>
     @endforeach
     <div class="mt-2 mb-4 row">
-        <label for="brewPouringNotes" class="col-sm-3 col-form-label"><strong>{{ __('site.pouring_notes') }}</strong></label>
-        <div class="col-sm-9">
+        <label for="brewPouringNotes" class="col-md-3 col-form-label"><strong>{{ __('site.pouring_notes') }}</strong></label>
+        <div class="col-md-9">
             <input class="form-control" name="brewPouringNotes" id="brewPouringNotes" type="text" maxlength="255"
                    value="{{ old('brewPouringNotes', $pouring['pouring_notes'] ?? '') }}">
         </div>
@@ -165,24 +165,24 @@
 </fieldset>
 
 <div class="mb-4 row">
-    <label for="og" class="col-sm-3 col-form-label text-teal"><i class="fa fa-star me-1"></i><strong>{{ __('site.original_gravity') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="og" class="col-md-3 col-form-label text-teal"><i class="fa fa-star me-1"></i><strong>{{ __('site.original_gravity') }}</strong></label>
+    <div class="col-md-9">
         <input class="form-control" id="og" name="brewOriginalGravity" type="number" min="0" step="0.001"
                value="{{ old('brewOriginalGravity', $gravity['OG'] ?? '') }}">
     </div>
 </div>
 
 <div class="mb-4 row">
-    <label for="fg" class="col-sm-3 col-form-label text-teal"><i class="fa fa-star me-1"></i><strong>{{ __('site.final_gravity') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="fg" class="col-md-3 col-form-label text-teal"><i class="fa fa-star me-1"></i><strong>{{ __('site.final_gravity') }}</strong></label>
+    <div class="col-md-9">
         <input class="form-control" id="fg" name="brewFinalGravity" type="number" min="0" step="0.001"
                value="{{ old('brewFinalGravity', $gravity['FG'] ?? '') }}">
     </div>
 </div>
 
 <div class="mb-4 row">
-    <label for="brewABV" class="col-sm-3 col-form-label"><strong><i class="fa fa-star me-1"></i>{{ __('site.abv') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="brewABV" class="col-md-3 col-form-label"><strong><i class="fa fa-star me-1"></i>{{ __('site.abv') }}</strong></label>
+    <div class="col-md-9">
         <input class="form-control" id="brewABV" name="brewABV" type="number" min="0" step="0.01"
                value="{{ old('brewABV', $entry->brewABV ?? '') }}">
     </div>
@@ -201,8 +201,8 @@
 </fieldset>
 
 <div class="mb-4 row">
-    <label for="brewPossAllergens" class="col-sm-3 col-form-label">{{ __('site.possible_allergens') }}</label>
-    <div class="col-sm-9">
+    <label for="brewPossAllergens" class="col-md-3 col-form-label">{{ __('site.possible_allergens') }}</label>
+    <div class="col-md-9">
         <input class="form-control" id="brewPossAllergens" name="brewPossAllergens" type="text"
                value="{{ old('brewPossAllergens', $entry->brewPossAllergens ?? '') }}">
         <div class="form-text">{{ __('site.possible_allergens_text') }}</div>
@@ -210,8 +210,8 @@
 </div>
 
 <div class="mb-4 row">
-    <label for="brewComments" class="col-sm-3 col-form-label"><strong>{{ __('site.brewer_specifics') }}</strong></label>
-    <div class="col-sm-9">
+    <label for="brewComments" class="col-md-3 col-form-label"><strong>{{ __('site.brewer_specifics') }}</strong></label>
+    <div class="col-md-9">
         <textarea class="form-control" rows="6" name="brewComments"
                   id="brewComments" maxlength="{{ $charLimit }}">{{ old('brewComments', $entry->brewComments ?? '') }}</textarea>
         <div class="form-text">{{ $charLimit }}{{ __('site.character_limit') }}<span id="countComments">{{ mb_strlen(old('brewComments', $entry->brewComments ?? '')) }}</span></div>

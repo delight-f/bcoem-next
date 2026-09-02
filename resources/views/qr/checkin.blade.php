@@ -46,7 +46,7 @@
             </div>
         @endif
 
-        <div class="page-header clearfix">
+        <div class="qr-checkin-head">
             <h3>{{ $ctx->contestStr('contestName') }}: QR Code Entry Check-In</h3>
         </div>
 
@@ -58,7 +58,7 @@
 
             <form name="form1" action="{{ url('/qr/password-check'.($id !== null ? '?id='.$id : '')) }}" method="post">
                 @csrf
-                <div class="form-group">
+                <div class="mb-3">
                     <label for="inputPassword" class="sr-only">Password</label>
                     <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" autofocus required>
                 </div>
@@ -74,16 +74,16 @@
                 <p class="lead text-danger"><small><strong>ONLY input a judging number if your competition is using judging number labels at sorting.</strong></small></p>
                 <form name="form1" action="{{ url('/qr/checkin?id='.$id) }}" method="post">
                     @csrf
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="brewJudgingNumber">Judging Number</label>
                         <input type="tel" pattern="[^^]+" maxlength="6" minlength="6" name="brewJudgingNumber" id="brewJudgingNumber" class="form-control" placeholder="Six numbers with leading zeros - e.g., 000021." autofocus>
-                        <div class="help-block small">Be sure to double-check your input and affix the appropriate judging number labels to each bottle and bottle label (if applicable).</div>
+                        <div class="form-text small">Be sure to double-check your input and affix the appropriate judging number labels to each bottle and bottle label (if applicable).</div>
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="brewBoxNum">Box Number</label>
                         <input type="text" name="brewBoxNum" id="brewBoxNum" class="form-control" placeholder="">
                     </div>
-                    <div class="form-group">
+                    <div class="mb-3">
                         <label for="brewPaid"><input type="checkbox" name="brewPaid" id="brewPaid" value="1"> Paid</label>
                     </div>
                     <button class="btn btn-lg btn-primary btn-block" type="submit">Check In</button>

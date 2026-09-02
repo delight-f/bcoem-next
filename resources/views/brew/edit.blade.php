@@ -27,7 +27,7 @@
             @include('brew._fields', ['entry' => $entry])
 
             <div class="row mb-4">
-                <div class="col-sm-9 offset-sm-3">
+                <div class="col-md-9 offset-md-3">
                     <button type="submit" class="btn btn-lg btn-primary">{{ __('site.save') }}</button>
                 </div>
             </div>

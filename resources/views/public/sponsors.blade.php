@@ -10,7 +10,7 @@
         <div class="row">
             @foreach ($sponsors as $sponsor)
                 @if ($sponsor->sponsorEnable == '1')
-                    <div class="col-lg-3 col-md-6 col-sm-9 col-xs-12 bcoem-sponsor-container">
+                    <div class="col-12 col-sm-6 col-md-6 col-lg-3 bcoem-sponsor-container">
                         <div class="bcoem-sponsor-name">
                             <h5>
                                 @if ($sponsor->sponsorURL != '')
@@ -22,7 +22,7 @@
                         </div>
                         <div class="bcoem-sponsor-location">{{ ! empty($sponsor->sponsorLocation) ? $sponsor->sponsorLocation : '&nbsp;' }}</div>
                         @if ($logos)
-                            <img class="responsive-image img-thumbnail" src="{{ $logoFor($sponsor) }}" border="0" alt="{{ $sponsor->sponsorName }}" title="{{ $sponsor->sponsorName }}">
+                            <img class="img-fluid img-thumbnail" src="{{ $logoFor($sponsor) }}" border="0" alt="{{ $sponsor->sponsorName }}" title="{{ $sponsor->sponsorName }}">
                         @endif
                         @if ($sponsor->sponsorText != '')
                             <div class="bcoem-sponsor-text small">{{ $sponsor->sponsorText }}</div>

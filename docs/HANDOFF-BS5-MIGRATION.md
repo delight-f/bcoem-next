@@ -17,7 +17,8 @@ fresh agent to pick up the migration at issue #3.
 | #8 | Admin chrome: session-expiry modals to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #9 | View batch A: core admin blades to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #10 | View batch B: judging/eval/backoffice to BS5 | **CLOSED (completed)** — see Implementation log below |
-| #11–#13 | View batch C, contract, docs+visual gate | OPEN (#11 next) |
+| #11 | View batch C: dual-chrome/print/account surfaces to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #12–#13 | Contract (delete shim), docs+visual gate | OPEN (#12 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 

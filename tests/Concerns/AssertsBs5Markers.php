@@ -124,7 +124,15 @@ trait AssertsBs5Markers
             return str_contains($html, $marker.'=');
         }
 
-        return (bool) preg_match('/\b'.preg_quote($marker, '/').'\b/', $html);
+        // Class markers match as their own token at word boundaries. A
+        // trailing '-' is excluded so the BS3 .caret element class is not
+        // mistaken for the legitimate CSS property caret-color (Tailwind's
+        // runtime-injected stylesheet lists it), and so 'panel' does not
+        // match 'panel-default' unless panel-default is itself a marker.
+        return (bool) preg_match(
+            '/\b'.preg_quote($marker, '/').'(?!-)/',
+            $html
+        );
     }
 
     /**
