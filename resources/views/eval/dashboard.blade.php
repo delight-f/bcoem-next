@@ -15,7 +15,7 @@
         {{-- warnings.eval.php port: countdown timers to judging close --}}
         @include('eval.partials.warnings')
 
-        <p class="text-xl font-light">Evaluations are not official until an administrator imports
+        <p class="fs-5 fw-light">Evaluations are not official until an administrator imports
         matching consensus scores entered by two or more judges.</p>
 
         @if ($admin !== null)

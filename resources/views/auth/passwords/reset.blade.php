@@ -38,7 +38,7 @@
                                type="password" placeholder="{{ __('reset.confirm_new_password') }}" required>
                         <label for="password-confirm">{{ __('reset.confirm_new_password') }}</label>
                     </div>
-                <div class="grid gap-2 mx-auto mb-6">
+                <div class="d-grid gap-2 mx-auto mb-6">
                     <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.reset_password_heading') }}</button>
                 </div>
             </form>

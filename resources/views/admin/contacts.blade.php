@@ -33,18 +33,18 @@
         @endif
 
         @foreach ($contacts as $contact)
-            <div class="border-bottom pb-2 mb-2 row items-center">
+            <div class="border-bottom pb-2 mb-2 row align-items-center">
                 <div class="col-md-8">
                     {{ $contact->contactLastName }}, {{ $contact->contactFirstName }}
                     <span class="text-muted">&middot; {{ $contact->contactPosition }}</span>
                 </div>
                 <div class="col-md-4 text-end">
                     <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/contacts/'.$contact->id.'/edit') }}">Edit</a>
-                    <form method="post" action="{{ url('/admin/contacts/'.$contact->id) }}" class="inline"
+                    <form method="post" action="{{ url('/admin/contacts/'.$contact->id) }}" class="d-inline"
                         onsubmit="return confirm('Are you sure you want to delete this contact? This cannot be undone.');">
                         @csrf
                         @method('delete')
-                        <button type="submit" class="btn btn-sm btn-outline btn-error">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
                     </form>
                 </div>
             </div>

@@ -125,7 +125,7 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
 
     const setOn = (id, on) => {
         const el = document.getElementById(id);
-        if (el) el.classList.toggle('hidden', !on);
+        if (el) el.classList.toggle('d-none', !on);
     };
     const requireRadios = (name, on) => document.querySelectorAll(`input[name="${name}"]`)
         .forEach((input) => { input.required = on; });
@@ -144,9 +144,9 @@ document.querySelectorAll('dialog.modal').forEach((dialog) => {
         if (specialInfo) {
             if (flags && flags.entry) {
                 document.getElementById('specialInfoText').textContent = flags.entry;
-                specialInfo.classList.remove('hidden');
+                specialInfo.classList.remove('d-none');
             } else {
-                specialInfo.classList.add('hidden');
+                specialInfo.classList.add('d-none');
             }
         }
         const optional = optionalStyles.includes(code);

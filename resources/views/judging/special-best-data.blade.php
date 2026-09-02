@@ -61,9 +61,9 @@
                             <td>{{ str_pad((string) $row->eid, 6, '0', STR_PAD_LEFT) }}</td>
                             <td>{{ $row->brewName }}</td>
                             <td>{{ trim($row->brewerFirstName.' '.$row->brewerLastName) }}</td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 <a href="{{ route('admin.specialbest.data.edit', ['id' => $row->sid]) }}">Edit category entries</a>
-                                <form method="post" action="{{ route('admin.specialbest.data.destroy', ['id' => $row->id]) }}" class="inline"
+                                <form method="post" action="{{ route('admin.specialbest.data.destroy', ['id' => $row->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Delete this winner? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

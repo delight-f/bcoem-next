@@ -59,7 +59,7 @@
             <form name="form1" action="{{ url('/qr/password-check'.($id !== null ? '?id='.$id : '')) }}" method="post">
                 @csrf
                 <div class="mb-3">
-                    <label for="inputPassword" class="sr-only">Password</label>
+                    <label for="inputPassword" class="visually-hidden">Password</label>
                     <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" autofocus required>
                 </div>
                 <button class="btn btn-lg btn-primary btn-block" type="submit">Log In</button>

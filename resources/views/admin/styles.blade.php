@@ -15,7 +15,7 @@
 
         @if ($row === null && ! request()->routeIs('admin.styles.create'))
             {{-- Accepted styles checklist (bulk update) --}}
-            <p class="text-xl font-light"><span class="text-sm">Check or uncheck the styles your competition will accept (any custom styles are at the top of the list).</span></p>
+            <p class="fs-5 fw-light"><span class="fs-6">Check or uncheck the styles your competition will accept (any custom styles are at the top of the list).</span></p>
             <form method="post" action="{{ url('/admin/styles') }}">
                 @csrf
                 @method('put')
@@ -49,11 +49,11 @@
                                 <td>
                                     @if ($style->brewStyleOwn !== 'bcoe')
                                         <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/styles/'.$style->id.'/edit') }}">Edit</a>
-                                        <form method="post" action="{{ url('/admin/styles/'.$style->id) }}" class="inline"
+                                        <form method="post" action="{{ url('/admin/styles/'.$style->id) }}" class="d-inline"
                                             onsubmit="return confirm('Delete this custom style? This cannot be undone.');">
                                             @csrf
                                             @method('delete')
-                                            <button type="submit" class="btn btn-sm btn-outline btn-error">Delete</button>
+                                            <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
                                         </form>
                                     @endif
                                 </td>

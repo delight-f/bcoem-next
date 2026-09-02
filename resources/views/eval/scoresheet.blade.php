@@ -52,7 +52,7 @@
                     'evalIntangibles' => 'Intangibles (1 = lifeless, 5 = wonderful)',
                 ] as $field => $label)
                     <div class="mt-2">
-                        <span class="form-label block">{{ $label }}</span>
+                        <span class="form-label d-block">{{ $label }}</span>
                         @for ($i = 5; $i >= 1; $i--)
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="{{ $field }}"
@@ -67,7 +67,7 @@
 
             <fieldset class="mb-4">
                 <legend>Consensus</legend>
-                <div class="row g-2 items-end">
+                <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label" for="evalFinalScore">Final Score</label>
                         <input type="number" class="form-control" id="evalFinalScore" name="evalFinalScore"

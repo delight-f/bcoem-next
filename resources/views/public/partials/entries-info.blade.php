@@ -3,7 +3,7 @@
      unpaid, fees right). Rendered whenever the entry window has opened,
      with or without entries. --}}
 @php($bottles = $info['bottles'])
-<div class="row g-2 mb-3 print:hidden">
+<div class="row g-2 mb-3 d-print-none">
     <div class="col-12 col-lg-6">
         <div class="card h-100 bg-light-subtle border-secondary-subtle">
             <div class="card-body">

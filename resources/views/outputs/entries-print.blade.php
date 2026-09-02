@@ -44,7 +44,7 @@
             <td nowrap="nowrap">{{ strtoupper((string) $e->brewJudgingNumber) }}</td>
             <td>{{ $e->brewName }}</td>
             <td>
-                <span class="hidden">{{ $e->brewCategorySort.$e->brewSubCategory }}</span>
+                <span class="d-none">{{ $e->brewCategorySort.$e->brewSubCategory }}</span>
                 {{ $e->brewCategorySort.$e->brewSubCategory.' - '.$e->brewStyle }}
             </td>
             <td nowrap="nowrap">{{ $e->brewerFirstName.' '.$e->brewerLastName }}</td>

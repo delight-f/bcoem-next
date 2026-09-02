@@ -19,7 +19,7 @@
             </div>
         @endif
 
-        <p class="text-xl font-light">Archiving preserves the current competition data in sibling
+        <p class="fs-5 fw-light">Archiving preserves the current competition data in sibling
             <code>&lt;table&gt;_&lt;suffix&gt;</code> tables and resets the live tables for the next competition.</p>
 
         @if ($archives->isNotEmpty())
@@ -45,7 +45,7 @@
             <input type="hidden" name="confirm" value="yes">
 
             <div class="mb-4 row">
-                <label for="archiveSuffix" class="col-md-4 col-form-label">Archive Name (suffix) <span class="text-error">*</span></label>
+                <label for="archiveSuffix" class="col-md-4 col-form-label">Archive Name (suffix) <span class="text-danger">*</span></label>
                 <div class="col-md-6">
                     <input class="form-control" id="archiveSuffix" name="archiveSuffix" type="text"
                         placeholder="{{ date('Y') }} or Q2{{ date('y') }}, etc."
@@ -90,7 +90,7 @@
             </fieldset>
 
             <details class="border rounded p-4 mb-4 bg-base-200">
-                <summary class="font-bold text-error">⚠ Irreversible — read before confirming</summary>
+                <summary class="fw-bold text-danger">⚠ Irreversible — read before confirming</summary>
                 <div class="mt-2">
                     <p class="mb-2">With the default options, archiving irreversibly destroys:</p>
                     <ol class="mb-2">

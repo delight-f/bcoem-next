@@ -13,7 +13,7 @@
             {{-- Legacy redirects to the reg_closed section (pub/reg_closed.pub.php:32):
                  "Thanks and Good Luck To All Who Entered the {contest}!" --}}
             <h2>{{ __('site.thanks_good_luck') }} {{ $ctx->contestStr('contestName') }}!</h2>
-            <p class="text-xl font-light">{{ __('site.registration_closed') }}</p>
+            <p class="fs-5 fw-light">{{ __('site.registration_closed') }}</p>
         @else
             @if ($adminRegister ?? false)
                 {{-- Legacy register.sec.php:334-362 — admin register chrome:

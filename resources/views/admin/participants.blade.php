@@ -245,30 +245,30 @@
                     @if ($filter === 'with_entries')
                         <th>{{ $proEdition ? 'Organization' : 'Name' }}</th>
                         <th>Entries</th>
-                        <th class="print:hidden">Actions</th>
+                        <th class="d-print-none">Actions</th>
                     @else
                         <th>{{ $proEdition ? 'Contact Name' : 'Name' }}</th>
                         <th>User Level</th>
                         @if (($filter === 'judges' || $filter === 'stewards'))
-                            <th class="print:hidden">Location(s) Available</th>
+                            <th class="d-print-none">Location(s) Available</th>
                         @else
-                            <th class="print:hidden">{{ $proEdition ? 'Organization' : 'Club' }}</th>
+                            <th class="d-print-none">{{ $proEdition ? 'Organization' : 'Club' }}</th>
                         @endif
                         @if ($filter === 'default')
-                            <th class="print:hidden">Steward?</th>
-                            <th class="print:hidden">Judge?</th>
+                            <th class="d-print-none">Steward?</th>
+                            <th class="d-print-none">Judge?</th>
                         @endif
                         <th>Assigned As</th>
                         @if ($filter !== 'default')
                             @if ($filter === 'judges')
-                                <th class="print:hidden">ID</th>
+                                <th class="d-print-none">ID</th>
                                 <th>Rank</th>
                             @endif
                             <th>Assigned to Table(s)</th>
-                            <th class="print:hidden">Has Entries In...</th>
+                            <th class="d-print-none">Has Entries In...</th>
                         @endif
-                        <th class="print:hidden">Updated</th>
-                        <th class="print:hidden">Actions</th>
+                        <th class="d-print-none">Updated</th>
+                        <th class="d-print-none">Actions</th>
                     @endif
                 </tr>
             </thead>
@@ -290,7 +290,7 @@
                             <td>
                                 <a href="{{ url('/backoffice/entries?bid='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries.">Entry Numbers</a>: {{ $entryNumbers[$p->uid] ?? '' }}<br>Judging Numbers: {{ $judgingNumbers[$p->uid] ?? '' }}
                             </td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 {{-- Legacy with_entries row (participants.admin.php): full action
                                      icon set — edit account, delete account, edit user level,
                                      add entry, list entries. --}}
@@ -321,17 +321,17 @@
                                 @endif
                             </td>
                             @if ($filter === 'judges' || $filter === 'stewards')
-                                <td class="print:hidden">{{ $locationDisplay($filter === 'judges' ? $p->brewerJudgeLocation : $p->brewerStewardLocation) }}</td>
+                                <td class="d-print-none">{{ $locationDisplay($filter === 'judges' ? $p->brewerJudgeLocation : $p->brewerStewardLocation) }}</td>
                             @else
-                                <td class="print:hidden">{{ $p->brewerClubs }}</td>
+                                <td class="d-print-none">{{ $p->brewerClubs }}</td>
                             @endif
                             @if ($filter === 'default')
-                                <td class="print:hidden">
+                                <td class="d-print-none">
                                     @if ($p->brewerSteward === 'Y')<span class="fa fa-lg fa-check text-success"></span>
                                     @elseif ($p->brewerSteward === 'N')<span class="fa fa-lg fa-times text-danger"></span>
                                     @endif
                                 </td>
-                                <td class="print:hidden">
+                                <td class="d-print-none">
                                     @if ($p->brewerJudge === 'Y')<span class="fa fa-lg fa-check text-success"></span>
                                     @elseif ($p->brewerJudge === 'N')<span class="fa fa-lg fa-times text-danger"></span>
                                     @endif
@@ -348,7 +348,7 @@
                             </td>
                             @if ($filter !== 'default')
                                 @if ($filter === 'judges')
-                                    <td class="print:hidden">{{ $p->brewerJudgeID }}</td>
+                                    <td class="d-print-none">{{ $p->brewerJudgeID }}</td>
                                     <td>{{ $p->brewerJudgeRank }}</td>
                                 @endif
                                 <td>
@@ -361,19 +361,19 @@
                                         @endif
                                     @endforeach
                                 </td>
-                                <td class="print:hidden">
+                                <td class="d-print-none">
                                     @foreach ($judgeEntries[$p->uid] ?? collect() as $i => $e)
                                         @if ($i !== 0), @endif
                                         <a href="{{ url('/backoffice/entries?filter='.$e['filter']) }}" title="View the {{ $e['label'] }} Entries">{{ $e['label'] }}</a>
                                     @endforeach
                                 </td>
                             @endif
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 @if ($p->userCreated)
                                     {{ \App\Support\Tenant\DateFmt::dateTime(strtotime((string) $p->userCreated) ?: null, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', false) }}
                                 @endif
                             </td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
                                 @if ($viewerLevel === 0)
@@ -384,7 +384,7 @@
                                     @endif
                                     @if ($p->brewerEmail !== auth()->user()?->user_name)
                                         <span style="margin-right: .4em">
-                                            <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="inline" onsubmit="return confirm('Delete the participant account for {{ $displayName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
+                                            <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="d-inline" onsubmit="return confirm('Delete the participant account for {{ $displayName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete {{ $displayName }}'s account."><span class="fa fa-lg fa-trash-o"></span></button>

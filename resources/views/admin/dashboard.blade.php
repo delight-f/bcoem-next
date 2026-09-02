@@ -404,7 +404,7 @@
                     </div>
                     <div class="modal-body">
                 <p class="py-4">{{ $blurb }}</p>
-                <p class="text-danger text-sm">This wipes and reassigns ALL judging numbers. Cannot be undone.</p>
+                <p class="text-danger fs-6">This wipes and reassigns ALL judging numbers. Cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

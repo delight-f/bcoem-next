@@ -12,9 +12,9 @@
 
     @php($msg = (int) request('msg'))
     @if ($msg === 13)
-        <p class="alert alert-success print:hidden">{{ __('site.payment_received') }}</p>
+        <p class="alert alert-success d-print-none">{{ __('site.payment_received') }}</p>
     @elseif ($msg === 14)
-        <p class="alert alert-danger print:hidden">{{ __('site.payment_cancelled') }}</p>
+        <p class="alert alert-danger d-print-none">{{ __('site.payment_cancelled') }}</p>
     @endif
 
     <section id="pay-fees" class="pb-4">
@@ -31,15 +31,15 @@
             <p class="lead"><small><span class="me-1 fa fa-fw fa-lg fa-check-circle text-success-emphasis"></span>
                 {{ __('site.pay_fees_marked_paid') }}</small></p>
         @else
-            <p class="text-xl font-light">
+            <p class="fs-5 fw-light">
                 {{-- pay.pub.php:80 — symbol prepended: {symbol}{amount} per entry --}}
                 <small>{{ __('site.pay_fees_are') }} <strong>{{ $ctx->currencySymbol() }}{{ number_format((float) $fee, 2) }}</strong> {{ __('site.pay_per_entry') }}.</small>
             </p>
-            <p class="text-xl font-light">
+            <p class="fs-5 fw-light">
                 <small>{{ __('site.pay_total_due') }} <strong>{{ number_format((float) $total, 2) }}</strong>.</small>
             </p>
 
-            <p class="text-xl font-light"><small>{{ __('site.pay_unpaid_intro') }} {{ count($unpaid) }} {{ __('site.pay_unpaid_entries') }}:</small></p>
+            <p class="fs-5 fw-light"><small>{{ __('site.pay_unpaid_intro') }} {{ count($unpaid) }} {{ __('site.pay_unpaid_entries') }}:</small></p>
             <ul class="ms-12 list-unstyled">
                 @foreach ($unpaid as $entry)
                     <li class="mb-1">{{ __('site.entry') }} #{{ str_pad((string) $entry->id, 6, '0', STR_PAD_LEFT) }}:
@@ -52,7 +52,7 @@
             @if ($state === 'unavailable')
                 <p>{{ __('site.pay_unavailable') }} <a href="#contact">{{ __('site.contact_officials') }}</a></p>
             @else
-                <form method="post" action="{{ route('pay.checkout') }}" class="print:hidden">
+                <form method="post" action="{{ route('pay.checkout') }}" class="d-print-none">
                     @csrf
                     <button type="submit" class="btn btn-primary">{{ __('site.pay_pay_button') }}</button>
                 </form>

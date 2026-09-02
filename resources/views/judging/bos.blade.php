@@ -3,7 +3,7 @@
         <h1>{{ $ctx->contestStr('contestName') }}: Best of Show (BOS) Entries and Places</h1>
 
         {{-- Legacy control set: admin/judging_scores_bos.admin.php (dbTable=default, action=default). --}}
-        <div class="bcoem-admin-element print:hidden mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <a class="btn btn-secondary" href="{{ route('admin.judging.scores.index') }}"><span class="fa fa-arrow-circle-left"></span> All Scores</a>
             </div>
@@ -29,7 +29,7 @@
                 items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>
                 (judging_scores_bos.admin.php:107); the port pullsheet output
                 dispatches the same shape. The Cup Mats outputs exist. --}}
-            <div class="btn-group d-none d-lg-block print:hidden" role="group">
+            <div class="btn-group d-none d-lg-block d-print-none" role="group">
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-print"></span> Print...
                     </button>

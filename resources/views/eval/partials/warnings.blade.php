@@ -3,7 +3,7 @@
      countdowns to judging close / next open session; the dashboard flavor
      is what the ported surfaces include. Timers degrade gracefully
      without JS (the text below simply stays). --}}
-<p id="judging-ends-p" class="text-sm text-muted">
+<p id="judging-ends-p" class="fs-6 text-muted">
     <strong>Judging closes:</strong> <span id="judging-ends">{{ \Carbon\Carbon::createFromTimestamp((int) ($ctx->judgingStr('jPrefsJudgingClosed') ?? 0))->toDayDateTimeString() }}</span>
 </p>
 <script>

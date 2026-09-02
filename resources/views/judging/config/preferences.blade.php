@@ -195,7 +195,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="queuedModalLabel">Queued Judging Info</h4>
+                        <h4 class="modal-title fw-bold" id="queuedModalLabel">Queued Judging Info</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -214,7 +214,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="prefsEvalModalLabel">Electronic Scoresheets Info</h4>
+                        <h4 class="modal-title fw-bold" id="prefsEvalModalLabel">Electronic Scoresheets Info</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">

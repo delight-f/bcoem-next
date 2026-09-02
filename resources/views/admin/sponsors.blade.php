@@ -17,16 +17,16 @@
         {{-- List with inline enable/level/image/text editors --}}
         @foreach ($sponsors as $sponsor)
             <div class="border-bottom pb-2 mb-2">
-                <form method="post" action="{{ url('/admin/sponsors') }}" class="row g-2 items-center">
+                <form method="post" action="{{ url('/admin/sponsors') }}" class="row g-2 align-items-center">
                     @csrf
                     @method('put')
                     <input type="hidden" name="id[]" value="{{ $sponsor->id }}">
                     <div class="col-md-3">
                         <strong>{{ $sponsor->sponsorName }}</strong>
-                        <span class="text-muted block text-sm">{{ $sponsor->sponsorLocation }} &middot; {{ $sponsor->sponsorURL }}</span>
+                        <span class="text-muted d-block fs-6">{{ $sponsor->sponsorLocation }} &middot; {{ $sponsor->sponsorURL }}</span>
                     </div>
                     <div class="col-md-2">
-                        <label class="sr-only" for="sponsorLevel{{ $sponsor->id }}">Level</label>
+                        <label class="visually-hidden" for="sponsorLevel{{ $sponsor->id }}">Level</label>
                         <select class="form-select form-select-sm" id="sponsorLevel{{ $sponsor->id }}" name="sponsorLevel{{ $sponsor->id }}">
                             @for ($i = 1; $i <= 5; $i++)
                                 <option value="{{ $i }}" @selected((string) $sponsor->sponsorLevel === (string) $i)>{{ $i }}</option>
@@ -34,7 +34,7 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="sr-only" for="sponsorImage{{ $sponsor->id }}">Logo</label>
+                        <label class="visually-hidden" for="sponsorImage{{ $sponsor->id }}">Logo</label>
                         <select class="form-select form-select-sm" id="sponsorImage{{ $sponsor->id }}" name="sponsorImage{{ $sponsor->id }}">
                             <option value="">(no logo)</option>
                             @foreach ($sponsorImages as $file)
@@ -43,22 +43,22 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label class="sr-only" for="sponsorText{{ $sponsor->id }}">Description</label>
+                        <label class="visually-hidden" for="sponsorText{{ $sponsor->id }}">Description</label>
                         <textarea class="form-control" id="sponsorText{{ $sponsor->id }}" name="sponsorText{{ $sponsor->id }}" rows="2">{{ $sponsor->sponsorText }}</textarea>
                     </div>
                     <div class="col-auto form-check ms-2">
                         <input class="form-check-input" type="checkbox" id="sponsorEnable{{ $sponsor->id }}" name="sponsorEnable{{ $sponsor->id }}" value="1" @checked(((int) $sponsor->sponsorEnable) === 1)>
-                        <label class="form-check-label text-sm" for="sponsorEnable{{ $sponsor->id }}">Display</label>
+                        <label class="form-check-label fs-6" for="sponsorEnable{{ $sponsor->id }}">Display</label>
                     </div>
                     <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline btn-primary">Save</button></div>
                 </form>
                 <div class="mt-1">
                     <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/sponsors/'.$sponsor->id.'/edit') }}">Edit</a>
-                    <form method="post" action="{{ url('/admin/sponsors/'.$sponsor->id) }}" class="inline"
+                    <form method="post" action="{{ url('/admin/sponsors/'.$sponsor->id) }}" class="d-inline"
                         onsubmit="return confirm('Are you sure you want to delete {{ $sponsor->sponsorName }} as a sponsor? This cannot be undone.');">
                         @csrf
                         @method('delete')
-                        <button type="submit" class="btn btn-sm btn-outline btn-error">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
                     </form>
                 </div>
             </div>

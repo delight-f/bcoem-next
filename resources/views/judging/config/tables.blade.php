@@ -5,7 +5,7 @@
         {{-- Tables Competition/Planning Mode (judging_tables.admin.php:744-752).
              Legacy ships both lead texts + both buttons, then JS shows one
              of each per jPrefsTablePlanning. --}}
-        <div id="mode-alert" class="alert {{ $planning ? 'alert-purple' : 'alert-teal' }} print:hidden">
+        <div id="mode-alert" class="alert {{ $planning ? 'alert-purple' : 'alert-teal' }} d-print-none">
             <div id="tables-planning-mode-text" @if (! $planning) hidden @endif>
                 <strong>Your installation is currently in Tables Planning Mode</strong>
                 &ndash; defining tables, flights, rounds, and associated judge/steward assignments
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div id="tables-planning-mode" class="print:hidden" @if ($planning) hidden @endif>
+        <div id="tables-planning-mode" class="d-print-none" @if ($planning) hidden @endif>
             <button type="button" id="table-planning-button" class="btn btn-primary">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Planning</strong> Mode
             </button>
@@ -30,7 +30,7 @@
                 data-bs-toggle="tooltip" data-placement="right" data-tooltip="true"
                 title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received."></span>
         </div>
-        <div id="tables-competition-mode" class="print:hidden" @if (! $planning) hidden @endif>
+        <div id="tables-competition-mode" class="d-print-none" @if (! $planning) hidden @endif>
             <button type="button" id="tables-competition-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Competition</strong> Mode
             </button>
@@ -39,7 +39,7 @@
                 data-bs-toggle="tooltip" data-placement="right" data-tooltip="true"
                 title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
         </div>
-        <p class="print:hidden">
+        <p class="d-print-none">
             <a class="btn btn-primary" href="{{ route('admin.judging.tables.create') }}">Add a Table</a>
         </p>
 
@@ -111,7 +111,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3 class="modal-title font-bold" id="tables-competition-mode-modal-label">Please Confirm</h3>
+                        <h3 class="modal-title fw-bold" id="tables-competition-mode-modal-label">Please Confirm</h3>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -155,7 +155,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="unassigned-modal-label">Caution! Judges and/or Stewards Were Un-Assigned</h4>
+                        <h4 class="modal-title fw-bold" id="unassigned-modal-label">Caution! Judges and/or Stewards Were Un-Assigned</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -175,7 +175,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="availJudgeModalLabel">Judges Not Assigned to a Table</h4>
+                        <h4 class="modal-title fw-bold" id="availJudgeModalLabel">Judges Not Assigned to a Table</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -206,7 +206,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="availStewardModalLabel">Stewards Not Assigned to a Table</h4>
+                        <h4 class="modal-title fw-bold" id="availStewardModalLabel">Stewards Not Assigned to a Table</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -244,7 +244,7 @@
                         <th>Location</th>
                         <th>Received</th>
                         <th>Scored</th>
-                        <th class="print:hidden">Actions</th>
+                        <th class="d-print-none">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -256,7 +256,7 @@
                             <td>{{ $table->tableLocationName ?? '' }}</td>
                             <td>{{ $table->receivedTotal }}</td>
                             <td>{{ $table->scoredTotal }}</td>
-                            <td class="print:hidden" nowrap>
+                            <td class="d-print-none" nowrap>
                                 {{-- Pullsheets by Entry/Judging Numbers (legacy planning-mode gate). --}}
                                 @if (! $planning)
                                     <a class="hide-loader" href="{{ route('outputs.pullsheets') }}&view=entry&id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
@@ -273,7 +273,7 @@
                                 <a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-bs-toggle="tooltip" data-placement="top" title="Add/edit flights for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-send"></span></a>
                                 <a href="{{ url('/admin/judging/tables?action=assign&filter=judges&id='.$table->id) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-lock"></span></a>
                                 <a href="{{ url('/admin/judging/tables?action=assign&filter=stewards&id='.$table->id) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
-                                <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
+                                <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="d-inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-placement="top" title="Delete Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-trash-o"></span></button>

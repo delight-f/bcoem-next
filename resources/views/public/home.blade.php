@@ -10,8 +10,8 @@
         {{-- judge_closed.pub.php: shown once registration/entry are closed
              and no future judging session remains (any winner-display state). --}}
         @if ($blurbCounts !== null)
-            <p class="text-xl font-light mt-4">{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}.</p>
-            <p class="text-xl font-light"><small>{{ __('site.there_were') }} <strong class="text-success">{{ $blurbCounts['received'] }}</strong> {{ __('site.entries_judged') }} {{ __('site.and') }} <strong class="text-success">{{ $blurbCounts['participants'] }}</strong> {{ __('site.registered_participants') }}.</small></p>
+            <p class="fs-5 fw-light mt-4">{{ __('site.salutation_thanks') }} {{ $ctx->contestStr('contestName') }}.</p>
+            <p class="fs-5 fw-light"><small>{{ __('site.there_were') }} <strong class="text-success">{{ $blurbCounts['received'] }}</strong> {{ __('site.entries_judged') }} {{ __('site.and') }} <strong class="text-success">{{ $blurbCounts['participants'] }}</strong> {{ __('site.registered_participants') }}.</small></p>
         @endif
 
         @includeWhen($resultsVisible, 'public.partials.results', [
@@ -28,7 +28,7 @@
 
     @includeWhen($sponsorsVisible, 'public.partials.sponsors-landing')
 
-    <section id="contact" class="landing-page-section pb-4 print:hidden">
+    <section id="contact" class="landing-page-section pb-4 d-print-none">
         <header class="landing-page-section-header py-2"><h1>{{ __('site.contact') }}</h1></header>
         @include('public.partials.contacts')
     </section>

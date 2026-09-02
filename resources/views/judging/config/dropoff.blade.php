@@ -2,7 +2,7 @@
     <section class="container mt-6 mb-4">
         <h1>Drop-Off Locations</h1>
 
-        <p class="print:hidden">
+        <p class="d-print-none">
             <a class="btn btn-primary" href="{{ route('admin.judging.dropoff.create') }}">Add a Drop-Off Location</a>
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#dropoffHelpModal">Drop-Off Locations Help</button>
         </p>
@@ -10,7 +10,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h4 class="modal-title font-bold" id="dropoffHelpModalLabel">Drop-Off Locations Help</h4>
+                        <h4 class="modal-title fw-bold" id="dropoffHelpModalLabel">Drop-Off Locations Help</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -46,12 +46,12 @@
                             <td>{{ $location->dropLocationPhone }}</td>
                             <td>{{ $location->dropLocation }}</td>
                             <td>{{ $location->dropLocationNotes }}</td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 @if (! empty($location->dropLocationWebsite) && preg_match('#^https?://#i', (string) $location->dropLocationWebsite))
                                     <a href="{{ $location->dropLocationWebsite }}" target="_blank" rel="noopener">Website</a>
                                 @endif
                                 <a href="{{ route('admin.judging.dropoff.edit', ['id' => $location->id]) }}">Edit</a>
-                                <form method="post" action="{{ route('admin.judging.dropoff.destroy', ['id' => $location->id]) }}" class="inline" onsubmit="return confirm('Delete this location? This cannot be undone.')">
+                                <form method="post" action="{{ route('admin.judging.dropoff.destroy', ['id' => $location->id]) }}" class="d-inline" onsubmit="return confirm('Delete this location? This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link btn-sm p-0">Delete</button>

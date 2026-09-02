@@ -11,7 +11,7 @@
         </header>
 
         @if ((int) request('msg') === 3)
-            <p class="alert alert-danger print:hidden">{{ __('site.password_incorrect') }}</p>
+            <p class="alert alert-danger d-print-none">{{ __('site.password_incorrect') }}</p>
         @endif
 
         @if ($errors->any())

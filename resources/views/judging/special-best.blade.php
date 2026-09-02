@@ -63,11 +63,11 @@
                             <td>{{ $category->sbi_description }}</td>
                             <td>{{ $category->sbi_places }}</td>
                             <td>{{ $category->sbi_rank }}</td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 <a href="{{ route('admin.specialbest.edit', ['id' => $category->id]) }}">Edit</a>
                                 &middot;
                                 <a href="{{ route($dataCount > 0 ? 'admin.specialbest.data.edit' : 'admin.specialbest.data.edit', ['id' => $category->id]) }}">Entries</a>
-                                <form method="post" action="{{ route('admin.specialbest.destroy', ['id' => $category->id]) }}" class="inline"
+                                <form method="post" action="{{ route('admin.specialbest.destroy', ['id' => $category->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Delete {{ $category->sbi_name }}? All associated data will be deleted as well.');">
                                     @csrf
                                     @method('DELETE')

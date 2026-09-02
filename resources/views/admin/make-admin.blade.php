@@ -16,12 +16,12 @@
 
             <p><strong>Top-level admins</strong> have full access to add, change, and delete all information in the
                 database, including preferences, competition information, and archival data — provide this level
-                <span class="text-error"><strong>with caution</strong></span>!</p>
+                <span class="text-danger"><strong>with caution</strong></span>!</p>
             <p><strong>Admin users</strong> are able to add, change, and delete most information in the database,
                 including participants, entries, tables, scores, etc.</p>
 
             <fieldset>
-                <legend class="text-sm">User Level for {{ $user->user_name }}</legend>
+                <legend class="fs-6">User Level for {{ $user->user_name }}</legend>
                 @foreach ([2 => 'Participant', 1 => 'Admin', 0 => 'Top-Level Admin'] as $level => $label)
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="userLevel" value="{{ $level }}" id="userLevel{{ $level }}"

@@ -7,7 +7,7 @@
             <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}">Stewards</a>
         </p>
 
-        <nav class="mb-4 text-sm">
+        <nav class="mb-4 fs-6">
             <a href="{{ url('/backoffice/participants') }}">All Participants</a> |
             <a href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a> |
             <a href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a>
@@ -56,13 +56,13 @@
                                         @endif
 
                                         @if ($cell['status'] === 'assigned')
-                                            <span class="text-warning block"><strong>Assigned.</strong></span>
+                                            <span class="text-warning d-block"><strong>Assigned.</strong></span>
                                         @elseif ($cell['status'] === 'busy')
-                                            <span class="text-primary block">Assigned to another table in this round.</span>
+                                            <span class="text-primary d-block">Assigned to another table in this round.</span>
                                         @elseif ($cell['status'] === 'preferred')
-                                            <span class="text-success block">Available and Preferred Style(s).</span>
+                                            <span class="text-success d-block">Available and Preferred Style(s).</span>
                                         @elseif ($cell['status'] === 'non-preferred')
-                                            <span class="text-error block">Available but Non-Preferred Style(s).</span>
+                                            <span class="text-danger d-block">Available but Non-Preferred Style(s).</span>
                                         @endif
                                     </td>
                                 @endforeach

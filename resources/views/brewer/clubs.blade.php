@@ -27,7 +27,7 @@
                 <div class="mb-4 row">
                     <label for="brewerClubs" class="col-md-3 col-form-label"><strong>{{ __('site.club') }}</strong></label>
                     <div class="col-md-9">
-                        <input class=" form-control" id="brewerClubs" name="brewerClubs" type="text"
+                        <input class="form-control" id="brewerClubs" name="brewerClubs" type="text"
                                value="{{ old('brewerClubs', $brewer->brewerClubs === 'Other' ? '' : $brewer->brewerClubs) }}">
                         <div class="form-text">{{ __('site.club_other_hint') }}</div>
                     </div>
@@ -35,7 +35,7 @@
                 <div class="mb-4 row">
                     <label for="brewerClubsOther" class="col-md-3 col-form-label"><strong>{{ __('site.club_other') }}</strong></label>
                     <div class="col-md-9">
-                        <input class=" form-control" id="brewerClubsOther" name="brewerClubsOther" type="text"
+                        <input class="form-control" id="brewerClubsOther" name="brewerClubsOther" type="text"
                                value="{{ old('brewerClubsOther', $brewer->brewerClubs === 'Other' ? $brewer->brewerClubs : '') }}">
                     </div>
                 </div>
@@ -45,7 +45,7 @@
                 <div class="mb-4 row">
                     <label for="brewerProAm" class="col-md-3 col-form-label"><strong>{{ __('site.pro_am') }}</strong></label>
                     <div class="col-md-9">
-                        <select class=" form-select" id="brewerProAm" name="brewerProAm">
+                        <select class="form-select" id="brewerProAm" name="brewerProAm">
                             <option value="0" @selected(old('brewerProAm', $brewer->brewerProAm ?? '0') === '0')>No</option>
                             <option value="1" @selected(old('brewerProAm', $brewer->brewerProAm) === '1')>Yes</option>
                             <option value="2" @selected(old('brewerProAm', $brewer->brewerProAm) === '2')>Opt out</option>
@@ -58,7 +58,7 @@
                 <div class="mb-4 row">
                     <label for="brewerAHA" class="col-md-3 col-form-label"><strong>{{ __('site.aha_number') }}</strong></label>
                     <div class="col-md-9">
-                        <input class=" form-control" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
+                        <input class="form-control" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
                                value="{{ old('brewerAHA', $brewer->brewerAHA) }}">
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                     <div class="mb-4 row">
                         <label for="brewerMHP" class="col-md-3 col-form-label"><strong>{{ __('site.mhp_number') }}</strong></label>
                         <div class="col-md-9">
-                            <input class=" form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
+                            <input class="form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
                                    value="{{ old('brewerMHP', $brewer->brewerMHP) }}">
                         </div>
                     </div>

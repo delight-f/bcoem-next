@@ -6,7 +6,7 @@
 <section id="account-info" class="mb-6">
     <h2>{{ __('site.account_info') }}</h2>
     @if ($brewer === null)
-        <p class="text-xl font-light">{{ __('site.no_profile_yet') }}</p>
+        <p class="fs-5 fw-light">{{ __('site.no_profile_yet') }}</p>
     @else
         <p class="lead">
             {{ __('site.thanks_for_participating') }} {{ App\Support\Tenant\TenantContext::load()->contestStr('contestName') }}, {{ $brewer->brewerFirstName }}.
@@ -56,7 +56,7 @@
 
         @if ($brewer->brewerJudge === 'Y')
             <hr>
-            @php($row(__('site.judge'), $yesNo($brewer->brewerJudge).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 print:hidden" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
+            @php($row(__('site.judge'), $yesNo($brewer->brewerJudge).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 d-print-none" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
             @php($row('BJCP '.__('site.bjcp_mead'), $yesNo($judgeMead)))
             @php($row('BJCP '.__('site.bjcp_cider'), $yesNo($judgeCider)))
             @php($row(__('site.designations'), e($designations)))
@@ -66,10 +66,10 @@
             @php($row(__('site.judge_non_preferred'), e($judgeDislikes)))
             @if ($judgeAvailability !== [])
                 @if (collect($judgeAvailability)->every(fn ($r) => ! $r['available']))
-                    <p class="alert alert-warning print:hidden"><i class="fa fa-exclamation-triangle"></i> {!! __('site.no_judge_availability') !!}</p>
+                    <p class="alert alert-warning d-print-none"><i class="fa fa-exclamation-triangle"></i> {!! __('site.no_judge_availability') !!}</p>
                 @endif
                 @php($row(__('site.avail'), ''))
-                <div class="row bcoem-account-info print:hidden">
+                <div class="row bcoem-account-info d-print-none">
                     <div class="col-12 col-md-8 offset-md-4">
                         <table class="table table-condensed table-striped table-bordered border-dark-subtle">
                             <thead class="table-dark">
@@ -98,10 +98,10 @@
 
         @if ($brewer->brewerSteward === 'Y')
             <hr>
-            @php($row(__('site.stewarding'), $yesNo($brewer->brewerSteward).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 print:hidden" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
+            @php($row(__('site.stewarding'), $yesNo($brewer->brewerSteward).' <a href="'.url('/list/edit-judging').'" class="btn btn-dark btn-sm ms-2 d-print-none" style="--bs-btn-padding-y: .2rem; --bs-btn-padding-x: .4rem; --bs-btn-font-size: .75rem;">'.explode(' ', __('site.change_email'))[0].'</a>'))
             @if ($stewardAvailability !== [])
                 @php($row(__('site.avail'), ''))
-                <div class="row bcoem-account-info print:hidden">
+                <div class="row bcoem-account-info d-print-none">
                     <div class="col-12 col-md-8 offset-md-4">
                         <table class="table table-condensed table-striped table-bordered border-dark-subtle">
                             <thead class="table-dark">
@@ -132,7 +132,7 @@
             <hr>
             @php($row(__('site.staff'), $yesNo($brewer->brewerStaff)))
             @php($row(__('site.avail'), ''))
-            <div class="row bcoem-account-info print:hidden">
+            <div class="row bcoem-account-info d-print-none">
                 <div class="col-12 col-md-8 offset-md-4">
                     <table class="table table-condensed table-striped table-bordered border-dark-subtle">
                         <thead class="table-dark">

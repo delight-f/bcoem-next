@@ -8,7 +8,7 @@
             dropdown — assignment views by name/table plus the
             not-assigned modals (edit view carries unassignedJudges/
             unassignedStewards; add falls back to the empty roster). --}}
-        <div class="bcoem-admin-element print:hidden mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-eye"></span> View...

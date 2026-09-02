@@ -59,22 +59,22 @@
             @endforeach
         </select>
         @error('brewStyle')<div class="text-danger">{{ $message }}</div>@enderror
-        <div id="req-special" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleReqSpec === 1) hidden @endunless">{!! __('site.req_special_legend') !!}</div>
-        <div id="req-strength" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleStrength === 1) hidden @endunless">{!! __('site.req_strength_legend') !!}</div>
-        <div id="req-carbonation" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleCarb === 1) hidden @endunless">{!! __('site.req_carb_legend') !!}</div>
-        <div id="req-sweetness" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1) hidden @endunless">{!! __('site.req_sweet_legend') !!}</div>
+        <div id="req-special" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleReqSpec === 1) d-none @endunless">{!! __('site.req_special_legend') !!}</div>
+        <div id="req-strength" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleStrength === 1) d-none @endunless">{!! __('site.req_strength_legend') !!}</div>
+        <div id="req-carbonation" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleCarb === 1) d-none @endunless">{!! __('site.req_carb_legend') !!}</div>
+        <div id="req-sweetness" class="mt-1 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1) d-none @endunless">{!! __('site.req_sweet_legend') !!}</div>
         <script type="application/json" id="style-flag-map">@json($styleFlagMap)</script>
         <script type="application/json" id="optional-info-styles">@json($optionalStyles)</script>
     </div>
 </div>
 
-<div id="specialInfo" class="mb-4 row @unless ($variantFlags !== null && trim((string) ($variantFlags->brewStyleEntry ?? '')) !== '') hidden @endunless">
+<div id="specialInfo" class="mb-4 row @unless ($variantFlags !== null && trim((string) ($variantFlags->brewStyleEntry ?? '')) !== '') d-none @endunless">
     <div class="offset-md-3 col-md-9">
         <p class="alert alert-teal" id="specialInfoText">{{ $variantFlags->brewStyleEntry ?? '' }}</p>
     </div>
 </div>
 
-<div id="special" class="mb-4 row @unless ($variantFlags !== null && (int) $variantFlags->brewStyleReqSpec === 1) hidden @endunless">
+<div id="special" class="mb-4 row @unless ($variantFlags !== null && (int) $variantFlags->brewStyleReqSpec === 1) d-none @endunless">
     <label for="brewInfo" class="col-md-3 col-form-label text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.required_info') }} *</strong></label>
     <div class="col-md-9">
         <textarea class="form-control" rows="8" name="brewInfo" id="brewInfo"
@@ -84,7 +84,7 @@
     </div>
 </div>
 
-<div id="optional" class="mb-4 row @unless ($variantFlags !== null && in_array(ltrim((string) $variantFlags->brewStyleGroup, '0').'-'.$variantFlags->brewStyleNum, $optionalStyles, true)) hidden @endunless">
+<div id="optional" class="mb-4 row @unless ($variantFlags !== null && in_array(ltrim((string) $variantFlags->brewStyleGroup, '0').'-'.$variantFlags->brewStyleNum, $optionalStyles, true)) d-none @endunless">
     <label for="brewInfoOptional" class="col-md-3 col-form-label"><strong>{{ __('site.optional_info') }}</strong></label>
     <div class="col-md-9">
         <textarea class="form-control" rows="4" name="brewInfoOptional"
@@ -93,7 +93,7 @@
     </div>
 </div>
 
-<fieldset id="carbonation" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleCarb === 1) hidden @endunless">
+<fieldset id="carbonation" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleCarb === 1) d-none @endunless">
     <legend class="col-form-label pt-0 text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.carbonation') }} *</strong></legend>
     @foreach ([['Still', 'still'], ['Petillant', 'petillant'], ['Sparkling', 'sparkling']] as [$value, $key])
         <div class="form-check form-check-inline">
@@ -104,7 +104,7 @@
     @endforeach
 </fieldset>
 
-<fieldset id="sweetness-mead" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1 && (string) $variantFlags->brewStyleType === '3') hidden @endunless">
+<fieldset id="sweetness-mead" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1 && (string) $variantFlags->brewStyleType === '3') d-none @endunless">
     <legend class="col-form-label pt-0 text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.sweetness') }} *</strong></legend>
     @foreach ([['Dry', 'dry'], ['Medium Dry', 'medium_dry'], ['Medium', 'medium'], ['Medium Sweet', 'medium_sweet'], ['Sweet', 'sweet']] as [$value, $key])
         <div class="form-check form-check-inline">
@@ -115,7 +115,7 @@
     @endforeach
 </fieldset>
 
-<fieldset id="sweetness-cider" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1 && (string) $variantFlags->brewStyleType === '2') hidden @endunless">
+<fieldset id="sweetness-cider" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleSweet === 1 && (string) $variantFlags->brewStyleType === '2') d-none @endunless">
     <legend class="col-form-label pt-0 text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.sweetness') }} *</strong></legend>
     @foreach ([['Dry', 'dry'], ['Semi-Dry', 'semi_dry'], ['Medium', 'medium'], ['Semi-Sweet', 'semi_sweet'], ['Sweet', 'sweet']] as [$value, $key])
         <div class="form-check form-check-inline">
@@ -126,7 +126,7 @@
     @endforeach
 </fieldset>
 
-<fieldset id="strength" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleStrength === 1) hidden @endunless">
+<fieldset id="strength" class="mb-4 @unless ($variantFlags !== null && (int) $variantFlags->brewStyleStrength === 1) d-none @endunless">
     <legend class="col-form-label pt-0 text-teal"><strong><i class="fa fa-star me-1"></i>{{ __('site.strength') }} *</strong></legend>
     @foreach ([['Hydromel', 'hydromel'], ['Standard', 'standard'], ['Sack', 'sack']] as [$value, $key])
         <div class="form-check form-check-inline">
@@ -137,7 +137,7 @@
     @endforeach
 </fieldset>
 
-<fieldset id="specify-pouring" class="mb-4 @unless ($variantFlags !== null && (string) $variantFlags->brewStyleType === '1') hidden @endunless">
+<fieldset id="specify-pouring" class="mb-4 @unless ($variantFlags !== null && (string) $variantFlags->brewStyleType === '1') d-none @endunless">
     <legend class="col-form-label pt-0"><strong>{{ __('site.pouring_instructions') }}</strong></legend>
     <p class="mb-1">{{ __('site.pouring_inst') }}</p>
     @foreach ([['Fast', 'fast'], ['Normal', 'normal'], ['Slow', 'slow']] as [$value, $key])

@@ -348,7 +348,7 @@
                             </td>
                             <td class="d-none d-lg-block hidden-print" nowrap>
                                 <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
-                                <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="inline"
+                                <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entryName }}?&rdquo; This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

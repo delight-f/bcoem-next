@@ -12,22 +12,22 @@
         @endif
 
         @foreach ($mods as $mod)
-            <div class="border-bottom pb-2 mb-2 row items-center">
+            <div class="border-bottom pb-2 mb-2 row align-items-center">
                 <div class="col-md-8">
                     <strong>{{ $mod->mod_name }}</strong>
-                    <span class="text-muted block text-sm">{{ $mod->mod_filename }}</span>
+                    <span class="text-muted d-block fs-6">{{ $mod->mod_filename }}</span>
                 </div>
                 <div class="col-auto form-check">
                     <input class="form-check-input" type="checkbox" id="mod_enable{{ $mod->id }}" form="mods-bulk" name="mod_enable{{ $mod->id }}" value="1" @checked(((int) $mod->mod_enable) === 1)>
-                    <label class="form-check-label text-sm" for="mod_enable{{ $mod->id }}">Enabled</label>
+                    <label class="form-check-label fs-6" for="mod_enable{{ $mod->id }}">Enabled</label>
                 </div>
                 <div class="col-md-3 text-end">
                     <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/mods/'.$mod->id.'/edit') }}">Edit</a>
-                    <form method="post" action="{{ url('/admin/mods/'.$mod->id) }}" class="inline"
+                    <form method="post" action="{{ url('/admin/mods/'.$mod->id) }}" class="d-inline"
                         onsubmit="return confirm('Are you sure you want to delete this module? This cannot be undone.');">
                         @csrf
                         @method('delete')
-                        <button type="submit" class="btn btn-sm btn-outline btn-error">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
                     </form>
                 </div>
             </div>

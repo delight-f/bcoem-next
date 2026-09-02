@@ -7,7 +7,7 @@
         {{-- Legacy judging_scores_bos.admin.php:98-112 — Print dropdown
              renders in list and enter modes: BOS pullsheets per BOS type
              + BOS cup mats. --}}
-        <div class="btn-group d-none d-lg-block print:hidden" role="group">
+        <div class="btn-group d-none d-lg-block d-print-none" role="group">
             <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span class="fa fa-print"></span> Print...
             </button>

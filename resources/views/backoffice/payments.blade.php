@@ -33,7 +33,7 @@
                         <td class="d-none d-md-block">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
                         <td>{{ \App\Http\Controllers\Admin\PaymentsController::paymentDate($ctx, $payment->created_at) }}</td>
                         <td nowrap>
-                            <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="inline"
+                            <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="d-inline"
                                   onsubmit="return confirm('Are you sure you want to delete this payment? This cannot be undone.');">
                                 @csrf
                                 @method('DELETE')

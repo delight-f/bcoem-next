@@ -30,7 +30,7 @@
                        placeholder="{{ __('site.email') }}" value="{{ old('email') }}" required autofocus>
                 <label for="forgot-user-name">{{ __('site.email') }}</label>
             </div>
-            <div class="grid gap-2 mx-auto mb-6">
+            <div class="d-grid gap-2 mx-auto mb-6">
                 <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
             </div>
         </form>

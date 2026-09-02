@@ -17,8 +17,8 @@
                     <td class="dataLabel">Mead Judge Endorsement:</td>
                     <td>
                         Have you taken <strong>and passed</strong> the BJCP Mead Exam?
-                        <label class="block"><input type="radio" name="brewerJudgeMead" value="Y" @checked($brewer->brewerJudgeMead === 'Y')> Yes</label>
-                        <label class="block"><input type="radio" name="brewerJudgeMead" value="N" @checked($brewer->brewerJudgeMead !== 'Y')> No</label>
+                        <label class="d-block"><input type="radio" name="brewerJudgeMead" value="Y" @checked($brewer->brewerJudgeMead === 'Y')> Yes</label>
+                        <label class="d-block"><input type="radio" name="brewerJudgeMead" value="N" @checked($brewer->brewerJudgeMead !== 'Y')> No</label>
                     </td>
                 </tr>
                 <tr>
@@ -27,7 +27,7 @@
                         <fieldset class="mb-2">
                             <legend class="text-base">BJCP Designations</legend>
                             @foreach ($ranks as $rank)
-                                <label class="block">
+                                <label class="d-block">
                                     <input type="radio" name="brewerJudgeRank[]" value="{{ $rank }}" @checked(in_array($rank, $selectedRanks, true) || ($selectedRanks === [] && $rank === 'Novice'))>
                                     {{ $rank === 'Novice' ? 'Non-BJCP' : $rank }}
                                 </label>
@@ -36,7 +36,7 @@
                         <fieldset>
                             <legend class="text-base">Other Designations</legend>
                             @foreach ($designations as $designation)
-                                <label class="block">
+                                <label class="d-block">
                                     <input type="checkbox" name="brewerJudgeRank[]" value="{{ $designation }}" @checked(in_array($designation, $selectedRanks, true))>
                                     {{ $designation }}
                                 </label>
@@ -50,7 +50,7 @@
                     <td>
                         <p>Check all styles that you <em>prefer</em> to judge. Leaving a style unchecked indicates that you are OK to judge it.</p>
                         @foreach ($styles as $style)
-                            <label class="inline-block me-4">
+                            <label class="d-inline-block me-4">
                                 <input type="checkbox" name="brewerJudgeLikes[]" value="{{ $style->id }}" @checked(in_array((string) $style->id, $likes, true))>
                                 {{ ltrim($style->brewStyleGroup, '0') }}{{ $style->brewStyleNum }}: {{ $style->brewStyle }}
                             </label>
@@ -62,7 +62,7 @@
                     <td>
                         <p>Check all styles that you <em>do not wish</em> to judge. There is no need to mark styles for which you have entries; the system will not assign you to any table where you have entries.</p>
                         @foreach ($styles as $style)
-                            <label class="inline-block me-4">
+                            <label class="d-inline-block me-4">
                                 <input type="checkbox" name="brewerJudgeDislikes[]" value="{{ $style->id }}" @checked(in_array((string) $style->id, $dislikes, true))>
                                 {{ ltrim($style->brewStyleGroup, '0') }}{{ $style->brewStyleNum }}: {{ $style->brewStyle }}
                             </label>

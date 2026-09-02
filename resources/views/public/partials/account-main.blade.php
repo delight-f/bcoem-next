@@ -4,13 +4,13 @@
      the same list.pub.php block for both sections. --}}
     @php($msg = (int) request('msg'))
     @if ($msg === 5)
-        <p class="alert alert-danger print:hidden">{{ __('site.deleted_ok') }}</p>
+        <p class="alert alert-danger d-print-none">{{ __('site.deleted_ok') }}</p>
     @elseif ($msg === 2)
-        <p class="alert alert-success print:hidden">{{ __('site.updated_ok') }}</p>
+        <p class="alert alert-success d-print-none">{{ __('site.updated_ok') }}</p>
     @elseif ($msg === 7)
-        <p class="alert alert-success print:hidden">{{ __('site.registration_complete') }}</p>
+        <p class="alert alert-success d-print-none">{{ __('site.registration_complete') }}</p>
     @elseif ($msg === 1)
-        <p class="alert alert-success print:hidden"><strong>{{ __('site.info_added') }}</strong></p>
+        <p class="alert alert-success d-print-none"><strong>{{ __('site.info_added') }}</strong></p>
     @endif
 
     <a name="my-account"></a>
@@ -19,7 +19,7 @@
             {{-- BrewerForm2 owns this partial; include tolerates its landing order. --}}
             @includeIf('brewer.info', $info)
         </div>
-        <div class="col-12 col-md-4 col-lg-3 print:hidden">
+        <div class="col-12 col-md-4 col-lg-3 d-print-none">
             {{-- pub/list.pub.php $user_edit_links button stack --}}
             <div class="d-grid gap-2 mb-5">
                 @if (count($rows) > 0)

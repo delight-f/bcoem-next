@@ -19,7 +19,7 @@
             </div>
         @endif
 
-        <p class="text-xl font-light"><em>{{ $question }}</em></p>
+        <p class="fs-5 fw-light"><em>{{ $question }}</em></p>
 
         <form method="post" action="{{ route('password.verify') }}" class="needs-validation" novalidate>
             @csrf
@@ -29,7 +29,7 @@
                        placeholder="{{ __('reset.security_answer_label') }}" required autofocus>
                 <label for="security-question-answer">{{ __('reset.security_answer_label') }}</label>
             </div>
-            <div class="grid gap-2 mx-auto mb-6">
+            <div class="d-grid gap-2 mx-auto mb-6">
                 <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
             </div>
         </form>

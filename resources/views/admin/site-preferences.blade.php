@@ -340,7 +340,7 @@
                             <p>The Barcode options are intended to be used with a USB barcode scanner and the <a class="hide-loader" href="{{ url('/admin/judging/checkin') }}">barcode entry check-in function</a>.</p>
                             <p>The QR code options are intended to be used with a mobile device and <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR code entry check-in function</a> (requires a QR code reading app).</p>
                         </span>
-                        <div class="hidden">
+                        <div class="d-none">
                             <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number.png') }}" data-caption="Standard - Larger Printed Number and Style">Link</a>
                             <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_barcode.png') }}" data-caption="Standard with Barcode/QR Code">Link</a>
                             <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number_barcode.png') }}" data-caption="Standard - Larger Printed Number and Style with Barcode/QR Code">Link</a>

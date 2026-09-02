@@ -54,7 +54,7 @@
             @csrf
             @foreach ($imagesByCategory as $categoryId => $images)
                 <fieldset class="mb-4 border rounded p-4">
-                    <legend class="text-sm">{{ $categories[$categoryId] }}
+                    <legend class="fs-6">{{ $categories[$categoryId] }}
                         @if ($categoryId === '0')<span class="text-muted">(shown on all pages)</span>@endif
                     </legend>
                     @forelse ($images as $image)
@@ -80,7 +80,7 @@
         @if ($allKnown !== [])
             <form method="post" action="{{ url('/admin/hero-images/delete') }}" class="mt-4">
                 @csrf
-                <div class="row g-2 items-end">
+                <div class="row g-2 align-items-end">
                     <div class="col-auto">
                         <label for="hero_image_delete" class="form-label">Delete an image</label>
                         <select class="form-select" id="hero_image_delete" name="hero_image_delete" required>

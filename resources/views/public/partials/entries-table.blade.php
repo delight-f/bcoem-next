@@ -17,7 +17,7 @@
                     <th>{{ __('site.confirmed') }}</th>
                     <th>{{ __('site.paid_label') }}</th>
                     <th>{{ __('site.received') }}</th>
-                    <th class="print:hidden">{{ __('site.actions') }}</th>
+                    <th class="d-print-none">{{ __('site.actions') }}</th>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
@@ -29,7 +29,7 @@
                         <td>
                             {{ $e->brewName }}
                             @if (! empty($e->brewCoBrewer))
-                                <div><em class="text-sm">{{ __('site.cobrewer') }}: {{ $e->brewCoBrewer }}</em></div>
+                                <div><em class="fs-6">{{ __('site.cobrewer') }}: {{ $e->brewCoBrewer }}</em></div>
                             @endif
                         </td>
                         <td>{{ $e->brewCategorySort }}-{{ $e->brewSubCategory }}: {{ $e->brewStyle }}</td>
@@ -40,7 +40,7 @@
                                     data-flag="{{ $flag }}" data-state="{{ $on ? 'yes' : 'no' }}">{{ __($labelKey) }}</span>
                             </td>
                         @endforeach
-                        <td class="print:hidden">
+                        <td class="d-print-none">
                             @if ($r['canEdit'])
                                 {{-- P3.3b brew edit route --}}
                                 <a href="{{ url('/brew/'.$e->id.'/edit') }}" title="Edit"><i class="fa fa-fw fa-lg fa-pencil"></i></a>
@@ -48,7 +48,7 @@
                                 <span title="{{ __('site.edit_locked') }}"><i class="fa fa-fw fa-lg fa-pencil text-muted"></i></span>
                             @endif
                             @if ($r['canDelete'])
-                                <form method="post" action="{{ route('entries.destroy', ['id' => $e->id]) }}" class="inline">
+                                <form method="post" action="{{ route('entries.destroy', ['id' => $e->id]) }}" class="d-inline">
                                     onsubmit="return confirm('{{ __('site.delete_confirm') }}');">
                                     @csrf
                                     <button type="submit" class="btn btn-link p-0 align-baseline" title="{{ __('site.delete') }}">

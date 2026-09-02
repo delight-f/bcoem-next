@@ -39,13 +39,13 @@
             </div>
             <div class="btn-group" role="group" aria-label="all-styles">
                 @if ($combined)
-                    <form method="post" action="{{ url('/admin/style-types/separate') }}" class="inline"
+                    <form method="post" action="{{ url('/admin/style-types/separate') }}" class="d-inline"
                           onsubmit="return confirm('Are you sure you want to separate mead and cider into two distinct style types? This will clear any Mead/Cider BOS scores/places already entered in the database.');">
                         @csrf
                         <button type="submit" class="btn btn-success"><span class="fa fa-expand"></span> Separate Mead and Cider?</button>
                     </form>
                 @else
-                    <form method="post" action="{{ url('/admin/style-types/combine') }}" class="inline"
+                    <form method="post" action="{{ url('/admin/style-types/combine') }}" class="d-inline"
                           onsubmit="return confirm('Are you sure you want to combine mead and cider into a single style type? This will also enable Best of Show (BOS) for the combined style type and clear any Mead or Cider BOS scores/places already in the database.');">
                         @csrf
                         <button type="submit" class="btn btn-success"><span class="fa fa-compress"></span> Combine Mead and Cider?</button>
@@ -87,7 +87,7 @@
                         <td>
                             <a href="{{ url('/admin/style-types/'.$type->id.'/edit') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $type->styleTypeName }}"><span class="fa fa-lg fa-pencil"></span></a>
                             @if ($type->styleTypeOwn !== 'bcoe')
-                                <form method="post" action="{{ url('/admin/style-types/'.$type->id) }}" class="inline"
+                                <form method="post" action="{{ url('/admin/style-types/'.$type->id) }}" class="d-inline"
                                       onsubmit="return confirm('Are you sure you want to delete {{ $type->styleTypeName }}? This cannot be undone.');">
                                     @csrf
                                     @method('delete')
