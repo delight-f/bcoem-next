@@ -1,4 +1,9 @@
-import 'bootstrap/dist/js/bootstrap.bundle.js';
+import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
+
+// The BS5 UMD attaches to module.exports under Vite (CJS branch), so it never
+// reaches window.bootstrap — expose it explicitly for callers that use
+// bootstrap.Modal/.Offcanvas programmatically (session modals, login reopen).
+window.bootstrap = bootstrap.default ?? bootstrap;
 
 // Mobile navbar: CSS peer-checkbox toggles #nav-menu; close on link click.
 const navToggle = document.getElementById('nav-toggle');
@@ -201,7 +206,8 @@ if (dateTimeInputs.length > 0 && window.flatpickr) {
 
 // Admin session-expiry modals + auto-logout. Port of legacy
 // js_includes/autologout.min.js (index.legacy.php:302-311 wires session_end_*
-// globals); shown via the Bootstrap JS loaded on the admin head.
+// globals); shown via Bootstrap 5's Modal API (issue 8 — the modals are BS5
+// markup; bootstrap.Modal is the bundled BS5 global).
 if (window.bcoemAdminSession) {
     const { endSeconds, redirect } = window.bcoemAdminSession;
     let expiryShown = null;
@@ -211,13 +217,14 @@ if (window.bcoemAdminSession) {
             window.location.replace(redirect);
             return;
         }
-        if (!window.jQuery) return;
         if (remaining <= 30 && expiryShown !== 30) {
-            if (expiryShown === 120) window.jQuery('#session-expire-warning').modal('hide');
-            window.jQuery('#session-expire-warning-30').modal('show');
+            if (expiryShown === 120) {
+                bootstrap.Modal.getOrCreateInstance('#session-expire-warning').hide();
+            }
+            bootstrap.Modal.getOrCreateInstance('#session-expire-warning-30').show();
             expiryShown = 30;
         } else if (remaining <= 120 && expiryShown !== 120) {
-            window.jQuery('#session-expire-warning').modal('show');
+            bootstrap.Modal.getOrCreateInstance('#session-expire-warning').show();
             expiryShown = 120;
         }
     }, 1000);

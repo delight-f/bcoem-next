@@ -641,38 +641,38 @@
         <script>window.bcoemAdminSession = { endSeconds: {{ (int) (time() + (int) config('session.lifetime', 120) * 60) }}, lifetimeMin: {{ (int) config('session.lifetime', 120) }}, redirect: "{{ route('logout') }}" };</script>
 
         <!-- Session Expiring Modal: 2 Minute Warning -->
-        <div class="modal fade" id="session-expire-warning" tabindex="-1" role="dialog" aria-labelledby="session-expire-warning-label">
-          <div class="modal-dialog" role="document">
+        <div class="modal fade" id="session-expire-warning" tabindex="-1" aria-labelledby="session-expire-warning-label" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="session-expire-warning-label">Session About To Expire</h4>
+                <h5 class="modal-title" id="session-expire-warning-label">Session About To Expire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
                 <p>Your session will expire in two minutes. Stay on the current page to finish your work before time expires. Need more time? Refresh this page to continue your current session (unsaved form data may be lost). Or, simply log out.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Stay Here</button>
-                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stay Here</button>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
               </div>
             </div>
           </div>
         </div>
         <!-- Session Expiring Modal: 30 Second Warning -->
-        <div class="modal fade" id="session-expire-warning-30" tabindex="-1" role="dialog" aria-labelledby="session-expire-warning-30-label">
-          <div class="modal-dialog" role="document">
+        <div class="modal fade" id="session-expire-warning-30" tabindex="-1" aria-labelledby="session-expire-warning-30-label" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
               <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="session-expire-warning-30-label">Session About To Expire</h4>
+                <h5 class="modal-title" id="session-expire-warning-30-label">Session About To Expire</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
                 <p>Your session will expire in 30 seconds. You can refresh to continue your current session or log out.</p>
               </div>
               <div class="modal-footer">
-                <button type="button" class="btn btn-success" data-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
-                <button type="button" class="btn btn-danger" data-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
               </div>
             </div>
           </div>
