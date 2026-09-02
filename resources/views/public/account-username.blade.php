@@ -8,7 +8,7 @@
         <p class="lead">{!! $lead !!}</p>
 
         @if ($errors->any())
-            <div class="alert alert-error mb-4">
+            <div class="alert alert-danger mb-4">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -24,17 +24,17 @@
             <input type="hidden" name="old_email" value="{{ $oldEmail }}">
 
             <div class="mb-4">
-                <label for="user_name" class="form-label"><span class="text-error">*</span> <strong>{{ __('site.new_email') }}</strong></label>
-                <input class="input input-bordered w-full" id="user_name" name="user_name" type="email"
+                <label for="user_name" class="form-label"><span class="text-danger">*</span> <strong>{{ __('site.new_email') }}</strong></label>
+                <input class="form-control" id="user_name" name="user_name" type="email"
                        value="{{ old('user_name') }}" required autocomplete="email">
                 <div class="help-block invalid-feedback text-danger">{{ __('site.email_invalid') }}</div>
                 <div id="username-status" class="mt-2 small"></div>
             </div>
 
             <div class="mb-4">
-                <label class="form-label"><span class="text-error">*</span> <strong>{{ __('site.are_you_sure') }}</strong></label>
+                <label class="form-label"><span class="text-danger">*</span> <strong>{{ __('site.are_you_sure') }}</strong></label>
                 <label class="form-check-label">
-                    <input class="checkbox" type="checkbox" name="sure" value="Y" required @checked(old('sure'))>
+                    <input class="form-check-input" type="checkbox" name="sure" value="Y" required @checked(old('sure'))>
                     {{ __('site.yes') }}
                 </label>
                 <div class="help-block invalid-feedback text-danger">{{ __('site.sure_required') }}</div>

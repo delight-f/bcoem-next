@@ -11,11 +11,11 @@
         </header>
 
         @if ((int) request('msg') === 3)
-            <p class="alert alert-error print:hidden">{{ __('site.password_incorrect') }}</p>
+            <p class="alert alert-danger print:hidden">{{ __('site.password_incorrect') }}</p>
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -30,13 +30,13 @@
             <div class="mb-4 row">
                 <label for="passwordOld" class="col-sm-3 col-form-label">{{ __('site.old_password') }} *</label>
                 <div class="col-sm-9">
-                    <input class="input input-bordered" id="passwordOld" name="passwordOld" type="password" required>
+                    <input class="form-control" id="passwordOld" name="passwordOld" type="password" required>
                 </div>
             </div>
             <div class="mb-4 row">
                 <label for="newPassword" class="col-sm-3 col-form-label">{{ __('site.new_password') }} *</label>
                 <div class="col-sm-9">
-                    <input class="input input-bordered" id="newPassword" name="password" type="password" required>
+                    <input class="form-control" id="newPassword" name="password" type="password" required>
                 </div>
             </div>
 

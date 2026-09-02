@@ -28,7 +28,7 @@
             @else
                 <p>{{ __('site.contact_use_form') }}</p>
                 @if ($errors->any())
-                    <div class="alert alert-error mb-4">
+                    <div class="alert alert-danger mb-4">
                         <ul class="mb-0">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
@@ -38,35 +38,35 @@
                 @endif
                 <form method="post" action="{{ route('contact.store') }}" class="needs-validation" novalidate>
                     @csrf
-                    <label class="floating-label w-full mb-4">
-                        <select class="select select-bordered w-full" name="to" required>
+                    <div class="form-floating mb-4">
+                        <select class="form-select" name="to" required>
                             @foreach ($contacts as $contact)
                                 <option value="{{ $contact->id }}" @selected(old('to') == $contact->id)>
                                     {{ $contact->contactFirstName }} {{ $contact->contactLastName }} &ndash; {{ $contact->contactPosition }}
                                 </option>
                             @endforeach
                         </select>
-                        <span>{{ __('site.contact_to') }}</span>
-                    </label>
-                    <label class="floating-label w-full mb-4">
-                        <input class="input input-bordered input-lg w-full" name="from_name" type="text"
+                        <label for="to">{{ __('site.contact_to') }}</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input class="form-control" id="from_name" name="from_name" type="text"
                                value="{{ old('from_name') }}" required>
-                        <span>{{ __('site.name') }}</span>
-                    </label>
-                    <label class="floating-label w-full mb-4">
-                        <input class="input input-bordered input-lg w-full" name="from_email" type="email"
+                        <label for="from_name">{{ __('site.name') }}</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input class="form-control" id="from_email" name="from_email" type="email"
                                value="{{ old('from_email') }}" required>
-                        <span>{{ __('site.email_address') }}</span>
-                    </label>
-                    <label class="floating-label w-full mb-4">
-                        <input class="input input-bordered input-lg w-full" name="subject" type="text"
+                        <label for="from_email">{{ __('site.email_address') }}</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <input class="form-control" id="subject" name="subject" type="text"
                                value="{{ old('subject') }}" required>
-                        <span>{{ __('site.contact_subject') }}</span>
-                    </label>
-                    <label class="floating-label w-full mb-4">
-                        <textarea class="textarea textarea-bordered w-full" name="message" rows="6" required>{{ old('message') }}</textarea>
-                        <span>{{ __('site.contact_message') }}</span>
-                    </label>
+                        <label for="subject">{{ __('site.contact_subject') }}</label>
+                    </div>
+                    <div class="form-floating mb-4">
+                        <textarea class="form-control" id="message" name="message" rows="6" required>{{ old('message') }}</textarea>
+                        <label for="message">{{ __('site.contact_message') }}</label>
+                    </div>
                     <div class="alert alert-warning">{{ __('site.contact_form_required') }}</div>
                     <button type="submit" class="btn btn-primary">{{ __('site.contact_send_message') }}</button>
                 </form>

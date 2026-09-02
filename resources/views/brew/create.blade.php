@@ -7,7 +7,7 @@
         <h1>{{ __('site.add_entry') }}</h1>
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

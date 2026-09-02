@@ -319,9 +319,9 @@
     <header id="home" class="site-header">
         <nav id="site-nav" class="site-nav family-sans navbar fixed top-0 text-white print:hidden" style="z-index: 1000;">
             <div class="container-fluid flex flex-wrap items-center">
-                <a class="btn btn-ghost" href="{{ url()->current() === url('/') ? '#home' : url('/') }}"><i class="fas fa-home me-2"></i></a>
+                <a class="btn btn-link nav-icon-btn" href="{{ url()->current() === url('/') ? '#home' : url('/') }}"><i class="fas fa-home me-2"></i></a>
                 <input type="checkbox" id="nav-toggle" class="peer hidden">
-                <label for="nav-toggle" class="btn btn-ghost btn-square md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
+                <label for="nav-toggle" class="btn btn-link nav-icon-btn md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
                 <section id="nav-menu" class="md:ms-auto w-full md:w-auto flex-col md:flex-row items-start md:items-center hidden peer-checked:flex md:flex">
                     @php
                         $onLanding = request()->routeIs('home');
@@ -434,7 +434,7 @@
                             <button type="submit" class="nav-item nav-link" aria-label="{{ __('site.log_out') }}"><i class="fa fa-lg fa-fw fa-sign-out-alt"></i></button>
                         </form>
                     @else
-                        <a class="nav-item nav-link" href="#" data-open-modal="login-modal">{{ __('site.log_in') }}</a>
+                        <a class="nav-item nav-link" href="#" data-bs-toggle="modal" data-bs-target="#login-modal">{{ __('site.log_in') }}</a>
                     @endif
                 </section>
             </div>
@@ -493,68 +493,80 @@
     </header>
 @endif
 
-
 @guest
     {{-- index.pub.php #login-modal / #forgot-modal: the login form lives in
          a shell modal opened by the nav Log In button, not on a page. --}}
-    <dialog id="login-modal" class="modal">
-        <div class="modal-box max-w-2xl">
-            <h1 class="text-lg font-bold mb-4">{{ __('site.log_in') }}</h1>
-            @if (isset($errors) && $errors->any())
-                <div class="alert alert-error mb-4">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title" id="login-modal-title">{{ __('site.log_in') }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('site.close') }}"></button>
                 </div>
-            @endif
-            <form method="post" action="{{ route('login.store') }}" class="needs-validation" novalidate>
-                @csrf
-                <label class="floating-label w-full mb-4">
-                    <input class="input input-bordered input-lg w-full" id="login-user-name" type="email" name="loginUsername"
-                           placeholder="{{ __('site.email') }}" value="{{ old('loginUsername') }}" required autofocus>
-                    <span>{{ __('site.email') }}</span>
-                </label>
-                <label class="floating-label w-full mb-4">
-                    <input class="input input-bordered input-lg w-full" id="login-password" type="password" name="loginPassword"
-                           placeholder="{{ __('site.password') }}" required>
-                    <span>{{ __('site.password') }}</span>
-                </label>
-                <div class="d-grid gap-2 mx-auto mb-4">
-                    <button id="login-button" class="btn btn-lg btn-success" type="submit">
-                        {{ __('site.log_in') }}<i class="fas fa-sign-in-alt ps-2"></i>
-                    </button>
+                <div class="modal-body">
+                    @if (isset($errors) && $errors->any())
+                        <div class="alert alert-danger mb-4">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <form method="post" action="{{ route('login.store') }}" class="needs-validation" novalidate>
+                        @csrf
+                        <div class="form-floating mb-4">
+                            <input class="form-control" id="login-user-name" type="email" name="loginUsername"
+                                   placeholder="{{ __('site.email') }}" value="{{ old('loginUsername') }}" required autofocus>
+                            <label for="login-user-name">{{ __('site.email') }}</label>
+                        </div>
+                        <div class="form-floating mb-4">
+                            <input class="form-control" id="login-password" type="password" name="loginPassword"
+                                   placeholder="{{ __('site.password') }}" required>
+                            <label for="login-password">{{ __('site.password') }}</label>
+                        </div>
+                        <div class="d-grid gap-2 mx-auto mb-4">
+                            <button id="login-button" class="btn btn-lg btn-success" type="submit">
+                                {{ __('site.log_in') }}<i class="fas fa-sign-in-alt ps-2"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="d-grid gap-2 mx-auto text-center">
+                        {{ __('site.forgot_password') }}
+                        <button class="btn btn-sm btn-primary mt-1" data-bs-toggle="modal" data-bs-target="#forgot-modal"
+                            data-bs-dismiss="modal">{{ __('site.reset_password') }}</button>
+                    </div>
                 </div>
-            </form>
-            <div class="d-grid gap-2 mx-auto text-center">
-                {{ __('site.forgot_password') }}
-                <button class="btn btn-sm btn-primary mt-1" data-open-modal="forgot-modal">{{ __('site.reset_password') }}</button>
-            </div>
-            <div class="modal-action">
-                <button type="button" class="btn btn-danger" data-close-modal>{{ __('site.close') }}</button>
             </div>
         </div>
-    </dialog>
+    </div>
 
-    <dialog id="forgot-modal" class="modal">
-        <div class="modal-box max-w-2xl">
-            <h1 class="text-lg font-bold mb-4">{{ __('site.reset_password') }}</h1>
-            <form method="post" action="{{ route('password.forgot') }}" class="needs-validation" novalidate>
-                @csrf
-                <label class="floating-label w-full mb-4">
-                    <input class="input input-bordered input-lg w-full" id="forgot-user-name" name="email" type="email"
-                           placeholder="{{ __('site.email') }}" value="{{ old('email') }}" required>
-                    <span>{{ __('site.email') }}</span>
-                </label>
-                <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
-            </form>
-            <div class="modal-action">
-                <button type="button" class="btn btn-dark" data-open-modal="login-modal"><i class="fas fa-chevron-left pe-2"></i>{{ __('site.log_in') }}</button>
-                <button type="button" class="btn btn-danger" data-close-modal>{{ __('site.close') }}</button>
+    <div class="modal fade" id="forgot-modal" tabindex="-1" role="dialog" aria-labelledby="forgot-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title" id="forgot-modal-title">{{ __('site.reset_password') }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('site.close') }}"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{{ route('password.forgot') }}" class="needs-validation" novalidate>
+                        @csrf
+                        <div class="form-floating mb-4">
+                            <input class="form-control" id="forgot-user-name" name="email" type="email"
+                                   placeholder="{{ __('site.email') }}" value="{{ old('email') }}" required>
+                            <label for="forgot-user-name">{{ __('site.email') }}</label>
+                        </div>
+                        <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
+                    </form>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#login-modal"
+                            data-bs-dismiss="modal"><i class="fas fa-chevron-left pe-2"></i>{{ __('site.log_in') }}</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">{{ __('site.close') }}</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </dialog>
+    </div>
 @endguest
     @if (! empty($modsTop))
         {{-- index.pub.php:357 — mods_top.inc.php render point (before core). --}}

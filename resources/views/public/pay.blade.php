@@ -14,7 +14,7 @@
     @if ($msg === 13)
         <p class="alert alert-success print:hidden">{{ __('site.payment_received') }}</p>
     @elseif ($msg === 14)
-        <p class="alert alert-error print:hidden">{{ __('site.payment_cancelled') }}</p>
+        <p class="alert alert-danger print:hidden">{{ __('site.payment_cancelled') }}</p>
     @endif
 
     <section id="pay-fees" class="pb-4">

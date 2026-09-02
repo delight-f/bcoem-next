@@ -4,7 +4,7 @@
      the same list.pub.php block for both sections. --}}
     @php($msg = (int) request('msg'))
     @if ($msg === 5)
-        <p class="alert alert-error print:hidden">{{ __('site.deleted_ok') }}</p>
+        <p class="alert alert-danger print:hidden">{{ __('site.deleted_ok') }}</p>
     @elseif ($msg === 2)
         <p class="alert alert-success print:hidden">{{ __('site.updated_ok') }}</p>
     @elseif ($msg === 7)

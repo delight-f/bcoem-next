@@ -22,7 +22,7 @@
                 <small><ul class="list-unstyled m-0 p-0">
                     <li><strong>{{ __('site.confirmed_entries') }}:</strong> {{ $info['confirmed'] }}</li>
                     @if ($info['unconfirmed'] > 0)
-                        <li class="text-error"><strong>{{ __('site.unconfirmed_entries') }}:</strong> {{ $info['unconfirmed'] }}<i class="fa fa-exclamation-circle ms-1"></i></li>
+                        <li class="text-danger"><strong>{{ __('site.unconfirmed_entries') }}:</strong> {{ $info['unconfirmed'] }}<i class="fa fa-exclamation-circle ms-1"></i></li>
                     @endif
                     <li><strong>{{ __('site.unpaid_confirmed_entries') }}:</strong> {{ $info['unpaidConfirmed'] }}</li>
                     <li><strong>{{ __('site.entry_fees_to_pay') }}:</strong> {{ $info['currency'] }}{{ number_format($info['feesToPay'], 2) }}</li>

@@ -60,7 +60,7 @@
             </ul>
 
             @if ($errors->any())
-                <div class="alert alert-error">
+                <div class="alert alert-danger">
                     <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -78,7 +78,7 @@
                 <div class="mb-4 row">
                     <label for="user_name" class="col-sm-3 col-form-label">{{ __('site.email') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="user_name" name="user_name" type="email" required
+                        <input class="form-control" id="user_name" name="user_name" type="email" required
                                value="{{ old('user_name') }}" autocomplete="off">
                     </div>
                 </div>
@@ -95,20 +95,20 @@
                 <div class="mb-4 row">
                     <label for="password" class="col-sm-3 col-form-label">{{ __('site.password') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="password" name="password" type="password" required>
+                        <input class="form-control" id="password" name="password" type="password" required>
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="password-confirm" class="col-sm-3 col-form-label">{{ __('site.confirm_password') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="password-confirm" name="password_confirmation" type="password" required>
+                        <input class="form-control" id="password-confirm" name="password_confirmation" type="password" required>
                     </div>
                 </div>
 
                 <div class="mb-4 row">
                     <label class="col-sm-3 col-form-label">{{ __('site.security_question') }} *</label>
                     <div class="col-sm-9">
-                        <select class="select select-bordered" name="userQuestion" required>
+                        <select class="form-select" name="userQuestion" required>
                             <option value="">{{ __('site.select_security_question') }}</option>
                             <option value="What is your favorite all-time beer to drink?" {{ old('userQuestion') === 'What is your favorite all-time beer to drink?' ? 'selected' : '' }}>
                                 What is your favorite all-time beer to drink?
@@ -125,7 +125,7 @@
                 <div class="mb-4 row">
                     <label for="userQuestionAnswer" class="col-sm-3 col-form-label">{{ __('site.security_answer') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="userQuestionAnswer" name="userQuestionAnswer" type="text" required
+                        <input class="form-control" id="userQuestionAnswer" name="userQuestionAnswer" type="text" required
                                value="{{ old('userQuestionAnswer') }}">
                     </div>
                 </div>
@@ -133,91 +133,91 @@
                 <div class="mb-4 row">
                     <label for="brewerFirstName" class="col-sm-3 col-form-label">{{ __('site.first_name') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerFirstName" name="brewerFirstName" type="text" required
+                        <input class="form-control" id="brewerFirstName" name="brewerFirstName" type="text" required
                                value="{{ old('brewerFirstName') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerLastName" class="col-sm-3 col-form-label">{{ __('site.last_name') }} *</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerLastName" name="brewerLastName" type="text" required
+                        <input class="form-control" id="brewerLastName" name="brewerLastName" type="text" required
                                value="{{ old('brewerLastName') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerCountry" class="col-sm-3 col-form-label">{{ __('site.country') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerCountry" name="brewerCountry" type="text"
+                        <input class="form-control" id="brewerCountry" name="brewerCountry" type="text"
                                value="{{ old('brewerCountry', 'United States') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerAddress" class="col-sm-3 col-form-label">{{ __('site.address') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerAddress" name="brewerAddress" type="text"
+                        <input class="form-control" id="brewerAddress" name="brewerAddress" type="text"
                                value="{{ old('brewerAddress') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerCity" class="col-sm-3 col-form-label">{{ __('site.city') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerCity" name="brewerCity" type="text"
+                        <input class="form-control" id="brewerCity" name="brewerCity" type="text"
                                value="{{ old('brewerCity') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerState" class="col-sm-3 col-form-label">{{ __('site.state') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerState" name="brewerState" type="text"
+                        <input class="form-control" id="brewerState" name="brewerState" type="text"
                                value="{{ old('brewerState') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerZip" class="col-sm-3 col-form-label">{{ __('site.zip') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerZip" name="brewerZip" type="text"
+                        <input class="form-control" id="brewerZip" name="brewerZip" type="text"
                                value="{{ old('brewerZip') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerPhone1" class="col-sm-3 col-form-label">{{ __('site.phone') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerPhone1" name="brewerPhone1" type="tel"
+                        <input class="form-control" id="brewerPhone1" name="brewerPhone1" type="tel"
                                value="{{ old('brewerPhone1') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerClubs" class="col-sm-3 col-form-label">{{ __('site.club') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerClubs" name="brewerClubs" type="text"
+                        <input class="form-control" id="brewerClubs" name="brewerClubs" type="text"
                                value="{{ old('brewerClubs') }}" placeholder="{{ __('site.club_other_hint') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerClubsOther" class="col-sm-3 col-form-label">{{ __('site.club_other') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerClubsOther" name="brewerClubsOther" type="text"
+                        <input class="form-control" id="brewerClubsOther" name="brewerClubsOther" type="text"
                                value="{{ old('brewerClubsOther') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerAHA" class="col-sm-3 col-form-label">{{ __('site.aha_number') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
+                        <input class="form-control" id="brewerAHA" name="brewerAHA" type="text" pattern="[A-Za-z0-9]+"
                                value="{{ old('brewerAHA') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerMHP" class="col-sm-3 col-form-label">{{ __('site.mhp_number') }}</label>
                     <div class="col-sm-9">
-                        <input class="input input-bordered" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
+                        <input class="form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
                                value="{{ old('brewerMHP') }}">
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="brewerProAm" class="col-sm-3 col-form-label">{{ __('site.pro_am') }}</label>
                     <div class="col-sm-9">
-                        <select class="select select-bordered" id="brewerProAm" name="brewerProAm">
+                        <select class="form-select" id="brewerProAm" name="brewerProAm">
                             <option value="0" {{ old('brewerProAm', '0') === '0' ? 'selected' : '' }}>No</option>
                             <option value="1" {{ old('brewerProAm') === '1' ? 'selected' : '' }}>Yes</option>
                             <option value="2" {{ old('brewerProAm') === '2' ? 'selected' : '' }}>Opt out</option>
@@ -229,7 +229,7 @@
                     <div class="mb-4 row">
                         <label for="brewerJudgeWaiver" class="col-sm-3 col-form-label">{{ __('site.waiver') }} *</label>
                         <div class="col-sm-9 form-check mt-2">
-                            <input class="checkbox" type="checkbox" id="brewerJudgeWaiver" name="brewerJudgeWaiver"
+                            <input class="form-check-input" type="checkbox" id="brewerJudgeWaiver" name="brewerJudgeWaiver"
                                    value="Y" checked required>
                             <label class="form-check-label" for="brewerJudgeWaiver">{{ __('site.waiver_accept') }}</label>
                         </div>

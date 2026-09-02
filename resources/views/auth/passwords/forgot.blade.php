@@ -14,7 +14,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -25,11 +25,11 @@
 
         <form method="post" action="{{ route('password.forgot') }}" class="needs-validation" novalidate>
             @csrf
-            <label class="floating-label w-full mb-4">
-                <input class="input input-bordered input-lg w-full" id="forgot-user-name" name="email" type="email"
+            <div class="form-floating mb-4">
+                <input class="form-control" id="forgot-user-name" name="email" type="email"
                        placeholder="{{ __('site.email') }}" value="{{ old('email') }}" required autofocus>
-                <span>{{ __('site.email') }}</span>
-            </label>
+                <label for="forgot-user-name">{{ __('site.email') }}</label>
+            </div>
             <div class="grid gap-2 mx-auto mb-6">
                 <button type="submit" class="btn btn-lg btn-primary">{{ __('reset.submit') }}</button>
             </div>

@@ -107,7 +107,7 @@ final class Bs5MarkerHarnessTest extends DuskTestCase
         // we start logged-out and the login trigger is present.
         $browser->driver->manage()->deleteAllCookies();
         $browser->visit('/')
-            ->click('[data-open-modal="login-modal"]')
+            ->click('[data-bs-toggle="modal"][data-bs-target="#login-modal"]')
             ->whenAvailable('#login-modal', function (Browser $modal): void {
                 $modal->type('loginUsername', self::ADMIN_EMAIL)
                     ->type('loginPassword', self::ADMIN_PASS)

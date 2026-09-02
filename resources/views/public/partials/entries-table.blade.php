@@ -7,7 +7,7 @@
     <p>{{ __('site.no_entries') }}</p>
 @else
     <div class="table-responsive">
-        <table class="table table-bordered table-zebra border-neutral/30" id="sortable">
+        <table class="table table-bordered table-striped" id="sortable">
             <thead class="table-dark">
                 <tr>
                     <th>{{ __('site.entry_number') }}</th>
@@ -36,7 +36,7 @@
                         @foreach (['confirmed' => ['brewConfirmed', 'site.confirmed'], 'paid' => ['brewPaid', 'site.paid_label'], 'received' => ['brewReceived', 'site.received']] as $flag => [$col, $labelKey])
                             @php($on = (int) $e->{$col} === 1)
                             <td>
-                                <span class="badge {{ $on ? 'badge-success' : 'badge-error' }}"
+                                <span class="badge {{ $on ? 'text-bg-success' : 'text-bg-danger' }}"
                                     data-flag="{{ $flag }}" data-state="{{ $on ? 'yes' : 'no' }}">{{ __($labelKey) }}</span>
                             </td>
                         @endforeach

@@ -14,7 +14,7 @@
         <header class="landing-page-section-header py-2"><h1>{{ $ctx->contestStr("contestName") }} - {{ __("site.log_in") }}</h1></header>
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -23,12 +23,13 @@
             </div>
             {{-- Legacy leaves the page bare; re-opening the modal keeps the
                  failed-login flow usable without a dead end. --}}
-            <script>document.getElementById('login-modal')?.showModal();</script>
+            <script>const loginModalEl = document.getElementById('login-modal');
+                if (loginModalEl) { bootstrap.Modal.getOrCreateInstance(loginModalEl).show(); }</script>
         @endif
 
         <p class="text-xl font-light">
             {{ __('site.forgot_password') }}
-            <button type="button" class="link text-primary" data-open-modal="forgot-modal">{{ __('site.reset_password') }}</button>
+            <button type="button" class="link text-primary" data-bs-toggle="modal" data-bs-target="#forgot-modal">{{ __('site.reset_password') }}</button>
         </p>
     </section>
 </x-public-layout>
