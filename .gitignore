@@ -4,7 +4,11 @@
 .env.backup
 .env.production
 .phpactor.json
-.phpunit.result.cache
++/phpunit.dusk.xml
++/phpunit.dusk.xml.dist
+/tests/Browser/console
+/tests/Browser/screenshots
+/tests/Browser/source
 /.codex
 /.cursor/
 /.idea
