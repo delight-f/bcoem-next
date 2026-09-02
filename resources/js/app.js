@@ -55,9 +55,10 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
     revealables.forEach((el) => el.classList.add('active-element'));
 }
 
-// Admin chrome (nav.sec.php semantics without Bootstrap JS):
-// top-bar + offcanvas dropdowns toggle on click, close on outside click.
-document.querySelectorAll('.dropdown-toggle, .my-dropdown').forEach((toggler) =>
+// BS3-style dropdowns toggle on click, close on outside click. Migrated
+// dropdowns carry data-bs-toggle and are driven by real Bootstrap 5 JS —
+// exclude them here (selector: only togglers WITHOUT a data-bs-toggle).
+document.querySelectorAll('.dropdown-toggle:not([data-bs-toggle]), .my-dropdown:not([data-bs-toggle])').forEach((toggler) =>
     toggler.addEventListener('click', (e) => {
         e.preventDefault();
         const li = toggler.closest('.dropdown');
@@ -71,7 +72,6 @@ document.addEventListener('click', (e) => {
         document.querySelectorAll('.dropdown.open').forEach((d) => d.classList.remove('open'));
     }
 });
-
 // Admin dashboard accordion (Bootstrap panel collapse without Bootstrap JS):
 // clicking a panel title toggles its body; open one per group (accordion).
 document.querySelectorAll('.panel-collapse-toggle').forEach((toggler) =>

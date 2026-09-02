@@ -161,30 +161,30 @@
 <a name="top"></a>
 
 @if ($isAdminSide)
-    {{-- Legacy admin chrome (index.legacy.php + sections/nav.sec.php):
-        inverse navbar (Home left; print, user dropdown, Admin offcanvas
-        right), then the admin off-canvas "Admin Essentials" menu.
-        Class names avoid daisyUI's .collapse (accordion) on purpose. --}}
-    <nav class="navbar-inverse navbar-fixed-top print:hidden" style="z-index: 1000;">
+        {{-- Issue-5: the admin top bar is a Bootstrap 5 dark navbar. .admin-topbar
+         (custom class, unlayered CSS in app.css) preserves the brux gradient
+         look; BS5's data-api drives the user dropdown. The off-canvas navmenu
+         below is still BS3 until issue 6. --}}
+    <nav class="navbar navbar-dark admin-topbar fixed-top print:hidden" style="z-index: 1000;">
         <div class="container-fluid">
             <div class="admin-nav-body">
                 <ul class="nav navbar-nav">
                     <li><a class="hide-loader" href="{{ url('/') }}">Home</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a class="hide-loader hidden-xs hidden-sm hidden-md" href="#" onclick="window.print()" role="button"><span class="fa fa-print"></span></a></li>
+                    <li><a class="hide-loader d-none d-xl-block" href="#" onclick="window.print()" role="button"><span class="fa fa-print"></span></a></li>
                     @auth
-                        <li class="dropdown">
-                            <a href="#" class="my-dropdown" role="button"><span class="fa fa-user"></span> <span class="caret"></span></a>
-                            <ul class="dropdown-menu">
+                        <li class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"><span class="fa fa-user"></span></a>
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li class="dropdown-header"><strong>{{ auth()->user()->user_name }}</strong></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
-                                <li><a href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
-                                <li><a href="{{ url('/user/username?id='.auth()->id()) }}" tabindex="-1">{{ __('site.change_email') }}</a></li>
-                                <li><a href="{{ url('/user/password') }}" tabindex="-1">{{ __('site.change_password') }}</a></li>
-                                <li><a href="{{ url('/pay') }}" tabindex="-1">{{ __('site.pay') }}</a></li>
-                                <li role="separator" class="divider"></li>
+                                <li><a class="dropdown-item" href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/user/username?id='.auth()->id()) }}" tabindex="-1">{{ __('site.change_email') }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/user/password') }}" tabindex="-1">{{ __('site.change_password') }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/pay') }}" tabindex="-1">{{ __('site.pay') }}</a></li>
+                                <li role="separator" class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="{{ route('logout') }}">
                                         @csrf
@@ -194,7 +194,7 @@
                             </ul>
                         </li>
                         @if (auth()->user()->isAdmin())
-                            <li><a href="#" id="admin-offcanvas-open" role="button"><i class="fa fa-chevron-circle-left"></i> {{ __('site.admin_short') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#" id="admin-offcanvas-open" role="button"><i class="fa fa-chevron-circle-left"></i> {{ __('site.admin_short') }}</a></li>
                         @endif
                     @endauth
                 </ul>
@@ -202,7 +202,7 @@
         </div>
     </nav>
 
-    <div class="navbar-inverse navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas" id="admin-offcanvas">
+    <div class="admin-topbar navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas" id="admin-offcanvas">
         <div class="navmenu-brand disabled off-canvas-header d-flex justify-content-between align-items-center">
             <span>Admin Essentials Menu</span>
             <button type="button" id="admin-offcanvas-close" class="btn-close btn-close-white" aria-label="Close Admin Essentials menu"></button>

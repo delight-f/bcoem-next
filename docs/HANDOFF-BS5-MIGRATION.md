@@ -10,7 +10,9 @@ fresh agent to pick up the migration at issue #3.
 | #1 | Port admin + public UI to real Bootstrap 5 (parent spec) | OPEN |
 | #2 | Dusk test harness for BS5 migration gate | **CLOSED (completed)** |
 | #3 | Expand: load real Bootstrap 5 beside shim stack + preserve palettes | **CLOSED (completed)** — see Implementation log below |
-| #4–#13 | Public daisy purge, admin chrome ×4, view batches A–C, contract, docs+visual gate | OPEN (deps on #2 → now unblocked) |
+| #4 | Public daisy purge | **CLOSED (completed)** — see Implementation log below |
+| #5 | Admin chrome: top inverse navbar to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #6–#13 | Offcanvas, page frame, session modals, view batches A–C, contract, docs+visual gate | OPEN (#6 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 
@@ -245,3 +247,49 @@ calls — use DOM/computed-style probes); app.css `:root` sits in
 `@layer components` and the BS bridge must live there (above bs5) to win;
 daisy `data-theme="bcoem-brux"` on admin `<html>` remains (that is issue #7
 scope, not #4 — public pages never render it).
+
+---
+
+## Issue #5 IN PROGRESS — admin top navbar to BS5 (partial, not yet verified)
+
+Work started but NOT complete (agent turn ended mid-issue). Current uncommitted
+state on `main`:
+
+**Layout markup** (`resources/views/components/public-layout.blade.php`, admin branch):
+- Top bar converted: `<nav class="navbar-inverse navbar-fixed-top">` →
+  `<nav class="navbar navbar-dark admin-topbar fixed-top print:hidden">`.
+- User dropdown: `<a class="my-dropdown">` + `<span class="caret">` →
+  `<a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">` (BS5 JS drives it);
+  menu items now `dropdown-item`, divider `dropdown-divider`, added
+  `dropdown-menu-end`, removed `my-dropdown`. Print link `hidden-xs hidden-sm hidden-md`
+  → `d-none d-xl-block`.
+- Offcanvas container div got `admin-topbar` added to its class list
+  (`class="admin-topbar navmenu navmenu-inverse navmenu-fixed-right offcanvas admin-nav-off-canvas"`)
+  so it keeps the dark gradient until issue 6 (the shared `.navbar-inverse` CSS rules were renamed).
+- Issue-6 work (navmenu group conversion to BS5) NOT started.
+
+**CSS** (`resources/css/app.css`, unlayered admin-chrome block):
+- All `.navbar-inverse` selectors renamed → `.admin-topbar` (7 rule replacements).
+- Added `.admin-topbar .dropdown-menu.show, .dropdown-menu.show { display:block }` after the
+  `.dropdown.open .dropdown-menu` rule — BS5 JS adds `.show` to the menu; the unlayered
+  `.dropdown-menu{display:none}` base would otherwise keep it hidden.
+- NOTE the navmenu markup still carries class `navbar-inverse` (harmless: no CSS rule matches
+  it now) until issue 6 converts it.
+
+**JS** (`resources/js/app.js`):
+- Dropdown emulation selector changed from `.dropdown-toggle, .my-dropdown` →
+  `.dropdown-toggle:not([data-bs-toggle]), .my-dropdown:not([data-bs-toggle])` so migrated
+  BS5 dropdowns are driven ONLY by Bootstrap's data-api while legacy content-page dropdowns
+  (entries/participants/judging views, issues 9-10) keep the hand-rolled emulation.
+  Duplicate block removed. Offcanvas open/close handlers (lines ~176-199) unchanged.
+
+**Unverified**: the issue-5 probe test file `tests/Browser/TmpIssue5ProbeTest.php` is written
+(login → assert topbar has no navbar-inverse/caret, BS5 data-bs-toggle present → click
+dropdown → assert .show → click #admin-offcanvas-open → assert .in) but NOT yet run. Next
+step: run it, fix failures (likely candidates: topbar link color/padding regression because
+`.admin-topbar .navbar-nav > li > a` must match `li.nav-item > a.nav-link` — it does;
+dropdown .show interplay; BS5 `.navbar` base vs unlayered override), then screenshot, then
+write the permanent Dusk gate test, update docs, commit, close #5, proceed to #6.
+
+**Remember for #6**: the navmenu (`navmenu navmenu-inverse navmenu-fixed-right offcanvas`) +
+its 7 dropdown groups convert to BS5 offcanvas/collapse next; same unlayered-CSS pattern.

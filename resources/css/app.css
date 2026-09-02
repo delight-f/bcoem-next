@@ -661,8 +661,8 @@ html {
 }
 
 /* ---- Admin top bar + off-canvas menu (legacy sections/nav.sec.php) ----
-   Scoped to .navbar-inverse so daisyUI's .navbar (public pages) is untouched. */
-.navbar-inverse {
+   Scoped to .admin-topbar so daisyUI's .navbar (public pages) is untouched. */
+.admin-topbar {
     min-height: 50px;
     position: fixed;
     top: 0;
@@ -695,18 +695,18 @@ html {
     [data-theme="bcoem-brux"] h5 { font-size: 14px; }
     [data-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
-.navbar-inverse .navbar-nav > li > a {
+.admin-topbar .navbar-nav > li > a {
     color: #bec8d8;
     padding-top: 15px;
     padding-bottom: 15px;
     line-height: 20px;
 }
 /* brux a:not(.btn):visited outranks the base rule — pin all states grey */
-.navbar-inverse .navbar-nav > li > a:visited {
+.admin-topbar .navbar-nav > li > a:visited {
     color: #bec8d8;
 }
-.navbar-inverse .navbar-nav > li > a:hover,
-.navbar-inverse .navbar-nav > li > a:focus {
+.admin-topbar .navbar-nav > li > a:hover,
+.admin-topbar .navbar-nav > li > a:focus {
     color: #DFE4EC;
     background-color: transparent;
 }
@@ -807,6 +807,13 @@ html {
 .dropdown.open .dropdown-menu {
     display: block;
 }
+/* BS5-driven dropdowns (admin topbar, issue 5): Bootstrap JS adds .show to
+   the menu instead of .open on the parent li. The unlayered .dropdown-menu
+   base above keeps display:none, so reveal via .show the same way. */
+.admin-topbar .dropdown-menu.show,
+.dropdown-menu.show {
+    display: block;
+}
 /* pub/nav.pub.php user dropdown: Bootstrap 5 dark theme, right-aligned */
 .dropdown-menu-end {
     right: 0;
@@ -855,7 +862,7 @@ html {
     display: none;
 }
 .navmenu-fixed-right {
-    /* .navbar-inverse sets left:0 for the top bar; without left:auto
+    /* .admin-topbar sets left:0 for the top bar; without left:auto
        the panel anchors screen-left instead of right. */
     left: auto;
     right: 0;
