@@ -297,3 +297,41 @@ write the permanent Dusk gate test, update docs, commit, close #5, proceed to #6
 
 **Remember for #6**: the navmenu (`navmenu navmenu-inverse navmenu-fixed-right offcanvas`) +
 its 7 dropdown groups convert to BS5 offcanvas/collapse next; same unlayered-CSS pattern.
+
+---
+
+## Implementation log — issue #9 (batch A: core admin blades) DONE 2026-09-02
+
+29 admin/backoffice blades + the purge-action component converted from BS3+daisyUI to
+pure BS5 under a shared conversion contract (parallel batch agents), verified green.
+
+**Files**: dashboard + dashboard-help-modals (panel accordion -> BS5 card collapse,
+daisy dialogs -> real BS5 modals), site-preferences (5 tabs), competition-info,
+all-dates, hero-images, purge, archive, make-admin, change-user-password,
+send-test-email, contacts, sponsors, stripe, upload, upload-scoresheets, mods,
+style-types, styles, entries, entries_edit, entries_by_style/substyle, participants,
+participants_edit, participants-print, payments (admin + backoffice).
+
+**Key conversions**: BS3 panel accordion -> BS5 .card + data-bs-toggle=collapse;
+daisy <dialog class=modal>+modal-box -> real BS5 modals; btn-default->btn-secondary;
+form-group->mb-3; input-group-addon->input-group-text; help-block->form-text;
+hidden-xs/sm->BS5 responsive; col-sm-*->col-md-* tier shift (style-types 4-tier got
+12/md-4/lg-3/xl-2); daisy *-bordered/checkbox/radio->form-control/form-select/
+form-check-input; form-horizontal dropped; tooltips data-*; structural bugfixes
+(competition-info dup save button + stray diff markers; site-preferences garbled
+email rows; all-dates dead validator hooks + dup ids).
+
+**Class renames to avoid marker collisions**: admin-page-header -> admin-page-title;
+bcoem-sidebar-panel -> bcoem-stat-row (word-boundary page-header/panel detectors).
+
+**app.js**: tooltip CSS fallback selector extended to [data-bs-toggle=tooltip].
+
+**Verification**: per-agent temp Dusk probes (30/30, 36/36, 63 assertions) deleted;
+permanent tests/Browser/AdminBatchABs5Test (2 tests, 34 assertions). Full suite
+885/887 — the single failure test_payments_records_table_renders_and_deletes is
+PRE-EXISTING (asserts a legacy ledger page replaced by an earlier route refactor
+a9becb1; fails on HEAD too — do not chase). AdminScreensSettingsTest
+test_all_dates_* form-horizontal assertion updated to the BS5 form reality.
+
+**Contract files** (reusable for batches B/C): /tmp/admin-batch-contract.md
+(authoritative class map), /tmp/batch-b-contract.md. Commit fcd2765.
