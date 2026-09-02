@@ -13,7 +13,8 @@ fresh agent to pick up the migration at issue #3.
 | #4 | Public daisy purge | **CLOSED (completed)** — see Implementation log below |
 | #5 | Admin chrome: top inverse navbar to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #6 | Admin chrome: Admin Essentials offcanvas to BS5 | **CLOSED (completed)** — see Implementation log below |
-| #7–#13 | Page frame, session modals, view batches A–C, contract, docs+visual gate | OPEN (#7 next) |
+| #7 | Admin chrome: page frame (theme/container/header/footer) to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #8–#13 | Session modals, view batches A–C, contract, docs+visual gate | OPEN (#8 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 

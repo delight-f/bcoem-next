@@ -582,60 +582,60 @@ html {
    Active only when <html data-theme="bcoem-brux"> (admin/backoffice/eval
    requests — see public-layout). Unlayered so it outranks daisyUI's
    utilities-layer component rules. ---- */
-[data-theme="bcoem-brux"] body {
+[data-bs-theme="bcoem-brux"] body {
     font-family: "Droid Sans", Arial, sans-serif;
     font-weight: 400;
     font-size: 16px;
 }
-[data-theme="bcoem-brux"] a:not(.btn),
-[data-theme="bcoem-brux"] a:not(.btn):visited {
+[data-bs-theme="bcoem-brux"] a:not(.btn),
+[data-bs-theme="bcoem-brux"] a:not(.btn):visited {
     color: #2196f3;
     text-decoration: none;
 }
-[data-theme="bcoem-brux"] a:not(.btn):hover,
-[data-theme="bcoem-brux"] a:not(.btn):focus,
-[data-theme="bcoem-brux"] a:not(.btn):active {
+[data-bs-theme="bcoem-brux"] a:not(.btn):hover,
+[data-bs-theme="bcoem-brux"] a:not(.btn):focus,
+[data-bs-theme="bcoem-brux"] a:not(.btn):active {
     color: #f37e21;
     text-decoration: none;
 }
-[data-theme="bcoem-brux"] .text-info { color: #01579B; }
-[data-theme="bcoem-brux"] .text-success { color: #1B5E20; }
-[data-theme="bcoem-brux"] .text-danger { color: #B71C1C; }
-[data-theme="bcoem-brux"] .text-warning { color: #732800; }
-[data-theme="bcoem-brux"] h1,
-[data-theme="bcoem-brux"] h2,
-[data-theme="bcoem-brux"] h3,
-[data-theme="bcoem-brux"] h4,
-[data-theme="bcoem-brux"] h5,
-[data-theme="bcoem-brux"] h6 {
+[data-bs-theme="bcoem-brux"] .text-info { color: #01579B; }
+[data-bs-theme="bcoem-brux"] .text-success { color: #1B5E20; }
+[data-bs-theme="bcoem-brux"] .text-danger { color: #B71C1C; }
+[data-bs-theme="bcoem-brux"] .text-warning { color: #732800; }
+[data-bs-theme="bcoem-brux"] h1,
+[data-bs-theme="bcoem-brux"] h2,
+[data-bs-theme="bcoem-brux"] h3,
+[data-bs-theme="bcoem-brux"] h4,
+[data-bs-theme="bcoem-brux"] h5,
+[data-bs-theme="bcoem-brux"] h6 {
     font-family: "Merriweather", Georgia, serif;
     font-weight: 800;
     margin: 0;
     padding: 10px 0 20px 0;
 }
-[data-theme="bcoem-brux"] h1 {
+[data-bs-theme="bcoem-brux"] h1 {
     padding: 15px 0 25px 0;
 }
-[data-theme="bcoem-brux"] .page-header h1 {
+[data-bs-theme="bcoem-brux"] .page-header h1 {
     font-size: 2em;
 }
-[data-theme="bcoem-brux"] .page-header {
+[data-bs-theme="bcoem-brux"] .page-header {
     margin: 0;
     padding: 0;
 }
-[data-theme="bcoem-brux"] .lead {
+[data-bs-theme="bcoem-brux"] .lead {
     font-weight: 400;
 }
-[data-theme="bcoem-brux"] #site-nav {
+[data-bs-theme="bcoem-brux"] #site-nav {
     background: #303E4B;
     background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
     box-shadow: 0 3px 3px 0 rgba(230, 230, 230, 0.75);
 }
-[data-theme="bcoem-brux"] .site-footer {
+[data-bs-theme="bcoem-brux"] .site-footer {
     background: linear-gradient(to bottom, #bec8d8 0%, #DFE4EC 100%);
 }
-[data-theme="bcoem-brux"] .site-footer,
-[data-theme="bcoem-brux"] .site-footer a {
+[data-bs-theme="bcoem-brux"] .site-footer,
+[data-bs-theme="bcoem-brux"] .site-footer a {
     color: #303E4B;
 }
 
@@ -681,19 +681,19 @@ html {
     flex-wrap: wrap;
     align-items: center;
 }
-[data-theme="bcoem-brux"] #main-content {
+[data-bs-theme="bcoem-brux"] #main-content {
     padding-top: 60px;
 }
 .pull-right {
     float: right;
 }
 @media (min-width: 768px) {
-    [data-theme="bcoem-brux"] h1 { font-size: 36px; }
-    [data-theme="bcoem-brux"] h2 { font-size: 30px; }
-    [data-theme="bcoem-brux"] h3 { font-size: 24px; }
-    [data-theme="bcoem-brux"] h4 { font-size: 18px; }
-    [data-theme="bcoem-brux"] h5 { font-size: 14px; }
-    [data-theme="bcoem-brux"] h6 { font-size: 12px; }
+    [data-bs-theme="bcoem-brux"] h1 { font-size: 36px; }
+    [data-bs-theme="bcoem-brux"] h2 { font-size: 30px; }
+    [data-bs-theme="bcoem-brux"] h3 { font-size: 24px; }
+    [data-bs-theme="bcoem-brux"] h4 { font-size: 18px; }
+    [data-bs-theme="bcoem-brux"] h5 { font-size: 14px; }
+    [data-bs-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
 .admin-topbar .navbar-nav > li > a {
     color: #bec8d8;
@@ -950,9 +950,9 @@ html {
     color: inherit;
 }
 .panel-title > a,
-[data-theme="bcoem-brux"] .panel-title > a,
-[data-theme="bcoem-brux"] .panel-heading .panel-title > a,
-[data-theme="bcoem-brux"] .panel-heading .panel-title > a:hover {
+[data-bs-theme="bcoem-brux"] .panel-title > a,
+[data-bs-theme="bcoem-brux"] .panel-heading .panel-title > a,
+[data-bs-theme="bcoem-brux"] .panel-heading .panel-title > a:hover {
     color: inherit;
     text-decoration: none;
 }
@@ -1224,13 +1224,17 @@ html {
     .has-error .checkbox,
     .has-error .radio { color: #B71C1C; }
 
-    /* ==== BS3 page chrome ==== */
+    /* ==== Admin page chrome (issue 7: BS5 frame; .page-header kept for
+       blades not yet migrated — dashboard, qr/checkin — until their batches) ==== */
+    .admin-page-header,
     .page-header {
         padding-bottom: 9px;
         margin: 0;
         border-bottom: 1px solid #eee;
         padding: 0;
     }
+    .admin-page-header .lead,
+    .admin-page-header p,
     .page-header .lead,
     .page-header p { margin-bottom: 0; }
     .lead { margin-bottom: 20px; font-size: 16px; font-weight: 400; line-height: 1.4; }
@@ -1457,8 +1461,8 @@ html {
         border: 0;
     }
     .modal-header .modal-title,
-    [data-theme="bcoem-brux"] .modal-header .modal-title,
-    [data-theme="bcoem-brux"] .modal-header h4 {
+    [data-bs-theme="bcoem-brux"] .modal-header .modal-title,
+    [data-bs-theme="bcoem-brux"] .modal-header h4 {
         margin: 0;
         padding: 0;
         line-height: 1.42857143;

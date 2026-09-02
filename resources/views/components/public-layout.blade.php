@@ -102,7 +102,7 @@
     $adminNavBarcode = $adminNavObfuscate === 0
         && in_array((string) $ctx->prefsStr('prefsEntryForm'), ['0', '2', 'N', 'C', '3', '4', '5', '6', '1'], true);
 @endphp
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-theme="bcoem-brux" @endif>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-bs-theme="bcoem-brux" @endif>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
@@ -598,7 +598,7 @@
     @if ($adminPageTitle !== null)
         {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
              chrome (Administration: <label>) around the blade's own <p class="lead">. --}}
-        <div class="page-header">
+        <div class="admin-page-header">
             <h1>{{ $adminPageTitle }}</h1>
         </div>
     @endif
