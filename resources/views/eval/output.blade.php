@@ -61,6 +61,6 @@
             </div>
         @endforeach
 
-        <a class="btn btn-outline btn-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
+        <a class="btn btn-outline-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
     </section>
 </x-public-layout>

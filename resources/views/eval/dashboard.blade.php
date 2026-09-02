@@ -55,7 +55,7 @@
                 @if ($row['entries'] === [])
                     <p>No entries flighted to this table.</p>
                 @else
-                    <table class="table table-zebra table-sm align-middle">
+                    <table class="table table-striped table-sm align-middle">
                         <thead>
                             <tr><th>#</th><th>Entry</th><th>Style</th><th></th></tr>
                         </thead>
@@ -70,7 +70,7 @@
                                            href="{{ route('eval.scoresheet', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">
                                             Evaluate ({{ $variant }})
                                         </a>
-                                        <a class="btn btn-sm btn-outline btn-secondary"
+                                        <a class="btn btn-sm btn-outline-secondary"
                                            href="{{ route('eval.output', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">
                                             View output
                                         </a>

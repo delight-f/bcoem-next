@@ -20,7 +20,7 @@
         @else
             <form method="post" action="{{ route('admin.judging.assign.store', ['id' => $table->id, 'role' => $role]) }}">
                 @csrf
-                <table class="table table-zebra table-bordered">
+                <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -44,7 +44,7 @@
                                             <input type="hidden" name="{{ $name }}" value="0">
                                             &mdash;
                                         @else
-                                            <select name="{{ $name }}" class="select select-bordered select-sm">
+                                            <select name="{{ $name }}" class="form-select form-select-sm">
                                                 <option value="0">Do Not Assign</option>
                                                 @foreach ($flights as $choice)
                                                     <option value="{{ $choice->flightNumber }}"

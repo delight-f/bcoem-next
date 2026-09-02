@@ -20,7 +20,7 @@
         @if ($locations->isEmpty())
             <p>No {{ $nonJudging ? 'non-judging sessions' : 'judging sessions' }} have been defined.</p>
         @else
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Name</th>

@@ -5,7 +5,7 @@
         @include('eval.partials.scoresheet-head', ['style' => $style])
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -33,9 +33,9 @@
             <fieldset class="mb-4">
                 <legend>Overall Impression ({{ $points['overall'] }} possible)</legend>
                 <div class="row g-2 mb-2">
-                    <div class="col-sm-3">
+                    <div class="col-md-3">
                         <label class="form-label" for="evalOverallScore">Score</label>
-                        <select class="select select-bordered" id="evalOverallScore" name="evalOverallScore" required>
+                        <select class="form-select" id="evalOverallScore" name="evalOverallScore" required>
                             <option value=""></option>
                             @for ($i = $points['overall']; $i >= 1; $i--)
                                 <option value="{{ $i }}" @selected(($evaluation?->evalOverallScore ?? 0) === $i)>{{ $i }}</option>
@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <label class="form-label" for="evalOverallComments">Comments</label>
-                <textarea class="textarea textarea-bordered" id="evalOverallComments" name="evalOverallComments" rows="4">{{ $evaluation?->evalOverallComments }}</textarea>
+                <textarea class="form-control" id="evalOverallComments" name="evalOverallComments" rows="4">{{ $evaluation?->evalOverallComments }}</textarea>
 
                 @foreach ([
                     'evalStyleAccuracy' => 'Style Accuracy (1 = not classic, 5 = classic example)',
@@ -55,7 +55,7 @@
                         <span class="form-label block">{{ $label }}</span>
                         @for ($i = 5; $i >= 1; $i--)
                             <div class="form-check form-check-inline">
-                                <input class="radio" type="radio" name="{{ $field }}"
+                                <input class="form-check-input" type="radio" name="{{ $field }}"
                                        value="{{ $i }}" id="{{ $field.$i }}"
                                        @checked((int) ($evaluation?->{$field} ?? 0) === $i) required>
                                 <label class="form-check-label" for="{{ $field.$i }}">{{ $i }}</label>
@@ -68,13 +68,13 @@
             <fieldset class="mb-4">
                 <legend>Consensus</legend>
                 <div class="row g-2 items-end">
-                    <div class="col-sm-3">
+                    <div class="col-md-3">
                         <label class="form-label" for="evalFinalScore">Final Score</label>
-                        <input type="number" class="input input-bordered" id="evalFinalScore" name="evalFinalScore"
+                        <input type="number" class="form-control" id="evalFinalScore" name="evalFinalScore"
                                min="0" max="50" required value="{{ $evaluation?->evalFinalScore }}">
                     </div>
-                    <div class="col-sm-3 form-check ms-2">
-                        <input class="checkbox" type="checkbox" value="1" id="evalMiniBOS" name="evalMiniBOS"
+                    <div class="col-md-3 form-check ms-2">
+                        <input class="form-check-input" type="checkbox" value="1" id="evalMiniBOS" name="evalMiniBOS"
                                @checked((int) ($evaluation?->evalMiniBOS ?? 0) === 1)>
                         <label class="form-check-label" for="evalMiniBOS">Mini-BOS</label>
                     </div>

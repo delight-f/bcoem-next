@@ -4,23 +4,32 @@
 
         <p class="print:hidden">
             <a class="btn btn-primary" href="{{ route('admin.judging.dropoff.create') }}">Add a Drop-Off Location</a>
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#dropoffHelpModal">Drop-Off Locations Help</button>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#dropoffHelpModal">Drop-Off Locations Help</button>
         </p>
-        <dialog class="modal" id="dropoffHelpModal">
-            <div class="modal-box">
-                <h4 class="font-bold">Drop-Off Locations Help</h4>
-                <p>Define one or more entry drop-off locations for participants to hand-deliver their entries. Drop-off locations are displayed on the Info with a link* to a map and driving directions.</p>
-                <p>A drop-off location may or may not be the same as the Shipping Location, which is defined in Competition Info. There is only one shipping location defined for the competition, whereas there can be multiple drop-off locations.</p>
-                <p>Select the &ldquo;Add a Drop-Off Location&rdquo; button to enter a drop-off location.</p>
-                <p class="small">* The mapping features will only work if an address is stored for the location.</p>
-                <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form></div>
+        <div class="modal fade" id="dropoffHelpModal" tabindex="-1" role="dialog" aria-labelledby="dropoffHelpModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title font-bold" id="dropoffHelpModalLabel">Drop-Off Locations Help</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Define one or more entry drop-off locations for participants to hand-deliver their entries. Drop-off locations are displayed on the Info with a link* to a map and driving directions.</p>
+                        <p>A drop-off location may or may not be the same as the Shipping Location, which is defined in Competition Info. There is only one shipping location defined for the competition, whereas there can be multiple drop-off locations.</p>
+                        <p>Select the &ldquo;Add a Drop-Off Location&rdquo; button to enter a drop-off location.</p>
+                        <p class="small">* The mapping features will only work if an address is stored for the location.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
             </div>
-        </dialog>
+        </div>
 
         @if ($locations->isEmpty())
             <p>No drop-off locations have been specified.</p>
         @else
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Name</th>

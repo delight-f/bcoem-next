@@ -13,9 +13,9 @@
     <fieldset class="mb-4">
         <legend>{{ $label }} ({{ $points[$section] }} possible)</legend>
         <div class="row g-2 mb-2">
-            <div class="col-sm-3">
+            <div class="col-md-3">
                 <label class="form-label" for="eval{{ ucfirst($section) }}Score">Score</label>
-                <select class="select select-bordered" id="eval{{ ucfirst($section) }}Score"
+                <select class="form-select" id="eval{{ ucfirst($section) }}Score"
                         name="eval{{ ucfirst($section) }}Score" required>
                     <option value=""></option>
                     @for ($i = $points[$section]; $i >= 1; $i--)
@@ -26,7 +26,7 @@
             </div>
         </div>
         <label class="form-label" for="eval{{ ucfirst($section) }}Comments">Comments</label>
-        <textarea class="textarea textarea-bordered" id="eval{{ ucfirst($section) }}Comments"
+        <textarea class="form-control" id="eval{{ ucfirst($section) }}Comments"
                   name="eval{{ ucfirst($section) }}Comments" rows="4">{{ $evaluation?->{'eval'.ucfirst($section).'Comments'} }}</textarea>
     </fieldset>
 @endforeach

@@ -58,41 +58,41 @@ final class Bs5MarkerHarnessTest extends DuskTestCase
         });
     }
 
-    public function test_admin_dashboard_carries_bs3_markers_pre_migration(): void
+    public function test_admin_dashboard_is_bootstrap5_clean_post_migration(): void
     {
         $this->browse(function (Browser $browser): void {
             $this->loginAsSmokeAdmin($browser);
 
-            // The /admin dashboard is pre-migration: it still carries BS3
-            // chrome. The detector must flag at least one BS3 marker in the
-            // real rendered DOM — the gate the migration flips to green.
-            $found = self::markersInHtml(
-                $browser->driver->getPageSource(),
-                $this->bs3OnlyClasses
-            );
+            // The /admin dashboard is post-migration (issues 5-9): it no
+            // longer carries BS3 markers, and it does carry BS5 markers.
+            $html = $browser->driver->getPageSource();
+            $bs3 = self::markersInHtml($html, $this->bs3OnlyClasses);
+            $this->assertSame([], $bs3, 'dashboard still has BS3 markers: '.implode(', ', $bs3));
             $this->assertNotEmpty(
-                $found,
-                'Expected the pre-migration /admin dashboard to carry BS3 markers; none detected.'
+                self::markersInHtml($html, $this->bs5Markers),
+                'dashboard carries no BS5 markers'
             );
         });
     }
 
-    public function test_judging_surface_carries_daisy_markers_pre_migration(): void
+    public function test_judging_surface_is_bootstrap5_clean_post_migration(): void
     {
         $this->browse(function (Browser $browser): void {
             $this->loginAsSmokeAdmin($browser);
 
-            // A representative judging surface (tables/assign page).
-            $browser->visit('/admin/judging/tables')
-                ->assertSee('Admin');
-
-            $found = self::markersInHtml(
-                $browser->driver->getPageSource(),
-                $this->daisyOnlyMarkers
+            // A representative judging surface (tables/assign page) is
+            // post-migration (issue 10): no BS3/daisy markers, BS5 present.
+            $browser->visit('/admin/judging/tables');
+            $browser->pause(600);
+            $html = $browser->driver->getPageSource();
+            $legacy = array_merge(
+                self::markersInHtml($html, $this->bs3OnlyClasses),
+                self::markersInHtml($html, $this->daisyOnlyMarkers)
             );
+            $this->assertSame([], $legacy, 'judging tables still has legacy markers: '.implode(', ', $legacy));
             $this->assertNotEmpty(
-                $found,
-                'Expected the pre-migration judging tables page to carry daisy markers; none detected.'
+                self::markersInHtml($html, $this->bs5Markers),
+                'judging tables carries no BS5 markers'
             );
         });
     }

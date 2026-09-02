@@ -22,14 +22,14 @@
             $locEdit = url('/admin/judging/locations/'.$location->id.'/edit');
 
             return e($location->judgingLocName).($date ? ' &ndash; '.$date : '')
-                .' ('.$rounds.' '.$noun.' <a href="'.e($locEdit).'" data-toggle="tooltip" data-placement="top" title="Edit the '.e($location->judgingLocName).' location">defined for this location</a>)';
+                .' ('.$rounds.' '.$noun.' <a href="'.e($locEdit).'" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit the '.e($location->judgingLocName).' location">defined for this location</a>)';
         };
     @endphp
     <section class="container mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Define/Edit Flights</h1>
 
         {{-- Legacy control row (judging_flights.admin.php:102-119). --}}
-        <div class="mb-4 flex flex-wrap gap-2">
+        <div class="mb-4 d-flex flex-wrap gap-2">
             <a class="btn btn-secondary" href="{{ url('/admin/judging/tables') }}"><span class="fa fa-arrow-circle-left"></span> All Tables</a>
             <a class="btn btn-secondary" href="{{ url('/admin/judging/flights') }}"><span class="fa fa-plus-circle"></span> Add/Edit Flights</a>
         </div>
@@ -40,7 +40,7 @@
                 @php($table = $row['table'])
                 <h4>Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}
                     @if ($row['location'] !== null)
-                        <small><a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-toggle="tooltip" data-placement="top" title="Define/Edit the {{ $table->tableName }} Flights"><span class="fa fa-lg fa-pencil-square-o"></span></a></small>
+                        <small><a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-bs-toggle="tooltip" data-bs-placement="top" title="Define/Edit the {{ $table->tableName }} Flights"><span class="fa fa-lg fa-pencil-square-o"></span></a></small>
                     @endif
                 </h4>
                 <p><strong>Location:</strong> {!! $locationLine($row['location']) !!}</p>
@@ -52,12 +52,12 @@
                 @else
                     @php($maxRound = max(1, (int) ($row['location']->judgingRounds ?? 1)))
                     @foreach ($row['flights'] as $flightNumber => $current)
-                        <div class="form-group mb-2 row">
-                            <label class="col-sm-4 col-form-label" for="round-{{ $table->id }}-{{ $flightNumber }}">
+                        <div class="mb-2 row">
+                            <label class="col-md-4 col-form-label" for="round-{{ $table->id }}-{{ $flightNumber }}">
                                 Assign Flight {{ $flightNumber }} to:
                             </label>
-                            <div class="col-sm-3">
-                                <select class="select select-bordered" id="round-{{ $table->id }}-{{ $flightNumber }}"
+                            <div class="col-md-3">
+                                <select class="form-select" id="round-{{ $table->id }}-{{ $flightNumber }}"
                                         name="rounds[{{ $table->id }}][{{ $flightNumber }}]">
                                     <option value="" @selected($current === '')>Not Assigned to a Round</option>
                                     @for ($r = 1; $r <= $maxRound; $r++)
@@ -71,21 +71,28 @@
             @endforeach
 
             @if ($rows !== [])
-                <button type="button" class="btn btn-primary" data-open-modal="confirm-submit">Assign</button>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirm-submit">Assign</button>
             @endif
 
             {{-- Legacy confirm modal text verbatim
                  (judging_flights.admin.php:388-404). --}}
-            <dialog class="modal" id="confirm-submit">
-                <div class="modal-box">
-                    <h4 class="font-bold">Please Confirm</h4>
-                    <p><strong><em>All</em> applicable judging/stewarding assignments will be deleted if you have changed a table&rsquo;s round assignment.</strong> Do you wish to continue? This cannot be undone.</p>
-                    <div class="modal-action">
-                        <form method="dialog"><button class="btn">Cancel</button></form>
-                        <button type="submit" class="btn btn-success">Yes</button>
+            <div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="confirm-submit-title" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title font-bold" id="confirm-submit-title">Please Confirm</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p><strong><em>All</em> applicable judging/stewarding assignments will be deleted if you have changed a table&rsquo;s round assignment.</strong> Do you wish to continue? This cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">Yes</button>
+                        </div>
                     </div>
                 </div>
-            </dialog>
+            </div>
         </form>
     </section>
 </x-public-layout>

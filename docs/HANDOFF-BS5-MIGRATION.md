@@ -16,7 +16,8 @@ fresh agent to pick up the migration at issue #3.
 | #7 | Admin chrome: page frame (theme/container/header/footer) to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #8 | Admin chrome: session-expiry modals to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #9 | View batch A: core admin blades to BS5 | **CLOSED (completed)** — see Implementation log below |
-| #10–#13 | View batch B, batch C, contract, docs+visual gate | OPEN (#10 next) |
+| #10 | View batch B: judging/eval/backoffice to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #11–#13 | View batch C, contract, docs+visual gate | OPEN (#11 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 
@@ -335,3 +336,41 @@ test_all_dates_* form-horizontal assertion updated to the BS5 form reality.
 
 **Contract files** (reusable for batches B/C): /tmp/admin-batch-contract.md
 (authoritative class map), /tmp/batch-b-contract.md. Commit fcd2765.
+
+---
+
+## Implementation log — issue #10 (batch B: judging/eval/backoffice) DONE 2026-09-02
+
+31 judging/eval blades converted from BS3+daisyUI to pure BS5 (parallel batch
+agents, same contract as batch A). Files: judging/config/* (preferences,
+tables, table-form, location-form, locations, dropoff, dropoff-form) + the
+judging suite (scores, score-form, flights, flights-rounds, flights-table, bos,
+bos-form, special-best + data + form + data-form, assign, checkin) + the eval
+suite (scoresheet, dashboard, output, partials/full-scoresheet +
+structured-scoresheet; my-account/import/scoresheet-head/warnings + judge-
+signup/judge-closed audited already clean).
+
+Key conversions: judging/config/preferences (43 tokens) grid tier shift
+col-sm-*->col-md-3/6 + queued-judging <fieldset>+<legend> restructured to the
+sibling .col-md-3 + .col-md-6 row idiom (BS5 cols are flex, a non-.row legend
+no longer floats); daisy <dialog>+modal-box in config tables/preferences/dropoff
+-> real BS5 modals with data-bs-toggle triggers; checkin keeps the 'scan' input
+id (barcode JS); inline JS in config/tables reworked from native
+dialog.showModal()/.close() to data-bs-toggle/data-bs-dismiss; dropdowns ->
+data-bs-toggle; tooltips data-bs-*; eval scoresheets col-sm-3->col-md-3 (grid
+legible at >=768px, verified at 1280/800/640).
+
+app.js tooltip fallback note: config blades kept data-tooltip/data-placement/
+title attrs so the app.js CSS-tooltip path still fires; data-bs-toggle=tooltip
+elements rely on native title.
+
+The issue-2 harness (Bs5MarkerHarnessTest) reached end-of-life for its two
+pre-migration-state assertions: the dashboard (issue 9) and judging (issue 10)
+are now BS5-clean, so those tests flipped to assert the post-migration clean
+state (no BS3/daisy markers + BS5 present). This is the designed transition as
+batches complete.
+
+Verification: per-agent temp probes (41/96/41 assertions) deleted; permanent
+tests/Browser/AdminBatchBBs5Test (2 tests, 38 assertions over 8 pages + modal/
+dropdown interaction). The one remaining full-suite failure
+(test_payments_records_table_renders_and_deletes) stays PRE-EXISTING.

@@ -7,17 +7,16 @@
         {{-- Legacy judging_scores_bos.admin.php:98-112 — Print dropdown
              renders in list and enter modes: BOS pullsheets per BOS type
              + BOS cup mats. --}}
-        <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <div class="btn-group d-none d-lg-block print:hidden" role="group">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <span class="fa fa-print"></span> Print...
-                <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
                 @foreach ($types as $t)
-                    <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $t->id]) }}" title="Print the {{ $t->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $t->styleTypeName }}</a></li>
+                    <li><a data-fancybox data-type="iframe" class="dropdown-item modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $t->id]) }}" title="Print the {{ $t->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $t->styleTypeName }}</a></li>
                 @endforeach
-                <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader" href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
-                <li class="small"><a data-fancybox data-type="iframe" class="modal-window-link hide-loader" href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>
+                <li><a data-fancybox data-type="iframe" class="dropdown-item modal-window-link hide-loader" href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
+                <li><a data-fancybox data-type="iframe" class="dropdown-item modal-window-link hide-loader" href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>
             </ul>
         </div>
 
@@ -28,7 +27,7 @@
                 @csrf
                 @method('PUT')
 
-                <table class="table table-zebra table-bordered">
+                <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Entry</th>
@@ -54,7 +53,7 @@
                                 <td>{{ $row->brewCategorySort }}{{ $row->brewSubCategory }} {{ $row->brewName }}</td>
                                 <td>{{ $row->scoreEntry }}</td>
                                 <td>
-                                    <select class="select select-bordered" name="scorePlace{{ $row->eid }}">
+                                    <select class="form-select" name="scorePlace{{ $row->eid }}">
                                         <option value=""></option>
                                         @for ($i = 1; $i <= $maxBos; $i++)
                                             <option value="{{ $i }}"

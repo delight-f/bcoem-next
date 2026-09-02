@@ -15,7 +15,7 @@
 
             <form method="post" action="{{ route('admin.judging.flights.store', ['id' => $table->id]) }}">
                 @csrf
-                <table class="table table-zebra table-bordered">
+                <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Judging #</th>
