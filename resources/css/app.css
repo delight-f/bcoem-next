@@ -1,89 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400..700;1,400..700&family=Noto+Sans+Display:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;800;900&family=Droid+Sans:wght@400;700&display=swap');
-/* Real Bootstrap 5 sits in its own LOWEST cascade layer: daisyUI components
-   (layers above) keep winning wherever both define a class, so the public
-   bcoem / admin bcoem-brux palettes and daisy look are preserved until each
-   migration batch purges daisy tokens from views. BS5 supplies the layout
-   primitives (grid, containers, forms, utilities) the daisy stack lacks. */
-@layer bs5;
 @import 'bootstrap/dist/css/bootstrap.css' layer(bs5);
-@import 'tailwindcss';
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
 
-@plugin "daisyui" {
-    themes: bcoem --default;
-}
-
-/* Legacy identity theme — palette from legacy default-3.min.css :root */
-@plugin "daisyui/theme" {
-    name: "bcoem";
-    default: true;
-    color-scheme: light;
-    --color-base-100: #ffffff;
-    --color-base-200: #f8f9fa;
-    --color-base-300: #e9ecef;
-    --color-base-content: #212529;
-    --color-primary: #007bff;
-    --color-primary-content: #ffffff;
-    --color-secondary: #6c757d;
-    --color-secondary-content: #ffffff;
-    --color-accent: #17a2b8;
-    --color-accent-content: #ffffff;
-    --color-neutral: #343a40;
-    --color-neutral-content: #f8f9fa;
-    --color-info: #17a2b8;
-    --color-info-content: #ffffff;
-    --color-success: #28a745;
-    --color-success-content: #ffffff;
-    --color-warning: #ffc107;
-    --color-warning-content: #212529;
-    --color-error: #dc3545;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.25rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
-}
-
-/* Bruxellensis admin theme (css/bruxellensis.css palette) — admin side only
-   (site/bootstrap.php:422-425 swaps the theme css when section=admin). */
-@plugin "daisyui/theme" {
-    name: "bcoem-brux";
-    default: false;
-    color-scheme: light;
-    --color-base-100: #ffffff;
-    --color-base-200: #f5f5f5;
-    --color-base-300: #e0e0e0;
-    --color-base-content: #212529;
-    --color-primary: #1565C0;
-    --color-primary-content: #ffffff;
-    --color-secondary: #7e57c2;
-    --color-secondary-content: #ffffff;
-    --color-accent: #29B6F6;
-    --color-accent-content: #ffffff;
-    --color-neutral: #303E4B;
-    --color-neutral-content: #bec8d8;
-    --color-info: #29B6F6;
-    --color-info-content: #ffffff;
-    --color-success: #4CAF50;
-    --color-success-content: #ffffff;
-    --color-warning: #FF9800;
-    --color-warning-content: #ffffff;
-    --color-error: #F44336;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.25rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
-}
+/* Real Bootstrap 5 sits in its own LOWEST cascade layer (bs5). All legacy
+   identity/BS3-replica and custom CSS below is UNLAYERED author CSS, which
+   beats the bs5 layer regardless of specificity — so legacy bcoem /
+   bcoem-brux colors and BS3-replica classes keep winning over BS5 wherever
+   both define a class. BS5 supplies the layout primitives (grid, containers,
+   forms, utilities, card, badge) the legacy stack lacks. */
+@layer bs5;
 /* ---- Compat layer: Bootstrap-5 layout primitives ---- */
-/* Containers as plain (unlayered) CSS AFTER the tailwind import: wins over
-   Tailwind's built-in `container` utility. Bootstrap 5 breakpoint widths. */
+/* Containers as plain (unlayered) CSS: unlayered author CSS beats the bs5
+   layer. Bootstrap 5 breakpoint widths. */
 .container,
 .container-xxl,
 .container-fluid {
@@ -191,10 +119,9 @@
     border-radius: var(--bs-border-radius);
 }
 /* ---- Legacy theme (migrated from default-3.css / common-3.css) ----
-   MUST live inside @layer components: unlayered element selectors like
-   `a { color: … }` would override ALL layered daisyUI component colors
-   (unlayered author CSS wins the cascade regardless of specificity). */
-@layer components {
+   Unlayered on purpose: element selectors like `a { color: … }` must beat
+   the `bs5` cascade layer (unlayered author CSS wins regardless of
+   specificity), keeping the legacy identity colors authoritative. */
     :root {
     --blue: #007bff;
     --indigo: #6610f2;
@@ -242,8 +169,8 @@
        .table, .modal, .form-control), those elements fall through to real
        BS5 and would otherwise pick up BS5's DEFAULT palette (#0d6efd etc.).
        Map the BS5 theme variables to the public bcoem palette (shared legacy
-       colors) so purged pages stay visually identical. This declaration lives
-       in @layer components (above `bs5`) so it outranks BS5's own :root. */
+       colors) so purged pages stay visually identical. Unlayered so it
+       outranks BS5's own :root in the `bs5` layer. */
     --bs-primary: #007bff;
     --bs-secondary: #6c757d;
     --bs-success: #28a745;
@@ -542,11 +469,9 @@ html {
     padding: 0;
     margin: 15px 0 0 0;
 }
-}
 
-/* ---- Glance cards (at-a-glance.pub.php). Unlayered on purpose: daisyUI 5.7
-   emits .badge/.card into the UTILITIES layer, which outranks any
-   components-layer rule regardless of specificity. ---- */
+/* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
+   .badge/.card primitives so the legacy glance look is preserved. ---- */
 .position-absolute { position: absolute !important; }
 .glance-card-bg {
     background-color: #fefefe;
@@ -579,9 +504,9 @@ html {
 .glance-header.text-primary-glance-header { color: #084298; }
 
 /* ---- Bruxellensis admin-side theme (migrated from css/bruxellensis.css).
-   Active only when <html data-theme="bcoem-brux"> (admin/backoffice/eval
-   requests — see public-layout). Unlayered so it outranks daisyUI's
-   utilities-layer component rules. ---- */
+   Active only when <html data-bs-theme="bcoem-brux"> (admin/backoffice/eval
+   requests — see public-layout). Unlayered: beats the `bs5` layer so the
+   admin palette wins over BS5 defaults. ---- */
 [data-bs-theme="bcoem-brux"] body {
     font-family: "Droid Sans", Arial, sans-serif;
     font-weight: 400;
@@ -1028,11 +953,10 @@ html {
    Replicates the BS3.3.7 CDN styles the legacy admin pages load
    (maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css) plus the
    bruxellensis admin-theme overrides (css/bruxellensis.min.css), so the port
-   blades can carry verbatim legacy class markup. Lives LAST in
-   @layer components, so these rules win over the BS5 primitives, the earlier
-   legacy-theme re-implementations, and daisyUI for equal specificity. Values
-   are read from the legacy minified CSS, not eyeballed. */
-@layer components {
+   blades can carry verbatim legacy class markup. Unlayered (beats the `bs5`
+   layer and the earlier legacy-theme re-implementations for equal
+   specificity). Values are read from the legacy minified CSS, not
+   eyeballed. */
     /* ==== BS3 grid columns used by admin forms (float + 15px gutters) ==== */
     .col-xs-12,
     .col-sm-4,
@@ -1469,7 +1393,6 @@ html {
         font-weight: 400;
         font-family: inherit;
     }
-}
 /* INTERACTION-PARITY: CSS tooltip, loader overlay, sticky back-to-top
    (legacy Bootstrap tooltip init + #loader-submit + #sticky-home). */
 [data-toggle="tooltip"], [data-tooltip="true"] {
@@ -1567,3 +1490,32 @@ html {
     cursor: pointer;
 }
 .data-dt-pager button:disabled { opacity: .4; cursor: default; }
+
+/* ==== Legacy utility classes (formerly Tailwind/daisy) ====
+   Issue 12 deleted the Tailwind + daisyUI stacks. A small set of utility /
+   component classes still referenced by port blades had no BS5 equivalent,
+   so they are re-declared here as unlayered author CSS (beats the `bs5`
+   layer). */
+.mt-6 { margin-top: 1.5rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.text-teal { color: var(--teal); }
+.bg-black { background-color: #000; }
+.alert-teal {
+    color: #0f5132;
+    background-color: #d2f4ea;
+    border: 1px solid #a6dfcf;
+    border-radius: var(--bs-border-radius);
+    padding: var(--bs-alert-padding-y) var(--bs-alert-padding-x);
+}
+.help-content p { margin-bottom: .5rem; }
+.help-content ol, .help-content ul { margin-bottom: .5rem; padding-left: 1.25rem; }
+.help-content li { margin-bottom: .25rem; }
+
+/* Mobile public navbar: stack the nav items + dropdown vertically when the
+   collapse is shown below the md breakpoint (BS5 .navbar-expand-md forces
+   them into a row on md+). */
+@media (max-width: 767.98px) {
+    #nav-menu { flex-direction: column; align-items: stretch; gap: .25rem; padding-top: .5rem; padding-bottom: .5rem; }
+    #nav-menu .nav-item, #nav-menu > a { display: block; }
+    #nav-menu .dropdown-menu { position: static; }
+}

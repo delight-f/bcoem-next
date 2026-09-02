@@ -10,7 +10,7 @@
 
         @foreach ($evaluations as $evaluation)
             <div class="card mb-4">
-                <div class="card-header flex justify-content-between">
+                <div class="card-header d-flex justify-content-between">
                     <span>Evaluation #{{ $evaluation->id }} by judge uid {{ $evaluation->evalJudgeInfo }}</span>
                     <span>
                         Final score: <strong>{{ $evaluation->evalFinalScore }}</strong>

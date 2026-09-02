@@ -141,11 +141,6 @@
             .flatpickr-months .flatpickr-next-month:hover svg { fill: #1565C0; }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-        {{-- jQuery + Bootstrap JS remain on admin pages: app.js's session-expiry
-             autologout calls jQuery(...).modal() and the Bootstrap modal in
-             admin/all-dates (judging info) is opened via data-toggle/data-dismiss. --}}
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -165,7 +160,7 @@
          (custom class, unlayered CSS in app.css) preserves the brux gradient
          look; BS5's data-api drives the user dropdown. The off-canvas navmenu
          below is still BS3 until issue 6. --}}
-    <nav class="navbar navbar-dark admin-topbar fixed-top print:hidden" style="z-index: 1000;">
+    <nav class="navbar navbar-dark admin-topbar fixed-top d-print-none" style="z-index: 1000;">
         <div class="container-fluid">
             <div class="admin-nav-body">
                 <ul class="nav navbar-nav">
@@ -335,12 +330,11 @@
     </div>
 @else
     <header id="home" class="site-header">
-        <nav id="site-nav" class="site-nav family-sans navbar fixed top-0 text-white print:hidden" style="z-index: 1000;">
-            <div class="container-fluid flex flex-wrap items-center">
+        <nav id="site-nav" class="site-nav family-sans navbar navbar-expand-md navbar-dark fixed-top text-white d-print-none" style="z-index: 1000;">
+            <div class="container-fluid">
                 <a class="btn btn-link nav-icon-btn" href="{{ url()->current() === url('/') ? '#home' : url('/') }}"><i class="fas fa-home me-2"></i></a>
-                <input type="checkbox" id="nav-toggle" class="peer hidden">
-                <label for="nav-toggle" class="btn btn-link nav-icon-btn md:hidden" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></label>
-                <section id="nav-menu" class="md:ms-auto w-full md:w-auto flex-col md:flex-row items-start md:items-center hidden peer-checked:flex md:flex">
+                <button type="button" class="btn btn-link nav-icon-btn d-md-none" data-bs-toggle="collapse" data-bs-target="#nav-menu" aria-controls="nav-menu" aria-expanded="false" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></button>
+                <section id="nav-menu" class="collapse navbar-collapse justify-content-end">
                     @php
                         $onLanding = request()->routeIs('home');
                     @endphp
@@ -469,7 +463,7 @@
         @endif
         {{-- alerts.pub.php stacked info alerts ("For Your Information") --}}
         @if (! empty($fyiAlerts))
-            <div class="alert alert-info print:hidden" role="alert">
+            <div class="alert alert-info d-print-none" role="alert">
                 <strong>{{ __('site.fyi') }}</strong>
                 @foreach ($fyiAlerts as $fyiAlert)
                     <p class="mb-1">{!! $fyiAlert !!}</p>
@@ -487,7 +481,7 @@
                     background-position: center top;
                 }
             </style>
-            <div id="hero" class="layout-hero text-white flex items-center print:hidden">
+            <div id="hero" class="layout-hero text-white d-flex align-items-center d-print-none">
                 <section class="container-fluid shadow-text color-hero px-4">
                     <header>
                         <h1 class="text-center">{{ $ctx->contestStr('contestName') }}</h1>
@@ -496,7 +490,7 @@
             </div>
         @endif
 
-        <div id="salutation" class="text-white bg-black pt-6 pb-4 print:hidden">
+        <div id="salutation" class="text-white bg-black pt-4 pb-3 d-print-none">
             <section class="container-xxl">
                 {!! $salutation ?? '' !!}
             </section>
@@ -505,7 +499,7 @@
         {{-- Legacy renders a print-only h1 with the contest name on every page
              after the salutation (L4 DOM order: hero, salutation, print-h1); the
              text extractor sees it, so it must be present for content parity. --}}
-        <div class="hidden print:block landing-page-section p-4">
+        <div class="d-none d-print-block landing-page-section p-4">
             <h1>{{ $ctx->contestStr('contestName') }}</h1>
         </div>
     </header>
@@ -629,7 +623,7 @@
     @endif
 </div>
 
-<footer class="site-footer text-white justify-content-center container-fluid fixed bottom-0 pt-4 print:hidden">
+<footer class="site-footer text-white justify-content-center container-fluid fixed-bottom pt-4 d-print-none">
     <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M 3.1.0 &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
 </footer>
 

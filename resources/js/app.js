@@ -5,12 +5,14 @@ import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 // bootstrap.Modal/.Offcanvas programmatically (session modals, login reopen).
 window.bootstrap = bootstrap.default ?? bootstrap;
 
-// Mobile navbar: CSS peer-checkbox toggles #nav-menu; close on link click.
-const navToggle = document.getElementById('nav-toggle');
-if (navToggle) {
+// Mobile navbar: BS5 collapse toggles #nav-menu; close on link click.
+const navMenu = document.getElementById('nav-menu');
+if (navMenu) {
     document.querySelectorAll('#nav-menu a').forEach((a) =>
         a.addEventListener('click', () => {
-            navToggle.checked = false;
+            // No-op on desktop (navbar-expand-md forces it open); hides the
+            // mobile collapse after tapping a destination link.
+            bootstrap.Collapse.getOrCreateInstance(navMenu).hide();
         }),
     );
 }
@@ -59,58 +61,6 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
 } else {
     revealables.forEach((el) => el.classList.add('active-element'));
 }
-
-// BS3-style dropdowns toggle on click, close on outside click. Migrated
-// dropdowns carry data-bs-toggle and are driven by real Bootstrap 5 JS —
-// exclude them here (selector: only togglers WITHOUT a data-bs-toggle).
-document.querySelectorAll('.dropdown-toggle:not([data-bs-toggle]), .my-dropdown:not([data-bs-toggle])').forEach((toggler) =>
-    toggler.addEventListener('click', (e) => {
-        e.preventDefault();
-        const li = toggler.closest('.dropdown');
-        const wasOpen = li.classList.contains('open');
-        document.querySelectorAll('.dropdown.open').forEach((d) => d.classList.remove('open'));
-        if (!wasOpen) li.classList.add('open');
-    }),
-);
-document.addEventListener('click', (e) => {
-    if (!e.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown.open').forEach((d) => d.classList.remove('open'));
-    }
-});
-// Admin dashboard accordion (Bootstrap panel collapse without Bootstrap JS):
-// clicking a panel title toggles its body; open one per group (accordion).
-document.querySelectorAll('.panel-collapse-toggle').forEach((toggler) =>
-    toggler.addEventListener('click', (e) => {
-        e.preventDefault();
-        const target = document.getElementById(toggler.dataset.target);
-        if (!target) return;
-        const group = toggler.closest('.panel-group');
-        if (group) {
-            group.querySelectorAll('.panel-collapse.collapse.in').forEach((open) => {
-                if (open !== target) open.classList.remove('in');
-            });
-        }
-        target.classList.toggle('in');
-    }),
-);
-
-// daisyUI <dialog class="modal">: [data-open-modal="id"] opens, backdrop
-// click and [data-close-modal] close (Bootstrap modal semantics without
-// Bootstrap JS).
-document.querySelectorAll('[data-open-modal]').forEach((btn) =>
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById(btn.dataset.openModal)?.showModal();
-    }),
-);
-document.querySelectorAll('dialog.modal').forEach((dialog) => {
-    dialog.addEventListener('click', (e) => {
-        if (e.target === dialog) dialog.close();
-    });
-    dialog.querySelectorAll('[data-close-modal]').forEach((btn) =>
-        btn.addEventListener('click', () => dialog.close()),
-    );
-});
 
 // Entry form (pub/brew.pub.php + js_includes/entry.min.js): show/hide the
 // required-info, optional-info, carbonation, sweetness (mead vs cider),

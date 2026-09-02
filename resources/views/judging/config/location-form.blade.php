@@ -5,7 +5,7 @@
 
         {{-- Legacy control row (judging_locations.admin.php:229-236):
             back-to-sessions plus (edit view) the add-session shortcut. --}}
-        <div class="mb-4 flex flex-wrap gap-2">
+        <div class="mb-4 d-flex flex-wrap gap-2">
             <a class="btn btn-secondary" href="{{ route('admin.judging.locations.index') }}"><span class="fa fa-arrow-circle-left"></span> All Judging Sessions</a>
             @if ($isEdit)
                 <a class="btn btn-outline btn-secondary" href="{{ route('admin.judging.locations.create') }}"><span class="fa fa-plus-circle"></span> Add a Judging Session</a>

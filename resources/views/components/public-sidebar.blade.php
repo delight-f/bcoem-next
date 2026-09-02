@@ -57,7 +57,7 @@
     @endif
 
     {{-- 400: Judging Locations --}}
-    <div class="panel panel-info mb-3 print:hidden">
+    <div class="panel panel-info mb-3 d-print-none">
         <div class="panel-heading"><h4 class="panel-title m-0">{{ __('site.judging_locations') }}</h4></div>
         <div class="panel-body">
             @if ($sbJudging === [])
@@ -90,7 +90,7 @@
 
     {{-- 700: Non-Judging Locations --}}
     @if ($sbNonJudging !== [])
-        <div class="panel panel-info mb-3 print:hidden">
+        <div class="panel panel-info mb-3 d-print-none">
             <div class="panel-heading"><h4 class="panel-title m-0">{{ __('site.non_judging_locations') }}</h4></div>
             <div class="panel-body">
                 @foreach ($sbNonJudging as $sbLoc)
@@ -142,7 +142,7 @@
 
     {{-- 200: Entry Window --}}
     @if (! $sbLoggedIn || true)
-        <div class="panel {{ $sbEntryOpen && ! $sbWindows->compEntryLimitReached ? 'panel-success' : 'panel-danger' }} mb-3 print:hidden">
+        <div class="panel {{ $sbEntryOpen && ! $sbWindows->compEntryLimitReached ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
             <div class="panel-heading">
                 <h4 class="panel-title m-0">
                     {{ __('site.entry_registration') }}
@@ -166,7 +166,7 @@
 
     {{-- 300: Drop-Off --}}
     @if ((int) $sbCtx->prefsStr('prefsDropOff') === 1)
-        <div class="panel {{ $sbWindows->dropoff === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 print:hidden">
+        <div class="panel {{ $sbWindows->dropoff === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
             <div class="panel-heading">
                 <h4 class="panel-title m-0">
                     {{ __('site.entry_drop_off') }}
@@ -181,7 +181,7 @@
 
     {{-- 500: Shipping --}}
     @if ((int) $sbCtx->prefsStr('prefsShipping') === 1)
-        <div class="panel {{ $sbWindows->shipping === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 print:hidden">
+        <div class="panel {{ $sbWindows->shipping === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
             <div class="panel-heading">
                 <h4 class="panel-title m-0">
                     {{ __('site.entry_shipping') }}
