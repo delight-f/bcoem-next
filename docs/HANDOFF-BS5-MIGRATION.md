@@ -184,3 +184,64 @@ replica is deleted.
   components will then style it (that's the migration working as intended).
 - BS3 `.col-sm-*` → BS5 `.col-md-*` tier-shift is the grid correctness
   landmine — verify at tablet width (from the original handoff).
+
+---
+
+## Implementation log — issue #4 (public daisy purge) DONE 2026-09-02
+
+The public-facing surface (home shell, auth pages, contact, account, entries
+table, brew entry form) is now single-dialect Bootstrap 5 markup with zero
+daisyUI-only class tokens. Admin chrome (`data-theme`, BS3 panels, admin
+dialogs) is untouched (issues #5-#11).
+
+**Blades purged** (daisy -> BS5):
+- `components/public-layout`: login/forgot `<dialog class="modal">` +
+  `modal-box/modal-action` -> real BS5 modals (.modal-dialog-centered /
+  .modal-content / .modal-header / .modal-body, btn-close, data-bs-toggle /
+  data-bs-dismiss); nav Log-In trigger + home/hamburger icons `btn-ghost` /
+  `btn-square` -> `btn-link`; modal fields `floating-label`+`input
+  input-bordered` -> `form-floating`+`form-control`.
+- `auth/login`, `auth/register`, `auth/password`, `auth/passwords/{forgot,
+  reset,verify}`: `input/select/textarea-bordered`, `checkbox`, `radio`,
+  `floating-label`, `alert-error` -> `form-control`, `form-select`,
+  `form-check-input`, `form-floating`, `alert-danger`. Login page auto-reopen
+  now uses `bootstrap.Modal.getOrCreateInstance().show()`.
+- `public/contact`, `public/account-username`, `public/partials/entries-table`
+  (table-zebra -> table-striped, badge-success/error -> text-bg-*),
+  `public/partials/{account-main,entries-info}`, `public/pay`,
+  `brew/_fields` (8 inputs, 1 select, 3 textareas, 7 radios), `brew/{create,
+  edit}`: same dialect sweep.
+
+**CSS bridge (app.css)** — real BS5 modal/form markup would be broken by the
+residual shim layers (daisyUI + BS3 replica sit ABOVE bs5 until #12):
+- `.modal.show` unlayered rule: daisy `.modal{visibility:hidden}` (only
+  reveals `[open]`/:target/`.modal-toggle`) would hide BS5 modals; BS3-replica
+  `.modal{z-index:1040}` would put the BS5 `.modal-backdrop` (1050) OVER the
+  content. Bridge restores `visibility:visible; z-index:1060` on `.modal.show`
+  (admin daisy dialogs never carry `.show`, so they are untouched).
+- `.modal-header .btn-close`: daisy's `.btn-close{position:absolute;top:0;
+  right:0}` fought the flex header; bridge pins `position:static;
+  margin-left:auto`.
+- `.form-floating` placeholder: daisy `::placeholder{color:...}` (higher
+  layer) made the floating-label text duplicate the placeholder; bridge makes
+  form-floating placeholders transparent.
+- `.form-select`: daisy styles the bare `select` ELEMENT (transparent bg,
+  border-style none, tiny clamp width) so BS5 form-selects were invisible;
+  bridge re-states the BS5 look unlayered.
+- BS5 theme variables (`--bs-primary:#007bff` etc.) added to the legacy
+  `:root` (components layer, above bs5) so purged `.btn-primary/.table/...`
+  fall through to real BS5 with bcoem colors, not BS5 defaults.
+
+**Verification**: new `tests/Browser/PublicBs5GateTest` (4/4: home, contact,
+auth pages, open login modal — no daisy markers + BS5 markers present);
+harness login updated to the BS5 trigger (3/3); unit 6/6; BrowserJourneys
+2/2; auth/contact feature tests 19/19. Browser probes confirmed BS5 modal
+close button right-aligned, form-floating labels single, select border
+#dee2e6/38px. Screenshots of home/contact/register/forgot/login-modal-open
+captured and reviewed.
+
+**Gotchas hit**: vision-inspection API cost is exhausted (no more vision
+calls — use DOM/computed-style probes); app.css `:root` sits in
+`@layer components` and the BS bridge must live there (above bs5) to win;
+daisy `data-theme="bcoem-brux"` on admin `<html>` remains (that is issue #7
+scope, not #4 — public pages never render it).
