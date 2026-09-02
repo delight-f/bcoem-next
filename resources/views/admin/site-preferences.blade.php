@@ -29,7 +29,7 @@
             <div class="alert alert-success">Preferences updated.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         @php $p = fn (string $k) => (string) ($ctx->prefsStr($k) ?? ''); @endphp
@@ -39,40 +39,40 @@
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Pro Edition</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Pro Edition</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsProEdition" value="1" id="proYes" @checked($p('prefsProEdition') === '1')><label class="form-check-label" for="proYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsProEdition" value="1" id="proYes" @checked($p('prefsProEdition') === '1')><label class="form-check-label" for="proYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsProEdition" value="0" id="proNo" @checked($p('prefsProEdition') !== '1')><label class="form-check-label" for="proNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsProEdition" value="0" id="proNo" @checked($p('prefsProEdition') !== '1')><label class="form-check-label" for="proNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Show Homebrew Club Points Page</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Show Homebrew Club Points Page</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsMHPDisplay" value="1" id="mhpYes" @checked($p('prefsMHPDisplay') === '1')><label class="form-check-label" for="mhpYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsMHPDisplay" value="1" id="mhpYes" @checked($p('prefsMHPDisplay') === '1')><label class="form-check-label" for="mhpYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsMHPDisplay" value="0" id="mhpNo" @checked($p('prefsMHPDisplay') !== '1')><label class="form-check-label" for="mhpNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsMHPDisplay" value="0" id="mhpNo" @checked($p('prefsMHPDisplay') !== '1')><label class="form-check-label" for="mhpNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Display Winners</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Display Winners</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsDisplayWinners" value="Y" id="dwY" @checked($p('prefsDisplayWinners') === 'Y')><label class="form-check-label" for="dwY">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsDisplayWinners" value="Y" id="dwY" @checked($p('prefsDisplayWinners') === 'Y')><label class="form-check-label" for="dwY">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsDisplayWinners" value="N" id="dwN" @checked($p('prefsDisplayWinners') !== 'Y')><label class="form-check-label" for="dwN">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsDisplayWinners" value="N" id="dwN" @checked($p('prefsDisplayWinners') !== 'Y')><label class="form-check-label" for="dwN">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsWinnerDelay" class="col-sm-4 col-form-label">Winners Display Date/Time</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsWinnerDelay" name="prefsWinnerDelay" type="text" style="width:auto;" value="{{ \App\Support\Tenant\DateFmt::dateTime($ctx->prefsStr('prefsWinnerDelay'), $tz, $df, $tf, 'system', false) }}"></div>
+                    <label for="prefsWinnerDelay" class="col-md-4 col-form-label">Winners Display Date/Time</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsWinnerDelay" name="prefsWinnerDelay" type="text" style="width:auto;" value="{{ \App\Support\Tenant\DateFmt::dateTime($ctx->prefsStr('prefsWinnerDelay'), $tz, $df, $tf, 'system', false) }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsWinnerMethod" class="col-sm-4 col-form-label">Winner Place Distribution Method</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsWinnerMethod" name="prefsWinnerMethod" style="width:auto;">
+                    <label for="prefsWinnerMethod" class="col-md-4 col-form-label">Winner Place Distribution Method</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsWinnerMethod" name="prefsWinnerMethod" style="width:auto;">
                             <option value="0" @selected($p('prefsWinnerMethod') === '0')>By Table/Medal Group</option>
                             <option value="1" @selected($p('prefsWinnerMethod') === '1')>By Style</option>
                             <option value="2" @selected($p('prefsWinnerMethod') === '2')>By Sub-Style</option>
@@ -80,9 +80,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTheme" class="col-sm-4 col-form-label">Theme</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsTheme" name="prefsTheme" style="width:auto;">
+                    <label for="prefsTheme" class="col-md-4 col-form-label">Theme</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsTheme" name="prefsTheme" style="width:auto;">
                             @foreach (['default', 'cerulean', 'superhero', 'slate', 'darkly'] as $theme)
                                 <option value="{{ $theme }}" @selected($p('prefsTheme') === $theme)>{{ ucfirst($theme) }}</option>
                             @endforeach
@@ -90,36 +90,36 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Use Custom Modules?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Use Custom Modules?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsUseMods" value="1" id="modsYes" @checked($p('prefsUseMods') === '1')><label class="form-check-label" for="modsYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsUseMods" value="1" id="modsYes" @checked($p('prefsUseMods') === '1')><label class="form-check-label" for="modsYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsUseMods" value="0" id="modsNo" @checked($p('prefsUseMods') !== '1')><label class="form-check-label" for="modsNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsUseMods" value="0" id="modsNo" @checked($p('prefsUseMods') !== '1')><label class="form-check-label" for="modsNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsDropOff" class="col-sm-4 col-form-label">Entry Drop-Off</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsDropOff" name="prefsDropOff" style="width:auto;">
+                    <label for="prefsDropOff" class="col-md-4 col-form-label">Entry Drop-Off</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsDropOff" name="prefsDropOff" style="width:auto;">
                             <option value="Y" @selected($p('prefsDropOff') === 'Y')>Enabled</option>
                             <option value="N" @selected($p('prefsDropOff') !== 'Y')>Disabled</option>
                         </select>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsShipping" class="col-sm-4 col-form-label">Shipping</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsShipping" name="prefsShipping" style="width:auto;">
+                    <label for="prefsShipping" class="col-md-4 col-form-label">Shipping</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsShipping" name="prefsShipping" style="width:auto;">
                             <option value="Y" @selected($p('prefsShipping') === 'Y')>Enabled</option>
                             <option value="N" @selected($p('prefsShipping') !== 'Y')>Disabled</option>
                         </select>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsLanguage" class="col-sm-4 col-form-label">Language</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsLanguage" name="prefsLanguage" style="width:auto;">
+                    <label for="prefsLanguage" class="col-md-4 col-form-label">Language</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsLanguage" name="prefsLanguage" style="width:auto;">
                             @foreach ($languages as $code => $name)
                                 <option value="{{ $code }}" @selected($p('prefsLanguage') === $code)>{{ $name }}</option>
                             @endforeach
@@ -127,9 +127,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsDateFormat" class="col-sm-4 col-form-label">Date Format</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsDateFormat" name="prefsDateFormat" style="width:auto;">
+                    <label for="prefsDateFormat" class="col-md-4 col-form-label">Date Format</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsDateFormat" name="prefsDateFormat" style="width:auto;">
                             <option value="0" @selected($p('prefsDateFormat') === '0')>YYYY/MM/DD</option>
                             <option value="1" @selected($p('prefsDateFormat') === '1')>MM/DD/YYYY</option>
                             <option value="2" @selected($p('prefsDateFormat') === '2')>DD/MM/YYYY</option>
@@ -138,18 +138,18 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTimeFormat" class="col-sm-4 col-form-label">Time Format</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsTimeFormat" name="prefsTimeFormat" style="width:auto;">
+                    <label for="prefsTimeFormat" class="col-md-4 col-form-label">Time Format</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsTimeFormat" name="prefsTimeFormat" style="width:auto;">
                             <option value="0" @selected($p('prefsTimeFormat') === '0')>12-hour</option>
                             <option value="1" @selected($p('prefsTimeFormat') === '1')>24-hour</option>
                         </select>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTimeZone" class="col-sm-4 col-form-label">Time Zone</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsTimeZone" name="prefsTimeZone" style="width:auto;">
+                    <label for="prefsTimeZone" class="col-md-4 col-form-label">Time Zone</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsTimeZone" name="prefsTimeZone" style="width:auto;">
                             @foreach ($timezones as $value => $label)
                                 <option value="{{ $value }}" @selected($p('prefsTimeZone') === $value)>{{ $label }}</option>
                             @endforeach
@@ -157,85 +157,85 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsCAPTCHA" class="col-sm-4 col-form-label">Enable CAPTCHA</label>
-                    <div class="col-sm-9">
+                    <label for="prefsCAPTCHA" class="col-md-4 col-form-label">Enable CAPTCHA</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCAPTCHA" value="1" id="capY" @checked($p('prefsCAPTCHA') === '1')><label class="form-check-label" for="capY">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCAPTCHA" value="1" id="capY" @checked($p('prefsCAPTCHA') === '1')><label class="form-check-label" for="capY">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCAPTCHA" value="0" id="capN" @checked($p('prefsCAPTCHA') !== '1')><label class="form-check-label" for="capN">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCAPTCHA" value="0" id="capN" @checked($p('prefsCAPTCHA') !== '1')><label class="form-check-label" for="capN">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsRecordPaging" class="col-sm-4 col-form-label">Records Displayed</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="prefsRecordPaging" name="prefsRecordPaging" type="text" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
-                        <span class="help-block">The number of records displayed per page when viewing lists.</span>
+                    <label for="prefsRecordPaging" class="col-md-4 col-form-label">Records Displayed</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="prefsRecordPaging" name="prefsRecordPaging" type="text" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
+                        <span class="form-text">The number of records displayed per page when viewing lists.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsGoogleAccount" class="col-sm-4 col-form-label">reCAPTCHA Account(s)</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
-                        <span class="help-block">reCAPTCHA site key|secret key (pipe-separated) if CAPTCHA is enabled.</span>
+                    <label for="prefsGoogleAccount" class="col-md-4 col-form-label">reCAPTCHA Account(s)</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
+                        <span class="form-text">reCAPTCHA site key|secret key (pipe-separated) if CAPTCHA is enabled.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsSEF" class="col-sm-4 col-form-label">Search Engine Friendly URLs</label>
-                    <div class="col-sm-9">
+                    <label for="prefsSEF" class="col-md-4 col-form-label">Search Engine Friendly URLs</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSEF" value="N" id="sefN" @checked($p('prefsSEF') !== 'Y')><label class="form-check-label" for="sefN">Disable</label></div>
-                        <span class="help-block">If you enable this and receive 404 errors, navigate to the login screen at <a class="hide-loader" href="{{ url('/login') }}" target="_blank" rel="noopener">{{ url('/login') }}</a> to log back in and &ldquo;turn off&rdquo; this feature.</span>
+                            <input class="form-check-input" type="radio" name="prefsSEF" value="N" id="sefN" @checked($p('prefsSEF') !== 'Y')><label class="form-check-label" for="sefN">Disable</label></div>
+                        <span class="form-text">If you enable this and receive 404 errors, navigate to the login screen at <a class="hide-loader" href="{{ url('/login') }}" target="_blank" rel="noopener">{{ url('/login') }}</a> to log back in and &ldquo;turn off&rdquo; this feature.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsAutoPurge" class="col-sm-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
-                    <div class="col-sm-9">
+                    <label for="prefsAutoPurge" class="col-md-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsAutoPurge" value="1" id="apY" @checked($p('prefsAutoPurge') === '1')><label class="form-check-label" for="apY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsAutoPurge" value="1" id="apY" @checked($p('prefsAutoPurge') === '1')><label class="form-check-label" for="apY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsAutoPurge" value="0" id="apN" @checked($p('prefsAutoPurge') !== '1')><label class="form-check-label" for="apN">Disable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsAutoPurge" value="0" id="apN" @checked($p('prefsAutoPurge') !== '1')><label class="form-check-label" for="apN">Disable</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsLanguageToggle" class="col-sm-4 col-form-label">Runtime Language Toggle</label>
-                    <div class="col-sm-9">
+                    <label for="prefsLanguageToggle" class="col-md-4 col-form-label">Runtime Language Toggle</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsLanguageToggle" value="Y" id="ltY" @checked($p('prefsLanguageToggle') === 'Y')><label class="form-check-label" for="ltY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsLanguageToggle" value="Y" id="ltY" @checked($p('prefsLanguageToggle') === 'Y')><label class="form-check-label" for="ltY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsLanguageToggle" value="N" id="ltN" @checked($p('prefsLanguageToggle') !== 'Y')><label class="form-check-label" for="ltN">Disable</label></div>
-                        <span class="help-block">Requires additional language files in the lang directory.</span>
+                            <input class="form-check-input" type="radio" name="prefsLanguageToggle" value="N" id="ltN" @checked($p('prefsLanguageToggle') !== 'Y')><label class="form-check-label" for="ltN">Disable</label></div>
+                        <span class="form-text">Requires additional language files in the lang directory.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsLanguageOptions" class="col-sm-4 col-form-label">Available Languages</label>
-                    <div class="col-sm-9">
+                    <label for="prefsLanguageOptions" class="col-md-4 col-form-label">Available Languages</label>
+                    <div class="col-md-9">
                         @foreach ($languages as $code => $name)
                             <div class="form-check">
-                                <input class="checkbox" type="checkbox" name="prefsLanguageOptions[]" value="{{ $code }}" id="langOpt-{{ $code }}" @checked(in_array($code, $langOptions, true))>
+                                <input class="form-check-input" type="checkbox" name="prefsLanguageOptions[]" value="{{ $code }}" id="langOpt-{{ $code }}" @checked(in_array($code, $langOptions, true))>
                                 <label class="form-check-label" for="langOpt-{{ $code }}">{{ $name }}</label>
                             </div>
                         @endforeach
-                        <span class="help-block">Which languages visitors may choose from when the runtime language toggle is enabled.</span>
+                        <span class="form-text">Which languages visitors may choose from when the runtime language toggle is enabled.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsSponsorLogos" class="col-sm-4 col-form-label">Sponsor Logo Display</label>
-                    <div class="col-sm-9">
+                    <label for="prefsSponsorLogos" class="col-md-4 col-form-label">Sponsor Logo Display</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSponsorLogos" value="Y" id="slY" @checked($p('prefsSponsorLogos') === 'Y')><label class="form-check-label" for="slY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSponsorLogos" value="Y" id="slY" @checked($p('prefsSponsorLogos') === 'Y')><label class="form-check-label" for="slY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSponsorLogos" value="N" id="slN" @checked($p('prefsSponsorLogos') !== 'Y')><label class="form-check-label" for="slN">Disable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSponsorLogos" value="N" id="slN" @checked($p('prefsSponsorLogos') !== 'Y')><label class="form-check-label" for="slN">Disable</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Sponsors</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Sponsors</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSponsors" value="Y" id="sponY" @checked($p('prefsSponsors') === 'Y')><label class="form-check-label" for="sponY">Enabled</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSponsors" value="Y" id="sponY" @checked($p('prefsSponsors') === 'Y')><label class="form-check-label" for="sponY">Enabled</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSponsors" value="N" id="sponN" @checked($p('prefsSponsors') !== 'Y')><label class="form-check-label" for="sponN">Disabled</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSponsors" value="N" id="sponN" @checked($p('prefsSponsors') !== 'Y')><label class="form-check-label" for="sponN">Disabled</label></div>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Preferences</button>
@@ -247,52 +247,52 @@
                 <h3>Fees (stored on contest info)</h3>
                 @php $c = fn (string $k) => (string) ($ctx->contestStr($k) ?? ''); @endphp
                 <div class="mb-4 row">
-                    <label for="contestEntryFee" class="col-sm-4 col-form-label">Per Entry Fee</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFee" name="contestEntryFee" type="text" style="width:auto;" value="{{ $c('contestEntryFee') }}"></div>
+                    <label for="contestEntryFee" class="col-md-4 col-form-label">Per Entry Fee</label>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryFee" name="contestEntryFee" type="text" style="width:auto;" value="{{ $c('contestEntryFee') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFee2" class="col-sm-4 col-form-label">Discounted Entry Fee</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFee2" name="contestEntryFee2" type="text" style="width:auto;" value="{{ $c('contestEntryFee2') }}"></div>
+                    <label for="contestEntryFee2" class="col-md-4 col-form-label">Discounted Entry Fee</label>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryFee2" name="contestEntryFee2" type="text" style="width:auto;" value="{{ $c('contestEntryFee2') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscountNum" class="col-sm-4 col-form-label">Minimum Entries for Discount</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}"></div>
+                    <label for="contestEntryFeeDiscountNum" class="col-md-4 col-form-label">Minimum Entries for Discount</label>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryCap" class="col-sm-4 col-form-label">Fee Cap</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryCap" name="contestEntryCap" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryCap') }}"></div>
+                    <label for="contestEntryCap" class="col-md-4 col-form-label">Fee Cap</label>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryCap" name="contestEntryCap" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryCap') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscount" class="col-sm-4 col-form-label">Discount Multiple Entries</label>
-                    <div class="col-sm-9">
+                    <label for="contestEntryFeeDiscount" class="col-md-4 col-form-label">Discount Multiple Entries</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="contestEntryFeeDiscount" value="N" id="discN" @checked($c('contestEntryFeeDiscount') !== 'Y')><label class="form-check-label" for="discN">No</label></div>
+                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="N" id="discN" @checked($c('contestEntryFeeDiscount') !== 'Y')><label class="form-check-label" for="discN">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeePassword" class="col-sm-4 col-form-label">Member Discount Password</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="contestEntryFeePassword" name="contestEntryFeePassword" type="text" value="{{ $c('contestEntryFeePassword') }}">
-                        <span class="help-block">Password for participants to enter to receive discounted entry fees.</span>
+                    <label for="contestEntryFeePassword" class="col-md-4 col-form-label">Member Discount Password</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="contestEntryFeePassword" name="contestEntryFeePassword" type="text" value="{{ $c('contestEntryFeePassword') }}">
+                        <span class="form-text">Password for participants to enter to receive discounted entry fees.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeePasswordNum" class="col-sm-4 col-form-label">Member Discount Fee</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
+                    <label for="contestEntryFeePasswordNum" class="col-md-4 col-form-label">Member Discount Fee</label>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
                 </div>
 
                 <h3>Limits</h3>
                 <div class="mb-4 row">
-                    <label for="prefsStyleSet" class="col-sm-4 col-form-label">Style Set</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsStyleSet" name="prefsStyleSet" style="width:auto;">
+                    <label for="prefsStyleSet" class="col-md-4 col-form-label">Style Set</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsStyleSet" name="prefsStyleSet" style="width:auto;">
                             @foreach (['BJCP2021', 'BJCP2025', 'AABC2025', 'NWCiderCup'] as $set)
                                 <option value="{{ $set }}" @selected($p('prefsStyleSet') === $set)>{{ $set }}</option>
                             @endforeach
                         </select>
-                        <span class="help-block">Changing the set rebuilds the accepted-styles list.</span>
+                        <span class="form-text">Changing the set rebuilds the accepted-styles list.</span>
                     </div>
                 </div>
                 @foreach ([
@@ -302,14 +302,14 @@
                     'prefsUserSubCatLimit' => 'Per Participant Sub-Style Entry Limit',
                 ] as $field => $label)
                     <div class="mb-4 row">
-                        <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
-                        <div class="col-sm-9"><input class="input input-bordered" id="{{ $field }}" name="{{ $field }}" type="number" min="1" style="width:auto;" value="{{ $p($field) }}"></div>
+                        <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
+                        <div class="col-md-9"><input class="form-control" id="{{ $field }}" name="{{ $field }}" type="number" min="1" style="width:auto;" value="{{ $p($field) }}"></div>
                     </div>
                 @endforeach
                 <div class="mb-4 row">
-                    <label for="prefsUSCLExLimit" class="col-sm-4 col-form-label">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
+                    <label for="prefsUSCLExLimit" class="col-md-4 col-form-label">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
                             <option value="" @selected($p('prefsUSCLExLimit') === '')></option>
                             @foreach (range(1, 50) as $i)
                                 <option value="{{ $i }}" @selected($p('prefsUSCLExLimit') === (string) $i)>{{ $i }}</option>
@@ -319,9 +319,9 @@
                 </div>
 
                 <div class="mb-4 row">
-                    <label for="prefsEntryForm" class="col-sm-4 col-form-label">Printed Entry Bottle/Can Labels</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsEntryForm" name="prefsEntryForm" style="width:auto;">
+                    <label for="prefsEntryForm" class="col-md-4 col-form-label">Printed Entry Bottle/Can Labels</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsEntryForm" name="prefsEntryForm" style="width:auto;">
                             @foreach ([
                                 '7' => 'Standard',
                                 '10' => 'Standard - Larger Printed Number and Style',
@@ -334,8 +334,8 @@
                                 <option value="{{ $val }}" @selected($p('prefsEntryForm') === $val)>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <span class="help-block">
-                            <a class="btn btn-xs btn-info hide-loader" data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard.png') }}" data-caption="Standard">Examples</a>
+                        <span class="form-text">
+                            <a class="btn btn-sm btn-info hide-loader" data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard.png') }}" data-caption="Standard">Examples</a>
                             <p class="mt-2">Both label types are available with or without a barcode and QR code corresponding to the unique identification number.</p>
                             <p>The Barcode options are intended to be used with a USB barcode scanner and the <a class="hide-loader" href="{{ url('/admin/judging/checkin') }}">barcode entry check-in function</a>.</p>
                             <p>The QR code options are intended to be used with a mobile device and <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR code entry check-in function</a> (requires a QR code reading app).</p>
@@ -352,47 +352,47 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsSpecific" class="col-sm-4 col-form-label">Hide Brewer's Specifics Field</label>
-                    <div class="col-sm-9">
+                    <label for="prefsSpecific" class="col-md-4 col-form-label">Hide Brewer's Specifics Field</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSpecific" value="1" id="specY" @checked($p('prefsSpecific') === '1')><label class="form-check-label" for="specY">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSpecific" value="1" id="specY" @checked($p('prefsSpecific') === '1')><label class="form-check-label" for="specY">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsSpecific" value="0" id="specN" @checked($p('prefsSpecific') !== '1')><label class="form-check-label" for="specN">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsSpecific" value="0" id="specN" @checked($p('prefsSpecific') !== '1')><label class="form-check-label" for="specN">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsSpecialCharLimit" class="col-sm-4 col-form-label">Character Limit for Text Entry</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsSpecialCharLimit" name="prefsSpecialCharLimit" style="width:auto;">
+                    <label for="prefsSpecialCharLimit" class="col-md-4 col-form-label">Character Limit for Text Entry</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsSpecialCharLimit" name="prefsSpecialCharLimit" style="width:auto;">
                             @foreach (range(25, 255, 5) as $i)
                                 <option value="{{ $i }}" @selected($p('prefsSpecialCharLimit') === (string) $i)>{{ $i }}</option>
                             @endforeach
                         </select>
-                        <span class="help-block">Limit for special ingredients, optional ingredients, and brewer's specifics. 65 or less suggested when attaching bottle labels at sorting.</span>
+                        <span class="form-text">Limit for special ingredients, optional ingredients, and brewer's specifics. 65 or less suggested when attaching bottle labels at sorting.</span>
                     </div>
                 </div>
 
                 <h3>Per-style limits</h3>
                 <div class="mb-4 row">
-                    <label for="choose-style-entry-limits" class="col-sm-4 col-form-label">Entry Limits by Style or Table/Medal Group</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="choose-style-entry-limits" name="choose-style-entry-limits" style="width:auto;">
+                    <label for="choose-style-entry-limits" class="col-md-4 col-form-label">Entry Limits by Style or Table/Medal Group</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="choose-style-entry-limits" name="choose-style-entry-limits" style="width:auto;">
                             <option value="0" @selected($p('prefsStyleLimits') === '')>Disable</option>
                             <option value="1" @selected(str_starts_with($p('prefsStyleLimits'), '{'))>Enable By Style</option>
                             <option value="2" @selected($p('prefsStyleLimits') === '2')>Enable By Table or Medal Group</option>
                         </select>
-                        <span class="help-block">Limiting by table or medal group requires Tables Planning Mode and defined tables/medal groups. Limiting entries by style allows a numerical limit on overall styles or style groups.</span>
+                        <span class="form-text">Limiting by table or medal group requires Tables Planning Mode and defined tables/medal groups. Limiting entries by style allows a numerical limit on overall styles or style groups.</span>
                     </div>
                 </div>
                 <section id="define-style-entry-limits">
                     <div class="mb-4 row">
-                        <label for="styleLimitsEdit" class="col-sm-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
-                        <div class="col-sm-9">
+                        <label for="styleLimitsEdit" class="col-md-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
+                        <div class="col-md-9">
                             @foreach ($styleLimitRows as $row)
                                 <div class="row mb-1 small">
-                                    <div class="col-sm-3 col-md-2">{{ $row['label'] }}</div>
-                                    <div class="col-sm-9 col-md-5">
-                                        <input type="number" min="0" class="input input-bordered" name="styleEntryLimit-{{ $styleSet }}-{{ $row['key'] }}" value="{{ $row['value'] }}">
+                                    <div class="col-md-2">{{ $row['label'] }}</div>
+                                    <div class="col-md-5">
+                                        <input type="number" min="0" class="form-control" name="styleEntryLimit-{{ $styleSet }}-{{ $row['key'] }}" value="{{ $row['value'] }}">
                                     </div>
                                 </div>
                             @endforeach
@@ -407,26 +407,26 @@
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Allow BCOE&amp;M to Send Emails</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Allow BCOE&amp;M to Send Emails</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailSMTP" value="1" id="smtpYes" @checked($p('prefsEmailSMTP') === '1')><label class="form-check-label" for="smtpYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="1" id="smtpYes" @checked($p('prefsEmailSMTP') === '1')><label class="form-check-label" for="smtpYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailSMTP" value="0" id="smtpNo" @checked($p('prefsEmailSMTP') !== '1')><label class="form-check-label" for="smtpNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="0" id="smtpNo" @checked($p('prefsEmailSMTP') !== '1')><label class="form-check-label" for="smtpNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailHost" class="col-sm-4 col-form-label">Host</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailHost" name="prefsEmailHost" type="text" value="{{ $p('prefsEmailHost') }}"></div>
+                    <label for="prefsEmailHost" class="col-md-4 col-form-label">Host</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsEmailHost" name="prefsEmailHost" type="text" value="{{ $p('prefsEmailHost') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailPort" class="col-sm-4 col-form-label">Port</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailPort" name="prefsEmailPort" type="number" style="width:auto;" value="{{ $p('prefsEmailPort') }}"></div>
+                    <label for="prefsEmailPort" class="col-md-4 col-form-label">Port</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsEmailPort" name="prefsEmailPort" type="number" style="width:auto;" value="{{ $p('prefsEmailPort') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailEncrypt" class="col-sm-4 col-form-label">Encryption</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsEmailEncrypt" name="prefsEmailEncrypt" style="width:auto;">
+                    <label for="prefsEmailEncrypt" class="col-md-4 col-form-label">Encryption</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsEmailEncrypt" name="prefsEmailEncrypt" style="width:auto;">
                             @foreach (['tls', 'ssl', 'none'] as $enc)
                                 <option value="{{ $enc }}" @selected(strtolower($p('prefsEmailEncrypt')) === $enc)>{{ strtoupper($enc) }}</option>
                             @endforeach
@@ -434,60 +434,66 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailUsername" class="col-sm-4 col-form-label">SMTP Username</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailUsername" name="prefsEmailUsername" type="text" value="{{ $p('prefsEmailUsername') }}"></div>
+                    <label for="prefsEmailUsername" class="col-md-4 col-form-label">SMTP Username</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsEmailUsername" name="prefsEmailUsername" type="text" value="{{ $p('prefsEmailUsername') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Change Password?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Change Password?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="change-email-password-choice" value="0" id="pwKeep" @checked(true)>
+                            <input class="form-check-input" type="radio" name="change-email-password-choice" value="0" id="pwKeep" @checked(true)>
                             <label class="form-check-label" for="pwKeep">Keep stored password</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="change-email-password-choice" value="1" id="pwChange">
+                            <input class="form-check-input" type="radio" name="change-email-password-choice" value="1" id="pwChange">
                             <label class="form-check-label" for="pwChange">Set new password below</label>
                         </div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailPassword" class="col-sm-4 col-form-label">SMTP Password</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password"></div>
+                    <label for="prefsEmailPassword" class="col-md-4 col-form-label">SMTP Password</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsEmailFrom" class="col-sm-4 col-form-label">Originating Email Address</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsEmailFrom" name="prefsEmailFrom" type="text" value="{{ $p('prefsEmailFrom') }}"></div>
-                </div>
-                            <input class="radio" type="radio" name="prefsContact" value="Y" id="contactY" @checked($p('prefsContact') === 'Y')><label class="form-check-label" for="contactY">Enable Contact Form</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsContact" value="N" id="contactN" @checked($p('prefsContact') === 'N')><label class="form-check-label" for="contactN">Disable Contact Form - List Contacts</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsContact" value="X" id="contactX" @checked($p('prefsContact') === 'X')><label class="form-check-label" for="contactX">Disable Contact Form - Do Not List Contacts</label></div>
-                    </div>
-                </div>
-                            <input class="radio" type="radio" name="prefsContact" value="Y" id="contactY" @checked($p('prefsContact') === 'Y')><label class="form-check-label" for="contactY">Enabled</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsContact" value="N" id="contactN" @checked($p('prefsContact') !== 'Y')><label class="form-check-label" for="contactN">Disabled</label></div>
-                    </div>
+                    <label for="prefsEmailFrom" class="col-md-4 col-form-label">Originating Email Address</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsEmailFrom" name="prefsEmailFrom" type="text" value="{{ $p('prefsEmailFrom') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Registration Confirmation Emails</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Contact Form</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailRegConfirm" value="1" id="regYes" @checked($p('prefsEmailRegConfirm') === '1')><label class="form-check-label" for="regYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsContact" value="Y" id="contactY" @checked($p('prefsContact') === 'Y')><label class="form-check-label" for="contactY">Enable Contact Form</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsEmailRegConfirm" value="0" id="regNo" @checked($p('prefsEmailRegConfirm') !== '1')><label class="form-check-label" for="regNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsContact" value="N" id="contactN" @checked($p('prefsContact') === 'N')><label class="form-check-label" for="contactN">Disable Contact Form - List Contacts</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsContact" value="X" id="contactX" @checked($p('prefsContact') === 'X')><label class="form-check-label" for="contactX">Disable Contact Form - Do Not List Contacts</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Contact Form CC</label>
+                    <label class="col-md-4 col-form-label">Contact Form CC</label>
+                    <div class="col-md-9">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsEmailCC" value="1" id="ccYes" @checked($p('prefsEmailCC') === '1')><label class="form-check-label" for="ccYes">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsEmailCC" value="0" id="ccNo" @checked($p('prefsEmailCC') !== '1')><label class="form-check-label" for="ccNo">No</label></div>
+                    </div>
+                </div>
                 <div class="mb-4 row">
-                    <label for="send-test-email" class="col-sm-4 col-form-label">SMTP Settings Test</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Registration Confirmation Emails</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailRegConfirm" value="1" id="regYes" @checked($p('prefsEmailRegConfirm') === '1')><label class="form-check-label" for="regYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailRegConfirm" value="0" id="regNo" @checked($p('prefsEmailRegConfirm') !== '1')><label class="form-check-label" for="regNo">No</label></div>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="send-test-email" class="col-md-4 col-form-label">SMTP Settings Test</label>
+                    <div class="col-md-9">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
                         {{-- Legacy sends the test email directly from
                              send_test_email.admin.php (fancybox iframe);
                              ported as SendTestEmailController. --}}
@@ -495,16 +501,15 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Email Preferences</button>
-                <button type="submit" class="btn btn-primary">Save Email Preferences</button>
             </form>
         @elseif ($go === 'payment')
             <form method="post" action="{{ url('/admin/site-preferences/payment') }}">
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label for="prefsCurrency" class="col-sm-4 col-form-label">Currency</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="prefsCurrency" name="prefsCurrency" style="width:auto;">
+                    <label for="prefsCurrency" class="col-md-4 col-form-label">Currency</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsCurrency" name="prefsCurrency" style="width:auto;">
                             @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc'] as $curr)
                                 <option value="{{ $curr }}" @selected($p('prefsCurrency') === $curr)>{{ $curr }}</option>
                             @endforeach
@@ -512,64 +517,65 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTransFee" class="col-sm-4 col-form-label">Checkout Fees Paid by Entrant</label>
-                    <div class="col-sm-9">
+                    <label for="prefsTransFee" class="col-md-4 col-form-label">Checkout Fees Paid by Entrant</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsTransFee" value="Y" id="tfY" @checked($p('prefsTransFee') === 'Y')><label class="form-check-label" for="tfY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsTransFee" value="Y" id="tfY" @checked($p('prefsTransFee') === 'Y')><label class="form-check-label" for="tfY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsTransFee" value="N" id="tfN" @checked($p('prefsTransFee') !== 'Y')><label class="form-check-label" for="tfN">Disable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsTransFee" value="N" id="tfN" @checked($p('prefsTransFee') !== 'Y')><label class="form-check-label" for="tfN">Disable</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Pay to Print?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Pay to Print?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPayToPrint" value="1" id="ptpYes" @checked($p('prefsPayToPrint') === '1')><label class="form-check-label" for="ptpYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPayToPrint" value="1" id="ptpYes" @checked($p('prefsPayToPrint') === '1')><label class="form-check-label" for="ptpYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPayToPrint" value="0" id="ptpNo" @checked($p('prefsPayToPrint') !== '1')><label class="form-check-label" for="ptpNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPayToPrint" value="0" id="ptpNo" @checked($p('prefsPayToPrint') !== '1')><label class="form-check-label" for="ptpNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Accept Cash?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Accept Cash?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCash" value="1" id="cashYes" @checked($p('prefsCash') === '1')><label class="form-check-label" for="cashYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCash" value="1" id="cashYes" @checked($p('prefsCash') === '1')><label class="form-check-label" for="cashYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCash" value="0" id="cashNo" @checked($p('prefsCash') !== '1')><label class="form-check-label" for="cashNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCash" value="0" id="cashNo" @checked($p('prefsCash') !== '1')><label class="form-check-label" for="cashNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Accept Checks?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Accept Checks?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCheck" value="1" id="checkYes" @checked($p('prefsCheck') === '1')><label class="form-check-label" for="checkYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCheck" value="1" id="checkYes" @checked($p('prefsCheck') === '1')><label class="form-check-label" for="checkYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsCheck" value="0" id="checkNo" @checked($p('prefsCheck') !== '1')><label class="form-check-label" for="checkNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCheck" value="0" id="checkNo" @checked($p('prefsCheck') !== '1')><label class="form-check-label" for="checkNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsCheckPayee" class="col-sm-4 col-form-label">Checks Payable To</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}"></div>
+                    <label for="prefsCheckPayee" class="col-md-4 col-form-label">Checks Payable To</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Accept PayPal?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Accept PayPal?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPaypal" value="1" id="ppYes" @checked($p('prefsPaypal') === '1')><label class="form-check-label" for="ppYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPaypal" value="1" id="ppYes" @checked($p('prefsPaypal') === '1')><label class="form-check-label" for="ppYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPaypal" value="0" id="ppNo" @checked($p('prefsPaypal') !== '1')><label class="form-check-label" for="ppNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPaypal" value="0" id="ppNo" @checked($p('prefsPaypal') !== '1')><label class="form-check-label" for="ppNo">No</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsPaypalAccount" class="col-sm-4 col-form-label">PayPal Account</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="prefsPaypalAccount" name="prefsPaypalAccount" type="text" value="{{ $p('prefsPaypalAccount') }}"></div>
+                    <label for="prefsPaypalAccount" class="col-md-4 col-form-label">PayPal Account</label>
+                    <div class="col-md-9"><input class="form-control" id="prefsPaypalAccount" name="prefsPaypalAccount" type="text" value="{{ $p('prefsPaypalAccount') }}"></div>
+                </div>
                 <div class="mb-4 row">
-                    <label for="prefsPaypalIPN" class="col-sm-4 col-form-label">PayPal IPN</label>
-                    <div class="col-sm-9">
+                    <label for="prefsPaypalIPN" class="col-md-4 col-form-label">PayPal IPN</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPaypalIPN" value="1" id="ipnY" @checked($p('prefsPaypalIPN') === '1')><label class="form-check-label" for="ipnY">Enable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPaypalIPN" value="1" id="ipnY" @checked($p('prefsPaypalIPN') === '1')><label class="form-check-label" for="ipnY">Enable</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsPaypalIPN" value="0" id="ipnN" @checked($p('prefsPaypalIPN') !== '1')><label class="form-check-label" for="ipnN">Disable</label></div>
+                            <input class="form-check-input" type="radio" name="prefsPaypalIPN" value="0" id="ipnN" @checked($p('prefsPaypalIPN') !== '1')><label class="form-check-label" for="ipnN">Disable</label></div>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
@@ -596,52 +602,52 @@
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label for="prefsShowBestBrewer" class="col-sm-4 col-form-label">Best Brewer Display? Up to which Position?</label>
-                    <div class="col-sm-8">
-                        <select class="select select-bordered" name="prefsShowBestBrewer" id="prefsShowBestBrewer">{!! $positionOptions($p('prefsShowBestBrewer')) !!}</select>
-                        <p class="help-block">Indicate whether you want to display the list of best brewers according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display.</p>
+                    <label for="prefsShowBestBrewer" class="col-md-4 col-form-label">Best Brewer Display? Up to which Position?</label>
+                    <div class="col-md-8">
+                        <select class="form-select" name="prefsShowBestBrewer" id="prefsShowBestBrewer">{!! $positionOptions($p('prefsShowBestBrewer')) !!}</select>
+                        <p class="form-text">Indicate whether you want to display the list of best brewers according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsBestBrewerTitle" class="col-sm-4 col-form-label">Best Brewer Title</label>
-                    <div class="col-sm-8">
-                        <input class="input input-bordered" id="prefsBestBrewerTitle" name="prefsBestBrewerTitle" type="text" value="{{ $p('prefsBestBrewerTitle') }}">
-                        <p class="help-block">Enter the title for the Best Brewer award (e.g., Heavy Medal, Ninkasi Award).</p>
+                    <label for="prefsBestBrewerTitle" class="col-md-4 col-form-label">Best Brewer Title</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsBestBrewerTitle" name="prefsBestBrewerTitle" type="text" value="{{ $p('prefsBestBrewerTitle') }}">
+                        <p class="form-text">Enter the title for the Best Brewer award (e.g., Heavy Medal, Ninkasi Award).</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsShowBestClub" class="col-sm-4 col-form-label">Best Club Display? Up to which Position?</label>
-                    <div class="col-sm-8">
-                        <select class="select select-bordered" name="prefsShowBestClub" id="prefsShowBestClub">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
-                        <p class="help-block">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
+                    <label for="prefsShowBestClub" class="col-md-4 col-form-label">Best Club Display? Up to which Position?</label>
+                    <div class="col-md-8">
+                        <select class="form-select" name="prefsShowBestClub" id="prefsShowBestClub">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
+                        <p class="form-text">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsBestClubTitle" class="col-sm-4 col-form-label">Best Club Title</label>
-                    <div class="col-sm-8">
-                        <input class="input input-bordered" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
-                        <p class="help-block">Enter the title for the Best Club award.</p>
+                    <label for="prefsBestClubTitle" class="col-md-4 col-form-label">Best Club Title</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
+                        <p class="form-text">Enter the title for the Best Club award.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Include BOS in Calculations?</label>
-                    <div class="col-sm-8">
+                    <label class="col-md-4 col-form-label">Include BOS in Calculations?</label>
+                    <div class="col-md-8">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsBestUseBOS" value="1" id="bbosYes" @checked($p('prefsBestUseBOS') === '1')><label class="form-check-label" for="bbosYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="1" id="bbosYes" @checked($p('prefsBestUseBOS') === '1')><label class="form-check-label" for="bbosYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsBestUseBOS" value="0" id="bbosNo" @checked($p('prefsBestUseBOS') !== '1')><label class="form-check-label" for="bbosNo">No</label></div>
-                        <p class="help-block">Indicate whether you wish to include any Best of Show (BOS) places in Best Brewer and Best Club calculations.</p>
+                            <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="0" id="bbosNo" @checked($p('prefsBestUseBOS') !== '1')><label class="form-check-label" for="bbosNo">No</label></div>
+                        <p class="form-text">Indicate whether you wish to include any Best of Show (BOS) places in Best Brewer and Best Club calculations.</p>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Use Circuit of America Calculations?</label>
-                    <div class="col-sm-8">
+                    <label class="col-md-4 col-form-label">Use Circuit of America Calculations?</label>
+                    <div class="col-md-8">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsScoringCOA" value="1" id="coaYes" @checked($p('prefsScoringCOA') === '1')><label class="form-check-label" for="coaYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsScoringCOA" value="1" id="coaYes" @checked($p('prefsScoringCOA') === '1')><label class="form-check-label" for="coaYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="prefsScoringCOA" value="0" id="coaNo" @checked($p('prefsScoringCOA') !== '1')><label class="form-check-label" for="coaNo">No</label></div>
-                        <p class="help-block">Indicate whether you wish use the Master Homebrewer Program's <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank">Circuit of America</a> scoring methodolgy for all Best Brewer and Best Club calculations. <strong>Indicating "Yes" here will override all other calculation preferences.</strong></p>
-                        <button type="button" class="btn btn-info btn-xs" data-open-modal="coa-info-modal">Circuit of America Calculations Info</button>
+                            <input class="form-check-input" type="radio" name="prefsScoringCOA" value="0" id="coaNo" @checked($p('prefsScoringCOA') !== '1')><label class="form-check-label" for="coaNo">No</label></div>
+                        <p class="form-text">Indicate whether you wish use the Master Homebrewer Program's <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank">Circuit of America</a> scoring methodolgy for all Best Brewer and Best Club calculations. <strong>Indicating "Yes" here will override all other calculation preferences.</strong></p>
+                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#coa-info-modal">Circuit of America Calculations Info</button>
                     </div>
                 </div>
                 <section id="non-COA-scoring" @if ($p('prefsScoringCOA') === '1') hidden @endif>
@@ -653,9 +659,9 @@
                         'prefsHMPts' => 'Points for Honorable Mention',
                     ] as $field => $label)
                         <div class="mb-4 row">
-                            <label for="{{ $field }}" class="col-sm-4 col-form-label">{{ $label }}</label>
-                            <div class="col-sm-8">
-                                <select class="select select-bordered" name="{{ $field }}" id="{{ $field }}">
+                            <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
+                            <div class="col-md-8">
+                                <select class="form-select" name="{{ $field }}" id="{{ $field }}">
                                     @foreach (range(0, 25) as $i)
                                         <option value="{{ $i }}" @selected((string) $i === (string) $p($field))>{{ $i }}</option>
                                     @endforeach
@@ -666,9 +672,9 @@
                 </section>
                 @foreach (range(1, 6) as $i)
                     <div class="mb-4 row">
-                        <label for="prefsTieBreakRule{{ $i }}" class="col-sm-4 col-form-label">Tie Break Rule #{{ $i }}</label>
-                        <div class="col-sm-8">
-                            <select class="select select-bordered" name="prefsTieBreakRule{{ $i }}" id="prefsTieBreakRule{{ $i }}">
+                        <label for="prefsTieBreakRule{{ $i }}" class="col-md-4 col-form-label">Tie Break Rule #{{ $i }}</label>
+                        <div class="col-md-8">
+                            <select class="form-select" name="prefsTieBreakRule{{ $i }}" id="prefsTieBreakRule{{ $i }}">
                                 @foreach ($tieBreakRules as $rule => $label)
                                     <option value="{{ $rule }}" @selected((string) $p('prefsTieBreakRule'.$i) === (string) $rule)>{{ $label }}</option>
                                 @endforeach
@@ -678,15 +684,22 @@
                 @endforeach
                 <button type="submit" class="btn btn-primary">Save Best Brewer/Club Preferences</button>
             </form>
-            <dialog class="modal" id="coa-info-modal">
-                <div class="modal-box">
-                    <h3 class="font-bold">Circuit of America Scoring Info</h3>
-                    <p>Use the Master Homebrewer Program's Circuit of America scoring methodology to determine Best Brewer and Best Club results.</p>
-                    <div class="modal-action">
-                        <form method="dialog"><button class="btn">Close</button></form>
+            <div class="modal fade" id="coa-info-modal" tabindex="-1" aria-labelledby="coa-info-modal-label" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="coa-info-modal-label">Circuit of America Scoring Info</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Use the Master Homebrewer Program's Circuit of America scoring methodology to determine Best Brewer and Best Club results.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
                     </div>
                 </div>
-            </dialog>
+            </div>
             <script>
                 document.addEventListener('DOMContentLoaded', () => {
                     const sync = () => {

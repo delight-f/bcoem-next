@@ -33,104 +33,100 @@
     {{-- Legacy admin-element control row (participants.admin.php:543-720). --}}
     <div class="bcoem-admin-element hidden-print">
         <div class="row">
-            <div class="col-lg-10 col-md-8 col-sm-12 col-xs-12">
+            <div class="col-12 col-lg-8 col-xl-10">
                 @if ($filter !== 'default')
                     <div class="btn-group" role="group">
-                        <a class="btn btn-default" href="{{ url('/backoffice/participants') }}"><span class="fa fa-arrow-circle-left"></span> All Participants</a>
+                        <a class="btn btn-secondary" href="{{ url('/backoffice/participants') }}"><span class="fa fa-arrow-circle-left"></span> All Participants</a>
                     </div>
                 @endif
 
                 {{-- View... dropdown --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-eye"></span> View...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         @if ($filter !== 'default')
-                            <li class="small"><a href="{{ url('/backoffice/participants') }}">All Participants</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/backoffice/participants') }}">All Participants</a></li>
                         @endif
                         @if ($filter !== 'judges')
-                            <li class="small"><a href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a></li>
                         @endif
                         @if ($filter !== 'stewards')
-                            <li class="small"><a href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a></li>
                         @endif
                         @if ($filter !== 'with_entries')
-                            <li class="small"><a href="{{ url('/backoffice/participants?filter=with_entries') }}">Participants with Entries</a></li>
+                            <li><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=with_entries') }}">Participants with Entries</a></li>
                         @endif
                     </ul>
                 </div>
 
                 {{-- Register... dropdown --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-plus-circle"></span> Register...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li class="small"><a href="{{ url('/register/entrant') }}">A Participant</a></li>
-                        <li class="small"><a href="{{ url('/register/judge') }}">A Judge (Standard)</a></li>
-                        <li class="small"><a href="{{ url('/register/steward') }}">A Steward (Standard)</a></li>
-                        <li class="small"><a href="{{ url('/register/judge') }}?view=quick">A Judge (Quick)</a></li>
-                        <li class="small"><a href="{{ url('/register/steward') }}?view=quick">A Steward (Quick)</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/register/entrant') }}">A Participant</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/register/judge') }}">A Judge (Standard)</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/register/steward') }}">A Steward (Standard)</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/register/judge') }}?view=quick">A Judge (Quick)</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/register/steward') }}?view=quick">A Steward (Quick)</a></li>
                     </ul>
                 </div>
 
                 {{-- Assign/Unassign... dropdown --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-check-circle"></span> Assign/Unassign...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Judges</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">BOS Judges</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Stewards</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff">Staff</a></li>
-                        <li class="small"><a href="{{ url('/admin/judging/tables') }}?action=assign">Judges/Stewards to Tables</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Judges</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">BOS Judges</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Stewards</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff">Staff</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign">Judges/Stewards to Tables</a></li>
                     </ul>
                 </div>
 
                 {{-- Print Current View... dropdown (TODO: legacy output route). --}}
-                <div class="btn-group hidden-xs hidden-sm hidden-md" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div class="btn-group d-none d-xl-block" role="group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-print"></span> Print Current View...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         @if ($filter === 'default')
-                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?psort=brewer_name') }}">By Last Name</a></li>
+                            <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/participant_summary?psort=brewer_name') }}">By Last Name</a></li>
                             @if (! $proEdition)
-                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?psort=club') }}">By Club</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/participant_summary?psort=club') }}">By Club</a></li>
                             @else
-                                <li class="small"><a class="hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&psort=organization') }}">By Organization Name</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&psort=organization') }}">By Organization Name</a></li>
                             @endif
                         @elseif ($filter === 'with_entries')
-                            <li class="small"><a class="hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&filter=with_entries') }}">{{ $proEdition ? 'By Organization Name' : 'By Entrant Last Name' }}</a></li>
+                            <li><a class="dropdown-item hide-loader" href="{{ url('/backoffice/participants?action=print&view=default&filter=with_entries') }}">{{ $proEdition ? 'By Organization Name' : 'By Entrant Last Name' }}</a></li>
                         @elseif ($filter === 'judges')
-                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_id') }}">By Judge ID</a></li>
-                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_rank') }}">By Judge Rank</a></li>
+                            <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_id') }}">By Judge ID</a></li>
+                            <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/participant_summary?filter=judges&psort=judge_rank') }}">By Judge Rank</a></li>
                         @elseif ($filter === 'stewards')
-                            <li class="small"><a class="hide-loader" href="{{ url('/admin/output/participant_summary?filter=stewards&psort=brewer_name') }}">By Last Name</a></li>
+                            <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/participant_summary?filter=stewards&psort=brewer_name') }}">By Last Name</a></li>
                         @endif
                     </ul>
                 </div>
 
                 @if ($allEmails !== '')
                     {{-- All <subtitle> Email Addresses modal (participants.admin.php:660). --}}
-                    <div class="btn-group hidden-xs hidden-sm" role="group">
-                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#allEmailModal">
+                    <div class="btn-group d-none d-lg-block" role="group">
+                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#allEmailModal">
                             All {{ ucwords($subtitle) }} Email Addresses
                         </button>
                     </div>
                 @endif
             </div>
 
-            <div class="col-lg-2 col-md-4 col-sm-12 col-xs-12">
-                <div class="btn-group pull-right hidden-xs" role="group">
+            <div class="col-12 col-lg-4 col-xl-2">
+                <div class="btn-group float-end d-none d-md-block" role="group">
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#participantStatusModal">
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#participantStatusModal">
                             Participant Status
                         </button>
                     </div>
@@ -150,12 +146,12 @@
             $entriesIn = $judgeEntries[$p->uid] ?? collect();
         @endphp
         @if (($hasJudge || $hasSteward) && $filter !== 'judges' && $filter !== 'stewards')
-            <div class="modal fade" id="assignment-modal-{{ $p->uid }}" tabindex="-1" role="dialog" aria-labelledby="assignment-modal-label-{{ $p->uid }}">
-                <div class="modal-dialog modal-lg" role="document">
+            <div class="modal fade" id="assignment-modal-{{ $p->uid }}" tabindex="-1" role="dialog" aria-labelledby="assignment-modal-label-{{ $p->uid }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bcoem-admin-modal">
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                             <h4 class="modal-title" id="assignment-modal-label-{{ $p->uid }}">Assignment(s) for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}</h4>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
                             @if ($hasJudge)
@@ -177,7 +173,7 @@
                             @endif
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>
@@ -187,19 +183,19 @@
 
     @if ($allEmails !== '')
         {{-- All email addresses modal. --}}
-        <div class="modal fade" id="allEmailModal" tabindex="-1" role="dialog" aria-labelledby="allEmailModalLabel">
-            <div class="modal-dialog" role="document">
+        <div class="modal fade" id="allEmailModal" tabindex="-1" role="dialog" aria-labelledby="allEmailModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header bcoem-admin-modal">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" id="allEmailModalLabel">Participant Email Addresses</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>Copy and paste the list below into your favorite email program.</p>
                         <textarea class="form-control" rows="8">{{ ltrim($allEmails, ' ') }}</textarea>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -207,29 +203,29 @@
     @endif
 
     {{-- Participant Status modal. --}}
-    <div class="modal fade" id="participantStatusModal" tabindex="-1" role="dialog" aria-labelledby="participantStatusModalLabel">
-        <div class="modal-dialog modal-sm" role="document">
+    <div class="modal fade" id="participantStatusModal" tabindex="-1" role="dialog" aria-labelledby="participantStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header bcoem-admin-modal">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="participantStatusModalLabel">Participant Status</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="bcoem-sidebar-panel">
-                        <strong class="text-info">Participants</strong><span class="pull-right">{{ $statusCounts['participants'] }}</span>
+                    <div class="d-flex justify-content-between gap-2 mb-2">
+                        <strong class="text-info">Participants</strong><span>{{ $statusCounts['participants'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
-                        <strong class="text-info">Participants with Entries</strong><span class="pull-right">{{ $statusCounts['withEntries'] }}</span>
+                    <div class="d-flex justify-content-between gap-2 mb-2">
+                        <strong class="text-info">Participants with Entries</strong><span>{{ $statusCounts['withEntries'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
-                        <strong class="text-info">Available Judges</strong><span class="pull-right">{{ $statusCounts['judges'] }}</span>
+                    <div class="d-flex justify-content-between gap-2 mb-2">
+                        <strong class="text-info">Available Judges</strong><span>{{ $statusCounts['judges'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
-                        <strong class="text-info">Available Stewards</strong><span class="pull-right">{{ $statusCounts['stewards'] }}</span>
+                    <div class="d-flex justify-content-between gap-2 mb-2">
+                        <strong class="text-info">Available Stewards</strong><span>{{ $statusCounts['stewards'] }}</span>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -292,17 +288,17 @@
                         <tr>
                             <td>{{ $displayName }}</td>
                             <td>
-                                <a href="{{ url('/backoffice/entries?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries.">Entry Numbers</a>: {{ $entryNumbers[$p->uid] ?? '' }}<br>Judging Numbers: {{ $judgingNumbers[$p->uid] ?? '' }}
+                                <a href="{{ url('/backoffice/entries?bid='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries.">Entry Numbers</a>: {{ $entryNumbers[$p->uid] ?? '' }}<br>Judging Numbers: {{ $judgingNumbers[$p->uid] ?? '' }}
                             </td>
                             <td class="print:hidden">
                                 {{-- Legacy with_entries row (participants.admin.php): full action
                                      icon set — edit account, delete account, edit user level,
                                      add entry, list entries. --}}
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account information."><span class="fa fa-lg fa-pencil"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Delete {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account." data-confirm="Are you sure you want to delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone."><span class="fa fa-lg fa-trash-o"></span></a></span>
-                                <span style="margin-right: .4em"><a href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Change {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}"><span class="fa fa-lg fa-beer"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account information."><span class="fa fa-lg fa-pencil"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account." data-confirm="Are you sure you want to delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone."><span class="fa fa-lg fa-trash-o"></span></a></span>
+                                <span style="margin-right: .4em"><a href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Add an entry for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}"><span class="fa fa-lg fa-beer"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/entries?bid='.$p->uid) }}" title="List {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s entries."><span class="fa fa-lg fa-list"></span></a></span>
                             </td>
                         </tr>
@@ -319,9 +315,9 @@
                             <td>
                                 {{ $levelLabel }}
                                 @if ($level === 0)
-                                    <i class="fa fa-sm fa-eye" data-toggle="tooltip" data-placement="top" title="{{ $displayName }} can view Judging Numbers - edit their user level to change."></i>
+                                    <i class="fa fa-sm fa-eye" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $displayName }} can view Judging Numbers - edit their user level to change."></i>
                                 @else
-                                    <i class="fa fa-sm fa-eye-slash" data-toggle="tooltip" data-placement="top" title="{{ $displayName }} CANNOT view Judging Numbers - edit their user level to change."></i>
+                                    <i class="fa fa-sm fa-eye-slash" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $displayName }} CANNOT view Judging Numbers - edit their user level to change."></i>
                                 @endif
                             </td>
                             @if ($filter === 'judges' || $filter === 'stewards')
@@ -344,7 +340,7 @@
                             <td>
                                 @if ($assignment !== '')
                                     @if (($hasJudge || $hasSteward) && $filter !== 'judges' && $filter !== 'stewards')
-                                        <button type="button" class="btn btn-link" style="margin:0; padding:0;" data-toggle="modal" data-target="#assignment-modal-{{ $p->uid }}">{{ ucwords($assignment) }}</button>
+                                        <button type="button" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="modal" data-bs-target="#assignment-modal-{{ $p->uid }}">{{ ucwords($assignment) }}</button>
                                     @else
                                         {{ ucwords($assignment) }}
                                     @endif
@@ -359,9 +355,9 @@
                                     @foreach ($tableAssignments[$p->uid.'|'.($filter === 'judges' ? 'J' : 'S')] ?? [] as $i => $t)
                                         @if ($i !== 0),&nbsp;@endif
                                         @if ($filter === 'judges')
-                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges&id={{ $t['id'] }}" data-toggle="tooltip" title="Assign/Unassign Judges to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges&id={{ $t['id'] }}" data-bs-toggle="tooltip" title="Assign/Unassign Judges to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
                                         @else
-                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards&id={{ $t['id'] }}" data-toggle="tooltip" title="Assign/Unassign Stewards to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards&id={{ $t['id'] }}" data-bs-toggle="tooltip" title="Assign/Unassign Stewards to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
                                         @endif
                                     @endforeach
                                 </td>
@@ -378,13 +374,13 @@
                                 @endif
                             </td>
                             <td class="print:hidden">
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-toggle="tooltip" data-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Add an entry for {{ $displayName }}"><span class="fa fa-lg fa-beer"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
                                 @if ($viewerLevel === 0)
                                     @if ($p->brewerEmail !== auth()->user()?->user_name)
-                                        <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants?bid='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
+                                        <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants?bid='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
                                     @else
-                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-lock text-muted" data-toggle="tooltip" data-placement="top" title="You cannot change your own user level, {{ auth()->user()?->user_name }}."></span></span>
+                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-lock text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="You cannot change your own user level, {{ auth()->user()?->user_name }}."></span></span>
                                     @endif
                                     @if ($p->brewerEmail !== auth()->user()?->user_name)
                                         <span style="margin-right: .4em">
@@ -395,16 +391,16 @@
                                             </form>
                                         </span>
                                     @else
-                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-trash-o text-muted" data-toggle="tooltip" data-placement="top" title="Silly, you cannot delete yourself, {{ auth()->user()?->user_name }}!"></span></span>
+                                        <span style="margin-right: .4em"><span class="fa fa-lg fa-trash-o text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Silly, you cannot delete yourself, {{ auth()->user()?->user_name }}!"></span></span>
                                     @endif
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/password') }}" data-toggle="tooltip" data-placement="top" title="Change {{ $displayName }}'s password"><span class="fa fa-lg fa-key"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/password') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s password"><span class="fa fa-lg fa-key"></span></a></span>
                                 @endif
-                                <span style="margin-right: .4em"><a class="hide-loader" href="mailto:{{ $p->brewerEmail }}" data-toggle="tooltip" data-placement="top" title="Email {{ $displayName }} at {{ $p->brewerEmail }}"><span class="fa fa-lg fa-envelope"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="#" data-toggle="tooltip" data-placement="top" title="{{ $displayName }}'s phone number: {{ $p->brewerPhone1 }}"><span class="fa fa-lg fa-phone"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="mailto:{{ $p->brewerEmail }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Email {{ $displayName }} at {{ $p->brewerEmail }}"><span class="fa fa-lg fa-envelope"></span></a></span>
+                                <span style="margin-right: .4em"><a class="hide-loader" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $displayName }}'s phone number: {{ $p->brewerPhone1 }}"><span class="fa fa-lg fa-phone"></span></a></span>
                                 @if (str_contains((string) ($tableAssignments[$p->uid.'|J'] ?? ''), 'Judge') || ($staffJudge[$p->uid] ?? false))
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=5160') }}" data-toggle="tooltip" data-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - Letter (Avery 5160)"><span class="fa fa-lg fa-file"></span></a></span>
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=3422') }}" data-toggle="tooltip" data-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - A4 (Avery 3422)"><span class="fa fa-lg fa-file-text"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=5160') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - Letter (Avery 5160)"><span class="fa fa-lg fa-file"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=3422') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - A4 (Avery 3422)"><span class="fa fa-lg fa-file-text"></span></a></span>
                                 @endif
                             </td>
                         </tr>

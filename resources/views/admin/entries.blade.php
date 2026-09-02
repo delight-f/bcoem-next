@@ -35,7 +35,7 @@
             <div class="col-md-12">
                 @if ($scoped)
                     <div class="btn-group" role="group" aria-label="allEntriesNav">
-                        <a class="btn btn-default" href="{{ url('/backoffice/entries') }}"><span class="fa fa-arrow-circle-left"></span>
+                        <a class="btn btn-secondary" href="{{ url('/backoffice/entries') }}"><span class="fa fa-arrow-circle-left"></span>
                                                         @if ($filter !== 'default')
                                 All Styles
                             @endif
@@ -52,19 +52,18 @@
                 @if ($entries->isNotEmpty())
                     {{-- View Entries Dropdown --}}
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <span class="fa fa-eye"></span> View...
-                            <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu">
                             @if ($view !== 'default')
-                                <li class="small"><a href="{{ url('/backoffice/entries') }}">All Entries</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/backoffice/entries') }}">All Entries</a></li>
                             @endif
                             @if ($view !== 'paid')
-                                <li class="small"><a href="{{ url('/backoffice/entries?view=paid') }}">Paid Entries</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/backoffice/entries?view=paid') }}">Paid Entries</a></li>
                             @endif
                             @if ($view !== 'unpaid' && $entryStatus['paidCount'] < $entryStatus['totalCount'])
-                                <li class="small"><a href="{{ url('/backoffice/entries?view=unpaid') }}">Unpaid Entries</a></li>
+                                <li><a class="dropdown-item" href="{{ url('/backoffice/entries?view=unpaid') }}">Unpaid Entries</a></li>
                             @endif
                         </ul>
                     </div>
@@ -72,12 +71,12 @@
 
                 {{-- Add an Entry For... participant jump (legacy participant_choose). --}}
                 <div class="btn-group" role="group" aria-label="chooseParticipants">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Add an Entry For... <span class="caret"></span>
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fa fa-plus-circle"></span> Add an Entry For...
                     </button>
                     <ul class="dropdown-menu" role="listbox" aria-label="Choose participant">
                         @foreach ($participants as $p)
-                            <li class="small">
+                            <li>
                                 <a class="dropdown-item" href="{{ '/backoffice/entries?bid='.$p->uid }}">{{ $p->brewerLastName }}, {{ $p->brewerFirstName }}</a>
                             </li>
                         @endforeach
@@ -85,37 +84,35 @@
                 </div>
 
                 @if ($entries->isNotEmpty())
-                    <div class="btn-group hidden-xs hidden-sm" role="group" aria-label="printCurrent">
+                    <div class="btn-group d-none d-lg-block" role="group" aria-label="printCurrent">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="fa fa-print"></span> Print Current View...
-                                <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu">
                                 {{-- TODO: legacy output — includes/output.inc.php?section=admin&go=entries&action=print&psort=* --}}
-                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_number') }}">By Entry Number</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_number') }}">By Entry Number</a></li>
                                 @if ($obfuscate)
-                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=judging_number') }}">By Judging Number</a></li>
+                                    <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?psort=judging_number') }}">By Judging Number</a></li>
                                 @endif
-                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=category') }}">By Style</a></li>
-                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=brewer_name') }}">{{ $proEdition ? 'By Organization Name' : 'By Brewer Last Name' }}</a></li>
-                                <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_name') }}">By Entry Name</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?psort=category') }}">By Style</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?psort=brewer_name') }}">{{ $proEdition ? 'By Organization Name' : 'By Brewer Last Name' }}</a></li>
+                                <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?psort=entry_name') }}">By Entry Name</a></li>
                             </ul>
                         </div>
                         @if ($entryStatus['totalCount'] > $limit && $filter === 'default')
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <span class="fa fa-print"></span> Print All...
-                                    <span class="caret"></span>
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_number') }}">By Entry Number</a></li>
+                                    <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_number') }}">By Entry Number</a></li>
                                     @if ($obfuscate)
-                                        <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=judging_number') }}">By Judging Number</a></li>
+                                        <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=judging_number') }}">By Judging Number</a></li>
                                     @endif
-                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=category') }}">By Style</a></li>
-                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=brewer_name') }}">By Brewer Last Name</a></li>
-                                    <li class="small"><a class="hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_name') }}">By Entry Name</a></li>
+                                    <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=category') }}">By Style</a></li>
+                                    <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=brewer_name') }}">By Brewer Last Name</a></li>
+                                    <li><a class="dropdown-item hide-loader" href="{{ url('/admin/output/entries_print?view=all&psort=entry_name') }}">By Entry Name</a></li>
                                 </ul>
                             </div>
                         @endif
@@ -124,8 +121,8 @@
 
                 {{-- Admin Actions dropdown — legacy process.inc.php mark-all actions. --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <span class="fa fa-check-circle"></span> Admin Actions <span class="caret"></span>
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fa fa-check-circle"></span> Admin Actions
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ([
@@ -135,7 +132,7 @@
                             'not-received' => ['Un-Mark All as Received', 'Are you sure? This will mark ALL entries as NOT received and could be a large pain to undo.', 35],
                             'confirmed' => ['Confirm All Entries', 'Are you sure? This will mark ALL entries as confirmed and could be a large pain to undo.', 22],
                         ] as $action => [$label, $confirm, $msg])
-                            <li class="small">
+                            <li>
                                 <form method="post" action="{{ route('backoffice.entries.mark_all') }}"
                                       onsubmit="return confirm('{{ $confirm }}');">
                                     @csrf
@@ -149,16 +146,16 @@
 
                 @foreach ([['allEmailModal', 'all', 'All Participants with Entries Email Addresses', 'to contact all participants with entries'], ['paidEmailModal', 'paid', 'All Participants with Paid Entries Email Addresses', 'to contact participants with <strong>PAID</strong> entries'], ['unpaidEmailModal', 'unpaid', 'All Participants with Unpaid Entries Email Addresses', 'to contact participants with <strong>UNPAID</strong> entries']] as [$modalId, $key, $title, $purpose])
                     @if ($emailLists[$key] !== '')
-                        <div class="btn-group hidden-xs hidden-sm" role="group">
-                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#{{ $modalId }}">{{ $title }}</button>
+                        <div class="btn-group d-none d-lg-block" role="group">
+                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}">{{ $title }}</button>
                         </div>
                     @endif
                 @endforeach
 
                 @if ($entries->isNotEmpty())
-                    <div class="btn-group pull-right hidden-xs" role="group">
+                    <div class="btn-group float-end d-none d-md-block" role="group">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#entryStatusModal">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#entryStatusModal">
                                 {{ $statusLabel }} Entry Status
                             </button>
                         </div>
@@ -169,19 +166,19 @@
 
         @foreach ([['allEmailModal', 'all', 'All Participants with Entries Email Addresses', 'to contact all participants with entries'], ['paidEmailModal', 'paid', 'All Participants with Paid Entries Email Addresses', 'to contact participants with <strong>PAID</strong> entries'], ['unpaidEmailModal', 'unpaid', 'All Participants with Unpaid Entries Email Addresses', 'to contact participants with <strong>UNPAID</strong> entries']] as [$modalId, $key, $title, $purpose])
             @if ($emailLists[$key] !== '')
-                <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}Label">
-                    <div class="modal-dialog" role="document">
+                <div class="modal fade" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}Label" aria-hidden="true">
+                    <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header bcoem-admin-modal">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                 <h4 class="modal-title" id="{{ $modalId }}Label">{{ $title }}</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <p>Copy and paste the list below into your favorite email program {!! $purpose !!}.</p>
                                 <textarea class="form-control" rows="8">{{ $emailLists[$key] }}</textarea>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -190,47 +187,47 @@
         @endforeach
 
         {{-- Entry Status modal (entries.admin.php:936). --}}
-        <div class="modal fade" id="entryStatusModal" tabindex="-1" role="dialog" aria-labelledby="entryStatusModalLabel">
-            <div class="modal-dialog modal-sm" role="document">
+        <div class="modal fade" id="entryStatusModal" tabindex="-1" role="dialog" aria-labelledby="entryStatusModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-header bcoem-admin-modal">
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" id="entryStatusModalLabel">{{ $statusLabel }} Entry Status</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="bcoem-sidebar-panel">
-                            <strong class="text-info">Confirmed Entries</strong><span class="pull-right">{{ $entryStatus['confirmed'] }}</span>
+                        <div class="d-flex justify-content-between gap-2 mb-2">
+                            <strong class="text-info">Confirmed Entries</strong><span>{{ $entryStatus['confirmed'] }}</span>
                         </div>
-                        <div class="bcoem-sidebar-panel">
-                            <strong class="text-info">Unconfirmed Entries</strong><span class="pull-right">{{ $entryStatus['unconfirmed'] }}</span>
+                        <div class="d-flex justify-content-between gap-2 mb-2">
+                            <strong class="text-info">Unconfirmed Entries</strong><span>{{ $entryStatus['unconfirmed'] }}</span>
                         </div>
-                        <div class="bcoem-sidebar-panel">
-                            <strong class="text-info">Received Entries</strong><span class="pull-right">{{ $entryStatus['received'] }}</span>
+                        <div class="d-flex justify-content-between gap-2 mb-2">
+                            <strong class="text-info">Received Entries</strong><span>{{ $entryStatus['received'] }}</span>
                         </div>
                         @if (isset($entryStatus['paidConfirmed']))
-                            <div class="bcoem-sidebar-panel">
-                                <strong class="text-info">Paid Confirmed Entries</strong><span class="pull-right">{{ $entryStatus['paidConfirmed'] }}</span>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <strong class="text-info">Paid Confirmed Entries</strong><span>{{ $entryStatus['paidConfirmed'] }}</span>
                             </div>
-                            <div class="bcoem-sidebar-panel">
-                                <strong class="text-info">Unpaid Confirmed Entries</strong><span class="pull-right">{{ $entryStatus['unpaidConfirmed'] }}</span>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <strong class="text-info">Unpaid Confirmed Entries</strong><span>{{ $entryStatus['unpaidConfirmed'] }}</span>
                             </div>
-                            <div class="bcoem-sidebar-panel">
-                                <strong class="text-info">Total Fees</strong><span class="pull-right">{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFees'], 2) }}</span>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <strong class="text-info">Total Fees</strong><span>{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFees'], 2) }}</span>
                             </div>
                         @endif
                         @if (isset($entryStatus['totalFeesPaid']))
-                            <div class="bcoem-sidebar-panel">
-                                <strong class="text-info">Total Fees Paid{{ $scoped ? ' in this Category' : '' }}</strong><span class="pull-right">{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFeesPaid'], 2) }}</span>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <strong class="text-info">Total Fees Paid{{ $scoped ? ' in this Category' : '' }}</strong><span>{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFeesPaid'], 2) }}</span>
                             </div>
                         @endif
                         @if (isset($entryStatus['totalFeesUnpaid']))
-                            <div class="bcoem-sidebar-panel">
-                                <strong class="text-info">Total Fees Unpaid{{ $scoped ? ' in this Category' : '' }}</strong><span class="pull-right">{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFeesUnpaid'], 2) }}</span>
+                            <div class="d-flex justify-content-between gap-2 mb-2">
+                                <strong class="text-info">Total Fees Unpaid{{ $scoped ? ' in this Category' : '' }}</strong><span>{{ $ctx->currencySymbol() }}{{ number_format($entryStatus['totalFeesUnpaid'], 2) }}</span>
                             </div>
                         @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -244,25 +241,25 @@
                     <tr>
                         <th nowrap>Entry</th>
                         <th nowrap>Judging
-                            @if ($obfuscate)<a href="#" tabindex="0" role="button" data-toggle="popover" data-trigger="hover" data-placement="auto top" data-container="body" title="Judging Numbers" data-content="Judging numbers are random six-digit numbers that are automatically assigned by the system. You can override each judging number when scanning in barcodes, QR Codes, or by entering it in the field provided. Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use."><span class="fa fa-question-circle"></span></a>@endif
+                            @if ($obfuscate)<a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" title="Judging Numbers" data-bs-content="Judging numbers are random six-digit numbers that are automatically assigned by the system. You can override each judging number when scanning in barcodes, QR Codes, or by entering it in the field provided. Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use."><span class="fa fa-question-circle"></span></a>@endif
                         </th>
-                        <th class="hidden-xs hidden-sm hidden-md">Name</th>
+                        <th class="d-none d-xl-block">Name</th>
                         <th>Style</th>
-                        <th class="hidden-xs hidden-sm">{{ $proEdition ? 'Organization' : 'Brewer' }}</th>
+                        <th class="d-none d-lg-block">{{ $proEdition ? 'Organization' : 'Brewer' }}</th>
                         @if (! $proEdition)
-                            <th class="hidden-xs hidden-sm hidden-md hidden-print">Club</th>
+                            <th class="d-none d-xl-block hidden-print">Club</th>
                         @endif
-                        <th class="hidden-xs hidden-sm hidden-md hidden-print">Updated</th>
-                        <th class="hidden-xs hidden-sm" width="3%">P<span class="hidden-md">aid?</span></th>
-                        <th class="hidden-xs hidden-sm" width="3%">R<span class="hidden-md">ec'd?</span></th>
-                        <th class="hidden-xs hidden-sm hidden-md">Admin Notes
-                            <a href="#" tabindex="0" role="button" data-toggle="popover" data-trigger="hover" data-placement="auto top" data-container="body" data-html="true" title="Admin Notes" data-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="hidden-xs hidden-sm hidden-md hidden-print fa fa-question-circle"></span></a>
+                        <th class="d-none d-xl-block hidden-print">Updated</th>
+                        <th class="d-none d-lg-block" width="3%">P<span class="d-none d-xl-block">aid?</span></th>
+                        <th class="d-none d-lg-block" width="3%">R<span class="d-none d-xl-block">ec'd?</span></th>
+                        <th class="d-none d-xl-block">Admin Notes
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Admin Notes" data-bs-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="d-none d-xl-block hidden-print fa fa-question-circle"></span></a>
                         </th>
-                        <th class="hidden-xs hidden-sm hidden-md">Staff Notes
-                            <a href="#" tabindex="0" role="button" data-toggle="popover" data-trigger="hover" data-placement="auto top" data-container="body" data-html="true" title="Staff Notes" data-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="hidden-xs hidden-sm hidden-md hidden-print fa fa-question-circle"></span></a>
+                        <th class="d-none d-xl-block">Staff Notes
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Staff Notes" data-bs-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="d-none d-xl-block hidden-print fa fa-question-circle"></span></a>
                         </th>
-                        <th class="hidden-xs hidden-sm">Loc<span class="hidden-md">/Box</span></th>
-                        <th class="hidden-xs hidden-sm hidden-print">Actions</th>
+                        <th class="d-none d-lg-block">Loc<span class="d-none d-xl-block">/Box</span></th>
+                        <th class="d-none d-lg-block hidden-print">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -301,9 +298,9 @@
                             <input type="hidden" name="ids[]" value="{{ $entryId }}">
                             <td nowrap>{{ $entryNumber }}</td>
                             <td nowrap>
-                                <input class="form-control input-sm hidden-print" name="brewJudgingNumber{{ $entry->id }}" type="text" pattern=".{6,}" title="Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use." size="8" maxlength="6" value="{{ $judgingNumber }}">
+                                <input class="form-control form-control-sm hidden-print" name="brewJudgingNumber{{ $entry->id }}" type="text" pattern=".{6,}" title="Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use." size="8" maxlength="6" value="{{ $judgingNumber }}">
                             </td>
-                            <td class="hidden-xs hidden-sm hidden-md">
+                            <td class="d-none d-xl-block">
                                 {{ $entryName }}
                                 @if ($allergens)
                                     <p><strong class="text-danger small">Possible Allergens: {{ $entry->brewPossAllergens }}</strong></p>
@@ -317,48 +314,48 @@
                                     <p class="small"><strong>Co-Brewer:</strong> {{ $entry->brewCoBrewer }}</p>
                                 @endif
                                 @if ((int) $entry->brewConfirmed !== 1)
-                                    <p><span class="label label-danger">UNCONFIRMED</span></p>
+                                    <p><span class="badge text-bg-danger">UNCONFIRMED</span></p>
                                 @endif
                             </td>
                             <td nowrap>
-                                <a href="{{ url('/backoffice/entries?filter='.$entry->brewCategorySort) }}" data-toggle="tooltip" data-placement="top" title="See only the category {{ ltrim($entry->brewCategorySort, '0') }} entries">{{ $styleLabel }}: {{ $entry->brewStyle }}</a>
+                                <a href="{{ url('/backoffice/entries?filter='.$entry->brewCategorySort) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="See only the category {{ ltrim($entry->brewCategorySort, '0') }} entries">{{ $styleLabel }}: {{ $entry->brewStyle }}</a>
                             </td>
-                            <td class="hidden-xs hidden-sm">{{ $name }}</td>
+                            <td class="d-none d-lg-block">{{ $name }}</td>
                             @if (! $proEdition)
-                                <td class="hidden-xs hidden-sm hidden-md hidden-print">{{ $entry->brewerClubs }}</td>
+                                <td class="d-none d-xl-block hidden-print">{{ $entry->brewerClubs }}</td>
                             @endif
-                            <td class="hidden-xs hidden-sm hidden-md hidden-print">
+                            <td class="d-none d-xl-block hidden-print">
                                 {{ \App\Http\Controllers\Admin\EntriesController::updated($ctx, $entry->brewUpdated) }}
                             </td>
-                            <td class="hidden-xs hidden-sm">
-                                <div class="checkbox"><label>
-                                    <input type="checkbox" value="1" name="brewPaid{{ $entry->id }}" @if ((int) $entry->brewPaid === 1) checked @endif>
-                                </label></div>
+                            <td class="d-none d-lg-block">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" name="brewPaid{{ $entry->id }}" @if ((int) $entry->brewPaid === 1) checked @endif>
+                                </div>
                             </td>
-                            <td class="hidden-xs hidden-sm">
-                                <div class="checkbox"><label>
-                                    <input type="checkbox" value="1" name="brewReceived{{ $entry->id }}" @if ((int) $entry->brewReceived === 1) checked @endif>
-                                </label></div>
+                            <td class="d-none d-lg-block">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="1" name="brewReceived{{ $entry->id }}" @if ((int) $entry->brewReceived === 1) checked @endif>
+                                </div>
                             </td>
-                            <td class="hidden-xs hidden-sm hidden-md">
-                                <textarea class="form-control input-sm" name="brewAdminNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewAdminNotes }}</textarea>
+                            <td class="d-none d-xl-block">
+                                <textarea class="form-control form-control-sm" name="brewAdminNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewAdminNotes }}</textarea>
                             </td>
-                            <td class="hidden-xs hidden-sm hidden-md">
-                                <textarea class="form-control input-sm" name="brewStaffNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewStaffNotes }}</textarea>
+                            <td class="d-none d-xl-block">
+                                <textarea class="form-control form-control-sm" name="brewStaffNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewStaffNotes }}</textarea>
                             </td>
-                            <td class="hidden-xs hidden-sm">
-                                <input class="form-control input-sm" name="brewBoxNum{{ $entry->id }}" type="text" size="5" maxlength="10" value="{{ $entry->brewBoxNum }}">
+                            <td class="d-none d-lg-block">
+                                <input class="form-control form-control-sm" name="brewBoxNum{{ $entry->id }}" type="text" size="5" maxlength="10" value="{{ $entry->brewBoxNum }}">
                             </td>
-                            <td class="hidden-xs hidden-sm hidden-print" nowrap>
-                                <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-toggle="tooltip" data-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
+                            <td class="d-none d-lg-block hidden-print" nowrap>
+                                <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
                                 <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="inline"
                                       onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entryName }}?&rdquo; This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-trash-o"></span></button>
                                 </form>
-                                <a class="hide-loader" href="{{ url('/admin/output/entry?bid='.($entry->uid ?? $entry->brewBrewerID).'&filter=admin&id='.$entry->id) }}" data-toggle="tooltip" data-placement="top" title="Print the Entry Forms for &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-print"></span></a>
-                                <a class="hide-loader" href="mailto:{{ $entry->brewBrewerEmail ?? '' }}" data-toggle="tooltip" data-placement="top" title="Email the entry&rsquo;s owner, {{ $name }}, at {{ $entry->brewBrewerEmail ?? '' }}"><span class="fa fa-lg fa-envelope"></span></a>
+                                <a class="hide-loader" href="{{ url('/admin/output/entry?bid='.($entry->uid ?? $entry->brewBrewerID).'&filter=admin&id='.$entry->id) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Print the Entry Forms for &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-print"></span></a>
+                                <a class="hide-loader" href="mailto:{{ $entry->brewBrewerEmail ?? '' }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Email the entry&rsquo;s owner, {{ $name }}, at {{ $entry->brewBrewerEmail ?? '' }}"><span class="fa fa-lg fa-envelope"></span></a>
                             </td>
                         </tr>
                     @endforeach

@@ -8,7 +8,7 @@
             </div>
         @endif
         @if (session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         <p>
@@ -22,7 +22,7 @@
                 @if ($accountId)
                     <code>{{ $accountId }}</code>
                 @else
-                    <strong class="text-error">not connected</strong>
+                    <strong class="text-danger">not connected</strong>
                 @endif
             </li>
             <li>Platform secret key: {{ $secretKeySet ? 'configured' : 'MISSING (set STRIPE_SECRET)' }}</li>
@@ -47,7 +47,7 @@
         <form method="post" action="{{ route('admin.stripe.secret') }}" class="row g-2">
             @csrf
             <div class="col-auto">
-                <input type="text" name="webhook_secret" class="input input-bordered"
+                <input type="text" name="webhook_secret" class="form-control"
                        placeholder="whsec_..." value="" aria-label="Webhook signing secret">
             </div>
             <div class="col-auto">

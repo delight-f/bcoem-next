@@ -14,7 +14,7 @@
         @if ($sent === true)
             <div class="alert alert-success">Test email sent. If it does not arrive, close this window and check your settings, especially your password.</div>
         @elseif ($sent === false)
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 Message could not be sent. Mailer Error:
                 <pre>{{ $error }}</pre>
             </div>

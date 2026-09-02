@@ -232,8 +232,9 @@ if (window.bcoemAdminSession) {
 // ── Tooltips (INTERACTION-PARITY; legacy $('[data-toggle="tooltip"]').tooltip()).
 // Bootstrap JS is loaded on admin pages only; a CSS tooltip works on every
 // surface (public + admin). Title-bearing [data-toggle=tooltip] /
-// [data-tooltip=true] elements get a .bcoem-tooltip on hover/focus.
-document.querySelectorAll('[data-toggle="tooltip"], [data-tooltip="true"]').forEach((el) => {
+// [data-tooltip=true] and migrated [data-bs-toggle="tooltip"] elements get a
+// .bcoem-tooltip on hover/focus.
+document.querySelectorAll('[data-toggle="tooltip"], [data-tooltip="true"], [data-bs-toggle="tooltip"]').forEach((el) => {
     const title = el.getAttribute('title') || el.getAttribute('data-original-title');
     if (!title || el.getAttribute('data-bcoem-tooltip')) return;
     el.setAttribute('data-bcoem-tooltip', '1');

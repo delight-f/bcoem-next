@@ -6,7 +6,7 @@
             <div class="alert alert-success">Password updated.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         <form method="post" action="{{ url('/admin/users/'.$user->id.'/password') }}">
@@ -15,16 +15,16 @@
             <input type="hidden" name="userEdit" value="1">
 
             <div class="mb-4 row">
-                <label for="password1" class="col-sm-4 col-form-label">New Password</label>
-                <div class="col-sm-9">
-                    <input class="input input-bordered" id="password1" name="password1" type="password" required minlength="8">
+                <label for="password1" class="col-md-4 col-form-label">New Password</label>
+                <div class="col-md-9">
+                    <input class="form-control" id="password1" name="password1" type="password" required minlength="8">
                 </div>
             </div>
             <div class="mb-4 row">
-                <label for="password2" class="col-sm-4 col-form-label">Confirm Password</label>
-                <div class="col-sm-9">
-                    <input class="input input-bordered" id="password2" name="password" type="password" required minlength="8">
-                    <span class="help-block">The passwords must match.</span>
+                <label for="password2" class="col-md-4 col-form-label">Confirm Password</label>
+                <div class="col-md-9">
+                    <input class="form-control" id="password2" name="password" type="password" required minlength="8">
+                    <span class="form-text">The passwords must match.</span>
                 </div>
             </div>
 

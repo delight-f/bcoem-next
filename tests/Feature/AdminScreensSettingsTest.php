@@ -203,10 +203,11 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         );
         $response->assertSee('Provide even if the date of judging is the same.');
 
-        // Legacy control/columns.
+        // Legacy control/columns (form-horizontal is BS3 — the BS5 migration
+        // (issue 9) dropped it; the form keeps its rows as .row.mb-3).
         $response->assertSee('class="form-control date-time-picker-system"', false);
         $response->assertSee('name="submit" type="submit" class="btn btn-primary" value="Update Competition Dates"', false);
-        $response->assertSee('class="form-horizontal"', false);
+        $response->assertSee('<form data-time-24hr=', false);
 
         // Baseline has no judging/non-judging sessions → empty-state links.
         $response->assertSee('No judging sessions have been defined.');

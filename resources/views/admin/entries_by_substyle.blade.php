@@ -2,12 +2,12 @@
     <section class="container mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }} entry count broken down by sub-style.</h1>
 
-        <a class="btn btn-outline btn-primary mb-4" href="{{ url('/backoffice/count-by-style') }}">View Entry Count by Style</a>
+        <a class="btn btn-outline-primary mb-4" href="{{ url('/backoffice/count-by-style') }}">View Entry Count by Style</a>
 
         @if ($filter === 'no_zeros')
-            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-substyle') }}">Show Sub-Styles with Zero Entries</a>
+            <a class="btn btn-outline-secondary mb-4" href="{{ url('/backoffice/count-by-substyle') }}">Show Sub-Styles with Zero Entries</a>
         @else
-            <a class="btn btn-outline btn-secondary mb-4" href="{{ url('/backoffice/count-by-substyle?filter=no_zeros') }}">Hide Sub-Styles with Zero Entries</a>
+            <a class="btn btn-outline-secondary mb-4" href="{{ url('/backoffice/count-by-substyle?filter=no_zeros') }}">Hide Sub-Styles with Zero Entries</a>
         @endif
 
         <h3>Breakdown By Sub-Style</h3>

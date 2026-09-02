@@ -11,14 +11,14 @@
         <table class="table table-responsive table-striped table-bordered" id="sortable">
             <thead>
                 <tr>
-                    <th nowrap>Payer <span class="hidden-xs hidden-sm">Name</span></th>
-                    <th class="hidden-xs">Item</th>
-                    <th>Am<span class="hidden-xs">ount</span></th>
-                    <th>St<span class="hidden-xs">atus</span></th>
-                    <th nowrap><span class="hidden-xs">Transaction</span> ID</th>
-                    <th class="hidden-xs"><span class="hidden-sm">For</span> Entries...</th>
+                    <th nowrap>Payer <span class="d-none d-lg-block">Name</span></th>
+                    <th class="d-none d-md-block">Item</th>
+                    <th>Am<span class="d-none d-md-block">ount</span></th>
+                    <th>St<span class="d-none d-md-block">atus</span></th>
+                    <th nowrap><span class="d-none d-md-block">Transaction</span> ID</th>
+                    <th class="d-none d-md-block"><span class="d-none d-lg-block">For</span> Entries...</th>
                     <th>Date</th>
-                    <th>Act<span class="hidden-xs">ions</span></th>
+                    <th>Act<span class="d-none d-md-block">ions</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -26,18 +26,18 @@
                     <tr>
                         {{-- Legacy cell format: LAST, First --}}
                         <td>{{ ucwords((string) $payment->brewerLastName) }}, {{ ucwords((string) $payment->brewerFirstName) }}</td>
-                        <td class="hidden-xs">Entry Fees</td>
+                        <td class="d-none d-md-block">Entry Fees</td>
                         <td>{{ $payment->amount }} {{ $payment->currency }}</td>
                         <td>{{ $payment->status }}</td>
                         <td>{{ $payment->provider_ref !== '' && $payment->provider_ref !== null ? $payment->provider_ref : $payment->event_id }}</td>
-                        <td class="hidden-xs">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
+                        <td class="d-none d-md-block">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
                         <td>{{ \App\Http\Controllers\Admin\PaymentsController::paymentDate($ctx, $payment->created_at) }}</td>
                         <td nowrap>
                             <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="inline"
                                   onsubmit="return confirm('Are you sure you want to delete this payment? This cannot be undone.');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-toggle="tooltip" data-placement="top" title="Delete this payment"><span class="fa fa-lg fa-trash-o"></span></button>
+                                <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete this payment"><span class="fa fa-lg fa-trash-o"></span></button>
                             </form>
                         </td>
                     </tr>

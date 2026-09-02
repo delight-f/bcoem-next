@@ -39,7 +39,7 @@
 
         @if ($files !== [])
             <h2>Files in the Directory</h2>
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>File Name</th>

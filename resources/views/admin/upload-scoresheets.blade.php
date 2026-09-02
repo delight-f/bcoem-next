@@ -28,10 +28,10 @@
         <form method="post" action="{{ url('/admin/upload-scoresheets') }}" enctype="multipart/form-data" class="mb-5">
             @csrf
             <div class="mb-4 row">
-                <label for="scoresheetFiles" class="col-sm-3 col-form-label"><strong>PDF Files *</strong></label>
-                <div class="col-sm-9">
-                    <input class="input input-bordered" type="file" name="files[]" id="scoresheetFiles" multiple accept=".pdf" required>
-                    @error('files.*')<div class="text-error">{{ $message }}</div>@enderror
+                <label for="scoresheetFiles" class="col-md-3 col-form-label"><strong>PDF Files *</strong></label>
+                <div class="col-md-9">
+                    <input class="form-control" type="file" name="files[]" id="scoresheetFiles" multiple accept=".pdf" required>
+                    @error('files.*')<div class="text-danger">{{ $message }}</div>@enderror
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Upload PDF File(s)</button>

@@ -6,7 +6,7 @@
             <div class="alert alert-success">User level updated.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         <form method="post" action="{{ url('/admin/users/'.$user->id.'/level') }}">
@@ -24,16 +24,16 @@
                 <legend class="text-sm">User Level for {{ $user->user_name }}</legend>
                 @foreach ([2 => 'Participant', 1 => 'Admin', 0 => 'Top-Level Admin'] as $level => $label)
                     <div class="form-check">
-                        <input class="radio" type="radio" name="userLevel" value="{{ $level }}" id="userLevel{{ $level }}"
+                        <input class="form-check-input" type="radio" name="userLevel" value="{{ $level }}" id="userLevel{{ $level }}"
                             @checked((string) $user->userLevel === (string) $level)>
                         <label class="form-check-label" for="userLevel{{ $level }}">{{ $label }}</label>
                     </div>
                 @endforeach
                 <div class="form-check mt-2">
-                    <input class="checkbox" type="checkbox" name="userAdminObfuscate" value="1" id="obfuscate"
+                    <input class="form-check-input" type="checkbox" name="userAdminObfuscate" value="1" id="obfuscate"
                         @checked(((int) $user->userAdminObfuscate) === 1)>
                     <label class="form-check-label" for="obfuscate">Obfuscate Judging Numbers?</label>
-                    <span class="help-block block">If you wish to hide judging numbers from this Admin user, check the box.</span>
+                    <span class="form-text">If you wish to hide judging numbers from this Admin user, check the box.</span>
                 </div>
             </fieldset>
 

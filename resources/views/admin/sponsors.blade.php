@@ -11,7 +11,7 @@
             <div class="alert alert-success">Sponsors updated.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         {{-- List with inline enable/level/image/text editors --}}
@@ -27,7 +27,7 @@
                     </div>
                     <div class="col-md-2">
                         <label class="sr-only" for="sponsorLevel{{ $sponsor->id }}">Level</label>
-                        <select class="select select-bordered select-sm" id="sponsorLevel{{ $sponsor->id }}" name="sponsorLevel{{ $sponsor->id }}">
+                        <select class="form-select form-select-sm" id="sponsorLevel{{ $sponsor->id }}" name="sponsorLevel{{ $sponsor->id }}">
                             @for ($i = 1; $i <= 5; $i++)
                                 <option value="{{ $i }}" @selected((string) $sponsor->sponsorLevel === (string) $i)>{{ $i }}</option>
                             @endfor
@@ -35,7 +35,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="sr-only" for="sponsorImage{{ $sponsor->id }}">Logo</label>
-                        <select class="select select-bordered select-sm" id="sponsorImage{{ $sponsor->id }}" name="sponsorImage{{ $sponsor->id }}">
+                        <select class="form-select form-select-sm" id="sponsorImage{{ $sponsor->id }}" name="sponsorImage{{ $sponsor->id }}">
                             <option value="">(no logo)</option>
                             @foreach ($sponsorImages as $file)
                                 <option value="{{ $file }}" @selected($sponsor->sponsorImage === $file)>{{ $file }}</option>
@@ -44,10 +44,10 @@
                     </div>
                     <div class="col-md-3">
                         <label class="sr-only" for="sponsorText{{ $sponsor->id }}">Description</label>
-                        <textarea class="textarea textarea-bordered textarea-sm" id="sponsorText{{ $sponsor->id }}" name="sponsorText{{ $sponsor->id }}" rows="2">{{ $sponsor->sponsorText }}</textarea>
+                        <textarea class="form-control" id="sponsorText{{ $sponsor->id }}" name="sponsorText{{ $sponsor->id }}" rows="2">{{ $sponsor->sponsorText }}</textarea>
                     </div>
                     <div class="col-auto form-check ms-2">
-                        <input class="checkbox" type="checkbox" id="sponsorEnable{{ $sponsor->id }}" name="sponsorEnable{{ $sponsor->id }}" value="1" @checked(((int) $sponsor->sponsorEnable) === 1)>
+                        <input class="form-check-input" type="checkbox" id="sponsorEnable{{ $sponsor->id }}" name="sponsorEnable{{ $sponsor->id }}" value="1" @checked(((int) $sponsor->sponsorEnable) === 1)>
                         <label class="form-check-label text-sm" for="sponsorEnable{{ $sponsor->id }}">Display</label>
                     </div>
                     <div class="col-auto"><button type="submit" class="btn btn-sm btn-outline btn-primary">Save</button></div>
@@ -81,36 +81,36 @@
                 @csrf
                 @method($row !== null ? 'put' : 'post')
                 <div class="mb-4 row">
-                    <label for="sponsorName" class="col-sm-4 col-form-label">Name</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="sponsorName" name="sponsorName" type="text" maxlength="255" value="{{ $row->sponsorName ?? '' }}" required></div>
+                    <label for="sponsorName" class="col-md-4 col-form-label">Name</label>
+                    <div class="col-md-9"><input class="form-control" id="sponsorName" name="sponsorName" type="text" maxlength="255" value="{{ $row->sponsorName ?? '' }}" required></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="sponsorLocation" class="col-sm-4 col-form-label">Location</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="sponsorLocation" name="sponsorLocation" type="text" value="{{ $row->sponsorLocation ?? '' }}"></div>
+                    <label for="sponsorLocation" class="col-md-4 col-form-label">Location</label>
+                    <div class="col-md-9"><input class="form-control" id="sponsorLocation" name="sponsorLocation" type="text" value="{{ $row->sponsorLocation ?? '' }}"></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="sponsorLevel" class="col-sm-4 col-form-label">Level</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="sponsorLevel" name="sponsorLevel" style="width:auto;">
+                    <label for="sponsorLevel" class="col-md-4 col-form-label">Level</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="sponsorLevel" name="sponsorLevel" style="width:auto;">
                             @for ($i = 1; $i <= 5; $i++)
                                 <option value="{{ $i }}" @selected((string) ($row->sponsorLevel ?? '1') === (string) $i)>{{ $i }}</option>
                             @endfor
                         </select>
-                        <span class="help-block">1 is the highest level; 5 the lowest.</span>
+                        <span class="form-text">1 is the highest level; 5 the lowest.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="sponsorURL" class="col-sm-4 col-form-label">Website</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="sponsorURL" name="sponsorURL" type="text" value="{{ $row->sponsorURL ?? '' }}">
-                        <span class="help-block">Be sure to include the full website URL including the http://</span>
+                    <label for="sponsorURL" class="col-md-4 col-form-label">Website</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="sponsorURL" name="sponsorURL" type="text" value="{{ $row->sponsorURL ?? '' }}">
+                        <span class="form-text">Be sure to include the full website URL including the http://</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="sponsorImage" class="col-sm-4 col-form-label">Logo File Name</label>
-                    <div class="col-sm-9">
+                    <label for="sponsorImage" class="col-md-4 col-form-label">Logo File Name</label>
+                    <div class="col-md-9">
                         @if ($sponsorImages !== [])
-                            <select class="select select-bordered" id="sponsorImage" name="sponsorImage" style="width:auto;">
+                            <select class="form-select" id="sponsorImage" name="sponsorImage" style="width:auto;">
                                 <option value=""></option>
                                 @foreach ($sponsorImages as $file)
                                     <option value="{{ $file }}" @selected(($row->sponsorImage ?? '') === $file)>{{ $file }}</option>
@@ -124,18 +124,18 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="sponsorText" class="col-sm-4 col-form-label">Description</label>
-                    <div class="col-sm-9"><textarea class="textarea textarea-bordered" id="sponsorText" name="sponsorText" rows="6">{{ $row->sponsorText ?? '' }}</textarea></div>
+                    <label for="sponsorText" class="col-md-4 col-form-label">Description</label>
+                    <div class="col-md-9"><textarea class="form-control" id="sponsorText" name="sponsorText" rows="6">{{ $row->sponsorText ?? '' }}</textarea></div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Display?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Display?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="sponsorEnable" value="1" id="sponsorEnableYes" @checked($row === null || ((int) $row->sponsorEnable) === 1)>
+                            <input class="form-check-input" type="radio" name="sponsorEnable" value="1" id="sponsorEnableYes" @checked($row === null || ((int) $row->sponsorEnable) === 1)>
                             <label class="form-check-label" for="sponsorEnableYes">Yes</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="sponsorEnable" value="0" id="sponsorEnableNo" @checked($row !== null && ((int) $row->sponsorEnable) === 0)>
+                            <input class="form-check-input" type="radio" name="sponsorEnable" value="0" id="sponsorEnableNo" @checked($row !== null && ((int) $row->sponsorEnable) === 0)>
                             <label class="form-check-label" for="sponsorEnableNo">No</label>
                         </div>
                     </div>

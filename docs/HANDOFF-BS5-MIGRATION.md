@@ -15,7 +15,8 @@ fresh agent to pick up the migration at issue #3.
 | #6 | Admin chrome: Admin Essentials offcanvas to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #7 | Admin chrome: page frame (theme/container/header/footer) to BS5 | **CLOSED (completed)** — see Implementation log below |
 | #8 | Admin chrome: session-expiry modals to BS5 | **CLOSED (completed)** — see Implementation log below |
-| #9–#13 | View batches A–C, contract, docs+visual gate | OPEN (#9 next) |
+| #9 | View batch A: core admin blades to BS5 | **CLOSED (completed)** — see Implementation log below |
+| #10–#13 | View batch B, batch C, contract, docs+visual gate | OPEN (#10 next) |
 
 Issue #2 is fully implemented, verified, and closed. Its delivery:
 
