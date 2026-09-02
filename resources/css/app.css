@@ -653,7 +653,7 @@ html {
 .panel-info > .panel-body {
     padding: 15px;
 }
-.bcoem-sidebar-panel {
+.bcoem-stat-row {
     margin-bottom: 0.4rem;
     display: flex;
     justify-content: space-between;
@@ -1226,15 +1226,15 @@ html {
 
     /* ==== Admin page chrome (issue 7: BS5 frame; .page-header kept for
        blades not yet migrated — dashboard, qr/checkin — until their batches) ==== */
-    .admin-page-header,
+    .admin-page-title,
     .page-header {
         padding-bottom: 9px;
         margin: 0;
         border-bottom: 1px solid #eee;
         padding: 0;
     }
-    .admin-page-header .lead,
-    .admin-page-header p,
+    .admin-page-title .lead,
+    .admin-page-title p,
     .page-header .lead,
     .page-header p { margin-bottom: 0; }
     .lead { margin-bottom: 20px; font-size: 16px; font-weight: 400; line-height: 1.4; }

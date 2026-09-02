@@ -598,7 +598,7 @@
     @if ($adminPageTitle !== null)
         {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
              chrome (Administration: <label>) around the blade's own <p class="lead">. --}}
-        <div class="admin-page-header">
+        <div class="admin-page-title">
             <h1>{{ $adminPageTitle }}</h1>
         </div>
     @endif
