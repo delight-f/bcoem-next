@@ -1,10 +1,10 @@
 @php
     $tz = $ctx->prefsStr('prefsTimeZone');
-    $df = $ctx->prefsStr('prefsDateFormat');
     $tf = $ctx->prefsStr('prefsTimeFormat');
-    $dt = fn (string $key) => \App\Support\Tenant\DateFmt::dateTime(
-        $contest[$key] ?? null, $tz, $df, $tf, 'system', false,
-    );
+    // D1: prefsWinnerDelay is a flatpickr .date-time-picker-system input
+    // (legacy site_preferences.admin.php:940); prefill matches the picker
+    // dateFormat ('Y-m-d H:i' 24h / 'Y-m-d h:i K' 12h).
+    $tf24 = ((int) $tf) === 1;
     $go = $go ?? 'default';
     $tabs = ['default' => 'Display', 'entries' => 'Entries', 'email' => 'Email', 'payment' => 'Payment', 'best' => 'Best Brewer/Club'];
     $langOptions = json_decode((string) $ctx->prefsStr('prefsLanguageOptions'), true);
@@ -35,7 +35,7 @@
         @php $p = fn (string $k) => (string) ($ctx->prefsStr($k) ?? ''); @endphp
 
         @if ($go === 'default')
-            <form method="post" action="{{ url('/admin/site-preferences/default') }}">
+            <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/site-preferences/default') }}">
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
@@ -67,7 +67,7 @@
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsWinnerDelay" class="col-md-4 col-form-label">Winners Display Date/Time</label>
-                    <div class="col-md-9"><input class="form-control" id="prefsWinnerDelay" name="prefsWinnerDelay" type="text" style="width:auto;" value="{{ \App\Support\Tenant\DateFmt::dateTime($ctx->prefsStr('prefsWinnerDelay'), $tz, $df, $tf, 'system', false) }}"></div>
+                    <div class="col-md-9"><input class="form-control date-time-picker-system" id="prefsWinnerDelay" name="prefsWinnerDelay" type="text" style="width:auto;" value="{{ \App\Support\Tenant\DateFmt::dateTimeInput($ctx->prefsStr('prefsWinnerDelay'), $tz, $tf24) ?? '' }}"></div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsWinnerMethod" class="col-md-4 col-form-label">Winner Place Distribution Method</label>

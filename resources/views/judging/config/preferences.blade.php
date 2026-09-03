@@ -1,5 +1,12 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    @php($j = $judging)
+    @php
+        // D1: jPrefs date fields use the flatpickr picker (.date-time-picker-
+        // system) like the legacy page (judging_preferences.admin.php:408,417);
+        // prefill must match the picker dateFormat exactly ('Y-m-d H:i' 24h /
+        // 'Y-m-d h:i K' 12h per data-time-24hr below).
+        $j = $judging;
+        $tf24 = ((int) $ctx->prefsStr('prefsTimeFormat')) === 1;
+    @endphp
     <section class="container mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Set Preferences</h1>
         {{-- Sibling preference-tab buttons (judging_preferences.admin.php:187-198).
@@ -24,7 +31,7 @@
             </div>
         @endif
 
-        <form method="post" action="{{ route('admin.judging.preferences.store') }}">
+        <form data-time-24hr="{{ (int) $ctx->prefsStr('prefsTimeFormat') === 1 ? '1' : '0' }}" method="post" action="{{ route('admin.judging.preferences.store') }}">
             @csrf
 
             <div class="mb-4 row">
@@ -127,14 +134,14 @@
                 <div class="mb-4 row">
                     <label for="jPrefsJudgingOpen" class="col-md-3 col-form-label">Judging Open Date and Time</label>
                     <div class="col-md-6">
-                        <input class="form-control" id="jPrefsJudgingOpen" name="jPrefsJudgingOpen" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('jPrefsJudgingOpen', \App\Support\Tenant\DateFmt::dateTime($j['jPrefsJudgingOpen'] ?? null, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '') }}">
+                        <input class="form-control date-time-picker-system" id="jPrefsJudgingOpen" name="jPrefsJudgingOpen" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('jPrefsJudgingOpen', \App\Support\Tenant\DateFmt::dateTimeInput($j['jPrefsJudgingOpen'] ?? null, $ctx->prefsStr('prefsTimeZone'), $tf24) ?? '') }}">
                     </div>
                 </div>
 
                 <div class="mb-4 row">
                     <label for="jPrefsJudgingClosed" class="col-md-3 col-form-label">Judging Close Date and Time</label>
                     <div class="col-md-6">
-                        <input class="form-control" id="jPrefsJudgingClosed" name="jPrefsJudgingClosed" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('jPrefsJudgingClosed', \App\Support\Tenant\DateFmt::dateTime($j['jPrefsJudgingClosed'] ?? null, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '') }}">
+                        <input class="form-control date-time-picker-system" id="jPrefsJudgingClosed" name="jPrefsJudgingClosed" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('jPrefsJudgingClosed', \App\Support\Tenant\DateFmt::dateTimeInput($j['jPrefsJudgingClosed'] ?? null, $ctx->prefsStr('prefsTimeZone'), $tf24) ?? '') }}">
                     </div>
                 </div>
             @endif

@@ -1,4 +1,13 @@
-@php($isEdit = $location !== null)
+@php
+    // D1: flatpickr (app.js .date-time-picker-system) drives these inputs
+    // with dateFormat 'Y-m-d H:i' (24h) or 'Y-m-d h:i K' (12h), chosen by
+    // the form's data-time-24hr below. Prefill uses the matching
+    // DateFmt::dateTimeInput format so the open calendar highlights the
+    // stored wall time (legacy: getTimeZoneDateTime(...,'system',
+    // 'date-time-system')).
+    $isEdit = $location !== null;
+    $tf24 = ((int) $ctx->prefsStr('prefsTimeFormat')) === 1;
+@endphp
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="container mt-6 mb-4">
         <h1>{{ $nonJudging ? 'Non-Judging Sessions' : 'Judging Sessions' }}: {{ $isEdit ? 'Edit' : 'Add' }} a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</h1>
@@ -22,7 +31,7 @@
             </div>
         @endif
 
-        <form method="post" action="{{ $isEdit
+        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ $isEdit
             ? route($nonJudging ? 'admin.judging.non_judging.update' : 'admin.judging.locations.update', ['id' => $location->id])
             : route($nonJudging ? 'admin.judging.non_judging.store' : 'admin.judging.locations.store') }}">
             @csrf
@@ -56,7 +65,7 @@
             <div class="mb-4 row">
                 <label for="judgingDate" class="col-md-3 col-form-label">Session Start Date/Time</label>
                 <div class="col-md-6">
-                    <input class="form-control" id="judgingDate" name="judgingDate" type="text" placeholder="YYYY-MM-DD hh:mm AM" required value="{{ old('judgingDate', isset($location) && $location !== null ? \App\Support\Tenant\DateFmt::dateTime($location->judgingDate, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '' : '') }}">
+                    <input class="form-control date-time-picker-system" id="judgingDate" name="judgingDate" type="text" placeholder="YYYY-MM-DD hh:mm AM" required value="{{ old('judgingDate', \App\Support\Tenant\DateFmt::dateTimeInput($location->judgingDate ?? null, $ctx->prefsStr('prefsTimeZone'), $tf24) ?? '') }}">
                     <div class="form-text">Format: YYYY-MM-DD hh:mm AM/PM, in the competition's timezone.</div>
                 </div>
             </div>
@@ -64,7 +73,7 @@
             <div class="mb-4 row">
                 <label for="judgingDateEnd" class="col-md-3 col-form-label">Session End Date/Time</label>
                 <div class="col-md-6">
-                    <input class="form-control" id="judgingDateEnd" name="judgingDateEnd" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('judgingDateEnd', isset($location) && $location !== null ? \App\Support\Tenant\DateFmt::dateTime($location->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '' : '') }}">
+                    <input class="form-control date-time-picker-system" id="judgingDateEnd" name="judgingDateEnd" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('judgingDateEnd', \App\Support\Tenant\DateFmt::dateTimeInput($location->judgingDateEnd ?? null, $ctx->prefsStr('prefsTimeZone'), $tf24) ?? '') }}">
                     <div class="form-text">@if (! $nonJudging)Required for distributed sessions: the deadline for judges to submit evaluations.@else Optional.@endif</div>
                 </div>
             </div>

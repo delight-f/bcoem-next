@@ -7,6 +7,52 @@
                 <h1>Administration Dashboard</h1>
             </div>
 
+            {{-- mods_top.inc.php — the admin-side (go=default) missing-module-
+                 file alert. Legacy renders one danger list for enabled mods
+                 whose mods/<mod_filename> file is absent and one warning list
+                 for disabled ones; public pages render nothing for a missing
+                 file (PARITY-027). --}}
+            @php
+                $modsRealDir = realpath(base_path('mods'));
+                $missingEnabled = [];
+                $missingDisabled = [];
+                foreach (DB::table('mods')->get() as $mod) {
+                    $real = realpath(base_path('mods/'.$mod->mod_filename));
+                    if ($real === false || $modsRealDir === false
+                        || ! str_starts_with($real, $modsRealDir.DIRECTORY_SEPARATOR)) {
+                        if ((int) $mod->mod_enable === 1) {
+                            $missingEnabled[] = $mod->mod_filename;
+                        } else {
+                            $missingDisabled[] = $mod->mod_filename;
+                        }
+                    }
+                }
+            @endphp
+            @if ($missingEnabled !== [])
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>The following <u>enabled</u> custom module files were not found in the mods directory.</strong> These cannot be included or rendered:
+                    <ul class="mb-0 mt-1">
+                        @foreach ($missingEnabled as $file)
+                            <li>{{ $file }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            @if ($missingDisabled !== [])
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fa fa-exclamation-circle"></i>
+                    <strong>The following <u>disabled</u> custom module files were not found in the mods directory.</strong> These cannot be included or rendered if enabled:
+                    <ul class="mb-0 mt-1">
+                        @foreach ($missingDisabled as $file)
+                            <li>{{ $file }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <p class="lead">Hello, {{ $firstName }}. <span class="small">Select the headings or icons below to view the options available to you in each category. Help is available for each overall section by selecting the question mark icon.</span></p>
 
             {{-- default.admin.php:473-490 action row. Reset Competition Info is

@@ -1,10 +1,14 @@
 @php
     $tz = $ctx->prefsStr('prefsTimeZone');
-    $df = $ctx->prefsStr('prefsDateFormat');
     $tf = $ctx->prefsStr('prefsTimeFormat');
-    $dt = fn (?string $key) => \App\Support\Tenant\DateFmt::dateTime(
-        $contest[$key] ?? null, $tz, $df, $tf, 'system', false,
-    );
+    // D1: the date fields below are flatpickr .date-time-picker-system
+    // inputs (legacy competition_info.admin.php carried the same class);
+    // prefill matches the picker dateFormat so the open calendar
+    // highlights the stored wall time.
+    $tf24 = ((int) $tf) === 1;
+    $dt = fn (?string $key) => \App\Support\Tenant\DateFmt::dateTimeInput(
+        $contest[$key] ?? null, $tz, $tf24,
+    ) ?? '';
 @endphp
 
 <x-public-layout :ctx="$ctx" :show-hero="false">
@@ -19,7 +23,7 @@
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
-        <form method="post" action="{{ url('/admin/competition-info') }}">
+        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/competition-info') }}">
             @csrf
             @method('put')
             <div class="alert alert-info">
@@ -87,7 +91,7 @@
             ] as $field => $label)
                 <div class="mb-4 row">
                     <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
-                    <div class="col-md-9"><input class="form-control" id="{{ $field }}" name="{{ $field }}" type="text" value="{{ $dt($field) }}"></div>
+                    <div class="col-md-9"><input class="form-control date-time-picker-system" id="{{ $field }}" name="{{ $field }}" type="text" value="{{ $dt($field) }}"></div>
                 </div>
             @endforeach
 

@@ -186,6 +186,14 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
 
         self::assertStringContainsString('/brew/'.$id.'/edit', $html);
         self::assertStringContainsString('/entries/'.$id.'"', $html);
+
+        // C1 regression: the delete form tag must carry its confirm
+        // onsubmit INSIDE the tag (an attr left outside the tag kills the
+        // dialog and leaks stray text into the row).
+        self::assertMatchesRegularExpression(
+            '/<form[^>]*action="[^"]*\/entries\/'.$id.'"[^>]*onsubmit="return confirm\(\'Delete this entry\?[^\']*\'\);?"[^>]*>/',
+            $html,
+        );
     }
 
     public function test_delete_disabled_for_paid_entry_while_fee_applies(): void

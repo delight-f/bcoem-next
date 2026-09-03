@@ -16,18 +16,20 @@
     // pub/nav.pub.php:109 "Other Info" nav link). NULL/empty = absent,
     // mirroring legacy's file_exists() gate.
     $contestInfoExtra = trim((string) ($ctx->contestStr('contestInfoExtra') ?? ''));
-    // PARITY-027: safe public mods render — legacy include-renders
-    // mods .php files (index.pub.php:357+618); the port renders the
-    // DB-stored mod_description (informational mods) at the same
-    // placement points with the same gating, without PHP include (RCE
-    // boundary). Legacy gates (includes/db/mods.db.php:54-108 +
-    // mods_top/bottom.inc.php): prefsUseMods=Y, mod_enable=1,
-    // mod_permission >= userLevel (0 uber / 1 admin / 2 all) — legacy
-    // renders when mod_permission >= user_level, so a higher-numbered
-    // (less-restrictive) mod shows to lower-level users too, EXCEPT the
-    // strict admin-gated semantics below — display_section map
-    // (default/rules/volunteers/sponsors/contact/pay ->1, register->6,
-    // list->8, admin->9), mod_display_rank == page_location (1=before
+    // PARITY-027: public mods render, file-based like legacy.
+    // index.pub.php:357+618 include mods_top/bottom.inc.php, which
+    // include-render the FILE mods/<mod_filename> when it exists
+    // (mod_display() in includes/db/mods.db.php + the realpath guard in
+    // mods_top.inc.php) — mod_description is never rendered on public
+    // pages, and a missing file renders nothing (the admin dashboard
+    // carries the missing-file alert instead). A row whose file throws is
+    // skipped so one broken mod cannot take the page down.
+    // Gates (mods.db.php:54-108 + mods_top/bottom.inc.php): prefsUseMods=Y,
+    // mod_enable=1, mod_type=0 (Static HTML informational), display_section
+    // map (default/rules/volunteers/sponsors/contact/pay ->1, register->6,
+    // list->8), mod_extend_function equal to the section or 0,
+    // mod_permission >= userLevel (0 uber / 1 admin / 2 all; anon is 2 per
+    // mods_top.inc.php:5), mod_display_rank == page_location (1=before
     // core, 2=after core).
     $modsTop = [];
     $modsBottom = [];
@@ -39,6 +41,7 @@
         } elseif (request()->is('list') || request()->is('list/*')) {
             $modsSection = 8;
         }
+        $modsRealDir = realpath(base_path('mods'));
         foreach (DB::table('mods')->orderBy('mod_rank')->get() as $mod) {
             if ((int) $mod->mod_enable !== 1 || (int) $mod->mod_type !== 0) {
                 continue;
@@ -50,8 +53,23 @@
             if ((int) $mod->mod_permission < $modsUserLevel) {
                 continue;
             }
-            $content = trim((string) ($mod->mod_description ?? ''));
-            if ($content === '') {
+            // Legacy realpath guard (mods_top.inc.php): the file must sit
+            // directly inside mods/ — no traversal.
+            $modRealPath = realpath(base_path('mods/'.$mod->mod_filename));
+            if ($modRealPath === false || $modsRealDir === false
+                || ! str_starts_with($modRealPath, $modsRealDir.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+            ob_start();
+            try {
+                $base_url = url('/').'/';
+                include $modRealPath;
+                $content = (string) ob_get_clean();
+            } catch (\Throwable) {
+                ob_end_clean();
+                continue;
+            }
+            if (trim($content) === '') {
                 continue;
             }
             if ((int) $mod->mod_display_rank === 1) {

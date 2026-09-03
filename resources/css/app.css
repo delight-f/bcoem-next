@@ -2,121 +2,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;800;900&family=Droid+Sans:wght@400;700&display=swap');
 @import 'bootstrap/dist/css/bootstrap.css' layer(bs5);
 
-/* Real Bootstrap 5 sits in its own LOWEST cascade layer (bs5). All legacy
+/* Real Bootstrap 5 sits in its own LOWEST cascade layer (bs5). The legacy
    identity/BS3-replica and custom CSS below is UNLAYERED author CSS, which
    beats the bs5 layer regardless of specificity — so legacy bcoem /
-   bcoem-brux colors and BS3-replica classes keep winning over BS5 wherever
-   both define a class. BS5 supplies the layout primitives (grid, containers,
-   forms, utilities, card, badge) the legacy stack lacks. */
+   bcoem-brux colors win over BS5 wherever both define a class, while BS5
+   supplies layout primitives (grid, containers, forms, utilities, card,
+   badge) that the unlayered CSS no longer re-declares. */
 @layer bs5;
-/* ---- Compat layer: Bootstrap-5 layout primitives ---- */
-/* Containers as plain (unlayered) CSS: unlayered author CSS beats the bs5
-   layer. Bootstrap 5 breakpoint widths. */
-.container,
-.container-xxl,
-.container-fluid {
-    width: 100%;
-    padding-right: calc(1.5rem * 0.5);
-    padding-left: calc(1.5rem * 0.5);
-    margin-right: auto;
-    margin-left: auto;
-}
-
-@media (min-width: 576px) {
-    .container,
-    .container-xxl {
-        max-width: 540px;
-    }
-}
-
-@media (min-width: 768px) {
-    .container,
-    .container-xxl {
-        max-width: 720px;
-    }
-}
-
-@media (min-width: 992px) {
-    .container,
-    .container-xxl {
-        max-width: 960px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .container,
-    .container-xxl {
-        max-width: 1140px;
-    }
-}
-
-@media (min-width: 1400px) {
-    .container,
-    .container-xxl {
-        max-width: 1320px;
-    }
-}
-
-
-/* ---- Bootstrap 5 modal bridge (unlayered) ----
-   The residual BS3-replica layer (components) styles `.modal` with
-   `z-index:1040`, BELOW the real BS5 `.modal-backdrop` (1050) — so a
-   BS5-markup modal's own backdrop would cover its content. And daisyUI's
-   residual `<dialog>.modal` CSS sets `visibility:hidden`, only revealing
-   `[open]` / `:target` / `.modal-toggle:checked+.modal` variants — BS5
-   shows modal divs via `.show` + inline `display:block`, matching none of
-   those selectors. These unlayered rules (author CSS beats every layer)
-   restore correct BS5 modal stacking + visibility. They fire only on
-   `.modal.show`, which daisy's own dialogs never carry, so admin
-   `<dialog class="modal">` usage is untouched until the shim is deleted
-   (issue 12). */
-.modal.show {
-    visibility: visible;
-    pointer-events: auto;
-    background-color: transparent;
-    z-index: 1060;
-}
-
-/* Public login/forgot dialogs match legacy daisy modal-box width (~42rem)
+/* Public login/forgot dialogs match the legacy modal-box width (~42rem)
    instead of BS5's default 500px modal-dialog, keeping the look unchanged. */
 #login-modal .modal-dialog,
 #forgot-modal .modal-dialog {
     max-width: 42rem;
-}
-
-/* Residual-shim bridges for BS5 modals (see the .modal.show guard above).
-   daisyUI's higher-layer `.btn-close{position:absolute;top:0;right:0}`
-   and placeholder-color rules fight real BS5 modal markup until the shim
-   is deleted (issue 12). Unlayered author CSS outranks every layer: */
-.modal-header .btn-close {
-    position: static !important;
-    margin-left: auto !important;
-}
-.form-floating > .form-control::placeholder,
-.form-floating > .form-select::placeholder {
-    color: transparent !important;
-}
-
-/* daisyUI styles the bare `select` ELEMENT (higher layer) with no visible
-   border and a tiny clamp width, which strips the chrome from BS5
-   `.form-select` fields until the shim is deleted (issue 12). Re-state the
-   BS5 form-select look unlayered so purged public selects render properly. */
-.form-select {
-    display: block;
-    width: 100%;
-    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--bs-body-color);
-    appearance: none;
-    background-color: var(--bs-body-bg);
-    background-image: var(--bs-form-select-bg-img);
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px 12px;
-    border: var(--bs-border-width) solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
 }
 /* ---- Legacy theme (migrated from default-3.css / common-3.css) ----
    Unlayered on purpose: element selectors like `a { color: … }` must beat
@@ -478,7 +375,6 @@ html {
 
 /* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
    .badge/.card primitives so the legacy glance look is preserved. ---- */
-.position-absolute { position: absolute !important; }
 .glance-card-bg {
     background-color: #fefefe;
     border: 1px solid #aeaeae;
@@ -889,6 +785,13 @@ html {
     --bs-link-color: #2196f3;
     --bs-link-hover-color: #f37e21;
 }
+
+/* Legacy admin icon colors (common-3.css 900 shades) for FA flag icons —
+   e.g. the accepted-styles Requirements column (styles.admin.php:45-70). */
+[data-bs-theme="bcoem-brux"] .text-orange { color: #E65100; }
+[data-bs-theme="bcoem-brux"] .text-purple { color: #311B92; }
+[data-bs-theme="bcoem-brux"] .text-gold { color: #D4AF37; }
+[data-bs-theme="bcoem-brux"] .text-teal { color: #004D40; }
 
 /* Rebind BS5 solid buttons to the theme palette. Each variant sources its
    component vars from the matching --bs-* theme variable so the public

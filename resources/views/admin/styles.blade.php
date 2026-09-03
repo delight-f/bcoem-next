@@ -40,10 +40,21 @@
                                 <td>{{ $style->brewStyleGroup }}{{ $style->brewStyleNum }}</td>
                                 <td>{{ optional($styleTypes->firstWhere('id', $style->brewStyleType))->styleTypeName }}</td>
                                 <td>
-                                    @if (((int) $style->brewStyleReqSpec) === 1) ReqSpec @endif
-                                    @if (((int) $style->brewStyleStrength) === 1) Strength @endif
-                                    @if (((int) $style->brewStyleCarb) === 1) Carb @endif
-                                    @if (((int) $style->brewStyleSweet) === 1) Sweet @endif
+                                    {{-- Legacy styles.admin.php:45-70 renders the requirements
+                                         flags as colored check-circle icons with tooltips
+                                         (entry_info_text_048-051), never as words. --}}
+                                    @if (((int) $style->brewStyleReqSpec) === 1)
+                                        <span class="fa fa-circle-check text-orange" data-tooltip="true" title="To ensure proper judging, the entrant must provide additional information about the beverage."></span>
+                                    @endif
+                                    @if (((int) $style->brewStyleStrength) === 1)
+                                        <span class="fa fa-circle-check text-purple" data-tooltip="true" title="To ensure proper judging, the entrant must provide the strength level of the beverage."></span>
+                                    @endif
+                                    @if (((int) $style->brewStyleCarb) === 1)
+                                        <span class="fa fa-circle-check text-teal" data-tooltip="true" title="To ensure proper judging, the entrant must provide the carbonation level of the beverage."></span>
+                                    @endif
+                                    @if (((int) $style->brewStyleSweet) === 1)
+                                        <span class="fa fa-circle-check text-gold" data-tooltip="true" title="To ensure proper judging, the entrant must provide the sweetness level of the beverage."></span>
+                                    @endif
                                 </td>
                                 <td><input type="checkbox" name="brewStyleAtLimit{{ $style->id }}" value="1" @checked(((int) $style->brewStyleAtLimit) === 1)></td>
                                 <td>
