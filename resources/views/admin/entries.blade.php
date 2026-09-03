@@ -184,14 +184,6 @@
                     </ul>
                 </div>
 
-                @foreach ([['allEmailModal', 'all', 'All Participants with Entries Email Addresses', 'to contact all participants with entries'], ['paidEmailModal', 'paid', 'All Participants with Paid Entries Email Addresses', 'to contact participants with <strong>PAID</strong> entries'], ['unpaidEmailModal', 'unpaid', 'All Participants with Unpaid Entries Email Addresses', 'to contact participants with <strong>UNPAID</strong> entries']] as [$modalId, $key, $title, $purpose])
-                    @if ($emailLists[$key] !== '')
-                        <div class="btn-group d-none d-lg-inline-flex" role="group">
-                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}">{{ $title }}</button>
-                        </div>
-                    @endif
-                @endforeach
-
                 @if ($entries->isNotEmpty())
                     <div class="btn-group float-end d-none d-md-inline-flex" role="group">
                         <div class="btn-group" role="group">
@@ -201,6 +193,23 @@
                         </div>
                     </div>
                 @endif
+            </div>
+        </div>
+
+        {{-- Legacy second admin-element row (entries.admin.php:851-854): the
+             blue email-address buttons live on their own row (hidden-xs)
+             under the grey control row. --}}
+        <div class="bcoem-admin-element d-none d-md-block d-print-none">
+            <div class="row">
+                <div class="col-12">
+                @foreach ([['allEmailModal', 'all', 'All Participants with Entries Email Addresses', 'to contact all participants with entries'], ['paidEmailModal', 'paid', 'All Participants with Paid Entries Email Addresses', 'to contact participants with <strong>PAID</strong> entries'], ['unpaidEmailModal', 'unpaid', 'All Participants with Unpaid Entries Email Addresses', 'to contact participants with <strong>UNPAID</strong> entries']] as [$modalId, $key, $title, $purpose])
+                    @if ($emailLists[$key] !== '')
+                        <div class="btn-group d-none d-lg-inline-flex @if ($loop->last) mb-0 @else mb-2 @endif" role="group">
+                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}">{{ $title }}</button>
+                        </div>
+                    @endif
+                @endforeach
+                </div>
             </div>
         </div>
 
