@@ -168,10 +168,17 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             $response->assertSee($title, false);
         }
 
-        // Bottle-label families must be present (not silently dropped).
-        $response->assertSee('Letter (Avery 5160) — Entry Numbers', false)
-            ->assertSee('A4 (Avery 3422) — Entry Numbers', false)
-            ->assertSee('Round (Avery OL5275WR) — All Entries', false);
+        // Bottle/box label matrix papers + their per-option dropdown labels must
+        // be present (not silently dropped). Paper tooltips carry the product
+        // code, so assert on the option text and the shared button labels.
+        $response->assertSee('Print Bottle Labels (PDF)', false)
+            ->assertSee('With Required Info - All Styles (Entry Numbers)', false)
+            ->assertSee('Quicksort - 6 Labels per Entry', false)
+            ->assertSee('Print Box Labels (PDF)', false)
+            ->assertSee('Virtual Judging Box Labels (by Judge Name)', false)
+            ->assertSee('Number of Labels per Entry', false)
+            ->assertSee('Number of Labels per Table', false)
+            ->assertSee('Number of Labels per Judge', false);
     }
 
     public function test_every_active_dashboard_link_renders_with_label(): void

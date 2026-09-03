@@ -187,6 +187,7 @@ final class DashboardController extends Controller
      *   ['label', 'href']                          active link
      *   ['label', null, 'todo']                    disabled (backend missing)
      *   ['label', null, null, children]            family (per-count / per-row dropdown)
+     *   ['matrix', papers]                         paper-by-paper label matrix
      *
      * @return array{left: list<array>, right: list<array>}
      */
@@ -195,18 +196,6 @@ final class DashboardController extends Controller
         $l = static fn (string $href, string $label): array => ['label' => $label, 'href' => $href];
         $todo = static fn (string $label, string $src): array => ['label' => $label, 'href' => null, 'todo' => 'TODO: legacy output — '.$src];
         $family = static fn (string $label, array $children, string $descriptor = 'labels per entry'): array => ['label' => $label, 'children' => $children, 'descriptor' => $descriptor];
-
-        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown. The bottle
-        // and box label families all route through /admin/output/labels, so
-        // each count maps to the port route with the `section=labels-admin`
-        // segment dropped (it selects that route).
-        $countFamily = fn (string $label, string $hrefTemplate): array => [
-            'label' => $label,
-            'children' => collect(range(1, 12))->map(
-                fn (int $i): array => ['label' => (string) $i,
-                    'href' => '/admin/output/labels?'.str_replace('section=labels-admin&', '', $hrefTemplate).'&sort='.$i],
-            )->all(),
-        ];
 
         $level0 = $level === 0;
         $barcodes = $prefs['barcodes'];
@@ -284,63 +273,104 @@ final class DashboardController extends Controller
         }
         $sortItems[] = ['Entry Check-In', $checkIn];
 
-        // Sorting Sheets + Sorting Into Tables (legacy default.admin.php:910-936).
+        // Sorting Sheets + Sorting Into Tables (legacy default.admin.php:909-933).
+        $sortingSheets = [
+            $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards'),
+            $l('/admin/output/sorting?go=default&filter=default&view=entry', 'Entry Numbers'),
+        ];
         if ($obfuscate === 0) {
-            $sortItems[] = ['Sorting Sheets', [
-                $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards'),
-                $l('/admin/output/sorting?go=default&filter=default&view=entry', 'Entry Numbers'),
-                $l('/admin/output/sorting?go=default&filter=default', 'Judging Numbers'),
-                $l('/admin/output/sorting?go=cheat&filter=default', 'Cheat Sheets'),
-            ]];
-            $sortItems[] = ['Sorting Into Tables', [
-                $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'),
-                $l('/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'),
-            ]];
+            $sortingSheets[] = $l('/admin/output/sorting?go=default&filter=default', 'Judging Numbers');
+            $sortingSheets[] = $l('/admin/output/sorting?go=cheat&filter=default', 'Cheat Sheets');
         }
+        $sortItems[] = ['Sorting Sheets', $sortingSheets];
 
-        // Print Bottle Labels (PDF) — label-template matrix (legacy labels-admin).
+        // Sorting Into Tables — always shown (default.admin.php:922-933).
+        $sortItems[] = ['Sorting Into Tables', [
+            $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'),
+            $l('/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'),
+        ]];
+
+        // Print Bottle Labels (PDF) + Print Box Labels (PDF) — the paper-by-paper
+        // label matrix (legacy default.admin.php:934-1241, labels-admin branch).
+        // Each row is one PAPER (product link on the left, e.g. "Letter / Avery
+        // 5160"); its options live on the right, each with its own real
+        // "Number of Labels per Entry/Table/Judge" 1-12 dropdown.
         if ($obfuscate === 0) {
+            $labelsHref = static fn (string $qs): string => '/admin/output/labels?'
+                .str_replace('section=labels-admin&', '', $qs);
+            // One count menu: the descriptive option text + a dropdown of 1-12.
+            $countOpt = static fn (string $label, string $qs, string $button = 'Number of Labels per Entry'): array => [
+                'label' => $label,
+                'button' => $button,
+                'children' => collect(range(1, 12))->map(
+                    fn (int $i): array => ['label' => (string) $i, 'href' => $labelsHref($qs).'&sort='.$i],
+                )->all(),
+            ];
+            // One option row, drawn as a two-column paper block.
+            $paper = static fn (string $label, string $href, array $options, string $title = ''): array => [
+                'paper' => $label, 'href' => $href, 'options' => $options, 'title' => $title,
+            ];
+
             $bottle = [];
-            $bottle[] = $family('Letter (Avery 5160) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=5160')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=5160')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — With Required Info, All Styles (Entry Numbers)', $countFamily('With Required Info, All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=5160')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=5160')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=3422')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=3422')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Entry Numbers)', $countFamily('With Required Info, All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=3422')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=3422')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160&tb=received')['children']);
-            $bottle[] = $family('Letter (Avery 5160) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160&tb=received')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422&tb=received')['children']);
-            $bottle[] = $family('A4 (Avery 3422) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422&tb=received')['children']);
-            $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
-            $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
-            $bottle[] = $family('Round (Avery OL32) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL32')['children']);
-            $bottle[] = $family('Round (Avery OL32) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL32')['children']);
-            $bottle[] = $family('Round (Avery OL32) — Category Only', $countFamily('Category Only', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL32')['children']);
-            $bottle[] = $family('Round (Avery OL32) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL32')['children']);
-            $bottle[] = $family('Round (Avery OL5275WR) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL5275WR')['children']);
-            $bottle[] = $family('Round (Avery OL5275WR) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL5275WR')['children']);
-            $bottle[] = $family('Round (Avery OL5275WR) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL5275WR')['children']);
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=5160', 'Entry Numbers');
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=5160', 'Judging Numbers');
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=3422', 'Entry Numbers');
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=3422', 'Judging Numbers');
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167', 'Quicksort — 6 Labels per Entry');
-            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167&tb=short', 'Quicksort — 3 Labels per Entry');
-            $sortItems[] = ['Print Bottle Labels (PDF)', $bottle];
+            $bottle[] = $paper(
+                (string) 'Letter',
+                'https://www.avery.com/products/labels/5167',
+                [['label' => 'Quicksort - 6 Labels per Entry', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167')],
+                    ['label' => 'Quicksort - 3 Labels per Entry', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167&tb=short')]],
+            );
+            $bottle[] = $paper(
+                'Letter',
+                'https://www.avery.com/products/labels/5160',
+                [['label' => 'Entry Numbers', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=5160')],
+                    ['label' => 'Judging Numbers', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=5160')],
+                    $countOpt('With Required Info - All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=5160'),
+                    $countOpt('With Required Info - Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160'),
+                    $countOpt('With Required Info - All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=5160'),
+                    $countOpt('With Required Info - Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160')],
+            );
+            $bottle[] = $paper(
+                'A4',
+                'https://www.avery.fi/product/multipurpose-labels-ultragrip-3422',
+                [['label' => 'Entry Numbers', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-entry&filter=default&psort=3422')],
+                    ['label' => 'Judging Numbers', 'href' => $labelsHref('section=labels-admin&go=entries&action=bottle-judging&filter=default&psort=3422')],
+                    $countOpt('With Required Info - All Styles (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=all&psort=3422'),
+                    $countOpt('With Required Info - Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422'),
+                    $countOpt('With Required Info - All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=3422'),
+                    $countOpt('With Required Info - Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')],
+            );
+            $bottle[] = $paper(
+                '0.50 in/13 mm Round',
+                'http://www.onlinelabels.com/Products/OL32.htm',
+                [$countOpt('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL32'),
+                    $countOpt('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL32'),
+                    $countOpt('Style/Sub-Style Only', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL32'),
+                    $countOpt('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL32')],
+            );
+            $bottle[] = $paper(
+                '0.75 in/19 mm Round',
+                'http://www.onlinelabels.com/Products/OL5275WR.htm',
+                [$countOpt('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL5275WR'),
+                    $countOpt('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL5275WR'),
+                    $countOpt('Style/Sub-Style Only', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR'),
+                    $countOpt('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')],
+            );
+            $sortItems[] = ['Print Bottle Labels (PDF)', ['matrix' => $bottle]];
 
             // Print Box Labels (PDF).
             $box = [];
-            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables')['children']);
-            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges')['children']);
-            $box[] = $family('A4 (Avery 3422) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422')['children']);
-            $box[] = $family('A4 (Avery 3422) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422')['children']);
-            $sortItems[] = ['Print Box Labels (PDF)', $box];
+            $box[] = $paper(
+                'Letter',
+                'https://www.avery.com/products/labels/5160',
+                [$countOpt('Box Labels (by Table)', 'section=labels-admin&go=judging_tables', 'Number of Labels per Table'),
+                    $countOpt('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges', 'Number of Labels per Judge')],
+            );
+            $box[] = $paper(
+                'A4',
+                'https://www.avery.fi/product/multipurpose-labels-ultragrip-3422',
+                [$countOpt('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422', 'Number of Labels per Table'),
+                    $countOpt('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422', 'Number of Labels per Judge')],
+            );
+            $sortItems[] = ['Print Box Labels (PDF)', ['matrix' => $box]];
         }
 
         $left[] = ['Entry Sorting', 'fa-exchange',

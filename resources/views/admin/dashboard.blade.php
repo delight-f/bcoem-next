@@ -107,6 +107,62 @@
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
                                         <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
+                                                @if (isset($rowLinks['matrix']))
+                                                    {{-- Print Bottle/Box Labels matrix (default.admin.php:934-1241): each paper
+                                                         (product link on the left) owns option rows, each with a real
+                                                         "Number of Labels per Entry/Table/Judge" 1-12 dropdown. --}}
+                                                    <div class="row" style="padding-top: 20px;">
+                                                        <div class="col-12">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    @foreach ($rowLinks['matrix'] as $paper)
+                                                        <div class="row @if ($loop->last) mb-0 @else mb-2 @endif">
+                                                            <div class="col-12 col-md-4 small">
+                                                                @php
+                                                                    // Legacy left-cell tooltip names the product (e.g. "Avery 5160",
+                                                                    // "Online Lables OL32"); it disambiguates the two "Letter" papers.
+                                                                    $base = (string) $paper['href'];
+                                                                    $stem = preg_replace('~[?#].*$~', '', $base);
+                                                                    $stem = preg_replace('~\.[A-Za-z0-9]+$~', '', $stem);
+                                                                    if (preg_match('/(\d+|[A-Z]+\d+[A-Z]*)$/', $stem, $m)) {
+                                                                        $pcode = $m[1];
+                                                                    } else {
+                                                                        $pcode = basename($stem);
+                                                                    }
+                                                                    $ptitle = str_contains($base, 'onlinelabels.com')
+                                                                        ? 'Online Lables '.$pcode
+                                                                        : 'Avery '.$pcode;
+                                                                @endphp
+                                                                <a href="{{ $paper['href'] }}" target="_blank" rel="noopener"
+                                                                   data-bs-toggle="tooltip" data-bs-placement="right"
+                                                                   title="{{ $ptitle }}">{{ $paper['paper'] }} <span class="fa fa-sm fa-external-link"></span></a>
+                                                            </div>
+                                                            <div class="col-12 col-md-8 small">
+                                                                <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
+                                                                    @foreach ($paper['options'] as $opt)
+                                                                        <li class="d-inline-flex align-items-center gap-2">
+                                                                            @if (isset($opt['children']))
+                                                                                <span class="text-muted">{{ $opt['label'] }}</span>
+                                                                                <div class="btn-group">
+                                                                                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                                                                                            aria-haspopup="true" aria-expanded="false">{{ $opt['button'] }}</button>
+                                                                                    <ul class="dropdown-menu">
+                                                                                        @foreach ($opt['children'] as $child)
+                                                                                            <li><a class="dropdown-item" href="{{ url($child['href']) }}" target="_blank" rel="noopener">{{ $child['label'] }}</a></li>
+                                                                                        @endforeach
+                                                                                    </ul>
+                                                                                </div>
+                                                                            @else
+                                                                                <a href="{{ url($opt['href']) }}" target="_blank" rel="noopener">{{ $opt['label'] }}</a>
+                                                                            @endif
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                @else
                                                 <div class="row">
                                                     <div class="col-12 col-md-4 small">
                                                         <strong>{{ $category }}</strong>
@@ -159,6 +215,7 @@
                                                         @endif
                                                     </div>
                                                 </div>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
