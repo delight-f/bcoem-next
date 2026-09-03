@@ -101,6 +101,7 @@ final class RegressionProbeTest extends DuskTestCase
                   padLeft: links.map(a => getComputedStyle(a).paddingLeft),
                   padRight: links.map(a => getComputedStyle(a).paddingRight),
                   gap: links.length > 1 ? links[1].getBoundingClientRect().left - links[0].getBoundingClientRect().right : null,
+                  revealCards: document.querySelectorAll('.glance-card-bg.reveal-element').length,
                 });
             ")[0];
             fwrite(STDERR, "\nPUBLIC-NAV: ".$state."\n");

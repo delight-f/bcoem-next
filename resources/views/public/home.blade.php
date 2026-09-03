@@ -18,7 +18,7 @@
             'suffix' => $resultsSuffix ?? null,
         ])
 
-        @includeWhen($cardsVisible, 'public.partials.glance', ['cards' => $glance])
+        @includeWhen($cardsVisible, 'public.partials.glance', ['cards' => $glance, 'reveal' => true])
     </section>
 
     @includeWhen($windows->futureJudgingSessions > 0, 'public.partials.rules-section')

@@ -1,4 +1,5 @@
 @php($stacked = $stacked ?? false)
+@php($reveal = $reveal ?? false)
 <div class="row {{ $stacked ? 'row-cols-1 gy-3' : 'row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-center' }} mt-1 d-print-none">
     @foreach ($cards as $card)
         @php($icon = $card['icon'] ?? match ($card['color']) {
@@ -8,7 +9,9 @@
         })
         @php($iconClass = $icon === 'sync-spin' ? 'fa fa-sync fa-spin' : 'fa fa-'.$icon)
         <div class="col">
-            <div class="card h-100 glance-card-bg">
+            {{-- at-a-glance.pub.php:593 — the state cards reveal on scroll like
+                 the sections, but only on the home (section default) view. --}}
+            <div class="card h-100 glance-card-bg {{ $reveal ? 'reveal-element' : '' }}">
                 <div class="card-body glance-card-body">
                     <h5 class="card-title pt-2 pb-2 glance-header text-{{ $card['color'] }}-glance-header">{{ $card['title'] }}</h5>
                     <div class="position-absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 badge bg-{{ $card['color'] }}-glance-pill rounded-pill glance-status-pill"><i class="{{ $iconClass }} pe-2"></i> {{ $card['pill'] }}</div>
