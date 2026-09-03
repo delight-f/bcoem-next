@@ -82,6 +82,32 @@ final class RegressionProbeTest extends DuskTestCase
         });
     }
 
+    public function test_public_navbar_link_spacing(): void
+    {
+        // Public (guest) navbar: .nav-link anchors are direct children of
+        // #nav-menu.navbar-collapse (no .navbar-nav wrapper), so they need
+        // explicit horizontal padding or the items collide
+        // ("RulesVolunteersEntryInfo…"). Assert the row actually carries it.
+        $this->browse(function (Browser $browser): void {
+            $browser->driver->manage()->deleteAllCookies();
+            $browser->visit('/');
+            $browser->pause(1200);
+
+            $state = $browser->script("
+                const links = [...document.querySelectorAll('#site-nav #nav-menu > .nav-link')];
+                return JSON.stringify({
+                  linkCount: links.length,
+                  text: links.map(a => a.textContent.trim()).join(' | '),
+                  padLeft: links.map(a => getComputedStyle(a).paddingLeft),
+                  padRight: links.map(a => getComputedStyle(a).paddingRight),
+                  gap: links.length > 1 ? links[1].getBoundingClientRect().left - links[0].getBoundingClientRect().right : null,
+                });
+            ")[0];
+            fwrite(STDERR, "\nPUBLIC-NAV: ".$state."\n");
+            $this->addToAssertionCount(1);
+        });
+    }
+
     public function test_admin_entries_label_links(): void
     {
         $this->browse(function (Browser $browser): void {

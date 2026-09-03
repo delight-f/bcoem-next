@@ -209,6 +209,21 @@ html {
     color: #ffffff;
     text-decoration: none;
 }
+
+/* Public navbar links are .nav-item.nav-link <a> DIRECT children of the
+   #nav-menu .navbar-collapse (no .navbar-nav wrapper), so Bootstrap 5's
+   `.navbar-expand-md .navbar-nav .nav-link` horizontal padding never
+   applies and the items collide ("RulesVolunteersEntryInfo…"). Give the
+   row the spacing a real navbar-nav link would carry. Mobile keeps its
+   stacked column layout (#nav-menu media rule below). */
+@media (min-width: 768px) {
+    #site-nav #nav-menu > .nav-link {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+}
 .site-nav,
 .site-footer {
     background: var(--gray-dark);
