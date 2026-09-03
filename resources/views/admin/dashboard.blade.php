@@ -112,31 +112,51 @@
                                                         <strong>{{ $category }}</strong>
                                                     </div>
                                                     <div class="col-12 col-md-8 small">
-                                                        <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
-                                                            @foreach ($rowLinks as $item)
-                                                                @if (isset($item['children']))
-                                                                    <li class="text-muted">
-                                                                        <span class="text-muted">{{ $item['label'] }}</span>
-                                                                        @if (($item['descriptor'] ?? 'labels per entry') !== '')
-                                                                            <span class="text-muted">— {{ $item['descriptor'] }}:</span>
+                                                        {{-- Legacy default.admin.php keeps per-row option groups in separate
+                                                             <ul> blocks (e.g. Participants: Manage alone, then the assign links).
+                                                             A row whose first entry is a bare list of link items renders one
+                                                             <ul> per nested list; otherwise all items share a single <ul>. --}}
+                                                        @if ($rowLinks !== [] && is_array($rowLinks[0]) && array_is_list($rowLinks[0]))
+                                                            @foreach ($rowLinks as $line)
+                                                                <ul class="d-flex flex-wrap list-unstyled gap-2 @if ($loop->last) mb-0 @else mb-1 @endif">
+                                                                    @foreach ($line as $item)
+                                                                        @if (!empty($item['modal']))
+                                                                            <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
+                                                                        @elseif (!empty($item['todo']))
+                                                                            <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
+                                                                        @else
+                                                                            <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
                                                                         @endif
-                                                                        @foreach ($item['children'] as $child)
-                                                                            @if (! empty($child['href']))
-                                                                                <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
-                                                                            @else
-                                                                                <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                    @endforeach
+                                                                </ul>
+                                                            @endforeach
+                                                        @else
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
+                                                                @foreach ($rowLinks as $item)
+                                                                    @if (isset($item['children']))
+                                                                        <li class="text-muted">
+                                                                            <span class="text-muted">{{ $item['label'] }}</span>
+                                                                            @if (($item['descriptor'] ?? 'labels per entry') !== '')
+                                                                                <span class="text-muted">— {{ $item['descriptor'] }}:</span>
                                                                             @endif
-                                                                        @endforeach
-                                                                    </li>
-                                                                @elseif (!empty($item['modal']))
-                                                                    <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
-                                                                @elseif (!empty($item['todo']))
-                                                                    <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
-                                                                @else
-                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
-                                                                @endif
-                                                        @endforeach
-                                                        </ul>
+                                                                            @foreach ($item['children'] as $child)
+                                                                                @if (! empty($child['href']))
+                                                                                    <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
+                                                                                @else
+                                                                                    <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                                @endif
+                                                                            @endforeach
+                                                                        </li>
+                                                                    @elseif (!empty($item['modal']))
+                                                                        <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
+                                                                    @elseif (!empty($item['todo']))
+                                                                        <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
+                                                                    @else
+                                                                        <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                    @endif
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach

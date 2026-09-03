@@ -233,37 +233,28 @@ final class DashboardController extends Controller
             ];
         }
 
-        // Entries, Payments, and Participants — legacy Entries/Payments and Participants.
         $entriesItems = [];
-        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage'), $l('/backoffice/entries?view=paid', 'Paid')]];
+        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
         if ($prefs['paypalIpn']) {
             $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
         }
-        $participantLinks = [$l('/backoffice/participants', 'Manage')];
+        $participantManage = [$l('/backoffice/participants', 'Manage')];
+        $participantAssign = [
+            $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
+            $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
+        ];
         if ($level0) {
-            array_push(
-                $participantLinks,
-                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
-                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
-                $l('/backoffice/participants?filter=staff', 'Assign/Unassign Staff'),
-                $l('/backoffice/participants?filter=staff&view=yes', 'Assign/Unassign Staff (Interested Only)'),
-            );
-        } else {
-            array_push(
-                $participantLinks,
-                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
-                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
-            );
+            $participantAssign[] = $l('/backoffice/participants?filter=staff', 'Assign/Unassign Staff');
         }
-        $entriesItems[] = ['Participants', $participantLinks];
+        // Legacy default.admin.php renders the Participant and Register rows as
+        // separate <ul> line groups (Manage alone; the assign links together),
+        // so each line is its own nested list for the accordion renderer.
+        $entriesItems[] = ['Participants', [$participantManage, $participantAssign]];
         $entriesItems[] = ['Register', [
-            $l('/register/entrant', 'A Participant'),
-            $l('/register/judge?view=quick', 'A Judge (Quick)'),
-            $l('/register/judge', 'A Judge (Standard)'),
-            $l('/register/steward?view=quick', 'A Steward (Quick)'),
-            $l('/register/steward', 'A Steward (Standard)'),
+            [$l('/register/entrant', 'A Participant')],
+            [$l('/register/judge?view=quick', 'A Judge (Quick)'), $l('/register/judge', 'A Judge (Standard)')],
+            [$l('/register/steward?view=quick', 'A Steward (Quick)'), $l('/register/steward', 'A Steward (Standard)')],
         ]];
-
         $left[] = ['Entries, Payments, and Participants', 'fa-beer',
             'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
             $entriesItems,
