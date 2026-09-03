@@ -48,7 +48,7 @@
                                 <span title="{{ __('site.edit_locked') }}"><i class="fa fa-fw fa-lg fa-pencil text-muted"></i></span>
                             @endif
                             @if ($r['canDelete'])
-                                <form method="post" action="{{ route('entries.destroy', ['id' => $e->id]) }}" class="d-inline">
+                                <form method="post" action="{{ route('entries.destroy', ['id' => $e->id]) }}" class="d-inline"
                                     onsubmit="return confirm('{{ __('site.delete_confirm') }}');">
                                     @csrf
                                     <button type="submit" class="btn btn-link p-0 align-baseline" title="{{ __('site.delete') }}">

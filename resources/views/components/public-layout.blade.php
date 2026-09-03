@@ -160,7 +160,7 @@
          (custom class, unlayered CSS in app.css) preserves the brux gradient
          look; BS5's data-api drives the user dropdown. The off-canvas navmenu
          below is still BS3 until issue 6. --}}
-    <nav class="navbar navbar-dark admin-topbar fixed-top d-print-none" style="z-index: 1000;">
+    <nav class="navbar navbar-expand navbar-dark admin-topbar fixed-top d-print-none" style="z-index: 1000;">
         <div class="container-fluid">
             <div class="admin-nav-body">
                 <ul class="navbar-nav me-auto">

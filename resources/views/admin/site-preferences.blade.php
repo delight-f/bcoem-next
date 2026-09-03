@@ -302,7 +302,7 @@
                     'prefsUserSubCatLimit' => 'Per Participant Sub-Style Entry Limit',
                 ] as $field => $label)
                     <div class="mb-4 row">
-                        <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
+                        <label for="{{ $field }}" class="col-md-4 col-form-label">{!! $label !!}</label>
                         <div class="col-md-9"><input class="form-control" id="{{ $field }}" name="{{ $field }}" type="number" min="1" style="width:auto;" value="{{ $p($field) }}"></div>
                     </div>
                 @endforeach
@@ -659,7 +659,7 @@
                         'prefsHMPts' => 'Points for Honorable Mention',
                     ] as $field => $label)
                         <div class="mb-4 row">
-                            <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
+                            <label for="{{ $field }}" class="col-md-4 col-form-label">{!! $label !!}</label>
                             <div class="col-md-8">
                                 <select class="form-select" name="{{ $field }}" id="{{ $field }}">
                                     @foreach (range(0, 25) as $i)

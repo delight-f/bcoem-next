@@ -26,16 +26,25 @@ primary #1565C0, info #29B6F6/#0288D1, success #4CAF50, warning #FF9800,
 danger #F44336; greys #394a59…#DFE4EC; container-fluid layout, page-header
 h1 pattern, panels, navbar-inverse, Jasny off-canvas right menu.
 
-### Port design system
+### Port design system (re-baseline — issue 12)
 
-- Tailwind CSS + daisyUI, two themes (app.css):
-  `bcoem` public — Bootstrap-5 blue family (#007bff primary) from legacy
-  `default-3.min.css`; `bcoem-brux` admin — the Materials palette above.
-- Bootstrap-class compat layer (row/col/container/table/nav/form/lead/h*)
-  so views keep legacy class names.
-- Admin pages load jQuery 2.2.4 + BS 3.3.7 JS + flatpickr from CDN;
-  FontAwesome 6.5.1 everywhere (legacy: FA4 admin / FA6 public — v4 shims
-  only on legacy public).
+- **Single real Bootstrap 5** build (no Tailwind, no daisyUI, no BS3 compat
+  shim). `resources/css/app.css` declares `@layer bs5` with the BS5 import
+  at the lowest layer; all legacy identity/BS3-replica CSS is unlayered
+  author CSS that beats the `bs5` layer.
+- Two theme palettes, both mapped to BS5 `--bs-*` component variables:
+  `:root` — public bcoem palette (#007bff primary, #17a2b8 info, #28a745
+  success, #dc3545 danger, #ffc107 warning), matching legacy default-3.css;
+  `[data-bs-theme="bcoem-brux"]` — admin Materials palette (#1565C0 primary,
+  #29B6F6 info, #4CAF50 success, #F44336 danger, #FF9800 warning),
+  matching legacy bruxellensis.css. BS5 `.btn-*`/alerts rebound to `var(--bs-*)`
+  so both themes flow through one mechanism.
+- No jQuery, no Bootstrap 3 JS CDN — BS5's `bootstrap.bundle.js` drives all
+  interactions (dropdowns, modals, collapse, offcanvas, tooltips via the
+  `.bcoem-tooltip` CSS pattern). Flatpickr (admin date picker, CDN) and the
+  framework-agnostic DataTables-parity sort/pagination remain.
+- FontAwesome 6.5.1 everywhere (v4 shims via `fa-solid` + `fa-regular` +
+  `fa-brands` CSS).
 
 ## Verified structural parity (from markup diffs + views)
 

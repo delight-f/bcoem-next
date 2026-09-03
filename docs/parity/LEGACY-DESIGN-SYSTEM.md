@@ -38,17 +38,27 @@ Reconstructed from `css/common.css`, `css/common-3.css`, `css/default-3.css`,
 - Panels: BS3 `.panel .panel-heading .panel-title .panel-body` with
   success/danger/info variants for window states
 
-## Port mapping (verified)
+## Port mapping (verified — issue 12 re-baseline)
 
 `resources/css/app.css`:
 
-- daisyUI theme `bcoem` (default) = public palette (default-3 :root vars)
-- daisyUI theme `bcoem-brux` = admin palette (bruxellensis)
-- `data-theme="bcoem-brux"` set by public-layout when admin-side
-- BS5 layout primitives + legacy `:root` CSS vars (--blue…--dark,
-  --breakpoint-*) + heading scales inside `@layer components`
-- legacy classes `bcoem-*`, `landing-page-*`, panels carried via the
-  migrated legacy CSS blocks (app.css lines ~263-418 unlayered→components)
+- **Single real Bootstrap 5** build (no Tailwind, no daisyUI, no BS3 compat
+  shim). BS5 sits in its own `@layer bs5` (lowest layer); all legacy
+  identity CSS is unlayered author CSS, which beats the `bs5` layer.
+- Theme split via BS5 `data-bs-theme` attribute:
+  `:root` — public bcoem palette (default-3), matching the legacy
+  `:root` values from `default-3.min.css`;
+  `[data-bs-theme="bcoem-brux"]` — admin Materials palette, matching the
+  legacy `bruxellensis.css` palette. Applied by `public-layout.blade.php`
+  when `$isAdminSide` is true.
+- `data-bs-theme="bcoem-brux"` set on `<html>` for admin/backoffice/eval
+  requests.
+- BS5 layout primitives (grid, containers, forms, cards, nav, modal,
+  offcanvas, dropdown) + legacy `:root` CSS vars (--blue, --primary,
+  --breakpoint-*, --font-family-*, --bs-* bridge) + heading scales.
+- Legacy classes `bcoem-*`, `landing-page-*`, brux palette, panel-info
+  card variants, and the admin chrome are carried as unlayered legacy
+  identity CSS (no longer a BS3 compat layer).
 
 ## Gaps in the mapping
 

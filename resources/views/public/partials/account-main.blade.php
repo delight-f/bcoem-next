@@ -30,7 +30,7 @@
                 @endif
                 <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}"><i class="fa fa-lg fa-money-bill me-2"></i>{{ __('site.pay') }}</a>
                 <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>{{ __('site.edit_account') }}</a>
-                <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-envelope me-2"></i>{{ __('site.change_email') }}</a>
+                <a class="btn btn-dark" href="{{ url('/user/username') }}"><i class="fa fa-envelope me-2"></i>{{ __('site.change_email') }}</a>
                 <a class="btn btn-dark" href="{{ url('/user/password') }}"><i class="fa fa-key me-2"></i>{{ __('site.change_password') }}</a>
                 @if ((int) $ctx->prefsStr('prefsEval') === 1 && ($info['brewer']->brewerJudge ?? '') === 'Y' && ! $judgingStarted)
                     <a class="btn btn-primary" href="{{ url('/eval') }}"><i class="fa fa-gavel me-2"></i>{{ __('site.judging_dashboard') }}</a>

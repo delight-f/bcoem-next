@@ -28,12 +28,16 @@ legacy application is split-framework:
 | Public pages (`index.pub.php`) | Bootstrap 5.3.3 + Ninja Bootstrap + FontAwesome 6.7.2 + DataTables 2.1.8 + animate.css + tom-select |
 | Admin pages (`index.legacy.php`) | Bootstrap 3.3.7 + FontAwesome 4.5.0 + DataTables 1.10.12 + fancybox 3.5.7 + moment.js + eonasdan datetimepicker |
 
-The port replaces both with Tailwind CSS + daisyUI (two themes: `bcoem` public,
-`bcoem-brux` admin), plus a hand-written Bootstrap 5 compat layer in
-`resources/css/app.css` for `.row`/`.col-*`/`.container-*`/`.table-*`/`.nav-*`
-utilities still referenced by Blade views. Admin pages additionally load
-jQuery 2.2.4 + Bootstrap 3.3.7 JS (modal/dismiss) and flatpickr (date picker
-replacing moment/eonasdan).
+The port runs both surfaces on a **single real Bootstrap 5** build
+(`@layer bs5` in `resources/css/app.css`) — no Tailwind, no daisyUI, no
+hand-written Bootstrap 3 compat layer (the expand–contract migration,
+issues 3–12, deleted the Tailwind/daisyUI/compat stacks once every view was
+purged). Two BS5 theme palettes map the legacy split: `:root` carries the
+public bcoem palette (default-3) and `[data-bs-theme="bcoem-brux"]` carries
+the admin Materials palette (bruxellensis). Bootstrap 5's own JS
+(`bootstrap.bundle.js`) drives dropdowns, modals, collapse, and offcanvas;
+flatpickr (admin date picker, CDN) and a framework-agnostic client-side
+table sort replace moment/eonasdan and DataTables.
 
 ## Scoreboard
 
