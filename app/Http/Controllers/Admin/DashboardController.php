@@ -50,9 +50,12 @@ final class DashboardController extends Controller
             'eval' => (string) $ctx->prefsStr('prefsEval') === '1',
             'showBestBrewer' => (int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0,
             'showBestClub' => (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0,
-            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1,
             // Legacy $barcode_qrcode_array (bottle_label.output.php :93-99).
             'barcodes' => in_array((int) $ctx->prefsStr('prefsEntryForm'), [1, 3, 5, 6, 0, 11], true),
+            // Tables Planning/Competition mode (default.admin.php Tables row)
+            // and the queued-judging flag that gates the Flights row.
+            'tablesPlanning' => (string) ($ctx->judgingStr('jPrefsTablePlanning') ?? '0') === '1',
+            'queued' => (string) ($ctx->judgingStr('jPrefsQueued') ?? 'Y') === 'N',
         ];
 
         $counts = [
@@ -200,6 +203,8 @@ final class DashboardController extends Controller
         $level0 = $level === 0;
         $barcodes = $prefs['barcodes'];
         $tables = $counts['tables'];
+        $planning = $prefs['tablesPlanning'];
+        $queued = $prefs['queued'];
 
         $left = [];
 
@@ -385,13 +390,34 @@ final class DashboardController extends Controller
                 $l('/admin/judging/tables?action=assign&filter=stewards', 'Stewards'),
                 $l('/admin/judging/tables?action=assign&filter=staff', 'Staff'),
             ]],
-            ['Tables', array_merge(
+            // Tables row + the planning/competition-mode switch
+            // (default.admin.php:1273-1287). Row links are Manage / Add /
+            // [Assign Judges/Stewards if tables>1]; the mode switch adds its
+            // own indicator + two buttons under them, so the row is emitted
+            // as a dedicated "tables-mode" block for the blade renderer.
+            // Rendered by the blade's dedicated tables-mode branch: row links
+            // plus the planning/competition switch.
+            ['tables-mode', ['links' => array_merge(
                 [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
                 $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
-            )],
-            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights/rounds', 'Assign Tables to Rounds'), $l('/admin/judging/flights', 'Add')]],
-            ['BOS Judges', [$l('/backoffice/participants?filter=bos', 'Add')]],
+            ), 'planning' => $planning]],
         ];
+        if ($queued) {
+            // Flights row — only when queued judging is disabled
+            // (default.admin.php:1288-1300). Manage and Add both land on the
+            // flights screen, like legacy.
+            $orgItems[] = ['Flights', [
+                $l('/admin/judging/flights', 'Manage'),
+                $l('/admin/judging/flights', 'Add'),
+            ]];
+        }
+        if ($tables > 1) {
+            // BOS Judges (default.admin.php:1302-1315) — only when more than
+            // one table is defined.
+            $orgItems[] = ['BOS Judges', [
+                $l('/admin/judging/tables?action=assign&filter=bos', 'Add'),
+            ]];
+        }
         $left[] = ['Organizing', 'fa-tasks',
             'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
             $orgItems,

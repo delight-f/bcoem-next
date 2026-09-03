@@ -107,7 +107,41 @@
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
                                         <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
-                                                @if (isset($rowLinks['matrix']))
+                                                @if ($category === 'tables-mode')
+                                                    {{-- Organizing → Tables + the Planning/Competition mode switch
+                                                         (default.admin.php:1273-1287). Row links on the left; the mode
+                                                         indicator + both switch buttons under them. --}}
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>Tables</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
+                                                                @foreach ($rowLinks['links'] as $item)
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                @endforeach
+                                                            </ul>
+                                                            @php
+                                                                $modePlanning = (bool) ($rowLinks['planning'] ?? false);
+                                                                $modeId = 'tables-mode-'.$side.'-'.$loop->parent->index;
+                                                            @endphp
+                                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                                <strong><span id="tables-mode-indicator-{{ $loop->index }}" class="{{ $modePlanning ? 'text-success' : 'text-primary' }}">{{ $modePlanning ? '*** Tables Planning Mode ***' : '*** Tables Competition Mode ***' }}</span></strong>
+                                                                @if ($modePlanning)
+                                                                    <button type="button" id="tables-competition-button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
+                                                                        Switch to Tables <strong>Competition</strong> Mode
+                                                                    </button>
+                                                                    <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
+                                                                @else
+                                                                    <button type="button" id="table-planning-button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tables-planning-mode-modal">
+                                                                        Switch to Tables <strong>Planning</strong> Mode
+                                                                    </button>
+                                                                    <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received in the system. Pullsheets will not be available."></span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @elseif (isset($rowLinks['matrix']))
                                                     {{-- Print Bottle/Box Labels matrix (default.admin.php:934-1241): each paper
                                                          (product link on the left) owns option rows, each with a real
                                                          "Number of Labels per Entry/Table/Judge" 1-12 dropdown. --}}
@@ -227,6 +261,71 @@
                 </div>
             </div>
         </div>
+
+        {{-- Tables Planning/Competition mode confirm dialogs + submit
+             (default.admin.php mode-switch JS → ajax/tables_mode.ajax.php;
+             port TablesModeController at POST /admin/judging/tables-mode). --}}
+        <div class="modal fade" id="tables-planning-mode-modal" tabindex="-1" role="dialog" aria-labelledby="tables-planning-mode-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title fw-bold" id="tables-planning-mode-modal-label">Please Confirm</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to switch to Tables Planning Mode? This should only be done <strong>before</strong> entries have been sorted and marked as received.</p>
+                        <p>While in Tables Planning Mode, table entry counts and pullsheets reflect all entries, not only received ones, and any table configurations and associated assignments will <strong>not</strong> be official until you return to Tables Competition Mode.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="tables-planning-button-yes" class="btn btn-success" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="tables-competition-mode-modal" tabindex="-1" role="dialog" aria-labelledby="tables-competition-mode-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title fw-bold" id="tables-competition-mode-modal-label">Please Confirm</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to switch to Tables Competition Mode? This should only be done after <strong>all</strong> entries have been sorted and those present are <strong>marked as received</strong> in the system.</p>
+                        <p>Before you do, take note that, after switching to Tables Competition Mode:</p>
+                        <ul class="small mb-0">
+                            <li>Table entry counts will only reflect entries marked as received.</li>
+                            <li>Non-received entries&rsquo; flight designations will be reset to 1 (default) should any be marked as received after switching to Competition Mode. Flight positions and associated rounds should be reviewed prior to judging.</li>
+                            <li>If there are no entries marked as received for a particular sub-style, the sub-style will be removed from the table&rsquo;s styles list.</li>
+                            <li>If there are no entries marked as received for all sub-styles defined for a table, that table will be deleted.</li>
+                            <li>Judges and stewards that have entries at a table where they are assigned will be un-assigned from that table as a failsafe.</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="tables-competition-button-yes" class="btn btn-success" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+                    || document.querySelector('input[name="_token"]')?.value;
+                const postMode = (section) => fetch('{{ url('/admin/judging/tables-mode') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': csrf },
+                    body: 'section=' + encodeURIComponent(section),
+                }).then((r) => { if (r.ok) window.location.reload(); });
+                document.getElementById('tables-planning-button')?.addEventListener('click', () =>
+                    new bootstrap.Modal(document.getElementById('tables-planning-mode-modal')).show());
+                document.getElementById('tables-planning-button-yes')?.addEventListener('click', () => postMode('enable-planning'));
+                document.getElementById('tables-competition-button')?.addEventListener('click', () =>
+                    new bootstrap.Modal(document.getElementById('tables-competition-mode-modal')).show());
+                document.getElementById('tables-competition-button-yes')?.addEventListener('click', () => postMode('enable-competition'));
+            });
+        </script>
+
          {{-- sidebar.admin.php: Donate + Competition Status panel --}}
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
