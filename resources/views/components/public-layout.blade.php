@@ -163,23 +163,23 @@
     <nav class="navbar navbar-dark admin-topbar fixed-top d-print-none" style="z-index: 1000;">
         <div class="container-fluid">
             <div class="admin-nav-body">
-                <ul class="nav navbar-nav">
-                    <li><a class="hide-loader" href="{{ url('/') }}">Home</a></li>
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item"><a class="nav-link hide-loader" href="{{ url('/') }}">Home</a></li>
                 </ul>
-                <ul class="nav navbar-nav navbar-right">
-                    <li><a class="hide-loader d-none d-xl-block" href="#" onclick="window.print()" role="button"><span class="fa fa-print"></span></a></li>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link hide-loader d-none d-xl-block" href="#" onclick="window.print()" role="button"><span class="fa fa-print"></span></a></li>
                     @auth
                         <li class="nav-item dropdown">
                             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false"><span class="fa fa-user"></span></a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li class="dropdown-header"><strong>{{ auth()->user()->user_name }}</strong></li>
-                                <li role="separator" class="divider"></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url('/list') }}" tabindex="-1">{{ __('site.my_account') }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/list/edit-account') }}" tabindex="-1">{{ __('site.edit_account') }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/user/username?id='.auth()->id()) }}" tabindex="-1">{{ __('site.change_email') }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/user/password') }}" tabindex="-1">{{ __('site.change_password') }}</a></li>
                                 <li><a class="dropdown-item" href="{{ url('/pay') }}" tabindex="-1">{{ __('site.pay') }}</a></li>
-                                <li role="separator" class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="{{ route('logout') }}">
                                         @csrf
@@ -605,7 +605,7 @@
     @endif
     @if (($withSidebar ?? false) && ! $isAdminSide)
         <div class="row g-4">
-            <div class="col col-lg-9 col-md-8 col-sm-12 col-xs-12">
+            <div class="col-12 col-md-8 col-lg-9">
                 {{ $slot }}
             </div>
             <x-public-sidebar :ctx="$ctx" />

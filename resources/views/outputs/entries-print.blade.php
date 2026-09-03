@@ -1,5 +1,5 @@
 {{-- Legacy admin/entries.admin.php action=print (:988-1027): the entries table
-     as an HTML print view — no Actions column, no hidden-print columns,
+     as an HTML print view — no Actions column, no d-print-none columns,
      server-side psort ordering, self-print on load. --}}
 <!DOCTYPE html>
 <html lang="en">

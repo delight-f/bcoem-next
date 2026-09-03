@@ -3,7 +3,7 @@
         <h1>Custom Categories</h1>
         <p>Custom categories are useful if your competition features unique &ldquo;best of show&rdquo; categories, such as Pro-Am opportunities, Stewards&rsquo; Choice, Best Name, etc.</p>
 
-        <div class="bcoem-admin-element hidden-print mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             {{-- View... dropdown (special_best.admin.php:777-790). On the
                  default index the only item is "All Custom Category Entries",
                  enabled when winner rows exist. --}}

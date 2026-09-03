@@ -19,7 +19,7 @@
                 {{-- Legacy register.sec.php:334-362 — admin register chrome:
                      All Participants back button + standard/quick register
                      dropdowns (judge/steward), admin-form hrefs. --}}
-                <div class="bcoem-admin-element hidden-print mb-4">
+                <div class="bcoem-admin-element d-print-none mb-4">
                     <div class="btn-group" role="group">
                         <a class="btn btn-secondary" href="{{ url('/backoffice/participants') }}"><span class="fa fa-arrow-circle-left"></span> All Participants</a>
                     </div>

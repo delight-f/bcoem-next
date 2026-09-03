@@ -27,7 +27,7 @@
                 <label for="user_name" class="form-label"><span class="text-danger">*</span> <strong>{{ __('site.new_email') }}</strong></label>
                 <input class="form-control" id="user_name" name="user_name" type="email"
                        value="{{ old('user_name') }}" required autocomplete="email">
-                <div class="help-block invalid-feedback text-danger">{{ __('site.email_invalid') }}</div>
+                <div class="invalid-feedback text-danger">{{ __('site.email_invalid') }}</div>
                 <div id="username-status" class="mt-2 small"></div>
             </div>
 
@@ -37,7 +37,7 @@
                     <input class="form-check-input" type="checkbox" name="sure" value="Y" required @checked(old('sure'))>
                     {{ __('site.yes') }}
                 </label>
-                <div class="help-block invalid-feedback text-danger">{{ __('site.sure_required') }}</div>
+                <div class="invalid-feedback text-danger">{{ __('site.sure_required') }}</div>
             </div>
 
             <div class="d-grid gap-2 mt-4">

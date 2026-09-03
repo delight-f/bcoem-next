@@ -38,12 +38,12 @@
     $sbJudgeCap = $sbWindows->judgeCapReached;
     $sbStewardCap = $sbWindows->stewardCapReached;
 @endphp
-<div class="sidebar col col-lg-3 col-md-4 col-sm-12 col-xs-12">
+<div class="sidebar col-12 col-md-4 col-lg-3">
     {{-- 600: Past Winners --}}
     @if ($sbArchives !== [] || $sbWinnerLink !== '')
-        <div class="panel panel-info mb-3">
-            <div class="panel-heading"><h4 class="panel-title m-0">{{ __('site.past_winners') }}</h4></div>
-            <div class="panel-body">
+        <div class="card sidebar-panel-info mb-3">
+            <div class="card-header"><h4 class="card-title h6 m-0">{{ __('site.past_winners') }}</h4></div>
+            <div class="card-body">
                 <ul class="list-unstyled m-0">
                     @foreach ($sbArchives as $sbArchive)
                         <li><i class="fa fa-fw fa-trophy"></i> <a href="{{ url('/past-winners/'.$sbArchive->archiveSuffix) }}">{{ $sbArchive->archiveSuffix }}</a></li>
@@ -57,9 +57,9 @@
     @endif
 
     {{-- 400: Judging Locations --}}
-    <div class="panel panel-info mb-3 d-print-none">
-        <div class="panel-heading"><h4 class="panel-title m-0">{{ __('site.judging_locations') }}</h4></div>
-        <div class="panel-body">
+    <div class="card sidebar-panel-info mb-3 d-print-none">
+        <div class="card-header"><h4 class="card-title h6 m-0">{{ __('site.judging_locations') }}</h4></div>
+        <div class="card-body">
             @if ($sbJudging === [])
                 <p>{{ __('site.no_judging_locations') }}</p>
             @else
@@ -90,9 +90,9 @@
 
     {{-- 700: Non-Judging Locations --}}
     @if ($sbNonJudging !== [])
-        <div class="panel panel-info mb-3 d-print-none">
-            <div class="panel-heading"><h4 class="panel-title m-0">{{ __('site.non_judging_locations') }}</h4></div>
-            <div class="panel-body">
+        <div class="card sidebar-panel-info mb-3 d-print-none">
+            <div class="card-header"><h4 class="card-title h6 m-0">{{ __('site.non_judging_locations') }}</h4></div>
+            <div class="card-body">
                 @foreach ($sbNonJudging as $sbLoc)
                     <p class="mb-2">
                         @if ($sbLoc->judgingLocName !== '')<strong>{{ $sbLoc->judgingLocName }}</strong>@endif
@@ -113,11 +113,11 @@
     {{-- 100: Account Registration (anon only) --}}
     @if (! $sbLoggedIn)
         @php
-            $sbPanelClass = ($sbRegOpen || ($sbJudgeOpen && ! $sbJudgeCap)) || ($sbJudgeOpen && ! $sbStewardCap) ? 'panel-success' : (($sbWindows->registration === \App\Support\Tenant\WindowState::After && $sbWindows->judge === \App\Support\Tenant\WindowState::After) ? 'panel-danger' : 'panel-default');
+            $sbPanelClass = ($sbRegOpen || ($sbJudgeOpen && ! $sbJudgeCap)) || ($sbJudgeOpen && ! $sbStewardCap) ? 'sidebar-panel-success' : (($sbWindows->registration === \App\Support\Tenant\WindowState::After && $sbWindows->judge === \App\Support\Tenant\WindowState::After) ? 'sidebar-panel-danger' : 'sidebar-panel-default');
         @endphp
-        <div class="panel {{ $sbPanelClass }} mb-3">
-            <div class="panel-heading">
-                <h4 class="panel-title m-0">
+        <div class="card {{ $sbPanelClass }} mb-3">
+            <div class="card-header">
+                <h4 class="card-title h6 m-0">
                     {{ __('site.account_registration') }}
                     @if ($sbRegOpen) {{ __('site.open') }}
                     @elseif ($sbJudgeOpen && ! $sbJudgeCap && ! $sbStewardCap) {{ __('site.js_still_open') }}
@@ -127,7 +127,7 @@
                     @endif
                 </h4>
             </div>
-            <div class="panel-body">
+            <div class="card-body">
                 <p class="mb-2">{{ __('site.account_reg_open') }} {{ $sbShort($sbCtx->contestEpoch('contestRegistrationOpen')) }} {{ __('site.and') }} {{ $sbShort($sbCtx->contestEpoch('contestRegistrationDeadline')) }}.</p>
                 @if (! $sbJudgeCap && ! $sbStewardCap)
                     <p class="mb-2">{{ __('site.js_reg_open') }} {{ $sbShort($sbCtx->contestEpoch('contestJudgeOpen')) }} {{ __('site.and') }} {{ $sbShort($sbCtx->contestEpoch('contestJudgeDeadline')) }}.</p>
@@ -142,16 +142,16 @@
 
     {{-- 200: Entry Window --}}
     @if (! $sbLoggedIn || true)
-        <div class="panel {{ $sbEntryOpen && ! $sbWindows->compEntryLimitReached ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
-            <div class="panel-heading">
-                <h4 class="panel-title m-0">
+        <div class="card {{ $sbEntryOpen && ! $sbWindows->compEntryLimitReached ? 'sidebar-panel-success' : 'sidebar-panel-danger' }} mb-3 d-print-none">
+            <div class="card-header">
+                <h4 class="card-title h6 m-0">
                     {{ __('site.entry_registration') }}
                     @if ($sbEntryOpen && ! $sbWindows->compEntryLimitReached && ! $sbWindows->compPaidEntryLimitReached) {{ __('site.open') }}
                     @else {{ __('site.closed') }}
                     @endif
                 </h4>
             </div>
-            <div class="panel-body">
+            <div class="card-body">
                 @if (! $sbWindows->compEntryLimitReached && ! $sbWindows->compPaidEntryLimitReached)
                     <p class="mb-2">{{ __('site.entry_window') }} {{ $sbShort($sbCtx->contestEpoch('contestEntryOpen')) }} {{ __('site.and') }} {{ $sbShort($sbCtx->contestEpoch('contestEntryDeadline')) }}.</p>
                 @endif
@@ -166,14 +166,14 @@
 
     {{-- 300: Drop-Off --}}
     @if ((int) $sbCtx->prefsStr('prefsDropOff') === 1)
-        <div class="panel {{ $sbWindows->dropoff === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
-            <div class="panel-heading">
-                <h4 class="panel-title m-0">
+        <div class="card {{ $sbWindows->dropoff === \App\Support\Tenant\WindowState::Open ? 'sidebar-panel-success' : 'sidebar-panel-danger' }} mb-3 d-print-none">
+            <div class="card-header">
+                <h4 class="card-title h6 m-0">
                     {{ __('site.entry_drop_off') }}
                     {{ $sbWindows->dropoff === \App\Support\Tenant\WindowState::Open ? __('site.open') : __('site.closed') }}
                 </h4>
             </div>
-            <div class="panel-body">
+            <div class="card-body">
                 <p class="mb-2">{{ __('site.dropoff_window') }} {{ $sbShort($sbCtx->contestEpoch('contestDropoffOpen')) }} {{ __('site.and') }} {{ $sbShort($sbCtx->contestEpoch('contestDropoffDeadline')) }}.</p>
             </div>
         </div>
@@ -181,14 +181,14 @@
 
     {{-- 500: Shipping --}}
     @if ((int) $sbCtx->prefsStr('prefsShipping') === 1)
-        <div class="panel {{ $sbWindows->shipping === \App\Support\Tenant\WindowState::Open ? 'panel-success' : 'panel-danger' }} mb-3 d-print-none">
-            <div class="panel-heading">
-                <h4 class="panel-title m-0">
+        <div class="card {{ $sbWindows->shipping === \App\Support\Tenant\WindowState::Open ? 'sidebar-panel-success' : 'sidebar-panel-danger' }} mb-3 d-print-none">
+            <div class="card-header">
+                <h4 class="card-title h6 m-0">
                     {{ __('site.entry_shipping') }}
                     {{ $sbWindows->shipping === \App\Support\Tenant\WindowState::Open ? __('site.open') : __('site.closed') }}
                 </h4>
             </div>
-            <div class="panel-body">
+            <div class="card-body">
                 <p class="mb-2">{{ __('site.shipping_window') }} {{ $sbShort($sbCtx->contestEpoch('contestShippingOpen')) }} {{ __('site.and') }} {{ $sbShort($sbCtx->contestEpoch('contestShippingDeadline')) }}.</p>
             </div>
         </div>

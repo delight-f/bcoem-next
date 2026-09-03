@@ -2,7 +2,7 @@
     <section class="container mt-6 mb-4">
         <h1>Custom Style Entries</h1>
 
-        <div class="bcoem-admin-element hidden-print mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             {{-- View... dropdown (special_best_data.admin.php:814-825). --}}
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

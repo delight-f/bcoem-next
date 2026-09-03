@@ -18,7 +18,7 @@
         <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
 
-    <div class="bcoem-admin-element hidden-print">
+    <div class="bcoem-admin-element d-print-none">
         <div class="btn-group" role="group" aria-label="all-styles">
             <a class="btn btn-secondary" href="{{ url('/admin/styles') }}"><span class="fa fa-arrow-circle-left"></span> All Styles</a>
         </div>
@@ -168,7 +168,7 @@
                 </div>
             </div>
 
-            <div class="bcoem-admin-element hidden-print">
+            <div class="bcoem-admin-element d-print-none">
                 <div class="mb-3 row">
                     <div class="offset-md-4 offset-lg-3 offset-xl-2">
                         <input type="submit" name="Submit" id="updateStyle" class="btn btn-primary" value="{{ $row !== null ? 'Edit' : 'Add' }} Style Type" />

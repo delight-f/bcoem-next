@@ -31,7 +31,7 @@
         @csrf
         @method('PUT')
 
-        <div class="bcoem-admin-element hidden-print row">
+        <div class="bcoem-admin-element d-print-none row">
             <div class="col-md-12">
                 @if ($scoped)
                     <div class="btn-group" role="group" aria-label="allEntriesNav">
@@ -247,19 +247,19 @@
                         <th>Style</th>
                         <th class="d-none d-lg-block">{{ $proEdition ? 'Organization' : 'Brewer' }}</th>
                         @if (! $proEdition)
-                            <th class="d-none d-xl-block hidden-print">Club</th>
+                            <th class="d-none d-xl-block d-print-none">Club</th>
                         @endif
-                        <th class="d-none d-xl-block hidden-print">Updated</th>
+                        <th class="d-none d-xl-block d-print-none">Updated</th>
                         <th class="d-none d-lg-block" width="3%">P<span class="d-none d-xl-block">aid?</span></th>
                         <th class="d-none d-lg-block" width="3%">R<span class="d-none d-xl-block">ec'd?</span></th>
                         <th class="d-none d-xl-block">Admin Notes
-                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Admin Notes" data-bs-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="d-none d-xl-block hidden-print fa fa-question-circle"></span></a>
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Admin Notes" data-bs-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="d-none d-xl-block d-print-none fa fa-question-circle"></span></a>
                         </th>
                         <th class="d-none d-xl-block">Staff Notes
-                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Staff Notes" data-bs-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="d-none d-xl-block hidden-print fa fa-question-circle"></span></a>
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Staff Notes" data-bs-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="d-none d-xl-block d-print-none fa fa-question-circle"></span></a>
                         </th>
                         <th class="d-none d-lg-block">Loc<span class="d-none d-xl-block">/Box</span></th>
-                        <th class="d-none d-lg-block hidden-print">Actions</th>
+                        <th class="d-none d-lg-block d-print-none">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -298,7 +298,7 @@
                             <input type="hidden" name="ids[]" value="{{ $entryId }}">
                             <td nowrap>{{ $entryNumber }}</td>
                             <td nowrap>
-                                <input class="form-control form-control-sm hidden-print" name="brewJudgingNumber{{ $entry->id }}" type="text" pattern=".{6,}" title="Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use." size="8" maxlength="6" value="{{ $judgingNumber }}">
+                                <input class="form-control form-control-sm d-print-none" name="brewJudgingNumber{{ $entry->id }}" type="text" pattern=".{6,}" title="Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use." size="8" maxlength="6" value="{{ $judgingNumber }}">
                             </td>
                             <td class="d-none d-xl-block">
                                 {{ $entryName }}
@@ -322,9 +322,9 @@
                             </td>
                             <td class="d-none d-lg-block">{{ $name }}</td>
                             @if (! $proEdition)
-                                <td class="d-none d-xl-block hidden-print">{{ $entry->brewerClubs }}</td>
+                                <td class="d-none d-xl-block d-print-none">{{ $entry->brewerClubs }}</td>
                             @endif
-                            <td class="d-none d-xl-block hidden-print">
+                            <td class="d-none d-xl-block d-print-none">
                                 {{ \App\Http\Controllers\Admin\EntriesController::updated($ctx, $entry->brewUpdated) }}
                             </td>
                             <td class="d-none d-lg-block">
@@ -346,7 +346,7 @@
                             <td class="d-none d-lg-block">
                                 <input class="form-control form-control-sm" name="brewBoxNum{{ $entry->id }}" type="text" size="5" maxlength="10" value="{{ $entry->brewBoxNum }}">
                             </td>
-                            <td class="d-none d-lg-block hidden-print" nowrap>
+                            <td class="d-none d-lg-block d-print-none" nowrap>
                                 <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
                                 <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entryName }}?&rdquo; This cannot be undone.');">

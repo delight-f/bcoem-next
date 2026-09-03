@@ -71,7 +71,7 @@
                 @php($row(__('site.avail'), ''))
                 <div class="row bcoem-account-info d-print-none">
                     <div class="col-12 col-md-8 offset-md-4">
-                        <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                        <table class="table table-sm table-striped table-bordered border-dark-subtle">
                             <thead class="table-dark">
                                 <tr>
                                     <th style="width: 14%">{{ __('site.yes') }}/{{ __('site.no') }}</th>
@@ -103,7 +103,7 @@
                 @php($row(__('site.avail'), ''))
                 <div class="row bcoem-account-info d-print-none">
                     <div class="col-12 col-md-8 offset-md-4">
-                        <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                        <table class="table table-sm table-striped table-bordered border-dark-subtle">
                             <thead class="table-dark">
                                 <tr>
                                     <th style="width: 10%">{{ __('site.yes') }}/{{ __('site.no') }}</th>
@@ -134,7 +134,7 @@
             @php($row(__('site.avail'), ''))
             <div class="row bcoem-account-info d-print-none">
                 <div class="col-12 col-md-8 offset-md-4">
-                    <table class="table table-condensed table-striped table-bordered border-dark-subtle">
+                    <table class="table table-sm table-striped table-bordered border-dark-subtle">
                         <thead class="table-dark">
                             <tr>
                                 <th style="width: 14%">{{ __('site.yes') }}/{{ __('site.no') }}</th>

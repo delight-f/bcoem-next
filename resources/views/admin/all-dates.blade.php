@@ -267,7 +267,7 @@
             </div>
         </div><!-- ./Form Group -->
 
-        <div class="bcoem-admin-element hidden-print">
+        <div class="bcoem-admin-element d-print-none">
             <div class="row mb-3">
                 <div class="col-auto offset-md-4 offset-lg-3 offset-xl-2">
                     <input name="submit" type="submit" class="btn btn-primary" value="Update Competition Dates">

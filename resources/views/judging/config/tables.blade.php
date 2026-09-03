@@ -46,7 +46,7 @@
         {{-- Legacy assign-pool screen cross-nav (judging_locations.admin.php
              515-561): the ?action=assign URLs redirect here, so this page
              carries the pool screen's participants/assign-family nav. --}}
-        <div class="bcoem-admin-element hidden-print mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-users"></span> Assign Roles...
@@ -67,7 +67,7 @@
              (judging_tables.admin.php:777-822). Assignment items map to the
              existing port outputs; the "Not Assigned to a Table" items open
              the avail modals below. --}}
-        <div class="bcoem-admin-element hidden-print mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-eye"></span> View...

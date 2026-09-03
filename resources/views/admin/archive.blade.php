@@ -89,7 +89,7 @@
                     means destroy — check everything you want to carry into the next competition.</div>
             </fieldset>
 
-            <details class="border rounded p-4 mb-4 bg-base-200">
+            <details class="border rounded p-4 mb-4 bg-light">
                 <summary class="fw-bold text-danger">⚠ Irreversible — read before confirming</summary>
                 <div class="mt-2">
                     <p class="mb-2">With the default options, archiving irreversibly destroys:</p>

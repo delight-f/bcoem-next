@@ -172,11 +172,17 @@
        colors) so purged pages stay visually identical. Unlayered so it
        outranks BS5's own :root in the `bs5` layer. */
     --bs-primary: #007bff;
+    --bs-primary-rgb: 0, 123, 255;
     --bs-secondary: #6c757d;
+    --bs-secondary-rgb: 108, 117, 125;
     --bs-success: #28a745;
+    --bs-success-rgb: 40, 167, 69;
     --bs-info: #17a2b8;
+    --bs-info-rgb: 23, 162, 184;
     --bs-warning: #ffc107;
+    --bs-warning-rgb: 255, 193, 7;
     --bs-danger: #dc3545;
+    --bs-danger-rgb: 220, 53, 69;
     --bs-light: #f8f9fa;
     --bs-dark: #343a40;
     --bs-link-color: #007bff;
@@ -541,13 +547,6 @@ html {
 [data-bs-theme="bcoem-brux"] h1 {
     padding: 15px 0 25px 0;
 }
-[data-bs-theme="bcoem-brux"] .page-header h1 {
-    font-size: 2em;
-}
-[data-bs-theme="bcoem-brux"] .page-header {
-    margin: 0;
-    padding: 0;
-}
 [data-bs-theme="bcoem-brux"] .lead {
     font-weight: 400;
 }
@@ -564,20 +563,6 @@ html {
     color: #303E4B;
 }
 
-/* Competition Status panel — brux .panel-info */
-.panel-info {
-    border: 1px solid #B3E5FC;
-    border-radius: 0.25rem;
-}
-.panel-info > .panel-heading {
-    color: #01579B;
-    background-color: #E1F5FE;
-    border-bottom: 1px solid #B3E5FC;
-    padding: 10px 15px;
-}
-.panel-info > .panel-body {
-    padding: 15px;
-}
 .bcoem-stat-row {
     margin-bottom: 0.4rem;
     display: flex;
@@ -609,9 +594,6 @@ html {
 [data-bs-theme="bcoem-brux"] #main-content {
     padding-top: 60px;
 }
-.pull-right {
-    float: right;
-}
 @media (min-width: 768px) {
     [data-bs-theme="bcoem-brux"] h1 { font-size: 36px; }
     [data-bs-theme="bcoem-brux"] h2 { font-size: 30px; }
@@ -620,124 +602,20 @@ html {
     [data-bs-theme="bcoem-brux"] h5 { font-size: 14px; }
     [data-bs-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
-.admin-topbar .navbar-nav > li > a {
+/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). */
+.admin-topbar .nav-link {
     color: #bec8d8;
     padding-top: 15px;
     padding-bottom: 15px;
     line-height: 20px;
 }
-/* brux a:not(.btn):visited outranks the base rule — pin all states grey */
-.admin-topbar .navbar-nav > li > a:visited {
+.admin-topbar .nav-link:visited {
     color: #bec8d8;
 }
-.admin-topbar .navbar-nav > li > a:hover,
-.admin-topbar .navbar-nav > li > a:focus {
+.admin-topbar .nav-link:hover,
+.admin-topbar .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
-}
-.navbar-nav {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding-left: 0;
-    margin-bottom: 0;
-    list-style: none;
-}
-.navbar-nav > li {
-    position: relative;
-}
-.navbar-nav > li > a {
-    display: block;
-    padding: 10px 15px;
-    line-height: 20px;
-}
-.navbar-right {
-    margin-left: auto;
-    display: flex;
-    flex-direction: row;
-}
-.navbar-nav .open > a {
-    background-color: #303E4B;
-    color: #DFE4EC;
-}
-.caret {
-    display: inline-block;
-    width: 0;
-    height: 0;
-    margin-left: 2px;
-    vertical-align: middle;
-    border-top: 4px dashed;
-    border-top: 4px solid;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-}
-.dropdown {
-    position: relative;
-}
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none;
-    float: left;
-    min-width: 160px;
-    padding: 5px 0;
-    margin: 2px 0 0;
-    font-size: 14px;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-}
-.dropdown-menu > li > a,
-.dropdown-menu .dropdown-item {
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: 400;
-    line-height: 1.42857143;
-    color: #333;
-    white-space: nowrap;
-    background: none;
-    border: 0;
-    width: 100%;
-    text-align: left;
-}
-.dropdown-menu > li > a:hover,
-.dropdown-menu > li > a:focus,
-.dropdown-menu .dropdown-item:hover,
-.dropdown-menu .dropdown-item:focus {
-    color: #262626;
-    text-decoration: none;
-    background-color: #f5f5f5;
-}
-.dropdown-menu .dropdown-header {
-    display: block;
-    padding: 3px 20px;
-    font-size: 12px;
-    line-height: 1.42857143;
-    color: #777;
-    white-space: nowrap;
-}
-.dropdown-menu .divider {
-    height: 1px;
-    margin: 9px 0;
-    overflow: hidden;
-    background-color: #e5e5e5;
-}
-.dropdown.open .dropdown-menu {
-    display: block;
-}
-/* BS5-driven dropdowns (admin topbar, issue 5): Bootstrap JS adds .show to
-   the menu instead of .open on the parent li. The unlayered .dropdown-menu
-   base above keeps display:none, so reveal via .show the same way. */
-.admin-topbar .dropdown-menu.show,
-.dropdown-menu.show {
-    display: block;
 }
 /* pub/nav.pub.php user dropdown: Bootstrap 5 dark theme, right-aligned */
 .dropdown-menu-end {
@@ -846,553 +724,7 @@ html {
     font-weight: bold;
 }
 
-/* ---- Bootstrap panels (admin dashboard accordion + Competition Status) ---- */
-.panel {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-}
-.panel-default {
-    border-color: #bec8d8;
-}
-.panel-default > .panel-heading {
-    color: #303E4B;
-    background-color: #DFE4EC;
-    border-color: #bec8d8;
-}
-.panel-heading {
-    padding: 10px 15px;
-    border-bottom: 1px solid transparent;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-}
-.panel-title {
-    margin-top: 0;
-    margin-bottom: 0;
-    font-size: 16px;
-    color: inherit;
-}
-.panel-title > a,
-[data-bs-theme="bcoem-brux"] .panel-title > a,
-[data-bs-theme="bcoem-brux"] .panel-heading .panel-title > a,
-[data-bs-theme="bcoem-brux"] .panel-heading .panel-title > a:hover {
-    color: inherit;
-    text-decoration: none;
-}
-.panel-info {
-    border-color: #B3E5FC;
-}
-.panel-body {
-    padding: 15px;
-}
-.panel-collapse {
-    display: none;
-}
-.panel-collapse.in {
-    display: block;
-}
-.panel-title .pull-right {
-    margin-top: 2px;
-}
 
-/* ---- Bootstrap buttons (admin action row + sidebar) ---- */
-.btn-info {
-    color: #fff !important;
-    background-color: #29B6F6;
-    border-color: #0288D1;
-}
-.btn-info:hover,
-.btn-info:focus {
-    color: #fff !important;
-    background-color: #039BE5;
-    border-color: #0288D1;
-}
-.btn-dark {
-    color: #ffffff !important;
-    background-color: #262626;
-    border-color: #212121;
-}
-.btn-dark:hover,
-.btn-dark:focus {
-    color: #ffffff !important;
-    background-color: #424242;
-    border-color: #212121;
-}
-.btn-sm {
-    padding: 5px 10px;
-    font-size: 12px;
-    line-height: 1.5;
-    border-radius: 3px;
-}
-.btn-block {
-    display: block;
-    width: 100%;
-}
-.list-inline {
-    padding-left: 0;
-    list-style: none;
-    margin-left: -5px;
-}
-.list-inline > li {
-    display: inline-block;
-    padding-right: 5px;
-    padding-left: 5px;
-}
-.hidden-xs { display: none; }
-@media (min-width: 768px) {
-    .hidden-sm { display: none; }
-}
-@media (min-width: 992px) {
-    .hidden-md { display: none; }
-}
-.hide-loader { cursor: pointer; }
-
-/* ---- Bootstrap 3 compat layer (legacy admin markup) ----
-   Replicates the BS3.3.7 CDN styles the legacy admin pages load
-   (maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css) plus the
-   bruxellensis admin-theme overrides (css/bruxellensis.min.css), so the port
-   blades can carry verbatim legacy class markup. Unlayered (beats the `bs5`
-   layer and the earlier legacy-theme re-implementations for equal
-   specificity). Values are read from the legacy minified CSS, not
-   eyeballed. */
-    /* ==== BS3 grid columns used by admin forms (float + 15px gutters) ==== */
-    .col-xs-12,
-    .col-sm-4,
-    .col-sm-8,
-    .col-sm-12,
-    .col-md-3,
-    .col-md-6,
-    .col-md-12,
-    .col-lg-2,
-    .col-lg-6,
-    .col-lg-12 {
-        position: relative;
-        min-height: 1px;
-        padding-right: 15px;
-        padding-left: 15px;
-        float: left;
-    }
-    .col-xs-12 { width: 100%; }
-    @media (min-width: 768px) {
-        .col-sm-4 { width: 33.33333333%; }
-        .col-sm-8 { width: 66.66666667%; }
-        .col-sm-12 { width: 100%; }
-        .col-sm-offset-4 { margin-left: 33.33333333%; }
-    }
-    @media (min-width: 992px) {
-        .col-md-3 { width: 25%; }
-        .col-md-6 { width: 50%; }
-        .col-md-12 { width: 100%; }
-        .col-md-offset-3 { margin-left: 25%; }
-    }
-    @media (min-width: 1200px) {
-        .col-lg-2 { width: 16.66666667%; }
-        .col-lg-6 { width: 50%; }
-        .col-lg-12 { width: 100%; }
-        .col-lg-offset-2 { margin-left: 16.66666667%; }
-    }
-
-    /* ==== BS3 forms ==== */
-    .form-group { margin-bottom: 15px; }
-    .form-horizontal .form-group { margin-right: -15px; margin-left: -15px; }
-    .form-horizontal .form-group::before,
-    .form-horizontal .form-group::after {
-        display: table;
-        content: " ";
-    }
-    .form-horizontal .form-group::after { clear: both; }
-    .form-horizontal .control-label {
-        padding-top: 7px;
-        margin-bottom: 0;
-    }
-    @media (min-width: 768px) {
-        .form-horizontal .control-label { text-align: right; }
-    }
-    .control-label { margin-bottom: 0; }
-    .help-block {
-        display: block;
-        margin-top: 5px;
-        margin-bottom: 10px;
-        color: #737373;
-        font-size: 1em;
-        font-style: normal;
-    }
-    .form-control {
-        display: block;
-        width: 100%;
-        height: 34px;
-        padding: 6px 12px;
-        font-size: 14px;
-        line-height: 1.42857143;
-        color: #555;
-        background-color: #fff;
-        background-image: none;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
-        -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
-        -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
-        transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
-    }
-    .form-control:focus {
-        border-color: #66afe9;
-        outline: 0;
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 8px rgba(102, 175, 233, .6);
-    }
-    .form-control::-moz-placeholder { color: #999; opacity: 1; }
-    .form-control:-ms-input-placeholder { color: #999; }
-    .form-control::-webkit-input-placeholder { color: #999; }
-    textarea.form-control { height: auto; }
-    .form-control[disabled],
-    .form-control[readonly],
-    fieldset[disabled] .form-control { background-color: #eee; opacity: 1; }
-    .form-control[disabled],
-    fieldset[disabled] .form-control { cursor: not-allowed; }
-
-    /* ==== BS3 input groups ==== */
-    .input-group { position: relative; display: table; border-collapse: separate; }
-    .input-group[class*="col-"] { float: none; padding-right: 0; padding-left: 0; }
-    .input-group .form-control {
-        position: relative;
-        z-index: 2;
-        float: left;
-        width: 100%;
-        margin-bottom: 0;
-        display: table-cell;
-    }
-    .input-group .form-control:focus { z-index: 3; }
-    .input-group .form-control:not(:first-child):not(:last-child) { border-radius: 0; }
-    .input-group .form-control:first-child {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-    }
-    .input-group .form-control:last-child {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-    }
-    .input-group-addon,
-    .input-group-btn {
-        width: 1%;
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-    .input-group-addon {
-        padding: 6px 12px;
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 1;
-        color: #555;
-        text-align: center;
-        background-color: #eee;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        display: table-cell;
-    }
-    .input-group-addon:not(:first-child):not(:last-child) { border-radius: 0; }
-    .input-group-addon:first-child {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-        border-right: 0;
-    }
-    .input-group-addon:last-child {
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
-        border-left: 0;
-    }
-    .input-group > .form-control,
-    .input-group > .input-group-addon,
-    .input-group > .input-group-btn > .btn { display: table-cell; }
-
-    /* ==== BS3 validation states (bruxellensis theme palette) ==== */
-    .has-success .form-control,
-    .has-warning .form-control,
-    .has-error .form-control {
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
-    }
-    .has-success .form-control { border-color: #1B5E20; }
-    .has-success .form-control:focus {
-        border-color: #0A250C;
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #67b168;
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #67b168;
-    }
-    .has-warning .form-control { border-color: #732800; }
-    .has-warning .form-control:focus {
-        border-color: #451800;
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #c0a16b;
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #c0a16b;
-    }
-    .has-error .form-control { border-color: #B71C1C; }
-    .has-error .form-control:focus {
-        border-color: #6D1010;
-        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #ce8483;
-        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px #ce8483;
-    }
-    .has-success .input-group-addon { color: #1B5E20; background-color: #E8F5E9; border-color: #1B5E20; }
-    .has-warning .input-group-addon { color: #732800; background-color: #FFF3E0; border-color: #732800; }
-    .has-error .input-group-addon { color: #B71C1C; background-color: #FFEBEE; border-color: #B71C1C; }
-    .has-success .control-label { color: #1B5E20; }
-    .has-warning .control-label { color: #732800; }
-    .has-error .control-label { color: #B71C1C; }
-    .has-success .help-block { color: #1B5E20; }
-    .has-warning .help-block { color: #732800; }
-    .has-error .help-block { color: #B71C1C; }
-    .has-warning .checkbox,
-    .has-warning .radio { color: #732800; }
-    .has-success .checkbox,
-    .has-success .radio { color: #1B5E20; }
-    .has-error .checkbox,
-    .has-error .radio { color: #B71C1C; }
-
-    /* ==== Admin page chrome (issue 7: BS5 frame; .page-header kept for
-       blades not yet migrated — dashboard, qr/checkin — until their batches) ==== */
-    .admin-page-title,
-    .page-header {
-        padding-bottom: 9px;
-        margin: 0;
-        border-bottom: 1px solid #eee;
-        padding: 0;
-    }
-    .admin-page-title .lead,
-    .admin-page-title p,
-    .page-header .lead,
-    .page-header p { margin-bottom: 0; }
-    .lead { margin-bottom: 20px; font-size: 16px; font-weight: 400; line-height: 1.4; }
-    @media (min-width: 768px) { .lead { font-size: 21px; } }
-    .bcoem-admin-element { padding: 0 0 15px 0; }
-    .bcoem-admin-element-bottom { padding: 15px 0 0 0; }
-    @media print { .hidden-print { display: none !important; } }
-    .date-time-picker-system { cursor: pointer; }
-    .input-group.date .input-group-addon { cursor: pointer; }
-
-    /* ==== BS3 buttons (bruxellensis theme palette) ==== */
-    .btn {
-        display: inline-block;
-        padding: 6px 12px;
-        margin-bottom: 0;
-        font-size: 14px;
-        font-weight: 400;
-        line-height: 1.42857143;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: middle;
-        -ms-touch-action: manipulation;
-        touch-action: manipulation;
-        cursor: pointer;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        background-image: none;
-        border: 1px solid transparent;
-        border-radius: 4px;
-    }
-    .btn:focus,
-    .btn.focus,
-    .btn:hover { color: #333; text-decoration: none; }
-    .btn.active,
-    .btn:active {
-        background-image: none;
-        outline: 0;
-        -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
-        box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
-    }
-    .btn.disabled,
-    .btn[disabled],
-    fieldset[disabled] .btn {
-        cursor: not-allowed;
-        filter: alpha(opacity=65);
-        -webkit-box-shadow: none;
-        box-shadow: none;
-        opacity: .65;
-    }
-    .btn-primary {
-        color: #fff !important;
-        background-color: #1565C0;
-        border-color: #0D47A1;
-    }
-    .btn-primary:hover,
-    .btn-primary:focus,
-    .btn-primary.focus,
-    .btn-primary:active,
-    .btn-primary.active,
-    .open > .dropdown-toggle.btn-primary {
-        color: #fff;
-        background-color: #0a3880;
-        border-color: #051c40;
-    }
-    .btn-primary.active.focus,
-    .btn-primary.active:focus,
-    .btn-primary.active:hover,
-    .btn-primary:active.focus,
-    .btn-primary:active:focus,
-    .btn-primary:active:hover,
-    .open > .dropdown-toggle.btn-primary.focus,
-    .open > .dropdown-toggle.btn-primary:focus,
-    .open > .dropdown-toggle.btn-primary:hover {
-        color: #fff;
-        background-color: #051c40;
-        border-color: #031530;
-    }
-    .btn-info {
-        color: #fff !important;
-        background-color: #29B6F6;
-        border-color: #0288D1;
-    }
-    .btn-info:hover,
-    .btn-info:focus,
-    .btn-info.focus {
-        color: #fff !important;
-        background-color: #039BE5;
-        border-color: #0288D1;
-    }
-    .btn-default {
-        color: #303E4B !important;
-        background-color: #DFE4EC;
-        border-color: #acc0c7;
-    }
-    .btn-default:hover,
-    .btn-default:focus,
-    .btn-default.focus {
-        color: #303E4B;
-        background-color: #bec8d8;
-        border-color: #67819E;
-    }
-    .btn-success {
-        color: #fff !important;
-        background-color: #4CAF50;
-        border-color: #388E3C;
-    }
-    .btn-success:hover,
-    .btn-success:focus,
-    .btn-success.focus {
-        color: #fff;
-        background-color: #2E7D32;
-        border-color: #246428;
-    }
-    .btn-danger {
-        color: #fff !important;
-        background-color: #F44336;
-        border-color: #D32F2F;
-    }
-    .btn-danger:hover,
-    .btn-danger:focus,
-    .btn-danger.focus {
-        color: #fff;
-        background-color: #B71C1C;
-        border-color: #5b0E0E;
-    }
-    .btn-sm { padding: 5px 10px; font-size: 12px; line-height: 1.5; border-radius: 3px; }
-    .btn-xs { padding: 1px 5px; font-size: 12px; line-height: 1.5; border-radius: 3px; }
-    .btn-block { display: block; width: 100%; }
-    a.btn.disabled,
-    fieldset[disabled] a.btn { pointer-events: none; }
-
-    /* ==== BS3 modals (legacy admin session-expire + help modals) ==== */
-    .modal {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 1050;
-        display: none;
-        overflow: hidden;
-        -webkit-overflow-scrolling: touch;
-        outline: 0;
-    }
-    .modal.fade .modal-dialog {
-        -webkit-transition: -webkit-transform .3s ease-out;
-        -o-transition: -o-transform .3s ease-out;
-        transition: transform .3s ease-out;
-        -webkit-transform: translate(0, -25%);
-        -ms-transform: translate(0, -25%);
-        -o-transform: translate(0, -25%);
-        transform: translate(0, -25%);
-    }
-    .modal.in .modal-dialog {
-        -webkit-transform: translate(0, 0);
-        -ms-transform: translate(0, 0);
-        -o-transform: translate(0, 0);
-        transform: translate(0, 0);
-    }
-    .modal-open .modal { overflow-x: hidden; overflow-y: auto; }
-    .modal-dialog { position: relative; width: auto; margin: 10px; }
-    .modal-content {
-        position: relative;
-        background-color: #fff;
-        -webkit-background-clip: padding-box;
-        background-clip: padding-box;
-        border: 1px solid #999;
-        border: 1px solid rgba(0, 0, 0, .2);
-        border-radius: 6px;
-        outline: 0;
-        -webkit-box-shadow: 0 3px 9px rgba(0, 0, 0, .5);
-        box-shadow: 0 3px 9px rgba(0, 0, 0, .5);
-    }
-    .modal-backdrop {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 1040;
-        background-color: #000;
-    }
-    .modal-backdrop.fade { filter: alpha(opacity=0); opacity: 0; }
-    .modal-backdrop.in { filter: alpha(opacity=50); opacity: .5; }
-    .modal-header { padding: 15px; border-bottom: 1px solid #e5e5e5; }
-    .modal-header .close { margin-top: -2px; }
-    .modal-title { margin: 0; line-height: 1.42857143; }
-    .modal-body { position: relative; padding: 15px; }
-    .modal-footer {
-        padding: 15px;
-        text-align: right;
-        border-top: 1px solid #e5e5e5;
-    }
-    .modal-footer .btn + .btn { margin-left: 5px; margin-bottom: 0; }
-    @media (min-width: 768px) {
-        .modal-dialog { width: 600px; margin: 30px auto; }
-        .modal-content { -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, .5); box-shadow: 0 5px 15px rgba(0, 0, 0, .5); }
-    }
-    .close {
-        float: right;
-        font-size: 21px;
-        font-weight: 700;
-        line-height: 1;
-        color: #000;
-        text-shadow: 0 1px 0 #fff;
-        filter: alpha(opacity=20);
-        opacity: .2;
-    }
-    .close:hover,
-    .close:focus {
-        color: #000;
-        text-decoration: none;
-        cursor: pointer;
-        filter: alpha(opacity=50);
-        opacity: .5;
-    }
-    button.close {
-        -webkit-appearance: none;
-        padding: 0;
-        cursor: pointer;
-        background: transparent;
-        border: 0;
-    }
-    .modal-header .modal-title,
-    [data-bs-theme="bcoem-brux"] .modal-header .modal-title,
-    [data-bs-theme="bcoem-brux"] .modal-header h4 {
-        margin: 0;
-        padding: 0;
-        line-height: 1.42857143;
-        font-weight: 400;
-        font-family: inherit;
-    }
 /* INTERACTION-PARITY: CSS tooltip, loader overlay, sticky back-to-top
    (legacy Bootstrap tooltip init + #loader-submit + #sticky-home). */
 [data-toggle="tooltip"], [data-tooltip="true"] {
@@ -1491,6 +823,18 @@ html {
 }
 .data-dt-pager button:disabled { opacity: .4; cursor: default; }
 
+/* ---- Custom admin chrome helpers (formerly inside the BS3-replica block) ---- */
+.admin-page-title {
+    padding-bottom: 9px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+}
+.admin-page-title .lead,
+.admin-page-title p { margin-bottom: 0; }
+.bcoem-admin-element { padding: 0 0 15px 0; }
+.date-time-picker-system { cursor: pointer; }
+.hide-loader { cursor: pointer; }
+
 /* ==== Legacy utility classes (formerly Tailwind/daisy) ====
    Issue 12 deleted the Tailwind + daisyUI stacks. A small set of utility /
    component classes still referenced by port blades had no BS5 equivalent,
@@ -1519,3 +863,175 @@ html {
     #nav-menu .nav-item, #nav-menu > a { display: block; }
     #nav-menu .dropdown-menu { position: static; }
 }
+
+/* ==== Theme-scoped identity palettes (issue 12: BS3-replica deleted) ====
+   Real Bootstrap 5 hard-codes component colors per rule (.btn-*, .alert-*),
+   so they cannot inherit --bs-* by themselves. The legacy identity palettes
+   are re-applied two ways: (1) --bs-* theme variables are overridden under
+   the brux admin data-bs-theme scope (public bcoem values stay on :root
+   above), and (2) the button/alert components are rebound to source their
+   color vars from --bs-*, so each theme flows through one mechanism. */
+[data-bs-theme="bcoem-brux"] {
+    --bs-primary: #1565C0;
+    --bs-primary-rgb: 21, 101, 192;
+    --bs-secondary: #6c757d;
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-success: #4CAF50;
+    --bs-success-rgb: 76, 175, 80;
+    --bs-info: #29B6F6;
+    --bs-info-rgb: 41, 182, 246;
+    --bs-warning: #FF9800;
+    --bs-warning-rgb: 255, 152, 0;
+    --bs-danger: #F44336;
+    --bs-danger-rgb: 244, 67, 54;
+    --bs-light: #f5f5f5;
+    --bs-dark: #262626;
+    --bs-link-color: #2196f3;
+    --bs-link-hover-color: #f37e21;
+}
+
+/* Rebind BS5 solid buttons to the theme palette. Each variant sources its
+   component vars from the matching --bs-* theme variable so the public
+   bcoem (:root) and admin brux ([data-bs-theme]) palettes both flow through
+   one mechanism. Hover/active darken toward black via color-mix. */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-primary) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-primary) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+.btn-secondary {
+    --bs-btn-bg: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-secondary) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-secondary) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-secondary);
+    --bs-btn-disabled-border-color: var(--bs-secondary);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
+}
+.btn-success {
+    --bs-btn-bg: var(--bs-success);
+    --bs-btn-border-color: var(--bs-success);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-success) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-success) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-success) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-success) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-success);
+    --bs-btn-disabled-border-color: var(--bs-success);
+    --bs-btn-focus-shadow-rgb: var(--bs-success-rgb);
+}
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-info);
+    --bs-btn-border-color: var(--bs-info);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-info) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-info) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-info) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-info) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-info);
+    --bs-btn-disabled-border-color: var(--bs-info);
+    --bs-btn-focus-shadow-rgb: var(--bs-info-rgb);
+}
+.btn-warning {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-warning);
+    --bs-btn-border-color: var(--bs-warning);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-warning) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-warning) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-warning) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-warning) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-warning);
+    --bs-btn-disabled-border-color: var(--bs-warning);
+    --bs-btn-focus-shadow-rgb: var(--bs-warning-rgb);
+}
+.btn-danger {
+    --bs-btn-bg: var(--bs-danger);
+    --bs-btn-border-color: var(--bs-danger);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-danger) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-danger) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-danger) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-danger) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-danger);
+    --bs-btn-disabled-border-color: var(--bs-danger);
+    --bs-btn-focus-shadow-rgb: var(--bs-danger-rgb);
+}
+.btn-dark {
+    --bs-btn-bg: var(--bs-dark);
+    --bs-btn-border-color: var(--bs-dark);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-dark) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-dark) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-dark);
+    --bs-btn-disabled-border-color: var(--bs-dark);
+    --bs-btn-focus-shadow-rgb: 38, 38, 38;
+}
+.btn-light {
+    --bs-btn-bg: var(--bs-light);
+    --bs-btn-border-color: var(--bs-light);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-light) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-light) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-light) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-light) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-light);
+    --bs-btn-disabled-border-color: var(--bs-light);
+    --bs-btn-focus-shadow-rgb: 248, 249, 250;
+}
+/* Outline buttons: text/border/background tint follow the theme color. */
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-secondary);
+    --bs-btn-hover-border-color: var(--bs-secondary);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
+}
+.btn-outline-dark {
+    --bs-btn-color: var(--bs-dark);
+    --bs-btn-border-color: var(--bs-dark);
+    --bs-btn-hover-bg: var(--bs-dark);
+    --bs-btn-hover-border-color: var(--bs-dark);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 85%, #000);
+    --bs-btn-focus-shadow-rgb: 38, 38, 38;
+}
+
+/* ---- Public sidebar cards (public-sidebar: BS3 .panel -> BS5 .card) ----
+   Preserve the legacy public sidebar panel look: tinted header band, subtle
+   border, plain body. */
+.sidebar .card { border: 1px solid #dee2e6; border-radius: 0.25rem; }
+.sidebar .card-header {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
+}
+.sidebar .card-title { font-weight: 700; }
+.sidebar .card-body { padding: 0.75rem; font-size: 0.95rem; }
+.sidebar-panel-info { border-color: #B3E5FC !important; }
+.sidebar-panel-info > .card-header { background-color: #E1F5FE; color: #01579B; border-bottom-color: #B3E5FC; }
+.sidebar-panel-success { border-color: #C3E6CB !important; }
+.sidebar-panel-success > .card-header { background-color: #D4EDDA; color: #155724; border-bottom-color: #C3E6CB; }
+.sidebar-panel-danger { border-color: #F5C6CB !important; }
+.sidebar-panel-danger > .card-header { background-color: #F8D7DA; color: #721C24; border-bottom-color: #F5C6CB; }
+.sidebar-panel-default { border-color: #bec8d8 !important; }
+.sidebar-panel-default > .card-header { background-color: #DFE4EC; color: #303E4B; border-bottom-color: #bec8d8; }

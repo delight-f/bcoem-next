@@ -14,7 +14,7 @@
                 Presentation have no port equivalent and are omitted. --}}
             <div class="row bcoem-admin-element mb-4">
                 <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                    <a class="btn btn-info btn-sm btn-block" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
+                    <a class="btn btn-info btn-sm d-block w-100" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
                 </div>
                 @if (request('msg') === '36')
                     <div class="col-12">
@@ -23,22 +23,22 @@
                 @endif
                 @if (! $status['winnersPublished'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <button type="button" class="btn btn-warning btn-sm btn-block" data-bs-toggle="modal" data-bs-target="#publish-results">Publish Results <span class="fa fa-lg fa-bullhorn"></span></button>
+                        <button type="button" class="btn btn-warning btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#publish-results">Publish Results <span class="fa fa-lg fa-bullhorn"></span></button>
                     </div>
                 @endif
                 @if ($status['postCompTasks'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <a class="btn btn-info btn-sm btn-block" href="#" data-bs-toggle="modal" data-bs-target="#post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
+                        <a class="btn btn-info btn-sm d-block w-100" href="#" data-bs-toggle="modal" data-bs-target="#post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
                     </div>
                 @endif
                 @if ($status['judgingStarted'] && $status['winnerMethodTable'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <button type="button" class="btn btn-info btn-sm btn-block" data-bs-toggle="modal" data-bs-target="#presentationLaunch">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></button>
+                        <button type="button" class="btn btn-info btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#presentationLaunch">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></button>
                     </div>
                 @endif
                 @if ($status['showBest'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <button type="button" class="btn btn-info btn-sm btn-block" data-bs-toggle="modal" data-bs-target="#preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
+                        <button type="button" class="btn btn-info btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
                     </div>
                 @endif
             </div>
@@ -107,8 +107,8 @@
          {{-- sidebar.admin.php: Donate + Competition Status panel --}}
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
-                <button type="button" class="btn btn-dark btn-sm btn-block mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
-                 <a class="btn btn-dark btn-sm btn-block" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
+                <button type="button" class="btn btn-dark btn-sm d-block w-100 mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
+                 <a class="btn btn-dark btn-sm d-block w-100" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
              </div>
 
             <div class="card border-info mb-3">

@@ -31,7 +31,7 @@
     @endif
 
     {{-- Legacy admin-element control row (participants.admin.php:543-720). --}}
-    <div class="bcoem-admin-element hidden-print">
+    <div class="bcoem-admin-element d-print-none">
         <div class="row">
             <div class="col-12 col-lg-8 col-xl-10">
                 @if ($filter !== 'default')

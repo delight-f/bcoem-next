@@ -4,7 +4,7 @@
         <h1>{{ $ctx->contestStr('contestName') }}: Set Preferences</h1>
         {{-- Sibling preference-tab buttons (judging_preferences.admin.php:187-198).
              The Judging tab is the current page, so it is rendered disabled. --}}
-        <div class="bcoem-admin-element hidden-print mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit') }}"><span class="fa fa-cog"></span> General Preferences</a>
             <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'entries']) }}"><span class="fa fa-beer"></span> Entry Preferences</a>
             <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'email']) }}"><span class="fa fa-envelope"></span> Email Sending / Contact Display Preferences</a>
