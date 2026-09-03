@@ -34,6 +34,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('backoffice.entries.index');
     Route::post('/backoffice/entries/mark-all', [EntriesController::class, 'markAll'])
         ->name('backoffice.entries.mark_all');
+    // Legacy data_cleanup.inc.php purge flows (Admin Actions menu):
+    // go=unconfirmed / go=unpaid, level-0 only (data_cleanup guard).
+    Route::post('/backoffice/entries/purge', [EntriesController::class, 'purge'])
+        ->name('backoffice.entries.purge');
     // Legacy entries.admin.php single form wrapping the table: inline
     // judging-number / paid / received / box / notes edits POST together
     // (legacy saved each via AJAX save_column; the port saves the form).

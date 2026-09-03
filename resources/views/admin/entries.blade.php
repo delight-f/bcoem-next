@@ -141,6 +141,46 @@
                                 </form>
                             </li>
                         @endforeach
+                        {{-- Purge flows (legacy data_cleanup.inc.php go=unconfirmed /
+                             go=unpaid, entries.admin.php:830-831). Level-0 only,
+                             like data_cleanup.inc.php. --}}
+                        @if ((int) auth()->user()?->userLevel === 0)
+                            <li>
+                                <form method="post" action="{{ route('backoffice.entries.purge') }}"
+                                      onsubmit="return confirm('Are you sure? This will delete ALL unconfirmed entries and/or entries without special ingredients/classic style info that require them from the database - even those that are less than 24 hours old. This cannot be undone.');">
+                                    @csrf
+                                    <input type="hidden" name="go" value="unconfirmed">
+                                    <button type="submit" class="dropdown-item">Purge All Unconfirmed Entries</button>
+                                </form>
+                            </li>
+                            <li>
+                                <form method="post" action="{{ route('backoffice.entries.purge') }}"
+                                      onsubmit="return confirm('Are you sure? This will delete ALL unpaid entries from the database and cannot be undone.');">
+                                    @csrf
+                                    <input type="hidden" name="go" value="unpaid">
+                                    <button type="submit" class="dropdown-item">Purge All Unpaid Entries</button>
+                                </form>
+                            </li>
+                        @endif
+                        @if ($obfuscate)
+                            {{-- Regenerate judging numbers (legacy entries.admin.php
+                                 :832-840 → process.inc.php generate_judging_numbers). --}}
+                            @foreach ([
+                                'default' => ['Regenerate Judging Numbers (Random)', 'Are you sure you want to regenerate judging numbers for all entries? This will over-write all judging numbers, including those that have been assigned via the barcode or QR Code scanning function. The process may take a while depending upon the number of entires in your database.'],
+                                'legacy' => ['Regenerate Judging Numbers (With Style Number Prefix)', 'Are you sure you want to regenerate judging numbers for all entries? This will over-write all judging numbers, including those that have been assigned via the barcode or QR Code scanning function. The process may take a while depending upon the number of entires in your database. PLEASE NOTE that judging numbers will be in the following format: XX-123 (where XX is the category number or name).'],
+                                'identical' => ['Regenerate Judging Numbers (Same as Entry Numbers)', 'Are you sure you want to regenerate judging numbers for all entries? This will over-write all judging numbers, including those that have been assigned via the barcode or QR Code scanning function. The process may take a while depending upon the number of entires in your database.'],
+                            ] as $method => [$label, $confirm])
+                                <li>
+                                    <form method="post" action="{{ route('admin.judging.regenerate_numbers') }}"
+                                          onsubmit="return confirm('{{ $confirm }}');">
+                                        @csrf
+                                        <input type="hidden" name="method" value="{{ $method }}">
+                                        <input type="hidden" name="return_to" value="entries">
+                                        <button type="submit" class="dropdown-item">{{ $label }}</button>
+                                    </form>
+                                </li>
+                            @endforeach
+                        @endif
                     </ul>
                 </div>
 

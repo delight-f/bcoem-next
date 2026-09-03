@@ -187,6 +187,84 @@ final class EntriesController extends Controller
     }
 
     /**
+     * Legacy data_cleanup.inc.php purge flows behind the entries Admin
+     * Actions menu (entries.admin.php:830-831): go=unconfirmed and
+     * go=unpaid. Mirrors purge_entries() (common.lib.php:392) exactly —
+     * no date threshold (interval 0):
+     *
+     *  - unpaid:       (brewPaid='0' OR brewPaid IS NULL) rows
+     *  - unconfirmed:  brewConfirmed='0' rows, PLUS entries whose style
+     *                  requires special-ingredient info
+     *                  (styles.brewStyleReqSpec=1, matched on
+     *                  brewCategorySort/brewSubCategory against the active
+     *                  style-set version) but whose brewInfo is empty.
+     *
+     * Level-0 only, like the data_cleanup.inc.php guard; lands back on the
+     * entries list (legacy also carries no success banner).
+     */
+    public function purge(Request $request): RedirectResponse
+    {
+        if ((int) $request->user()?->userLevel !== 0) {
+            return redirect('/?msg=99');
+        }
+
+        $go = (string) $request->input('go');
+        $ids = match ($go) {
+            'unpaid' => DB::table('brewing')
+                ->where(fn ($q): \Illuminate\Database\Query\Builder => $q->where('brewPaid', '0')->orWhereNull('brewPaid'))
+                ->pluck('id'),
+            'unconfirmed' => DB::table('brewing')->where('brewConfirmed', '0')
+                ->pluck('id')
+                ->merge($this->missingSpecialInfoIds()),
+            default => null,
+        };
+
+        if ($ids === null) {
+            return redirect('/backoffice/entries');
+        }
+
+        if ($ids->isNotEmpty()) {
+            DB::table('brewing')->whereIn('id', $ids->all())->delete();
+        }
+
+        return redirect('/backoffice/entries');
+    }
+
+    /**
+     * Legacy purge_entries('special'): brewing rows whose style demands
+     * special-ingredient info but have no brewInfo. The styles-version
+     * predicate mirrors data_cleanup.inc.php:39-46 (BJCP2025 and AABC2025
+     * style sets span two seeded versions; every other set matches its own
+     * version).
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    private function missingSpecialInfoIds(): \Illuminate\Support\Collection
+    {
+        $set = TenantContext::load()->prefsStr('prefsStyleSet');
+
+        $query = DB::table('brewing as a')
+            ->join('styles as b', function ($j): void {
+                $j->on('a.brewCategorySort', '=', 'b.brewStyleGroup')
+                    ->on('a.brewSubCategory', '=', 'b.brewStyleNum');
+            })
+            ->where('b.brewStyleReqSpec', '1')
+            ->where(function ($q): void {
+                $q->whereNull('a.brewInfo')->orWhere('a.brewInfo', '');
+            });
+
+        if ($set === 'BJCP2025') {
+            $query->whereIn('b.brewStyleVersion', ['BJCP2021', 'BJCP2025']);
+        } elseif ($set === 'AABC2025') {
+            $query->whereIn('b.brewStyleVersion', ['AABC2022', 'AABC2025']);
+        } else {
+            $query->where('b.brewStyleVersion', $set);
+        }
+
+        return $query->pluck('a.id');
+    }
+
+    /**
      * Legacy entries.admin.php: the whole table is one form; inline
      * cells (judging number, paid/received checkboxes, box number, admin
      * and staff notes) posted per-row as `brewJudgingNumber{id}` etc.

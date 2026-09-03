@@ -58,6 +58,11 @@ final class RegenerateNumbersController extends Controller
 
         $label = ['default' => 'random', 'legacy' => 'style-prefix', 'identical' => 'entry-number'][$method];
 
-        return redirect('/admin')->with('status', "Judging numbers regenerated ({$label}).");
+        // Legacy process.inc.php redirects back to the calling surface:
+        // go=entries lands on the entries list, anything else on the admin
+        // dashboard. The entries Admin Actions toolbar posts return_to=entries.
+        $target = $request->input('return_to') === 'entries' ? '/backoffice/entries' : '/admin';
+
+        return redirect($target)->with('status', "Judging numbers regenerated ({$label}).");
     }
 }
