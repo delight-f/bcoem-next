@@ -125,7 +125,8 @@ final class RegressionProbeTest extends DuskTestCase
                 const userA = document.querySelector('#site-nav #nav-menu .fa-user')?.closest('a');
                 const outBtn = [...document.querySelectorAll('#site-nav #nav-menu form button')].find(b => b.querySelector('.fa-sign-out-alt'));
                 const r1 = userA?.getBoundingClientRect(); const r2 = outBtn?.getBoundingClientRect();
-                return JSON.stringify({ open: !!document.querySelector('#site-nav #nav-menu .dropdown-menu.show'), gap: r1 && r2 ? Math.round(r2.left - r1.right) : null });
+                const se = document.getElementById('session-end');
+                return JSON.stringify({ open: !!document.querySelector('#site-nav #nav-menu .dropdown-menu.show'), gap: r1 && r2 ? Math.round(r2.left - r1.right) : null, sessionEnd: se ? se.textContent : null });
             ")[0];
             fwrite(STDERR, "\nPUBLIC-USER-DROPDOWN: ".$state."\n");
             $this->addToAssertionCount(1);

@@ -62,6 +62,37 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
     revealables.forEach((el) => el.classList.add('active-element'));
 }
 
+// Public-nav "Auto Log Out in <mm:ss>" countdown (legacy nav.pub.php
+// session-end). Ticks the seconds span in the logged-in user dropdown from
+// the session lifetime and auto-logs-out (submits the navbar logout form)
+// when it reaches zero. Admin pages use the session-expiry modal instead.
+(() => {
+    const span = document.getElementById('session-end');
+    const total = Number(span?.dataset?.sessionEndSeconds ?? NaN);
+    if (!span || !Number.isFinite(total)) return;
+
+    const pad = (n) => String(n).padStart(2, '0');
+    let remaining = total;
+    const render = () => {
+        span.textContent = Math.floor(remaining / 60) + ':' + pad(remaining % 60);
+        if (remaining <= 0) {
+            clearInterval(timer);
+            const btn = [...document.querySelectorAll('#nav-menu form button')]
+                .find((b) => (b.closest('form')?.getAttribute('action') || '').includes('logout'));
+            if (btn) {
+                btn.click();
+            } else {
+                window.location.replace('/logout');
+            }
+        }
+    };
+    render();
+    const timer = setInterval(() => {
+        remaining -= 1;
+        render();
+    }, 1000);
+})();
+
 // Entry form (pub/brew.pub.php + js_includes/entry.min.js): show/hide the
 // required-info, optional-info, carbonation, sweetness (mead vs cider),
 // strength, and pouring fieldsets based on the selected style. Flag data

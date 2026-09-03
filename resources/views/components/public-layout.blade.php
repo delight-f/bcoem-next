@@ -452,10 +452,10 @@
                                 @endif
                                 <li class="small"><hr class="dropdown-divider"></li>
                                 <li class="small" style="font-size: .75em;">
-                                    {{-- pub/nav.pub.php:189 — "Auto Log Out in <span id=session-end>" countdown
-                                         footer. The countdown ticks via session-end JS (legacy nav.pub.php);
-                                         static fallback text without the timer. --}}
-                                    <span class="dropdown-item-text text-body-secondary">{{ __('site.auto_log_out') }} <span id="session-end"></span></span>
+                                    {{-- pub/nav.pub.php:189 — "Auto Log Out in <span id=session-end>"
+                                         countdown footer. app.js ticks #session-end from the session
+                                         lifetime and auto-logs-out at zero (nav.pub.php session-end JS). --}}
+                                    <span class="dropdown-item-text text-body-secondary">{{ __('site.auto_log_out') }} <span id="session-end" data-session-end-seconds="{{ (int) config('session.lifetime', 120) * 60 }}"></span></span>
                                 </li>
                             </ul>
                         </div>
