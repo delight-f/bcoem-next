@@ -427,7 +427,11 @@
                         @endphp
                         <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-lg fa-fw fa-user"></i></a>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            {{-- Dark theme like the language dropdown: .site-nav styles
+                                 this menu dark (#212529 bg), so BS5 muted utility colors
+                                 (text-body-secondary on the Auto-Log-Out row) must resolve
+                                 to the dark theme or they render illegibly. --}}
+                            <ul class="dropdown-menu dropdown-menu-end" data-bs-theme="dark">
                                 <li class="small"><a class="dropdown-item {{ request()->routeIs('list') ? 'disabled' : '' }}" href="{{ url('/list') }}">{{ __('site.my_account') }}</a></li>
                                 <li class="small"><a class="dropdown-item" href="{{ url('/list') }}#entries">{{ __('site.entries') }}</a></li>
                                 @if ($navWindows->entry === \App\Support\Tenant\WindowState::Open
