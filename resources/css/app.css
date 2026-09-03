@@ -368,6 +368,13 @@ html {
     padding: 0 0 10px 0;
 }
 
+/* Entries-list actions that are gate-locked (window closed / edit
+   deadline passed / received / paid-with-fee) are inert placeholders —
+   show a not-allowed cursor so they don't read as clickable. */
+.entry-action-locked {
+    cursor: not-allowed;
+}
+
 /* Modals */
 .modal h3,
 .modal h4,

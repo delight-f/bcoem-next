@@ -45,7 +45,7 @@
                                 {{-- P3.3b brew edit route --}}
                                 <a href="{{ url('/brew/'.$e->id.'/edit') }}" title="Edit"><i class="fa fa-fw fa-lg fa-pencil"></i></a>
                             @else
-                                <span title="{{ __('site.edit_locked') }}"><i class="fa fa-fw fa-lg fa-pencil text-muted"></i></span>
+                                <span class="entry-action-locked" title="{{ __('site.edit_locked') }}"><i class="fa fa-fw fa-lg fa-pencil text-muted"></i></span>
                             @endif
                             @if ($r['canDelete'])
                                 <form method="post" action="{{ route('entries.destroy', ['id' => $e->id]) }}" class="d-inline"
@@ -56,7 +56,7 @@
                                     </button>
                                 </form>
                             @else
-                                <span title="{{ __('site.delete_locked') }}"><i class="fa fa-fw fa-lg fa-trash-can text-muted"></i></span>
+                                <span class="entry-action-locked" title="{{ __('site.delete_locked') }}"><i class="fa fa-fw fa-lg fa-trash-can text-muted"></i></span>
                             @endif
                         </td>
                     </tr>
