@@ -156,7 +156,7 @@
                                                                 @endforeach
                                                             </ul>
                                                             <div class="btn-group bcoem-admin-dashboard-select">
-                                                                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $rowLinks['dropdown']['button'] }} <span class="caret"></span></button>
+                                                                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $rowLinks['dropdown']['button'] }}</button>
                                                                 <ul class="dropdown-menu small" aria-labelledby="{{ $rowLinks['dropdown']['id'] ?? '' }}">
                                                                     @forelse ($rowLinks['dropdown']['items'] as $ditem)
                                                                         <li class="small"><a class="dropdown-item" href="{{ url($ditem['href']) }}">{{ $ditem['label'] }}</a></li>
