@@ -243,23 +243,23 @@
                         <th nowrap>Judging
                             @if ($obfuscate)<a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" title="Judging Numbers" data-bs-content="Judging numbers are random six-digit numbers that are automatically assigned by the system. You can override each judging number when scanning in barcodes, QR Codes, or by entering it in the field provided. Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use."><span class="fa fa-question-circle"></span></a>@endif
                         </th>
-                        <th class="d-none d-xl-block">Name</th>
+                        <th class="d-none d-xl-table-cell">Name</th>
                         <th>Style</th>
-                        <th class="d-none d-lg-block">{{ $proEdition ? 'Organization' : 'Brewer' }}</th>
+                        <th class="d-none d-lg-table-cell">{{ $proEdition ? 'Organization' : 'Brewer' }}</th>
                         @if (! $proEdition)
-                            <th class="d-none d-xl-block d-print-none">Club</th>
+                            <th class="d-none d-xl-table-cell d-print-none">Club</th>
                         @endif
-                        <th class="d-none d-xl-block d-print-none">Updated</th>
-                        <th class="d-none d-lg-block" width="3%">P<span class="d-none d-xl-block">aid?</span></th>
-                        <th class="d-none d-lg-block" width="3%">R<span class="d-none d-xl-block">ec'd?</span></th>
-                        <th class="d-none d-xl-block">Admin Notes
-                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Admin Notes" data-bs-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="d-none d-xl-block d-print-none fa fa-question-circle"></span></a>
+                        <th class="d-none d-xl-table-cell d-print-none">Updated</th>
+                        <th class="d-none d-lg-table-cell" width="3%">P<span class="d-none d-xl-inline">aid?</span></th>
+                        <th class="d-none d-lg-table-cell" width="3%">R<span class="d-none d-xl-inline">ec'd?</span></th>
+                        <th class="d-none d-xl-table-cell">Admin Notes
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Admin Notes" data-bs-content="Catch-all for any information Admins may need for individual entries such as &quot;received damaged,&quot; &quot;maybe mis-categorized,&quot; etc. 255 character limit."><span class="d-none d-xl-inline-block d-print-none fa fa-question-circle"></span></a>
                         </th>
-                        <th class="d-none d-xl-block">Staff Notes
-                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Staff Notes" data-bs-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="d-none d-xl-block d-print-none fa fa-question-circle"></span></a>
+                        <th class="d-none d-xl-table-cell">Staff Notes
+                            <a href="#" tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-container="body" data-bs-html="true" title="Staff Notes" data-bs-content="Catch-all for any information staff may need to know about individual entries such as &quot;single 750ml bottle,&quot; &quot;missing MBOS bottle,&quot; etc. Notes entered here are printed on pullsheets. 255 character limit."><span class="d-none d-xl-inline-block d-print-none fa fa-question-circle"></span></a>
                         </th>
-                        <th class="d-none d-lg-block">Loc<span class="d-none d-xl-block">/Box</span></th>
-                        <th class="d-none d-lg-block d-print-none">Actions</th>
+                        <th class="d-none d-lg-table-cell">Loc<span class="d-none d-xl-inline">/Box</span></th>
+                        <th class="d-none d-lg-table-cell d-print-none">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -300,7 +300,7 @@
                             <td nowrap>
                                 <input class="form-control form-control-sm d-print-none" name="brewJudgingNumber{{ $entry->id }}" type="text" pattern=".{6,}" title="Judging numbers must be six characters and cannot include the ^ character. The ^ character will be converted to a dash (-) upon submit. Use leading zeroes (e.g., 000123 or 01-001, etc.). Alpha characters will be converted to lower case for consistency and system use." size="8" maxlength="6" value="{{ $judgingNumber }}">
                             </td>
-                            <td class="d-none d-xl-block">
+                            <td class="d-none d-xl-table-cell">
                                 {{ $entryName }}
                                 @if ($allergens)
                                     <p><strong class="text-danger small">Possible Allergens: {{ $entry->brewPossAllergens }}</strong></p>
@@ -320,33 +320,33 @@
                             <td nowrap>
                                 <a href="{{ url('/backoffice/entries?filter='.$entry->brewCategorySort) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="See only the category {{ ltrim($entry->brewCategorySort, '0') }} entries">{{ $styleLabel }}: {{ $entry->brewStyle }}</a>
                             </td>
-                            <td class="d-none d-lg-block">{{ $name }}</td>
+                            <td class="d-none d-lg-table-cell">{{ $name }}</td>
                             @if (! $proEdition)
-                                <td class="d-none d-xl-block d-print-none">{{ $entry->brewerClubs }}</td>
+                                <td class="d-none d-xl-table-cell d-print-none">{{ $entry->brewerClubs }}</td>
                             @endif
-                            <td class="d-none d-xl-block d-print-none">
+                            <td class="d-none d-xl-table-cell d-print-none">
                                 {{ \App\Http\Controllers\Admin\EntriesController::updated($ctx, $entry->brewUpdated) }}
                             </td>
-                            <td class="d-none d-lg-block">
+                            <td class="d-none d-lg-table-cell">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" value="1" name="brewPaid{{ $entry->id }}" @if ((int) $entry->brewPaid === 1) checked @endif>
                                 </div>
                             </td>
-                            <td class="d-none d-lg-block">
+                            <td class="d-none d-lg-table-cell">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" value="1" name="brewReceived{{ $entry->id }}" @if ((int) $entry->brewReceived === 1) checked @endif>
                                 </div>
                             </td>
-                            <td class="d-none d-xl-block">
+                            <td class="d-none d-xl-table-cell">
                                 <textarea class="form-control form-control-sm" name="brewAdminNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewAdminNotes }}</textarea>
                             </td>
-                            <td class="d-none d-xl-block">
+                            <td class="d-none d-xl-table-cell">
                                 <textarea class="form-control form-control-sm" name="brewStaffNotes{{ $entry->id }}" rows="2" maxlength="255">{{ $entry->brewStaffNotes }}</textarea>
                             </td>
-                            <td class="d-none d-lg-block">
+                            <td class="d-none d-lg-table-cell">
                                 <input class="form-control form-control-sm" name="brewBoxNum{{ $entry->id }}" type="text" size="5" maxlength="10" value="{{ $entry->brewBoxNum }}">
                             </td>
-                            <td class="d-none d-lg-block d-print-none" nowrap>
+                            <td class="d-none d-lg-table-cell d-print-none" nowrap>
                                 <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
                                 <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entryName }}?&rdquo; This cannot be undone.');">

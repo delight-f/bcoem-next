@@ -11,14 +11,14 @@
         <table class="table table-responsive table-striped table-bordered" id="sortable">
             <thead>
                 <tr>
-                    <th nowrap>Payer <span class="d-none d-lg-block">Name</span></th>
-                    <th class="d-none d-md-block">Item</th>
-                    <th>Am<span class="d-none d-md-block">ount</span></th>
-                    <th>St<span class="d-none d-md-block">atus</span></th>
-                    <th nowrap><span class="d-none d-md-block">Transaction</span> ID</th>
-                    <th class="d-none d-md-block"><span class="d-none d-lg-block">For</span> Entries...</th>
+                    <th nowrap>Payer <span class="d-none d-lg-inline">Name</span></th>
+                    <th class="d-none d-md-table-cell">Item</th>
+                    <th>Am<span class="d-none d-md-inline">ount</span></th>
+                    <th>St<span class="d-none d-md-inline">atus</span></th>
+                    <th nowrap><span class="d-none d-md-inline">Transaction</span> ID</th>
+                    <th class="d-none d-md-table-cell"><span class="d-none d-lg-inline">For</span> Entries...</th>
                     <th>Date</th>
-                    <th>Act<span class="d-none d-md-block">ions</span></th>
+                    <th>Act<span class="d-none d-md-inline">ions</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -26,11 +26,11 @@
                     <tr>
                         {{-- Legacy cell format: LAST, First --}}
                         <td>{{ ucwords((string) $payment->brewerLastName) }}, {{ ucwords((string) $payment->brewerFirstName) }}</td>
-                        <td class="d-none d-md-block">Entry Fees</td>
+                        <td class="d-none d-md-table-cell">Entry Fees</td>
                         <td>{{ $payment->amount }} {{ $payment->currency }}</td>
                         <td>{{ $payment->status }}</td>
                         <td>{{ $payment->provider_ref !== '' && $payment->provider_ref !== null ? $payment->provider_ref : $payment->event_id }}</td>
-                        <td class="d-none d-md-block">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
+                        <td class="d-none d-md-table-cell">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
                         <td>{{ \App\Http\Controllers\Admin\PaymentsController::paymentDate($ctx, $payment->created_at) }}</td>
                         <td nowrap>
                             <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="d-inline"
