@@ -84,7 +84,7 @@
                 </div>
 
                 @if ($entries->isNotEmpty())
-                    <div class="btn-group d-none d-lg-block" role="group" aria-label="printCurrent">
+                    <div class="btn-group d-none d-lg-inline-flex" role="group" aria-label="printCurrent">
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <span class="fa fa-print"></span> Print Current View...
@@ -186,14 +186,14 @@
 
                 @foreach ([['allEmailModal', 'all', 'All Participants with Entries Email Addresses', 'to contact all participants with entries'], ['paidEmailModal', 'paid', 'All Participants with Paid Entries Email Addresses', 'to contact participants with <strong>PAID</strong> entries'], ['unpaidEmailModal', 'unpaid', 'All Participants with Unpaid Entries Email Addresses', 'to contact participants with <strong>UNPAID</strong> entries']] as [$modalId, $key, $title, $purpose])
                     @if ($emailLists[$key] !== '')
-                        <div class="btn-group d-none d-lg-block" role="group">
+                        <div class="btn-group d-none d-lg-inline-flex" role="group">
                             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}">{{ $title }}</button>
                         </div>
                     @endif
                 @endforeach
 
                 @if ($entries->isNotEmpty())
-                    <div class="btn-group float-end d-none d-md-block" role="group">
+                    <div class="btn-group float-end d-none d-md-inline-flex" role="group">
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#entryStatusModal">
                                 {{ $statusLabel }} Entry Status
