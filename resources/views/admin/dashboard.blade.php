@@ -141,6 +141,32 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                @elseif (isset($rowLinks['dropdown']))
+                                                    {{-- Scoring rows carrying a real "Add … to..." dropdown (default.admin.php:
+                                                         Scores row → score_table_choose; Custom Categories row →
+                                                         score_custom_winning_choose). Links render above the dropdown. --}}
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
+                                                                @foreach ($rowLinks['links'] as $item)
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                @endforeach
+                                                            </ul>
+                                                            <div class="btn-group bcoem-admin-dashboard-select">
+                                                                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $rowLinks['dropdown']['button'] }} <span class="caret"></span></button>
+                                                                <ul class="dropdown-menu small" aria-labelledby="{{ $rowLinks['dropdown']['id'] ?? '' }}">
+                                                                    @forelse ($rowLinks['dropdown']['items'] as $ditem)
+                                                                        <li class="small"><a class="dropdown-item" href="{{ url($ditem['href']) }}">{{ $ditem['label'] }}</a></li>
+                                                                    @empty
+                                                                        <li class="small text-muted"><span class="dropdown-item-text">{{ $rowLinks['dropdown']['empty'] }}</span></li>
+                                                                    @endforelse
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 @elseif (isset($rowLinks['matrix']))
                                                     {{-- Print Bottle/Box Labels matrix (default.admin.php:934-1241): each paper
                                                          (product link on the left) owns option rows, each with a real

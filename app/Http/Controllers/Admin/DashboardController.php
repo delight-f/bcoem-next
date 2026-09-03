@@ -430,42 +430,59 @@ final class DashboardController extends Controller
                 $l('/admin/upload-scoresheets?action=html', 'Upload Individually'),
             ]],
         ];
-        if ($obfuscate === 0) {
+        if ($prefs['eval'] && $obfuscate === 0) {
+            // Entry Evaluations — prefsEval==1 AND not obfuscated
+            // (default.admin.php:1346).
             $scoreItems[] = ['Entry Evaluations', [$l('/eval', 'Manage')]];
         }
-        $scoreLinks = [$l('/admin/judging/scores', 'Manage')];
-        if ($prefs['eval']) {
-            $scoreLinks[] = ['label' => 'Import Scores', 'href' => '/eval/import-scores'];
-        }
-        $scoreItems[] = ['Scores', $scoreLinks];
-        // "Add Scores to..." dropdown (legacy score_table_choose,
-        // lib/admin.lib.php:445): per-table add/edit link.
-        $scoreAddItems = DB::table('judging_tables')->orderBy('tableNumber')
-            ->get(['id', 'tableNumber', 'tableName'])
-            ->map(fn ($t) => $l('/admin/judging/scores?action=add&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))
-            ->all();
-        if ($scoreAddItems !== []) {
-            $scoreItems[] = ['Add Scores to...', $scoreAddItems];
-        }
-        // "Add Entries to..." dropdown (legacy score_custom_winning_choose,
-        // lib/admin.lib.php:474): per special-best category, add when no
-        // data rows exist yet, edit otherwise.
-        $customEntries = DB::table('special_best_info')->orderBy('sbi_name')
-            ->get(['id', 'sbi_name'])
-            ->map(function ($sbi) use ($l): array {
-                $has = DB::table('special_best_data')->where('sid', $sbi->id)->exists();
-
-                return ['label' => (string) $sbi->sbi_name,
-                    'href' => '/admin/judging/special-best-data?action='.($has ? 'edit' : 'add').'&id='.$sbi->id];
-            })->all();
-        if ($customEntries !== []) {
-            $scoreItems[] = $family('Add Entries to...', $customEntries, '');
+        if ($level0 || $obfuscate === 0) {
+            // Scores row + its "Add Scores to..." dropdown (default.admin.php:
+            // 1363-1380). The dropdown lists every judging table with an
+            // add/edit link like legacy score_table_choose (lib/admin.lib.php:
+            // 445) — action=edit once the table has scores, else action=add.
+            $scoreLinks = [$l('/admin/judging/scores', 'Manage')];
+            if ($prefs['eval']) {
+                $scoreLinks[] = ['label' => 'Import Scores', 'href' => '/eval/import-scores'];
+            }
+            $addItems = DB::table('judging_tables')->orderBy('tableNumber')
+                ->get(['id', 'tableNumber', 'tableName'])
+                ->map(fn ($t): array => $l(
+                    // Legacy split add (no scores yet) vs edit (scores exist)
+                    // into two actions; the port's ScoreController serves one
+                    // grid for both (judging-scores.php:15-17), so all rows
+                    // link to the same edit route.
+                    '/admin/judging/scores/'.(int) $t->id.'/edit',
+                    'Table '.$t->tableNumber.': '.$t->tableName,
+                ))
+                ->all();
+            $scoreItems[] = ['Scores', ['links' => $scoreLinks, 'dropdown' => [
+                'button' => 'Add Scores to...', 'id' => 'scoresMenu1',
+                'empty' => 'No tables have been defined',
+                'items' => $addItems,
+            ]]];
         }
         if ($level0 || $obfuscate === 0) {
+            // BOS Entries and Places (default.admin.php:1382-1388).
             $scoreItems[] = ['BOS Entries and Places', [$l('/admin/judging/bos', 'Manage')]];
         }
         if ($level0) {
-            $scoreItems[] = ['Custom Categories', [$l('/admin/judging/special-best-data', 'Manage')]];
+            // Custom Categories row + its "Add Entries to..." dropdown
+            // (default.admin.php:1390-1410). Dropdown mirrors legacy
+            // score_custom_winning_choose (lib/admin.lib.php:474): each
+            // category is add/edit depending on whether data rows exist; when
+            // none, a disabled empty line + divider + "Add a Custom Category".
+            $customEntries = DB::table('special_best_info')->orderBy('sbi_name')
+                ->get(['id', 'sbi_name'])
+                ->map(function ($sbi) use ($l): array {
+                    $has = DB::table('special_best_data')->where('sid', $sbi->id)->exists();
+
+                    return $l('/admin/judging/special-best-data?action='.($has ? 'edit' : 'add').'&id='.$sbi->id, (string) $sbi->sbi_name);
+                })->all();
+            $scoreItems[] = ['Custom Categories', ['links' => [$l('/admin/judging/special-best-data', 'Manage')], 'dropdown' => [
+                'button' => 'Add Entries to...', 'id' => 'scoresMenu2',
+                'empty' => 'No custom categories have been defined',
+                'items' => $customEntries,
+            ]]];
         }
         $left[] = ['Scoring', 'fa-trophy',
             'Manage all functions related to evaluating and scoring participant entries for all stages of judging.',
