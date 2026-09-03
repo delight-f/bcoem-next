@@ -518,6 +518,10 @@ html {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    /* BS5 .navbar > .container-fluid is itself flex; without growing, this
+       wrapper shrink-wraps its content (~200px) and the .ms-auto icon group
+       can never reach the right edge. */
+    flex: 1 1 auto;
 }
 [data-bs-theme="bcoem-brux"] #main-content {
     padding-top: 60px;
@@ -530,18 +534,21 @@ html {
     [data-bs-theme="bcoem-brux"] h5 { font-size: 14px; }
     [data-bs-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
-/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). */
-.admin-topbar .nav-link {
+/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). The base
+   .admin-topbar .nav-link color loses to the brux anchor rebind
+   ([data-bs-theme="bcoem-brux"] a:not(.btn) is (0,2,1) vs (0,2,0)), which
+   turned topbar text/icons blue; scope the grey to the theme so it wins. */
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link {
     color: #bec8d8;
     padding-top: 15px;
     padding-bottom: 15px;
     line-height: 20px;
 }
-.admin-topbar .nav-link:visited {
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:visited {
     color: #bec8d8;
 }
-.admin-topbar .nav-link:hover,
-.admin-topbar .nav-link:focus {
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:hover,
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
 }
