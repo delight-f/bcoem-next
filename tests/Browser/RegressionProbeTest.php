@@ -109,6 +109,29 @@ final class RegressionProbeTest extends DuskTestCase
         });
     }
 
+    public function test_public_user_dropdown_opens_after_login(): void
+    {
+        // The public navbar person icon is a BS5 dropdown toggle; without
+        // data-bs-toggle="dropdown" clicking it does nothing, and without
+        // spacing it touches the logout icon.
+        $this->browse(function (Browser $browser): void {
+            $this->login($browser);
+            $browser->pause(900);
+            $browser->visit('/');
+            $browser->pause(1200);
+
+            $state = $browser->script("
+                document.querySelector('#site-nav #nav-menu .fa-user')?.closest('a').click();
+                const userA = document.querySelector('#site-nav #nav-menu .fa-user')?.closest('a');
+                const outBtn = [...document.querySelectorAll('#site-nav #nav-menu form button')].find(b => b.querySelector('.fa-sign-out-alt'));
+                const r1 = userA?.getBoundingClientRect(); const r2 = outBtn?.getBoundingClientRect();
+                return JSON.stringify({ open: !!document.querySelector('#site-nav #nav-menu .dropdown-menu.show'), gap: r1 && r2 ? Math.round(r2.left - r1.right) : null });
+            ")[0];
+            fwrite(STDERR, "\nPUBLIC-USER-DROPDOWN: ".$state."\n");
+            $this->addToAssertionCount(1);
+        });
+    }
+
     public function test_admin_entries_label_links(): void
     {
         $this->browse(function (Browser $browser): void {

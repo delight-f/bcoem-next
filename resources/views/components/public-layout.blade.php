@@ -398,7 +398,7 @@
                     @endphp
                     @if ($langToggle === 'Y' && count($langMenu) > 1)
                         <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false" title="Language"><i class="fa fa-lg fa-fw fa-globe"></i></a>
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false" title="Language"><i class="fa fa-lg fa-fw fa-globe"></i></a>
                             <ul class="dropdown-menu dropdown-menu-end" data-bs-theme="dark">
                                 @foreach ($langMenu as $langCode)
                                     @php
@@ -426,7 +426,7 @@
                             $navWindows = \App\Support\Tenant\Windows::derive($ctx, time());
                         @endphp
                         <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><i class="fa fa-lg fa-fw fa-user"></i></a>
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-lg fa-fw fa-user"></i></a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li class="small"><a class="dropdown-item {{ request()->routeIs('list') ? 'disabled' : '' }}" href="{{ url('/list') }}">{{ __('site.my_account') }}</a></li>
                                 <li class="small"><a class="dropdown-item" href="{{ url('/list') }}#entries">{{ __('site.entries') }}</a></li>

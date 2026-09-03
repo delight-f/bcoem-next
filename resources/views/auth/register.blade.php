@@ -24,7 +24,7 @@
                         <a class="btn btn-secondary" href="{{ url('/backoffice/participants') }}"><span class="fa fa-arrow-circle-left"></span> All Participants</a>
                     </div>
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-secondary dropdown-toggle">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="fa fa-plus-circle"></span> Register Judge/Steward (Standard)
                         </button>
                         <ul class="dropdown-menu">
@@ -33,7 +33,7 @@
                         </ul>
                     </div>
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-secondary dropdown-toggle">
+                        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="fa fa-plus-circle"></span> Register Judge/Steward (Quick)
                         </button>
                         <ul class="dropdown-menu">

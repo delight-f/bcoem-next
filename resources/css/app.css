@@ -223,6 +223,16 @@ html {
         padding-left: 0.5rem;
         padding-right: 0.5rem;
     }
+    /* The user controls are not direct .nav-link children: the person
+       dropdown is a .dropdown div and the logout button lives inside a
+       <form>, so neither gets the link padding — give them a matching gap
+       so the person and logout icons do not touch. */
+    #site-nav #nav-menu > form {
+        margin-left: 0.5rem;
+    }
+    #site-nav #nav-menu > .dropdown {
+        margin-left: 0.5rem;
+    }
 }
 .site-nav,
 .site-footer {
