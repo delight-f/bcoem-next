@@ -243,7 +243,7 @@
                                                         </div>
                                                     </div>
                                                     @foreach ($rowLinks['matrix'] as $paper)
-                                                        <div class="row @if ($loop->last) mb-0 @else mb-2 @endif">
+                                                        <div class="row">
                                                             <div class="col-12 col-md-4 small">
                                                                 @php
                                                                     // Legacy left-cell tooltip names the product (e.g. "Avery 5160",

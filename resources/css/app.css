@@ -404,6 +404,12 @@ html {
     padding: 0;
     margin: 15px 0 0 0;
 }
+/* Uniform vertical rhythm across every dashboard section's content rows. */
+/* Some rows carry mb-3/mb-2 utilities; this scoped rule is the single source, */
+/* so every top-level row in an expanded panel body sits 1rem apart. */
+.bcoem-admin-dashboard-accordion .card-body > .row {
+    margin-bottom: 1rem;
+}
 
 /* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
    .badge/.card primitives so the legacy glance look is preserved. ---- */
