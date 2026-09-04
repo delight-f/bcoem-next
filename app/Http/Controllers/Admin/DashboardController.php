@@ -56,6 +56,9 @@ final class DashboardController extends Controller
             // and the queued-judging flag that gates the Flights row.
             'tablesPlanning' => (string) ($ctx->judgingStr('jPrefsTablePlanning') ?? '0') === '1',
             'queued' => (string) ($ctx->judgingStr('jPrefsQueued') ?? 'Y') === 'N',
+            // default.admin.php gates the After Judging Reports sub-section on
+            // $judging_started (first judging session in the past).
+            'judgingStarted' => $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate,
         ];
 
         $counts = [
@@ -185,26 +188,28 @@ final class DashboardController extends Controller
 
     /**
      * Admin dashboard panels in default.admin.php order and shape. Each
-     * section: [title, icon, help, categories]. Each category:
-     * [categoryLabel, items] where each item is one of:
-     *   ['label', 'href']                          active link
-     *   ['label', null, 'todo']                    disabled (backend missing)
-     *   ['label', null, null, children]            family (per-count / per-row dropdown)
-     *   ['matrix', papers]                         paper-by-paper label matrix
+     * section: [title, icon, help, categories]; each category is the accordion
+     * tuple [categoryLabel, body]. Body shapes, chosen by the blade:
+     *   list of links/families        generic inline row (most panels)
+     *   ['links'=>, 'dropdown'=>]     row with a single real dropdown (Scoring)
+     *   ['matrix'=>papers]            paper-by-paper label matrix (Sorting)
+     *   ['blocks'=>list]              ordered block row — {inline|block|dd}
+     *                                 segments reproducing legacy Reports rows
+     *   '_section' category           full-width sub-section heading (Reports
+     *                                 Before/During/After Judging)
      *
      * @return array{left: list<array>, right: list<array>}
      */
     private function sections(int $level, int $obfuscate, array $prefs, array $counts): array
     {
         $l = static fn (string $href, string $label): array => ['label' => $label, 'href' => $href];
-        $todo = static fn (string $label, string $src): array => ['label' => $label, 'href' => null, 'todo' => 'TODO: legacy output — '.$src];
-        $family = static fn (string $label, array $children, string $descriptor = 'labels per entry'): array => ['label' => $label, 'children' => $children, 'descriptor' => $descriptor];
 
         $level0 = $level === 0;
         $barcodes = $prefs['barcodes'];
         $tables = $counts['tables'];
         $planning = $prefs['tablesPlanning'];
         $queued = $prefs['queued'];
+        $judgingStarted = $prefs['judgingStarted'];
 
         $left = [];
 
@@ -492,220 +497,258 @@ final class DashboardController extends Controller
         // ---- Right column ----
         $reportsItems = [];
 
-        // Before Judging.
-        $reportsItems[] = ['Staff Availability', [
-            $l('/admin/output/assignments?filter=staff&view=name', 'By Last Name'),
-            $l('/admin/output/assignments?filter=staff', 'By Non-Judging Session'),
-        ]];
-        $reportsItems[] = ['Notes', [
-            $l('/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'),
-            $l('/admin/output/judge_notes?go=admin', 'Admin and Staff Notes'),
-        ]];
-        if ($obfuscate === 0) {
-            $reportsItems[] = ['Allergens', [$l('/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries')]];
-        }
-        $reportsItems[] = ['Drop-Off and Shipping', [
-            $l('/admin/output/dropoff', 'Entry Totals'),
-            $l('/admin/output/dropoff?go=check', 'List of Entries'),
-        ]];
-        if ($tables > 0 && $obfuscate === 0) {
-            $reportsItems[] = ['Additional Info', [
-                $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers'),
-                $l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers'),
-            ]];
-            $reportsItems[] = ['Judge Inventories', [
-                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J', 'Entries for Session...'),
-                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry', 'Judging Numbers for Session...'),
-            ]];
-        }
-        $tableCardPerTable = DB::table('judging_tables')->orderBy('tableNumber')->get()
-            ->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all();
-        $reportsItems[] = ['Table Cards', [
-            $l('/admin/output/table_cards', 'All Tables'),
-            $l('/admin/output/table_cards?psort=sorting-placards', 'Sorting Placards'),
-            $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards (Master List)'),
-            $l('/admin/output/table_cards?psort=sorting-tables', 'Sorting Tables'),
-            $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Sorting Tables (Master List)'),
-            $l('/admin/output/table_cards?id=1', 'For Table...'),
-            $family('For Table (choose)...', $tableCardPerTable, ''),
-            $family('For Session...', DB::table('judging_locations')->orderBy('id')->get()
-                ->flatMap(fn ($loc) => collect(range(1, max(1, (int) $loc->judgingRounds)))
-                    ->map(fn (int $round) => $l('/admin/output/table_cards?go=judging_locations&location='.$loc->id.'&round='.$round, (string) $loc->judgingLocName.' - Round '.$round)))->all(), ''),
-        ]];
-        $reportsItems[] = ['Sign In Sheets', [
-            $l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
-            $l('/admin/output/assignments?filter=stewards&view=sign-in', 'Stewards'),
-        ]];
-        if ($tables > 0) {
-            $judgeSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
-                ->flatMap(fn ($loc) => [
-                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
-                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
-                ])->all();
-            $stewardSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
-                ->flatMap(fn ($loc) => [
-                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
-                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
-                ])->all();
-            $reportsItems[] = ['Assignments', [
-                $l('/admin/output/assignments?filter=judges&view=name', 'All Judges By Last Name'),
-                $l('/admin/output/assignments?filter=judges&view=table', 'All Judges By Table'),
-                $l('/admin/output/assignments?filter=judges&view=location', 'All Judges By Session'),
-                $family('Judges for Session...', $judgeSessionLinks, ''),
-                $l('/admin/output/assignments?filter=stewards&view=name', 'All Stewards Last Name'),
-                $l('/admin/output/assignments?filter=stewards&view=table', 'All Stewards By Table'),
-                $l('/admin/output/assignments?filter=stewards&view=location', 'All Stewards By Session'),
-                $family('Stewards for Session...', $stewardSessionLinks, ''),
-            ]];
-        }
-        $reportsItems[] = ['Judge Scoresheet Labels', [
-            $l('/admin/output/labels?go=participants&action=judging_labels&psort=5160', 'Letter'),
-            $l('/admin/output/labels?go=participants&action=judging_labels&psort=3422', 'A4'),
-        ]];
-        if ($obfuscate === 0) {
-            $reportsItems[] = ['Name Tags', [
-                $l('/admin/output/labels?go=participants&action=judging_nametags&psort=5395', 'Letter'),
-            ]];
-        }
+        // Reports panel (default.admin.php:1411-2198). Rows use the shared
+        // [category, rowLinks] accordion tuple; a '_section' category is a
+        // full-width Before/During/After Judging heading, and report rows
+        // carry an ordered list of {inline|block|dd} blocks reproducing
+        // legacy's interleaved flat <ul>s and dropdown buttons:
+        //   {inline:[items]}  -> <ul class="list-inline">
+        //   {block:[items]}   -> <ul class="list-unstyled"> (one link/line)
+        //   {dd:{button,items,prefix?}} -> a Bootstrap dropdown (prefix is a
+        //                          literal rendered before the button, e.g.
+        //                          Entry Required Info "Letter - Entry Numbers by Style")
+        // A block item is a link item, or {text:...} for a literal label
+        // (Address Labels "Winners" etc.), or {todo-label:...} disabled.
+        $inline = static fn (array $items): array => ['inline' => $items];
+        $block = static fn (array $items): array => ['block' => $items];
+        $dd = static fn (string $button, array $items, string $prefix = ''): array => ['dd' => ['button' => $button, 'items' => $items, 'prefix' => $prefix]];
+        $text = static fn (string $t): array => ['text' => $t];
+        $rows = &$reportsItems;
 
-        // During Judging (tables>0 && obfuscate 0).
-        if ($tables > 0 && $obfuscate === 0) {
-            $reportsItems[] = ['Mini-BOS Pullsheets', [
-                $l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
-                $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers'),
-                $l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
-                $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers'),
-            ]];
-            $reportsItems[] = ['Mini-BOS Cup Mats', [
-                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank (Mini-BOS)'),
-                $l('/admin/output/bos_mat?action=blank&view=pro-am', 'Blank (Pro-Am)'),
-                $l('/admin/output/bos_mat?action=blank', 'Blank'),
-                $l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers'),
-                $family('For Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=mini-bos&view='.$t->id.'&filter=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/bos_mat?action=mini-bos&view='.$t->id, (string) $t->tableNumber.' (Judging)')])->all(), ''),
-                $l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers'),
-            ]];
+        $locRows = DB::table('judging_locations')->orderBy('id')->get();
+        $tbls = DB::table('judging_tables')->orderBy('tableNumber')->get();
         $bosStyleTypes = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
-            $reportsItems[] = ['BOS Pullsheets', [
-                $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers'),
-                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all(), ''),
-                $l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers'),
-                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all(), ''),
-            ]];
-            $reportsItems[] = ['BOS Cup Mats', [
-                $l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'),
-                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id.'&filter=entry', $t->styleTypeName))->all(), ''),
-                $l('/admin/output/bos_mat', 'All Style Types - Judging Numbers'),
-                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all(), ''),
-                $family('Pro-Am...', collect(range(1, 3))->flatMap(fn ($sort) => $bosStyleTypes->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id.'&filter=entry', $t->styleTypeName.' ('.$sort.')'), $l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id, $t->styleTypeName.' ('.$sort.')')])->all())->all(), ''),
-            ]];
-        // Legacy ps_loc_* session dropdowns: per-location × per-round
-        // children, entry/judging number variants.
-        $sessionEntry = [];
-        $sessionJudging = [];
-        foreach (DB::table('judging_locations')->orderBy('id')->get() as $loc) {
-            foreach (range(1, max(1, (int) $loc->judgingRounds)) as $round) {
-                $name = (string) $loc->judgingLocName.' - Round '.$round;
-                $sessionEntry[] = $l('/admin/output/pullsheets?go=judging_locations&view=entry&location='.$loc->id.'&round='.$round, $name);
-                $sessionJudging[] = $l('/admin/output/pullsheets?go=judging_locations&view=default&location='.$loc->id.'&round='.$round, $name);
+
+        // Per-session (location x round) link list — legacy $ps_loc_* builders.
+        $perSession = static function (string $qsBase) use ($l, $locRows): array {
+            $out = [];
+            foreach ($locRows as $loc) {
+                foreach (range(1, max(1, (int) $loc->judgingRounds)) as $round) {
+                    $out[] = $l($qsBase.'&location='.$loc->id.'&round='.$round,
+                        (string) $loc->judgingLocName.' - Round '.$round);
+                }
             }
-        }
-            $reportsItems[] = ['Pullsheets', [
-                $l('/admin/output/pullsheets', 'All By Table'),
-                $l('/admin/output/pullsheets?go=judging_tables&id=default&view=entry', 'All By Table - Entry Numbers'),
-                $family('Entry Numbers for Session...', $sessionEntry, ''),
-                $family('Judging Numbers for Session...', $sessionJudging, ''),
-                $family('Judging Numbers for Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()
-                    ->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, (string) $t->tableNumber))->all(), ''),
-                $family('Mini-BOS per Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=default', (string) $t->tableNumber.' (Judging)')])->all(), ''),
-                $family('Mini-BOS per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=entry', (string) $t->judgingLocName.' (Entry)'), $l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=default', (string) $t->judgingLocName.' (Judging)')])->all(), ''),
-                $family('Judge Inventory per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory', (string) $t->judgingLocName), $l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory&sort=entry', (string) $t->judgingLocName.' (Entry)')])->all(), ''),
-                $family('Pro-Am per Style Type...', collect(range(1, 3))->flatMap(fn ($f) => $bosStyleTypes->map(fn ($t) => [$l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id.'&view=entry', $t->styleTypeName.' ('.$f.')'), $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id, $t->styleTypeName.' ('.$f.')')])->all())->flatten(1)->all(), ''),
-            ]];
-        }
 
-        // After Judging.
-        $reportsItems[] = ['Award Labels', [
-            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=5160', 'Letter'),
-            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=3422', 'A4'),
-        ]];
-        $reportsItems[] = ['Winner Address Labels', [
-            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=5160', 'Letter'),
-            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4'),
-        ]];
-        $reportsItems[] = ['Address Labels', [
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Letter (All Participants)'),
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'A4 (All Participants)'),
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Letter (With Entries)'),
-            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'A4 (With Entries)'),
-        ]];
-        $reportsItems[] = ['Summaries', [
-            $l('/admin/output/participant_summary', 'Participant Summaries'),
-        ]];
-        $reportsItems[] = ['Participant Entries List', [
-            $l('/admin/output/participant_entries_list', 'Participant Entries List (Address)'),
-        ]];
-        $reportsItems[] = ['BJCP Points', [
-            $l('/admin/output/staff_points', 'Print'),
-            $l('/admin/output/staff_points?action=download&view=pdf', 'PDF'),
-        ]];
-        $reportsItems[] = ['Inventory', [
-            $l('/admin/output/post_judge_inventory?go=scores', 'With Scores'),
-            $l('/admin/output/post_judge_inventory', 'Without Scores'),
-        ]];
-        $reportsItems[] = ['BOS Results', [
-            $l('/admin/output/results?go=judging_scores_bos&action=print&tb=bos&view=default', 'Print'),
-            $l('/admin/output/results?go=judging_scores_bos&action=download&view=pdf', 'PDF'),
-            $l('/admin/output/results?go=judging_scores_bos&action=download&view=html', 'HTML'),
-        ]];
-        if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
-            $reportsItems[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), [
-                $l('/admin/output/results?go=best&action=print&filter=default&view=default', 'Print'),
-                $l('/admin/output/results?go=best&action=print&view=default', 'Print (No Filter)'),
-            ]];
-        }
-        // default.admin.php:1998-2110 — the results matrix. Method 0
-        // (table/medal group): four dropdown families per category (with
-        // scores / winners-only-with-scores via tb=scores; the without-
-        // scores pair without tb), each with the three sort orders. Two
-        // categories: "Results" (go=judging_scores) and "All Results -
-        // Single Report" (go=all). Other methods: four flat links.
-        $resultsFamily = static function (string $label, string $go, string $view, bool $tb) use ($l): array {
-            $base = '/admin/output/results?go='.$go.'&action=print'.($tb ? '&tb=scores' : '').'&view='.$view;
-
-            return [
-                'label' => $label.'...',
-                'descriptor' => '',
-                'children' => [
-                    $l($base, 'By Table Number'),
-                    $l($base.'&psort=table-entry-count-asc', 'By Table/Medal Group Entry Count - Ascending'),
-                    $l($base.'&psort=table-entry-count-desc', 'By Table/Medal Group Entry Count - Descending'),
-                ],
-            ];
+            return $out;
         };
-        $methodLabel = $this->resultsMethodLabel($prefs['winnerMethod']);
-        if ($prefs['winnerMethod'] === 0) {
-            $reportsItems[] = ['Results ('.$methodLabel.')', [
-                $resultsFamily('All with Scores', 'judging_scores', 'default', true),
-                $resultsFamily('Winners Only with Scores', 'judging_scores', 'winners', true),
-                $resultsFamily('All without Scores', 'judging_scores', 'default', false),
-                $resultsFamily('Winners Only without Scores', 'judging_scores', 'winners', false),
-                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf', 'PDF'),
-                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=html', 'HTML'),
-            ]];
-            $reportsItems[] = ['All Results ('.$methodLabel.' - Single Report)', [
-                $resultsFamily('All with Scores', 'all', 'default', true),
-                $resultsFamily('Winners Only with Scores', 'all', 'winners', true),
-                $resultsFamily('All without Scores', 'all', 'default', false),
-                $resultsFamily('Winners Only without Scores', 'all', 'winners', false),
-            ]];
-        } else {
-            $reportsItems[] = ['Results ('.$methodLabel.')', [
-                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=default', 'All with Scores'),
-                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners', 'Winners Only with Scores'),
-                $l('/admin/output/results?go=judging_scores&action=print', 'All without Scores'),
-                $l('/admin/output/results?go=judging_scores&action=print&view=winners', 'Winners Only without Scores'),
-            ]];
+
+        // ============================ Before Judging ============================
+        $rows[] = ['_section', 'Before Judging'];
+        $rows[] = ['Staff Availability', ['blocks' => [
+            $inline([$l('/admin/output/assignments?filter=staff&view=name', 'By Last Name'),
+                $l('/admin/output/assignments?filter=staff', 'By Non-Judging Session')]),
+        ]]];
+        $rows[] = ['Notes', ['blocks' => [
+            $inline([$l('/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'),
+                $l('/admin/output/judge_notes?go=admin', 'Admin and Staff Notes')]),
+        ]]];
+        if ($obfuscate === 0) {
+            $rows[] = ['Allergens', ['blocks' => [
+                $inline([$l('/admin/output/judge_notes?go=allergens', 'Possible Allergens in Entries')]),
+            ]]];
         }
+        $rows[] = ['Drop-Off and Shipping', ['blocks' => [
+            $inline([$l('/admin/output/dropoff', 'Entry Totals'),
+                $l('/admin/output/dropoff?go=check', 'List of Entries')]),
+        ]]];
+        if (($tables > 0) && ($obfuscate === 0)) {
+            $rows[] = ['Additional Info', ['blocks' => [
+                $block([$l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers')]),
+                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                $block([$l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers')]),
+                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+            ]]];
+            $rows[] = ['Pullsheets', ['blocks' => [
+                $block([$l('/admin/output/pullsheets?go=judging_tables&view=entry&id=default', 'All By Table - Entry Numbers')]),
+                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables&view=entry')),
+                $block([$l('/admin/output/pullsheets?go=judging_tables&id=default', 'All By Table - Judging Numbers')]),
+                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables')),
+            ]]];
+            $rows[] = ['Judge Inventories', ['blocks' => [
+                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J')),
+                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry')),
+            ]]];
+        }
+        $rows[] = ['Table Cards', ['blocks' => [
+            $block([$l('/admin/output/table_cards', 'All Tables')]),
+            $dd('For Table...', $tbls->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+            $dd('For Session...', $perSession('/admin/output/table_cards?go=judging_locations')),
+        ]]];
+        $rows[] = ['Sign In Sheets', ['blocks' => [
+            $inline([$l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
+                $l('/admin/output/assignments?filter=stewards&view=sign-in', 'Stewards')]),
+        ]]];
+        if ($tables > 0) {
+            $judgesForSession = $locRows->flatMap(fn ($loc) => [$l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table')])->all();
+            $stewardsForSession = $locRows->flatMap(fn ($loc) => [$l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table')])->all();
+            $rows[] = ['Assignments', ['blocks' => [
+                $block([$l('/admin/output/assignments?filter=judges&view=name', 'All Judges By Last Name'),
+                    $l('/admin/output/assignments?filter=judges&view=table', 'All Judges By Table'),
+                    $l('/admin/output/assignments?filter=judges&view=location', 'All Judges By Session')]),
+                $dd('Judges for Session...', $judgesForSession),
+                $block([$l('/admin/output/assignments?filter=stewards&view=name', 'All Stewards Last Name'),
+                    $l('/admin/output/assignments?filter=stewards&view=table', 'All Stewards By Table'),
+                    $l('/admin/output/assignments?filter=stewards&view=location', 'All Stewards By Session')]),
+                $dd('Stewards for Session...', $stewardsForSession),
+            ]]];
+        }
+        $rows[] = ['Judge Scoresheet Labels', ['blocks' => [
+            $inline([$l('/admin/output/labels?go=participants&action=judging_labels&psort=5160', 'Letter'),
+                $l('/admin/output/labels?go=participants&action=judging_labels&psort=3422', 'A4')]),
+        ]]];
+        if ($obfuscate === 0) {
+            // Entry Required Info Scoresheet Labels (Received Entries Only)
+            // (default.admin.php:1656-1749): four "by Style" dropdowns
+            // (Letter/A4 x Entry/Judging Numbers). Each legacy <li> pairs a
+            // literal caption with the 1-12 dropdown; the collapsible "By
+            // Table" form is an inline JS widget outside the dashboard link
+            // model and is not reproduced.
+            $bottleItems = static fn (string $action, string $psort): array => collect(range(1, 12))
+                ->map(fn (int $i) => $l('/admin/output/labels?go=entries&action='.$action.'&view=special&psort='.$psort.'&sort='.$i.'&tb=received', (string) $i))->all();
+            $rows[] = ['Entry Required Info Scoresheet Labels (Received Entries Only)', ['blocks' => [
+                $dd('Number of Labels per Entry', $bottleItems('bottle-entry', '5160'), 'Letter - Entry Numbers by Style'),
+                $dd('Number of Labels per Entry', $bottleItems('bottle-judging', '5160'), 'Letter - Judging Numbers by Style'),
+                $dd('Number of Labels per Entry', $bottleItems('bottle-entry', '3422'), 'A4 - Entry Numbers by Style'),
+                $dd('Number of Labels per Entry', $bottleItems('bottle-judging', '3422'), 'A4 - Judging Numbers by Style'),
+            ]]];
+            $rows[] = ['Name Tags', ['blocks' => [
+                $inline([$l('/admin/output/labels?go=participants&action=judging_nametags&psort=5395', 'Letter')]),
+            ]]];
+        }
+
+
+        // Pro-Am/Scale-Up method captions (default.admin.php:140-157).
+        $proAmCaption = static fn (int $i): string => $i === 1 ? '1st Place Only'
+            : ($i === 2 ? '1st and 2nd Places' : '1st, 2nd, and 3rd Places');
+
+        // ============================ During Judging ============================
+        // gated tables>0 && obfuscate 0 (default.admin.php:1777).
+        if (($tables > 0) && ($obfuscate === 0)) {
+            $rows[] = ['_section', 'During Judging'];
+            $rows[] = ['Mini-BOS Pullsheets', ['blocks' => [
+                $block([$l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
+                    $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers')]),
+                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos&view=entry')),
+                $block([$l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
+                    $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers')]),
+                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos')),
+            ]]];
+            $rows[] = ['Mini-BOS Cup Mats', ['blocks' => [
+                $block([$l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank')]),
+                $block([$l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers')]),
+                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/bos_mat?action=mini-bos&filter=entry&view='.$t->id, (string) $t->tableNumber.': '.$t->tableName))->all()),
+                $block([$l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers')]),
+                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/bos_mat?action=mini-bos&view='.$t->id, (string) $t->tableNumber.': '.$t->tableName))->all()),
+            ]]];
+            $rows[] = ['BOS Pullsheets', ['blocks' => [
+                $block([$l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers')]),
+                $dd('Entry Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all()),
+                $block([$l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers')]),
+                $dd('Judging Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all()),
+            ]]];
+            $rows[] = ['BOS Cup Mats', ['blocks' => [
+                $block([$l('/admin/output/bos_mat?action=blank', 'Blank')]),
+                $block([$l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers')]),
+                $dd('Entry Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id.'&filter=entry', $t->styleTypeName))->all()),
+                $block([$l('/admin/output/bos_mat', 'All Style Types - Judging Numbers')]),
+                $dd('Judging Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all()),
+            ]]];
+            $rows[] = ['Pro-Am/Scale-Up Pullsheets', ['blocks' => [
+                $dd('Entry Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&view=entry&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+                $dd('Judging Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+            ]]];
+            $rows[] = ['Pro-Am/Scale-Up Cup Mats', ['blocks' => [
+                $block([$l('/admin/output/bos_mat?action=blank&view=pro-am', 'Blank')]),
+                $dd('Entry Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/bos_mat?action=pro-am&sort='.$s.'&filter=entry&view='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+                $dd('Judging Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/bos_mat?action=pro-am&sort='.$s.'&view='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+            ]]];
+        }
+
+        // ============================ After Judging ============================
+        // gated on $judging_started (default.admin.php:1963).
+        if ($judgingStarted) {
+            $rows[] = ['_section', 'After Judging'];
+            if ($tables > 0) {
+                $rows[] = ['BOS Results', ['blocks' => [
+                    $inline([$l('/admin/output/results?go=judging_scores_bos&action=print&tb=bos&view=default', 'Print'),
+                        $l('/admin/output/results?go=judging_scores_bos&action=download&view=pdf', 'PDF'),
+                        $l('/admin/output/results?go=judging_scores_bos&action=download&view=html', 'HTML')]),
+                ]]];
+            }
+            if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
+                $rows[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), ['blocks' => [
+                    $inline([$l('/admin/output/results?go=best&action=print&view=default', 'Print')]),
+                ]]];
+            }
+            // Results — method 0 renders dropdown families; other methods flat.
+            $methodLabel = $this->resultsMethodLabel($prefs['winnerMethod']);
+            $resultsSortLinks = static fn (string $base): array => [
+                $l($base, 'By Table Number'),
+                $l($base.'&psort=table-entry-count-asc', 'By Table/Medal Group Entry Count - Ascending'),
+                $l($base.'&psort=table-entry-count-desc', 'By Table/Medal Group Entry Count - Descending'),
+            ];
+            if ($prefs['winnerMethod'] === 0) {
+                $rows[] = ['Results ('.$methodLabel.')', ['blocks' => [
+                    $dd('All with Scores...', $resultsSortLinks('/admin/output/results?go=judging_scores&action=print&tb=scores&view=default')),
+                    $dd('Winners Only with Scores...', $resultsSortLinks('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners')),
+                    $dd('All without Scores...', $resultsSortLinks('/admin/output/results?go=judging_scores&action=print&view=default')),
+                    $dd('Winners Only without Scores...', $resultsSortLinks('/admin/output/results?go=judging_scores&action=print&view=winners')),
+                    $inline([$l('/admin/output/results?go=judging_scores&action=default&tb=none&view=pdf', 'PDF'),
+                        $l('/admin/output/results?go=judging_scores&action=default&tb=none&view=html', 'HTML')]),
+                ]]];
+                $rows[] = ['All Results ('.$methodLabel.' - Single Report)', ['blocks' => [
+                    $dd('All with Scores...', $resultsSortLinks('/admin/output/results?go=all&action=print&tb=scores&view=default')),
+                    $dd('Winners Only with Scores...', $resultsSortLinks('/admin/output/results?go=all&action=print&tb=scores&view=winners')),
+                    $dd('All without Scores...', $resultsSortLinks('/admin/output/results?go=all&action=print&view=default')),
+                    $dd('Winners Only without Scores...', $resultsSortLinks('/admin/output/results?go=all&action=print&view=winners')),
+                ]]];
+            } else {
+                $rows[] = ['Results ('.$methodLabel.')', ['blocks' => [
+                    $inline([$l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=default', 'All with Scores'),
+                        $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners', 'Winners Only with Scores')]),
+                    $inline([$l('/admin/output/results?go=judging_scores&action=print', 'All without Scores'),
+                        $l('/admin/output/results?go=judging_scores&action=print&view=winners', 'Winners Only without Scores')]),
+                ]]];
+            }
+            $rows[] = ['BJCP Points', ['blocks' => [
+                $inline([$l('/admin/output/staff_points', 'Print'),
+                    $l('/admin/output/staff_points?action=download&view=pdf', 'PDF')]),
+            ]]];
+            if ($tables > 0) {
+                $rows[] = ['Award Labels', ['blocks' => [
+                    $inline([$l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=5160', 'Letter'),
+                        $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=3422', 'A4')]),
+                ]]];
+            }
+            // Address Labels — three labeled inline groups (default.admin.php:
+            // 2155-2184): Winners, All Participants, All Participants with Entries.
+            $rows[] = ['Address Labels', ['blocks' => [
+                $inline([$text('Winners'),
+                    $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=5160', 'Letter'),
+                    $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4')]),
+                $inline([$text('All Participants'),
+                    $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Letter'),
+                    $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'A4')]),
+                $inline([$text('All Participants with Entries'),
+                    $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Letter'),
+                    $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'A4')]),
+            ]]];
+            $rows[] = ['Summaries', ['blocks' => [
+                $inline([$l('/admin/output/participant_summary', 'All Participants with Entries'),
+                    $l('/admin/output/participant_entries_list', 'All Entries by Particpant')]),
+            ]]];
+            $rows[] = ['Inventory', ['blocks' => [
+                $inline([$l('/admin/output/post_judge_inventory?go=scores', 'With Scores'),
+                    $l('/admin/output/post_judge_inventory', 'Without Scores')]),
+            ]]];
+        }
+
 
         $right = [['Reports', 'fa-file',
             'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',

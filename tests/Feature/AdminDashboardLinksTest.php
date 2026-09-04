@@ -21,7 +21,11 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
     /** @var list<int> */
     private array $tableIds = [];
 
-    /** Insert judging tables so tables>0 (and >1) conditional links render. */
+    private ?int $locationId = null;
+
+    /** Insert judging tables so tables>0 (and >1) conditional links render,
+     *  plus a past-dated judging session so judgingStarted is true and the
+     *  During/After Judging Reports rows render (default.admin.php:1777/1963). */
     private function primeTables(): void
     {
         if ($this->tableIds !== []) {
@@ -33,6 +37,15 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
                 'tableNumber' => $n,
             ]);
         }
+        if ($this->locationId === null) {
+            $this->locationId = (int) DB::table('judging_locations')->insertGetId([
+                'judgingLocName' => 'P54 Reports Session',
+                'judgingLocType' => 0,
+                'judgingDate' => (string) (time() - 86400),
+                'judgingDateEnd' => null,
+                'judgingRounds' => 1,
+            ]);
+        }
     }
 
     protected function tearDown(): void
@@ -40,6 +53,10 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
         if ($this->tableIds !== []) {
             DB::table('judging_tables')->whereIn('id', $this->tableIds)->delete();
             $this->tableIds = [];
+        }
+        if ($this->locationId !== null) {
+            DB::table('judging_locations')->where('id', $this->locationId)->delete();
+            $this->locationId = null;
         }
         parent::tearDown();
     }
@@ -120,8 +137,8 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'],
             ['/admin/output/bos_mat', 'All Style Types - Judging Numbers'],
             ['/admin/output/pullsheets', 'All By Table'],
-            ['/admin/output/participant_summary', 'Participant Summaries'],
-            ['/admin/output/participant_entries_list', 'Participant Entries List (Address)'],
+            ['/admin/output/participant_summary', 'All Participants with Entries'],
+            ['/admin/output/participant_entries_list', 'All Entries by Particpant'],
             ['/admin/output/staff_points', 'Print'],
             ['/admin/output/post_judge_inventory', 'With Scores'],
             ['/admin/output/post_judge_inventory', 'Without Scores'],

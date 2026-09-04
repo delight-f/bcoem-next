@@ -107,7 +107,62 @@
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
                                         <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
-                                                @if ($category === 'tables-mode')
+                                                @if ($category === '_section')
+                                                    {{-- Reports panel sub-section header (Before/During/After Judging). --}}
+                                                    <div class="row">
+                                                        <div class="col-12 small">
+                                                            <hr class="my-2">
+                                                            <strong>{{ $rowLinks }}</strong>
+                                                        </div>
+                                                    </div>
+                                                @elseif (isset($rowLinks['blocks']))
+                                                    {{-- Reports panel row (default.admin.php:1411-2198). The body is an
+                                                         ordered list of blocks mirroring legacy's interleaved flat
+                                                         <ul>s and dropdown <div>s: {inline:[..]} list-inline, {block:[..]}
+                                                         list-unstyled, {dd:{button,items,prefix?}} dropdown. Block items
+                                                         are link items or {text:...} literals. --}}
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            @foreach ($rowLinks['blocks'] as $block)
+                                                                @if (isset($block['dd']))
+                                                                    <div class="btn-group bcoem-admin-dashboard-select mb-1 me-2">
+                                                                        @if (! empty($block['dd']['prefix']))
+                                                                            <span class="text-muted me-1 align-middle">{{ $block['dd']['prefix'] }}</span>
+                                                                        @endif
+                                                                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $block['dd']['button'] }}</button>
+                                                                        <ul class="dropdown-menu small">
+                                                                            @forelse ($block['dd']['items'] as $bitem)
+                                                                                <li class="small"><a class="dropdown-item" href="{{ url($bitem['href']) }}"@if (! empty($bitem['target'])) target="{{ $bitem['target'] }}" rel="noopener"@endif>{{ $bitem['label'] }}</a></li>
+                                                                            @empty
+                                                                                <li class="small text-muted"><span class="dropdown-item-text">{{ $block['dd']['empty'] ?? '' }}</span></li>
+                                                                            @endforelse
+                                                                        </ul>
+                                                                    </div>
+                                                                @else
+                                                                    @php
+                                                                        $ulClass = isset($block['block'])
+                                                                            ? 'list-unstyled mb-1'
+                                                                            : 'd-inline list-inline mb-1';
+                                                                    @endphp
+                                                                    <ul class="{{ $ulClass }}">
+                                                                        @foreach ($block['inline'] ?? $block['block'] as $item)
+                                                                            @if (isset($item['text']))
+                                                                                <li class="me-2"><span class="text-muted">{{ $item['text'] }}</span></li>
+                                                                            @elseif (! empty($item['href']))
+                                                                                <li class="me-2"><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                            @else
+                                                                                <li class="text-muted me-2" title="{{ $item['todo'] ?? '' }}">{{ $item['label'] }}</li><!-- TODO: legacy output -->
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @elseif ($category === 'tables-mode')
                                                     {{-- Organizing → Tables + the Planning/Competition mode switch
                                                          (default.admin.php:1273-1287). Row links on the left; the mode
                                                          indicator + both switch buttons under them. --}}
