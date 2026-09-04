@@ -161,7 +161,7 @@
                                                                             @if (isset($item['text']))
                                                                                 <li class="me-2"><span class="text-muted">{{ $item['text'] }}</span></li>
                                                                             @elseif (! empty($item['href']))
-                                                                                <li class="me-2"><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                                <li class="me-2"><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a>@if (! empty($item['note'])) <em class="small text-muted">{{ $item['note'] }}</em>@endif</li>
                                                                             @else
                                                                                 <li class="text-muted me-2" title="{{ $item['todo'] ?? '' }}">{{ $item['label'] }}</li><!-- TODO: legacy output -->
                                                                             @endif

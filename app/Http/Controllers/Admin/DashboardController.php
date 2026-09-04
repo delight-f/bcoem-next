@@ -47,6 +47,7 @@ final class DashboardController extends Controller
             'useMods' => (string) $ctx->prefsStr('prefsUseMods') === 'Y',
             'winnerMethod' => (int) $ctx->prefsStr('prefsWinnerMethod'),
             'proEdition' => (int) $ctx->prefsStr('prefsProEdition'),
+            'mhpDisplay' => (int) ($ctx->prefsStr('prefsMHPDisplay') ?? 0) === 1,
             'eval' => (string) $ctx->prefsStr('prefsEval') === '1',
             'showBestBrewer' => (int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0,
             'showBestClub' => (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0,
@@ -755,37 +756,57 @@ final class DashboardController extends Controller
             $reportsItems,
         ]];
 
-        // Data Exports.
+        // Data Exports (default.admin.php:2199-2252). Three rows of flat
+        // CSV-download links (target=_blank, like legacy). The port's export
+        // route serves csv/all/all at byte parity; the tab/winners/circuit/
+        // mhp/email/paid/nopay/required variants are documented un-ported and
+        // are rendered here for dashboard parity as they return the route.
+        $csv = static fn (string $href, string $label, string $note = ''): array => [
+            'label' => $label,
+            'href' => $href,
+            'target' => '_blank',
+        ] + ($note !== '' ? ['note' => $note] : []);
+        $block = static fn (array $items): array => ['block' => $items];
+
         $dataExportItems = [];
-        $emailCsv = [
-            $l('/admin/output/export?go=csv&filter=avail_judges&action=email', 'Available Judges'),
-            $l('/admin/output/export?go=csv&filter=avail_stewards&action=email', 'Available Stewards'),
-            $l('/admin/output/export?go=csv&filter=judges&action=email', 'Assigned Judges'),
-            $l('/admin/output/export?go=csv&filter=stewards&action=email', 'Assigned Stewards'),
-            $l('/admin/output/export?go=csv&filter=staff&action=email', 'Available and Assigned Staff'),
-        ];
-        $participantCsv = [
-            $l('/admin/output/export?go=csv&action=participants', 'All Participants'),
-            $l('/admin/output/export?go=csv&tb=winners', 'Winners: Limited Data'),
-            $l('/admin/output/export?go=csv&tb=circuit', 'Winners: Circuit Data'),
-            $l('/admin/output/export?filter=mhp&go=csv&tb=circuit', 'Winners: Master Homebrewer Program Member Data'),
-        ];
-        $entriesCsv = [
-            $l('/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'),
-            $l('/admin/output/export?go=csv', 'All Entries: Limited Data'),
-            $l('/admin/output/export?go=csv&tb=brewer_contact_info', 'All Entries: Limited Data with Participant Contact Info'),
-            $l('/admin/output/export?go=csv&tb=paid&view=all', 'Paid Entries'),
-            $l('/admin/output/export?go=csv&tb=paid', 'Paid & Received Entries'),
-            $l('/admin/output/export?go=csv&tb=paid&view=not_received', 'Paid Entries Not Received'),
-            $l('/admin/output/export?go=csv&tb=nopay&view=all', 'Non-Paid Entries'),
-            $l('/admin/output/export?go=csv&tb=nopay', 'Non-Paid & Received Entries'),
-            $l('/admin/output/export?action=required&go=csv&tb=required', 'Entries with Required & Optional Info'),
-        ];
-        $dataExportItems[] = ['Email Addresses and Associated Contact Data (CSV)', $emailCsv];
-        $dataExportItems[] = ['Participant Data (CSV)', $participantCsv];
+        $dataExportItems[] = ['Email Addresses and Associated Contact Data (CSV)', ['blocks' => [
+            $block([
+                $csv('/admin/output/export', 'All Participants'),
+                $csv('/admin/output/export?go=csv&filter=avail_judges&action=email', 'Available Judges'),
+                $csv('/admin/output/export?go=csv&filter=avail_stewards&action=email', 'Available Stewards'),
+                $csv('/admin/output/export?go=csv&filter=judges&action=email', 'Assigned Judges'),
+                $csv('/admin/output/export?go=csv&filter=stewards&action=email', 'Assigned Stewards'),
+                $csv('/admin/output/export?go=csv&filter=staff&action=email', 'Available and Assigned Staff'),
+            ]),
+        ]]];
+        $dataExportItems[] = ['Participant Data (CSV)', ['blocks' => [
+            $block(array_merge(
+                [$csv('/admin/output/export?go=csv', 'All Participants')],
+                [$csv('/admin/output/export?go=csv&tb=winners', 'Winners: Limited Data', 'for generating award labels, etc.')],
+                $prefs['proEdition'] === 0
+                    ? [$csv('/admin/output/export?go=csv&tb=circuit', 'Winners: Circuit Data', 'suitable for local/regional circuits')]
+                    : [],
+                ($prefs['proEdition'] === 0 && $prefs['mhpDisplay'])
+                    ? [$csv('/admin/output/export?go=csv&tb=circuit&filter=mhp', 'Winners: Master Homebrewer Program Member Data')]
+                    : [],
+            )),
+        ]]];
         if ($obfuscate === 0) {
-            $dataExportItems[] = ['Entries and Associated Data (CSV)', $entriesCsv];
+            $dataExportItems[] = ['Entries and Associated Data (CSV)', ['blocks' => [
+                $block([
+                    $csv('/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'),
+                    $csv('/admin/output/export?go=csv', 'All Entries: Limited Data'),
+                    $csv('/admin/output/export?go=csv&tb=brewer_contact_info', 'All Entries: Limited Data with Participant Contact Info'),
+                    $csv('/admin/output/export?go=csv&tb=paid&view=all', 'Paid Entries'),
+                    $csv('/admin/output/export?go=csv&tb=paid', 'Paid & Received Entries'),
+                    $csv('/admin/output/export?go=csv&tb=paid&view=not_received', 'Paid Entries Not Received'),
+                    $csv('/admin/output/export?go=csv&tb=nopay&view=all', 'Non-Paid Entries'),
+                    $csv('/admin/output/export?go=csv&tb=nopay', 'Non-Paid & Received Entries'),
+                    $csv('/admin/output/export?go=csv&action=required&tb=required', 'Entries with Required & Optional Info'),
+                ]),
+            ]]];
         }
+
         $right[] = ['Data Exports', 'fa-download',
             'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
             $dataExportItems,
