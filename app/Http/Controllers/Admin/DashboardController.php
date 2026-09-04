@@ -862,21 +862,31 @@ final class DashboardController extends Controller
                 $dataMgmtItems,
             ];
 
-            // Preferences.
-            $prefItems = [['Preferences', [
-                $l('/admin/site-preferences', 'General'),
-                $l('/admin/site-preferences/entries', 'Entry'),
-                $l('/admin/hero-images', 'Banner Images'),
-                $l('/admin/site-preferences/email', 'Email Sending / Contact Display'),
-                $l('/admin/site-preferences/payment', 'Currency and Payment'),
-                $l('/admin/site-preferences/best', 'Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : '')),
-                $l('/admin/judging/preferences', 'Judging/Competition Organization'),
-            ]]];
+            // Preferences (default.admin.php:2420-2455). Rows use the block
+            // model so the Preferences / Custom Modules rows share the same
+            // vertical spacing as Reports/Data Exports.
+            $prefBlock = static fn (array $items): array => ['block' => $items];
+            $prefInline = static fn (array $items): array => ['inline' => $items];
+            $prefItems = [
+                ['Preferences', ['blocks' => [
+                    $prefBlock([
+                        $l('/admin/site-preferences', 'General'),
+                        $l('/admin/site-preferences/entries', 'Entry'),
+                        $l('/admin/hero-images', 'Banner Images'),
+                        $l('/admin/site-preferences/email', 'Email Sending / Contact Display'),
+                        $l('/admin/site-preferences/payment', 'Currency and Payment'),
+                        $l('/admin/site-preferences/best', 'Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : '')),
+                        $l('/admin/judging/preferences', 'Judging/Competition Organization'),
+                    ]),
+                ]]],
+            ];
             if ($prefs['useMods']) {
-                $prefItems[] = ['Custom Modules', [
-                    $l('/admin/mods', 'Manage'),
-                    $l('/admin/mods/create', 'Add'),
-                ]];
+                $prefItems[] = ['Custom Modules', ['blocks' => [
+                    $prefInline([
+                        $l('/admin/mods', 'Manage'),
+                        $l('/admin/mods/create', 'Add'),
+                    ]),
+                ]]];
             }
             $right[] = ['Preferences', 'fa-cog',
                 'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
