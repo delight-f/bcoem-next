@@ -71,21 +71,7 @@ final class DashboardController extends Controller
 
         $sections = $this->sections((int) $user->userLevel, (int) $user->userAdminObfuscate, $prefs, $counts);
 
-        $helpHtml = [
-            'Organizing' => implode('', [
-                '<p>Organization in BCOE&amp;M begins with assigning individual participants as a <a href="'.url('/backoffice/participants?filter=staff').'">staff</a> member and/or <a href="'.url('/backoffice/participants?filter=judges').'">judge</a> or <a href="'.url('/backoffice/participants?filter=stewards').'">steward</a>. This builds a pool of available participants to assign to various duties in the competition.</p>',
-                '<p>Once assignments have been given, the next steps are to:</p>',
-                '<ol>',
-                '<li><a href="'.url('/admin/judging/tables').'">Define tables</a> where specific sub-styles will be judged.</li>',
-                '<li>Add flights to tables (if queued judging is disabled).</li>',
-                '<li>Assign <a href="'.url('/admin/judging/flights').'?action=assign&filter=rounds">tables to rounds</a>.</li>',
-                '<li>Assign judges and stewards to tables (and flights, if applicable).</li>',
-                '</ol>',
-            ]),
-        ];
-
         return view('admin.dashboard', [
-            'helpHtml' => $helpHtml,
             'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],
@@ -216,8 +202,7 @@ final class DashboardController extends Controller
 
         if ($level0) {
             $left[] = [
-                'Competition Preparation', 'fa-wrench',
-                'Your competition&#39;s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
+                'Competition Preparation', 'fa-wrench', 'comp-prep',
                 [
                     ['All Competition Dates', [$l('/admin/dates', 'Edit')]],
                     ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload?action=html', 'Upload Logo')]],
@@ -255,8 +240,7 @@ final class DashboardController extends Controller
             [$l('/register/judge?view=quick', 'A Judge (Quick)'), $l('/register/judge', 'A Judge (Standard)')],
             [$l('/register/steward?view=quick', 'A Steward (Quick)'), $l('/register/steward', 'A Steward (Standard)')],
         ]];
-        $left[] = ['Entries, Payments, and Participants', 'fa-beer',
-            'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
+        $left[] = ['Entries, Payments, and Participants', 'fa-beer', 'entries-participants',
             $entriesItems,
         ];
 
@@ -384,8 +368,7 @@ final class DashboardController extends Controller
             $sortItems[] = ['Print Box Labels (PDF)', ['matrix' => $box]];
         }
 
-        $left[] = ['Entry Sorting', 'fa-exchange',
-            'Everything you need to help you with sorting received entries from participants. Check-in entries and print sorting sheets.',
+        $left[] = ['Entry Sorting', 'fa-exchange', 'sorting',
             $sortItems,
         ];
 
@@ -424,8 +407,7 @@ final class DashboardController extends Controller
                 $l('/admin/judging/tables?action=assign&filter=bos', 'Add'),
             ]];
         }
-        $left[] = ['Organizing', 'fa-tasks',
-            'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
+        $left[] = ['Organizing', 'fa-tasks', 'organizing',
             $orgItems,
         ];
 
@@ -490,8 +472,7 @@ final class DashboardController extends Controller
                 'items' => $customEntries,
             ]]];
         }
-        $left[] = ['Scoring', 'fa-trophy',
-            'Manage all functions related to evaluating and scoring participant entries for all stages of judging.',
+        $left[] = ['Scoring', 'fa-trophy', 'scoring',
             $scoreItems,
         ];
 
@@ -751,8 +732,7 @@ final class DashboardController extends Controller
         }
 
 
-        $right = [['Reports', 'fa-file',
-            'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
+        $right = [['Reports', 'fa-file', 'reports',
             $reportsItems,
         ]];
 
@@ -807,8 +787,7 @@ final class DashboardController extends Controller
             ]]];
         }
 
-        $right[] = ['Data Exports', 'fa-download',
-            'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
+        $right[] = ['Data Exports', 'fa-download', 'data-exports',
             $dataExportItems,
         ];
 
@@ -857,8 +836,7 @@ final class DashboardController extends Controller
                     $l('/admin/archive?action=add', 'Archive Current Data'),
                 ]),
             ]]];
-            $right[] = ['Data Management', 'fa-archive',
-                'Actions to help maintain the data collected by your installation including various archive and purge functions.',
+            $right[] = ['Data Management', 'fa-archive', 'data-mgmt',
                 $dataMgmtItems,
             ];
 
@@ -888,8 +866,7 @@ final class DashboardController extends Controller
                     ]),
                 ]]];
             }
-            $right[] = ['Preferences', 'fa-cog',
-                'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
+            $right[] = ['Preferences', 'fa-cog', 'preferences',
                 $prefItems,
             ];
         }
@@ -949,8 +926,7 @@ final class DashboardController extends Controller
                 $helpBlock([['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose', 'target' => '_blank']]),
             ]]],
         ];
-        $right[] = ['More Help', 'fa-question-circle',
-            'Answers to common organization, judging, and reporting questions.',
+        $right[] = ['More Help', 'fa-question-circle', null,
             $helpItems,
         ];
 

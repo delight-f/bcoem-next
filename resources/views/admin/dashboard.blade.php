@@ -99,9 +99,11 @@
                                     <div class="card-header">
                                         <h4>
                                             <a href="#" class="text-reset" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $side }}-{{ $loop->index }}" aria-expanded="false" aria-controls="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}<span class="fa {{ $icon }} float-end"></span></a>
-                                            <a href="#" role="button" data-bs-toggle="modal" data-bs-target="#help-{{ $side }}-{{ $loop->index }}"
-                                                onclick="event.stopPropagation()"
-                                                aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
+                                            @if ($help)
+                                                <a href="#" role="button" data-bs-toggle="modal" data-bs-target="#dashboard-help-modal-{{ $help }}"
+                                                    onclick="event.stopPropagation()"
+                                                    aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
+                                            @endif
                                         </h4>
                                     </div>
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
@@ -537,28 +539,6 @@
             </div>
         </div>
     </div>
-
-    @foreach (['left' => $left, 'right' => $right] as $side => $sections)
-        @foreach ($sections as $si => [$title, $icon, $help, $links])
-            <div class="modal fade" id="help-{{ $side }}-{{ $si }}" tabindex="-1" role="dialog" aria-labelledby="help-{{ $side }}-{{ $si }}-title" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 class="modal-title" id="help-{{ $side }}-{{ $si }}-title">{{ $title }}</h3>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                    <p>{{ $help }}</p>
-                    @if (! empty($helpHtml[$title] ?? null)) {!! $helpHtml[$title] !!} @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    @endforeach
 
     {{-- default.admin.php:489-505 Post-Competition Tasks checklist --}}
     @if ($status['postCompTasks'])

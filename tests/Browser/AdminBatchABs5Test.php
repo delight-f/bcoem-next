@@ -104,7 +104,7 @@ final class AdminBatchABs5Test extends DuskTestCase
 
             // A dashboard help dialog now opens as a real BS5 modal.
             $helpTarget = $browser->script("
-                const h = document.querySelector('a[data-bs-target^=\"#help-\"]');
+                const h = document.querySelector('a[data-bs-target^=\"#dashboard-help-modal-\"]');
                 return h ? h.getAttribute('data-bs-target') : null;
             ")[0];
             $this->assertNotNull($helpTarget, 'dashboard help modal trigger missing');
