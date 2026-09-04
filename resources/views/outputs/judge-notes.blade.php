@@ -2,9 +2,12 @@
      judge_notes.output.php go=org_notes|allergens|admin.
      $rows = org_notes objects; $entries = allergens/admin array rows. --}}
 <h1>{{ $contestName }} —
-    @if ($section === 'org_notes')Organizer Notes
-    @elseif ($section === 'allergens')Possible Allergens
-    @elseEntry Notes
+    @if ($section === 'org_notes')
+        Notes to Organizer
+    @elseif ($section === 'allergens')
+        Possible Allergens
+    @else
+        Notes
     @endif
 </h1>
 
