@@ -894,20 +894,60 @@ final class DashboardController extends Controller
             ];
         }
 
-        // More Help (legacy dashboard-help panel).
+        // More Help (legacy dashboard-help panel, default.admin.php:2470-2600).
+        // On a non-hosted, up-to-date install legacy shows Version Information,
+        // Guides, Customize Installation (the per-section help modals), and
+        // How Do I…. Version Updates (recent-update summary) and Customize
+        // (hosted-only) are correctly absent for this install type.
+        $helpGuide = static fn (string $slug, string $label): array => [
+            'label' => $label, 'href' => 'https://brewingcompetitions.com/'.$slug, 'target' => '_blank',
+        ];
+        $helpModal = static fn (string $label, string $suffix): array => [
+            'label' => $label, 'modal' => 'dashboard-help-modal-'.$suffix,
+        ];
+        $helpBlock = static fn (array $items): array => ['block' => $items];
+
+        $guideItems = [$helpGuide('comp-org', "Competition Organizer's Guide"),
+            $helpGuide('reset-comp', 'Reset Competition Information Guide'),
+            $helpGuide('paypal-ipn', 'Implement PayPal Instant Payment Notifications Guide'),
+            $helpGuide('upload-scoresheets', "Upload Scanned Judges' Scoresheets Guide"),
+            $helpGuide('barcode-check-in', 'Barcode or QR Code Entry Check-In Guide'),
+        ];
+        if ($prefs['eval']) {
+            $guideItems[] = $helpGuide('setup-electronic-scoresheets', 'Setup BCOE&M Electronic Scoresheets Guide');
+            $guideItems[] = $helpGuide('judging-with-electronic-scoresheets', 'Judging with BCOE&M Electronic Scoresheets Guide');
+            $guideItems[] = $helpGuide('virtual-judging', 'Virtual Judging Guide');
+            $guideItems[] = $helpGuide('virtual-judging/tips', 'Virtual Judging - Tips for Judges');
+        }
+
+        $customizeItems = [];
+        if ($level0) {
+            $customizeItems[] = $helpModal('Competition Preparation', 'comp-prep');
+        }
+        $customizeItems[] = $helpModal('Entries and Participants', 'entries-participants');
+        $customizeItems[] = $helpModal('Entry Sorting', 'sorting');
+        $customizeItems[] = $helpModal('Organizing', 'organizing');
+        if ($obfuscate === 0) {
+            $customizeItems[] = $helpModal('Scoring', 'scoring');
+        }
+        if ($level0) {
+            $customizeItems[] = $helpModal('Preferences', 'preferences');
+        }
+        $customizeItems[] = $helpModal('Reports', 'reports');
+        $customizeItems[] = $helpModal('Data Exports', 'data-exports');
+        if ($level0) {
+            $customizeItems[] = $helpModal('Data Management', 'data-mgmt');
+        }
+
         $helpItems = [
-            ['How Do I...', [
-                ['label' => 'Competition Preparation', 'modal' => 'dashboard-help-modal-comp-prep'],
-                ['label' => 'Entries and Participants', 'modal' => 'dashboard-help-modal-entries-participants'],
-                ['label' => 'Entry Sorting', 'modal' => 'dashboard-help-modal-sorting'],
-                ['label' => 'Organizing', 'modal' => 'dashboard-help-modal-organizing'],
-                ['label' => 'Scoring', 'modal' => 'dashboard-help-modal-scoring'],
-                ['label' => 'Preferences', 'modal' => 'dashboard-help-modal-preferences'],
-                ['label' => 'Reports', 'modal' => 'dashboard-help-modal-reports'],
-                ['label' => 'Data Exports', 'modal' => 'dashboard-help-modal-data-exports'],
-                ['label' => 'Data Management', 'modal' => 'dashboard-help-modal-data-mgmt'],
-                ['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose'],
-            ]],
+            ['Version Information', ['blocks' => [
+                $helpBlock([['label' => 'Release Notes, New Features, and Bug Fixes', 'href' => 'https://brewingcompetitions.com/release-notes', 'target' => '_blank']]),
+            ]]],
+            ['Guides', ['blocks' => [$helpBlock($guideItems)]]],
+            ['Customize Installation', ['blocks' => [$helpBlock($customizeItems)]]],
+            ['How Do I...', ['blocks' => [
+                $helpBlock([['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose', 'target' => '_blank']]),
+            ]]],
         ];
         $right[] = ['More Help', 'fa-question-circle',
             'Answers to common organization, judging, and reporting questions.',

@@ -160,6 +160,8 @@
                                                                         @foreach ($block['inline'] ?? $block['block'] as $item)
                                                                             @if (isset($item['text']))
                                                                                 <li class="me-2"><span class="text-muted">{{ $item['text'] }}</span></li>
+                                                                            @elseif (! empty($item['modal']))
+                                                                                <li class="me-2"><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
                                                                             @elseif (! empty($item['href']))
                                                                                 <li class="me-2"><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a>@if (! empty($item['note'])) <em class="small text-muted">{{ $item['note'] }}</em>@endif</li>
                                                                             @else
