@@ -108,10 +108,19 @@
                                         <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
                                                 @if ($category === '_section')
-                                                    {{-- Reports panel sub-section header (Before/During/After Judging). --}}
-                                                    <div class="row">
+                                                    {{-- Reports panel sub-section header (default.admin.php Before Judging
+                                                         :1416-1421; During/After Judging :1785-1788,1967-1971). Before Judging
+                                                         is bare at the panel top; During/After get 25px top spacing + a rule.
+                                                         All three carry 15px bottom padding so the header does not collide
+                                                         with the first report row beneath it. --}}
+                                                    @php
+                                                        $isFirstSection = $rowLinks === 'Before Judging';
+                                                    @endphp
+                                                    <div class="row @if (! $isFirstSection) pt-3 @endif pb-3">
                                                         <div class="col-12 small">
-                                                            <hr class="my-2">
+                                                            @if (! $isFirstSection)
+                                                                <hr class="my-2">
+                                                            @endif
                                                             <strong>{{ $rowLinks }}</strong>
                                                         </div>
                                                     </div>
@@ -121,7 +130,7 @@
                                                          <ul>s and dropdown <div>s: {inline:[..]} list-inline, {block:[..]}
                                                          list-unstyled, {dd:{button,items,prefix?}} dropdown. Block items
                                                          are link items or {text:...} literals. --}}
-                                                    <div class="row">
+                                                    <div class="row mb-3">
                                                         <div class="col-12 col-md-4 small">
                                                             <strong>{{ $category }}</strong>
                                                         </div>
