@@ -813,26 +813,50 @@ final class DashboardController extends Controller
         ];
 
         if ($level0) {
-            // Data Management.
+            // Data Management (default.admin.php:2267-2395). Each purge item
+            // deep-links to its confirmation card on the purge page
+            // (POST /admin/purge/{flow}, confirm-gated; see PurgeController).
+            $inline2 = static fn (array $items): array => ['inline' => $items];
+            $block2 = static fn (array $items): array => ['block' => $items];
+            $purge = static fn (string $flow, string $label): array => [
+                'label' => $label,
+                'href' => '/admin/purge#flow-'.$flow,
+            ];
+            $hasPayments = \Illuminate\Support\Facades\Schema::hasTable('payments');
+
             $dataMgmtItems = [];
-            $dataMgmtItems[] = ['Integrity', [
-                $l('/admin/purge?flow=cleanup', 'Clean-Up Data'),
-            ]];
-            $dataMgmtItems[] = ['Entries', [
-                $l('/admin/purge?flow=confirmed', 'Confirm All Unconfirmed'),
-                $l('/admin/purge?flow=unconfirmed', 'Purge All Unconfirmed'),
-                $l('/admin/purge?flow=unpaid', 'Purge All Unpaid'),
-            ]];
-            $dataMgmtItems[] = ['Purge', [
-                $l('/admin/purge?flow=entries', 'Entries'),
-                $l('/admin/purge?flow=payments', 'Payments'),
-                $l('/admin/purge?flow=participants', 'Participants'),
-                $l('/admin/purge?flow=tables', 'Judging Tables'),
-            ]];
-            $dataMgmtItems[] = ['Archives', [
-                $l('/admin/archive', 'Manage'),
-                $l('/admin/archive?action=add', 'Archive Current Data'),
-            ]];
+            $dataMgmtItems[] = ['Integrity', ['blocks' => [
+                $inline2([$purge('cleanup', 'Clean-Up Data')]),
+            ]]];
+            $dataMgmtItems[] = ['Entries', ['blocks' => [
+                $block2([
+                    $purge('confirmed', 'Confirm All Unconfirmed'),
+                    $purge('unconfirmed', 'Purge All Unconfirmed'),
+                    $purge('unpaid', 'Purge All Unpaid'),
+                ]),
+            ]]];
+            $dataMgmtItems[] = ['Purge', ['blocks' => [
+                $block2(array_merge(
+                    [$purge('entries', 'Entries')],
+                    $hasPayments ? [$purge('payments', 'Payments')] : [],
+                    [
+                        $purge('participants', 'Participants'),
+                        $purge('tables', 'Judging Tables'),
+                        $purge('scores', 'Scores'),
+                        $purge('custom', 'Custom Categories'),
+                        $purge('availability', 'Entrant Availability'),
+                        $purge('evaluation', 'Entry Evaluations'),
+                        $purge('scoresheets', 'Uploaded Scoresheets'),
+                        $purge('purge-all', 'All Purge Functions'),
+                    ],
+                )),
+            ]]];
+            $dataMgmtItems[] = ['Archives', ['blocks' => [
+                $inline2([
+                    $l('/admin/archive', 'Manage'),
+                    $l('/admin/archive?action=add', 'Archive Current Data'),
+                ]),
+            ]]];
             $right[] = ['Data Management', 'fa-archive',
                 'Actions to help maintain the data collected by your installation including various archive and purge functions.',
                 $dataMgmtItems,
