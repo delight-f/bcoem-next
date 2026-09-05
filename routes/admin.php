@@ -40,6 +40,10 @@ Route::middleware(['web', 'auth'])->group(function (): void {
         ->name('admin.competition_info.edit');
     Route::put('/admin/competition-info', [CompetitionInfoController::class, 'update'])
         ->name('admin.competition_info.update');
+    // Legacy go=qr branch: QR check-in password only, from the modal on the
+    // competition-info edit page.
+    Route::put('/admin/competition-info/qr-password', [CompetitionInfoController::class, 'updateQrPassword'])
+        ->name('admin.competition_info.qr_password');
 
     // site_preferences — five tabbed sub-forms (go=default|entries|email|payment|best).
     Route::get('/admin/site-preferences/{go?}', [SitePreferencesController::class, 'edit'])
