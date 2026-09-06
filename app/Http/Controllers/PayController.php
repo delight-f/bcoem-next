@@ -102,7 +102,13 @@ final class PayController extends Controller
         // Fee snapshot honors the legacy tiers/cap/special-rate model (W4).
         $feeTotal = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($ids));
 
-        $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
+        try {
+            $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
+        } catch (\Throwable) {
+            // Gateway unavailable (misconfiguration/connectivity): fail safe —
+            // nothing charged, entrant stays on the pay page.
+            return redirect('/pay?msg=14');
+        }
 
         if ($checkout->redirectUrl === null) {
             // No hosted flow (manual marking happens admin-side); nothing to
