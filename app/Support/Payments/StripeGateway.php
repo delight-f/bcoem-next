@@ -170,6 +170,24 @@ final class StripeGateway implements GatewayAdapter
     }
 
     /**
+     * Retrieve one Checkout Session on the connected account (payments
+     * plan W2): the success-return handler confirms payment state
+     * server-side — the browser return is never trusted on its own.
+     */
+    public function retrieveCheckoutSession(string $sessionId): ?object
+    {
+        try {
+            return $this->client()->checkout->sessions->retrieve(
+                $sessionId,
+                [],
+                $this->accountOpts(),
+            );
+        } catch (ApiErrorException) {
+            return null;
+        }
+    }
+
+    /**
      * @return array{stripe_account?: string}
      */
     private function accountOpts(): array

@@ -122,6 +122,21 @@ final class PayController extends Controller
         }
 
         $adapter = app(GatewayAdapter::class);
+
+        // Success return (payments plan W2): the gateway's redirect is only
+        // a UX hint. Confirm server-side — for Stripe, the {CHECKOUT_SESSION_ID}
+        // template in success_url resolves to a real session id we retrieve
+        // from the connected account. Flags are NOT flipped here: the signed
+        // webhook is the single writer (dedup makes overlap harmless).
+        if ((string) $request->query('session_id') !== '' && method_exists($adapter, 'retrieveCheckoutSession')) {
+            $session = $adapter->retrieveCheckoutSession((string) $request->query('session_id'));
+
+            $paid = $session !== null && ($session->payment_status ?? null) === 'paid';
+
+            return redirect('/pay?msg='.($paid ? '13' : '14'));
+        }
+
+        // Other transports (none today): the legacy-shaped callback payload.
         $result = $adapter->handleCallback($request->query->all());
 
         if (! $result->isPaid()) {

@@ -60,17 +60,7 @@
         @endif
     </section>
 
-    {{-- Legacy $pay_modal (index.pub.php): PayPal confirmation dialog shown
-         on both list and pay; copy differs by prefsPaypalIPN. --}}
-    @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
-        <div class="modal" id="confirm-submit">
-            <h3>{{ __('site.paypal_leaving_title') }}</h3>
-            <p>{!! __('site.paypal_leaving_body') !!}</p>
-        </div>
-    @else
-        <div class="modal" id="confirm-submit">
-            <h3>{!! __('site.paypal_return_title') !!}</h3>
-            <p>{!! __('site.paypal_return_body') !!}</p>
-        </div>
-    @endif
+    {{-- Legacy $pay_modal (index.pub.php) was a PayPal-specific
+         confirmation dialog; Stripe Checkout needs no leave-site coaching
+         (payments plan W3). --}}
 </x-public-layout>

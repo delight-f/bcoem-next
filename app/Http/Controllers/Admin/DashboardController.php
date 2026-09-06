@@ -43,7 +43,7 @@ final class DashboardController extends Controller
         $user = $request->user();
 
         $prefs = [
-            'paypalIpn' => (int) $ctx->prefsStr('prefsPaypalIPN') === 1,
+            'stripeConnected' => str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id'),
             'entryForm' => (int) $ctx->prefsStr('prefsEntryForm'),
             'useMods' => (string) $ctx->prefsStr('prefsUseMods') === 'Y',
             'winnerMethod' => (int) $ctx->prefsStr('prefsWinnerMethod'),
@@ -218,7 +218,7 @@ final class DashboardController extends Controller
 
         $entriesItems = [];
         $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
-        if ($prefs['paypalIpn']) {
+        if ($prefs['stripeConnected']) {
             $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
         }
         $participantManage = [$l('/backoffice/participants', 'Manage')];
