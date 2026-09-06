@@ -38,6 +38,9 @@ final class AwardsPresentationTest extends AdminScreensTestCase
             'prefsDisplayWinners' => 'N',
             'prefsWinnerDelay' => 0,
             'prefsWinnerMethod' => 0,
+            'prefsShowBestBrewer' => 0,
+            'prefsShowBestClub' => 0,
+            'prefsScoringCOA' => 0,
         ]);
         parent::tearDown();
     }
@@ -51,7 +54,7 @@ final class AwardsPresentationTest extends AdminScreensTestCase
         $response->assertOk();
         $html = $response->getContent();
         self::assertStringContainsString('reveal', $html);
-        self::assertStringContainsString('theme/white.min.css', $html);
+        self::assertStringContainsString('vendor/reveal/theme/white.css', $html);
         self::assertStringContainsString('AWRD Test Table', $html);
         self::assertStringContainsString('Best of Show', $html);
         self::assertStringContainsString('Thank You', $html);
@@ -80,9 +83,9 @@ final class AwardsPresentationTest extends AdminScreensTestCase
         $this->seedWinners();
 
         $this->get('/awards?view=black')->assertOk()
-            ->assertSee('theme/black.min.css', false);
+            ->assertSee('vendor/reveal/theme/black.css', false);
         $this->get('/awards?view=blue')->assertOk()
-            ->assertSee('theme/moon.min.css', false);
+            ->assertSee('vendor/reveal/theme/moon.css', false);
         foreach (['table-entry-count-desc', 'table-name-only', 'table-entry-count-asc'] as $go) {
             $this->get('/awards?go='.$go)->assertOk()
                 ->assertSee('AWRD Test Table', false);
@@ -113,6 +116,12 @@ final class AwardsPresentationTest extends AdminScreensTestCase
             'brewerLastName' => 'Testerson',
         ]);
         $this->brewerSeeded = true;
+
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsShowBestBrewer' => 1,
+            'prefsScoringCOA' => 0,
+            'prefsBestUseBOS' => 0,
+        ]);
 
         $this->tableId = (int) DB::table('judging_tables')->insertGetId([
             'tableName' => 'AWRD Test Table',

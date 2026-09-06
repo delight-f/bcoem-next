@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && node scripts/copy-reveal.mjs",
         "dev": "vite"
     },
     "devDependencies": {
@@ -15,6 +15,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
-        "bootstrap": "^5.3.8"
+        "bootstrap": "^5.3.8",
+        "reveal.js": "^5.2.1"
     }
 }
