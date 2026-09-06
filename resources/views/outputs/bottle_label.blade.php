@@ -96,9 +96,13 @@
                     @endif
 
                     @if ($cell['barcodeQr'])
-                        <div style="text-align:center; margin-top:8px;">
-                            <span class="small">[{{ $cell['code'] }}]</span>
-                            <img src="data:image/svg+xml;base64,{{ base64_encode($cell['qrSvg']) }}" width="75" height="75" alt="QR">
+                        {{-- QR anchored bottom-right of the label box; the
+                             code39 value centered beneath it. dompdf lacks
+                             position:absolute — float right + clear instead. --}}
+                        <div style="margin-top:8px;">
+                            <img src="data:image/svg+xml;base64,{{ base64_encode($cell['qrSvg']) }}" width="75" height="75" alt="QR"
+                                 style="float:right; margin:0;">
+                            <div style="clear:both; text-align:center;" class="small">[{{ $cell['code'] }}]</div>
                         </div>
                     @endif
                 </div>
