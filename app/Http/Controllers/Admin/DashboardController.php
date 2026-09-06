@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Results\BestBrewerStandings;
 use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
@@ -166,10 +167,7 @@ final class DashboardController extends Controller
             'winnerMethodTable' => (int) ($ctx->prefsStr('prefsWinnerMethod') ?? 0) === 0,
             'showBest' => ((int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0
                 || (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0) && $judgingStarted,
-            'bestBrewers' => $judgingStarted ? ResultsRepository::current()->bestBrewers(
-                (string) $ctx->prefsStr('prefsBestBrewerPointsMethod'),
-                'flat',
-            ) : [],
+            'bestBrewers' => $judgingStarted ? BestBrewerStandings::forAwards($ctx)->brewerRows : [],
         ];
     }
 
