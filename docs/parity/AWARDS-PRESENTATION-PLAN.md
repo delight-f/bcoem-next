@@ -62,9 +62,10 @@ Order = implementation order. "L:" = legacy `awards.php` unless noted.
 | G11 | Entry name / club truncation missing (65 / 25 chars, break on space, `...` pad) | `:208-214`, `truncate_string()` | LOW |
 | G12 | Sponsor slide: legacy uses lightslider carousel. Modern replacement: CSS scroll-snap, no dep. Plain `<img>` stack acceptable visually but janky with >4 sponsors | `:1228-1246,1343-1353` | LOW |
 | G13 | `#scoring-method` div is rendered but unreachable (fancybox absent) and its content is incomplete: missing the tie-breaker description list (`best_brewer_text_005`-`013`) and legacy gates the div on BB/BC being enabled | `:1102-1133` | MED |
-| G14 | Sidebar "Past Winners" panel lacks the legacy Launch Awards Presentation button (shows when archived score tables have rows) | `sections/sidebar.sec.php:320`, `get_archive_count()` | LOW |
+| G14 | Sidebar lacks the legacy Launch Awards Presentation button. Gate chain: `$show_presentation` (`constants.inc.php:490,528-534` = NOT judging past AND `prefsDisplayWinners=Y` AND winner delay passed) AND (live `judging_scores` OR `judging_scores_bos` has ≥1 row — `get_archive_count()`, `common.lib.php:3567`, checks the LIVE tables despite the name) AND `bcoem-admin-element` visibility (admin CSS class, `bruxellensis.css:1399`). Port's `ResultsRepository::archives()` reads the `archive` table — WRONG source for this gate; tenant `archive` is empty while `judging_scores` has rows, so the button never shows | `sections/sidebar.sec.php:319-321`, `includes/constants.inc.php:490,528-534` | MED |
 | G15 | `<noscript>` alert missing (`alert_text_087`) | `:1207` | LOW |
 | G16 | Verify (do not blindly change): table `count` uses distinct `judging_flights.flightEntryID`; legacy `get_table_info(1,"count_total",…)`; stats counts vs `get_entry_count()`/`get_participant_count()` (`lib/common.lib.php:2585`) | `:144,1291-1297` | VERIFY |
+| G17 | Dashboard action row: legacy `default.admin.php:516-586` — when `prefsWinnerMethod=0` a modal-launch button (port HAS this); when method 1/2 a DIRECT `/awards` link button with hover popover (identical label/icon). Port renders NOTHING for methods 1/2. Wrapper gate: `$judging_started && userLevel==0` | `admin/default.admin.php:516,581-586` | MED |
 
 Non-gaps (checked, already faithful): gate, themes, sorts, slide order
 (title→sponsors→judges→stewards→staff→stats→winner slides→BOS→special-best→
@@ -195,9 +196,12 @@ points, CoA vs classic produce the pinned fixture values,
    that category (method 1) or category+subcategory (method 2), places 1-5,
    place order asc. Method 1/2 slides IGNORE `?go=` (legacy does too).
 4. Keep method 0 path exactly as is.
+5. With methods 1/2 active, add the dashboard direct-link button per
+   Phase 5 (G17) — or defer both to Phase 5, but ship them together.
 
 Acceptance: feature tests for all three methods; `prefsWinnerMethod=1`
 renders category slides in `styles` order; `=2` renders subcategory slides.
+Dashboard shows the direct-link launch button when method ≠ 0 (G17).
 
 ### Phase 3 — Slide-fidelity fixes (G5-G11, G13, G15)
 
@@ -262,19 +266,49 @@ Acceptance: Dusk DOM probe confirms `window.Reveal` (or module-initialized
 keep — league-gothic/source-sans-pro: npm `@fontsource` them or keep the two
 CDN `<link>`s; state which in the commit body.
 
-### Phase 5 — Sidebar launch button (G14)
+### Phase 5 — Launch buttons: sidebar (G14) + dashboard methods 1/2 (G17)
 
-`resources/views/components/public-sidebar.blade.php`, Past Winners panel:
-add the legacy button (`btn btn-primary btn-sm w-100`, trophy icon,
-`Launch Awards Presentation`, `href=/awards target=_blank rel=noopener`)
-when archived score data exists. Port `get_archive_count()` minimally:
-sum of rows across `judging_scores_*`/`judging_scores_bos_*` tables that
-exist — reuse the port's existing archive-suffix discovery (the Past Winners
-panel already computes `$sbArchives`; button shows when that list is
-non-empty OR `contestWinnerLink` set? NO — legacy condition is archive rows
-only: `sections/sidebar.sec.php:320`. Match legacy: show when archive
-tables have rows). If `$sbArchives` already encodes exactly that, use it;
-verify its query first.
+Sidebar (`resources/views/components/public-sidebar.blade.php`, Past Winners
+panel — legacy puts the button in `$header1_600`, the SAME panel the port
+renders): add
+
+```blade
+<a class="btn btn-primary btn-sm w-100" href="{{ url('/awards') }}"
+   target="_blank" rel="noopener">{{ __('awards.launch_presentation') }}
+   <span class="fa fa-award"></span></a>
+```
+
+gated on the legacy chain, each piece cheap:
+1. `! $judgingPast` equivalent — reuse `Windows::derive($ctx, now())` as in
+   `AwardsController::show` (`futureJudgingSessions === 0` is judging past,
+   so the gate is `futureJudgingSessions > 0`).
+2. `prefsDisplayWinners === 'Y'` AND `now > (int) prefsWinnerDelay`.
+3. `DB::table('judging_scores')->exists() || DB::table('judging_scores_bos')->exists()`
+   — the LIVE tables (`get_archive_count` checks live despite its name).
+   Do NOT use `ResultsRepository::archives()` — the `archive` table is a
+   different feature (past comps) and is empty here.
+4. Element class `bcoem-admin-element` (admin-only visibility, same mechanism
+   the port already uses elsewhere — check how the port hides admin-only
+   sidebar elements and mirror it; if the port's sidebar is not rendered for
+   anon users at all, gate server-side instead and keep the CSS class for
+   parity).
+
+Dashboard (`resources/views/admin/dashboard.blade.php` action row ~line 80):
+currently gated `$status['judgingStarted'] && $status['winnerMethodTable']`.
+Change to mirror legacy `default.admin.php:516-586`:
+- method 0 (current modal button): gate stays `judgingStarted && winnerMethodTable`.
+- methods 1/2 (NEW, `! $status['winnerMethodTable']`): plain
+  `<a class="btn btn-info btn-sm d-block w-100" href="{{ url('/awards') }}"
+  target="_blank" rel="noopener">Launch Awards Presentation …fa-award</a>`
+  with the legacy hover popover text (BS5: `data-bs-toggle="popover"`
+  + a one-line popover initializer or drop the popover — popover is
+  cosmetic; state choice in commit). Same wrapper gate `judgingStarted`
+  (level-0 gating is already implicit — the port dashboard is admin-only).
+
+Acceptance: DOM probe of `/` anon + logged-in admin — button present exactly
+when the chain holds; with `prefsWinnerMethod=1` the dashboard shows the
+direct link (no modal), with `=0` the modal button; neither renders before
+judging starts.
 
 ## 6. Legacy constants (exact strings — from `lang/en/en-US.lang.php`)
 
@@ -341,7 +375,8 @@ e.g. `fix(awards): best brewer points method derived from prefsScoringCOA`
 `feat(awards): category and subcategory winner slides` (G2),
 `fix(awards): slide fidelity — co-brewers, head judge, style sets, special-best reveals`
 (G5-G11,G13,G15), `feat(awards): self-hosted reveal 5 via vite, native dialog, scroll-snap sponsors`
-(G12+), `feat(sidebar): launch awards presentation button` (G14).
+(G12+), `feat(awards): launch buttons — sidebar presentation launch, dashboard direct link for winner methods 1/2`
+(G14, G17).
 
 ## 10. Repo pitfalls (hard rules)
 
