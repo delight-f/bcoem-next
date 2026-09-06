@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Results\BestBrewerStandings;
-use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
@@ -90,9 +89,6 @@ final class DashboardController extends Controller
      */
     private function status(TenantContext $ctx, Windows $windows, int $now): array
     {
-        $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
-        $cap = (float) ($ctx->contestStr('contestEntryCap') ?? 0);
-
         // Per-entrant fee model incl. discount tiers, special brewer rate
         // and cap — FeeCalculator (payments plan W4) ports total_fees().
         $params = FeeCalculator::params($ctx);

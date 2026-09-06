@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Support\Results;
 
 use App\Support\Tenant\TenantContext;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**

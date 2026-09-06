@@ -1,8 +1,9 @@
 {{-- Entry bottle labels — legacy output/bottle_label.output.php. 3-column
      grid; page break every 9 labels (barcode variants, taller cells) or 12
      (plain). Legacy streamed HTML with a self-print timer; port renders PDF.
-     Barcode/QR render as text in a bordered box — dompdf has remote images
-     disabled and legacy pulled them from an external service. --}}
+     QR renders as an inline vector (bacon-qr-code via base64 data-URI —
+     dompdf has remote images disabled); the code39 value prints as the
+     centered number under the QR (dompdf has no code39 encoder). --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>

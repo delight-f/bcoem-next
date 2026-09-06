@@ -47,8 +47,9 @@ use Illuminate\Support\Facades\DB;
  *    (admin.brewingcompetitions.com code39 + api.qrserver.com QR); the
  *    port renders the QR locally as an inline base64 SVG via
  *    bacon/bacon-qr-code — payload mirrors legacy "$base_url/qr.php?id=N"
- *    as url('/qr?id=N') on the request host. The code39 value still renders
- *    as bracketed text (dompdf has no code39 encoder).
+ *    as url('/qr?id=N') on the request host. The code39 barcode has no
+ *    dompdf encoder; its value prints as the bracketed number centered
+ *    beneath the QR (anchored bottom-right of the label).
  */
 final class BottleLabelController extends Controller
 {

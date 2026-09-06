@@ -175,7 +175,10 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
         $response = $this->get('/admin/payments');
 
         $response->assertOk()
-            ->assertSee(': PayPal Payments</p>', false)
+            // PayPal retired (payments plan W3): heading no longer carries
+            // the legacy "PayPal Payments" label.
+            ->assertSee(': Payments</p>', false)
+            ->assertDontSee('PayPal Payments')
             ->assertSee('<th nowrap>Payer <span class="hidden-xs hidden-sm">Name</span></th>', false)
             ->assertSee('<span class="hidden-xs">Transaction</span> ID', false)
             ->assertSee('<span class="hidden-sm">For</span> Entries...', false)
