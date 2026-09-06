@@ -81,6 +81,12 @@
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
                         <button type="button" class="btn btn-info btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#presentationLaunch">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></button>
                     </div>
+                @elseif ($status['judgingStarted'])
+                    {{-- legacy default.admin.php:581-586: winner methods 1/2 get a
+                         direct /awards link (the modal is method-0 only). --}}
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <a class="btn btn-info btn-sm d-block w-100" href="{{ url('/awards') }}" target="_blank" rel="noopener">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></a>
+                    </div>
                 @endif
                 @if ($status['showBest'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
