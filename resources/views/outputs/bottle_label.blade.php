@@ -12,8 +12,11 @@
     body { font-family: 'DejaVu Sans', sans-serif; font-size: {{ $large ? '12px' : '9px' }}; }
     .row::after { content: ""; display: table; clear: both; }
     .cell { float: left; width: 33.33%; box-sizing: border-box;
-            border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '210px' : '150px' }};
+            border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '290px' : '200px' }};
             overflow: hidden; text-align: left; }
+    /* Fixed body region pins the QR row to the cell bottom (legacy
+       min-height 290px; dompdf has no absolute positioning). */
+    .body { height: 190px; overflow: hidden; }
     .title { text-align: center; font-weight: bold; margin-bottom: 6px;
              font-size: {{ $large ? '1.5em' : '1.1em' }}; }
     .code-large { text-align: center; font-size: 2.6em; font-weight: 900;
@@ -38,6 +41,7 @@
         <div class="row">
             @foreach ($row as $cell)
                 <div class="cell">
+                    <div class="body">
                     <div class="title">{{ $contest }}</div>
 
                     @if ($cell['largeNum'])
@@ -95,11 +99,12 @@
                         @endforeach
                     @endif
 
+                    </div>
                     @if ($cell['barcodeQr'])
                         {{-- QR anchored bottom-right of the label box; the
                              code39 value centered beneath it. dompdf lacks
                              position:absolute — float right + clear instead. --}}
-                        <div style="margin-top:8px;">
+                        <div>
                             <img src="data:image/svg+xml;base64,{{ base64_encode($cell['qrSvg']) }}" width="75" height="75" alt="QR"
                                  style="float:right; margin:0;">
                             <div style="clear:both; text-align:center;" class="small">[{{ $cell['code'] }}]</div>
