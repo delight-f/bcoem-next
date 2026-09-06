@@ -23,7 +23,7 @@ use UnexpectedValueException;
  * (no live calls). Webhook verification uses the SDK's constant-time HMAC
  * check against the per-competition secret in preferences.prefsStripe.
  */
-final class StripeGateway implements GatewayAdapter
+final class StripeGateway implements GatewayAdapter, SessionCheckout
 {
     public function __construct(
         private readonly string $secretKey,
@@ -167,23 +167,6 @@ final class StripeGateway implements GatewayAdapter
     }
 
     #[\Override]
-    public function cancel(string $checkoutId): PaymentResult
-    {
-        try {
-            $this->client()->checkout->sessions->expire($checkoutId, [], $this->accountOpts());
-        } catch (ApiErrorException) {
-            // Already expired or completed — either way nothing is paid
-            // locally and there is no ledger row to reverse.
-        }
-
-        return new PaymentResult(PaymentEvent::Cancelled, 'cs_expired_'.$checkoutId);
-    }
-
-    /**
-     * Retrieve one Checkout Session on the connected account (payments
-     * plan W2): the success-return handler confirms payment state
-     * server-side — the browser return is never trusted on its own.
-     */
     public function retrieveCheckoutSession(string $sessionId): ?object
     {
         try {

@@ -8,6 +8,7 @@ use App\Support\Payments\Checkout;
 use App\Support\Payments\GatewayAdapter;
 use App\Support\Payments\PaymentEvent;
 use App\Support\Payments\PaymentResult;
+use App\Support\Payments\SessionCheckout;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
@@ -107,11 +108,6 @@ final class PayPageTest extends PublicSurfaceTestCase
                 {
                     return new PaymentResult(PaymentEvent::Refunded, 'evt_refund_'.$paymentRef);
                 }
-
-                public function cancel(string $checkoutId): PaymentResult
-                {
-                    return new PaymentResult(PaymentEvent::Cancelled, 'evt_cancel_'.$checkoutId);
-                }
             };
         });
     }
@@ -203,6 +199,7 @@ final class PayPageTest extends PublicSurfaceTestCase
         self::assertStringContainsString((string) route('pay.checkout'), $html);
 
     }
+
     public function test_currency_symbol_matches_legacy_map(): void
     {
         // Legacy currency_info(...,1) (lib/common.lib.php:662-698): AUD
@@ -273,7 +270,7 @@ final class PayPageTest extends PublicSurfaceTestCase
         $this->login();
         $entryId = $this->makeEntry(['brewName' => 'Return Check']);
 
-        $gateway = new class implements GatewayAdapter
+        $gateway = new class implements GatewayAdapter, SessionCheckout
         {
             public ?object $session = null;
 
@@ -305,12 +302,6 @@ final class PayPageTest extends PublicSurfaceTestCase
             public function refund(string $paymentRef): PaymentResult
             {
                 return new PaymentResult(PaymentEvent::Refunded, 'evt_ref_'.$paymentRef);
-            }
-
-            #[\Override]
-            public function cancel(string $checkoutId): PaymentResult
-            {
-                return new PaymentResult(PaymentEvent::Cancelled, 'evt_cancel');
             }
         };
         $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $gateway);
@@ -458,84 +449,79 @@ final class PayPageTest extends PublicSurfaceTestCase
         $this->post('/pay/checkout')->assertRedirect('/pay');
     }
 
-    public function test_success_callback_flips_flags_through_service_idempotently(): void
+    public function test_session_checkout_success_return_confirms_server_side(): void
     {
+        // Review 2c: the return never flips flags — the webhook is the
+        // single writer. Paid session renders msg=13.
         $this->setFee('8');
-        $this->bindFakeGateway(PaymentEvent::Paid, 'evt_paid_once');
         $this->login();
+        $entryId = $this->makeEntry(['brewName' => 'Return Check']);
 
-        $a = $this->makeEntry(['brewName' => 'To Pay A']);
-        $b = $this->makeEntry(['brewName' => 'To Pay B']);
+        $gateway = $this->sessionGateway((object) ['payment_status' => 'paid']);
+        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $gateway);
 
-        $this->get("/pay/callback?uid=1&entries={$a}-{$b}&fee=16.00")
-            ->assertRedirect('/pay?msg=13');
+        $this->get('/pay/callback?session_id=cs_paid')->assertRedirect('/pay?msg=13');
 
-        foreach ([$a, $b] as $id) {
-            $row = DB::table('brewing')->where('id', $id)->first();
-            self::assertNotNull($row);
-            self::assertSame(1, (int) $row->brewPaid);
-            self::assertSame(1, (int) $row->brewConfirmed);
-        }
+        $gateway->session = (object) ['payment_status' => 'unpaid'];
+        $this->get('/pay/callback?session_id=cs_unpaid')->assertRedirect('/pay?msg=14');
 
-        $payment = DB::table('payments')->where('entrant_uid', 1)->first();
-        self::assertNotNull($payment);
-        self::assertSame(16.0, (float) $payment->amount);
-        self::assertSame('manual', $payment->method);
-        self::assertSame('paid', $payment->status);
+        $gateway->session = null;
+        $this->get('/pay/callback?session_id=cs_gone')->assertRedirect('/pay?msg=14');
 
-        // Ledger #7: duplicate event delivery dedups on event id — one row,
-        // flags unchanged.
-        $this->get("/pay/callback?uid=1&entries={$a}-{$b}&fee=16.00")
-            ->assertRedirect('/pay?msg=13');
-
-        self::assertSame(1, DB::table('payments')->where('entrant_uid', 1)->count());
+        // Idempotency (#7) and the single-writer rule: nothing local moved.
+        $this->assertSame(0, DB::table('payments')->count());
+        $this->assertSame('0', (string) DB::table('brewing')->where('id', $entryId)->value('brewPaid'));
     }
 
-    public function test_failed_callback_lands_cancelled_state_and_leaves_unpaid(): void
+    public function test_cancelled_state_renders_legacy_msg14_text_and_entry_stays_payable(): void
     {
         $this->setFee('8');
-        $this->bindFakeGateway(PaymentEvent::Failed, 'evt_failed');
         $this->login();
-
         $a = $this->makeEntry(['brewName' => 'Stays Unpaid']);
 
-        $this->get("/pay/callback?uid=1&entries={$a}&fee=8.00")
-            ->assertRedirect('/pay?msg=14');
-
-        self::assertSame(0, (int) DB::table('brewing')->where('id', $a)->value('brewPaid'));
-        self::assertSame(0, DB::table('payments')->count());
-
-        // The cancelled state renders the legacy msg=14 text and the entry
-        // is still up for payment.
-        $html = (string) $this->get('/pay?msg=14')->assertOk()->getContent();
+        $this->get('/pay?msg=14')->assertOk();
+        $html = (string) $this->get('/pay?msg=14')->getContent();
         self::assertStringContainsString('Your online payment has been cancelled.', $html);
         self::assertStringContainsString('Stays Unpaid', $html);
+        self::assertSame(0, (int) DB::table('brewing')->where('id', $a)->value('brewPaid'));
     }
 
-    public function test_callback_cannot_pay_another_users_entries(): void
+    /** Stripe-shaped fake whose retrieveCheckoutSession returns $session. */
+    private function sessionGateway(?object $session): GatewayAdapter
     {
-        $this->setFee('8');
-        $this->bindFakeGateway();
-        $this->login();
+        return new class($session) implements GatewayAdapter, SessionCheckout
+        {
+            public function __construct(public ?object $session) {}
 
-        $foreign = (int) DB::table('brewing')->insertGetId([
-            'brewName' => 'Foreign Entry',
-            'brewStyle' => 'Porter',
-            'brewCategory' => '12',
-            'brewCategorySort' => '12',
-            'brewSubCategory' => 'A',
-            'brewBrewerID' => 999,
-            'brewPaid' => 0,
-            'brewReceived' => 0,
-            'brewConfirmed' => '1',
-        ], 'id');
+            public function retrieveCheckoutSession(string $sessionId): ?object
+            {
+                return $this->session;
+            }
 
-        $this->get("/pay/callback?uid=1&entries={$foreign}&fee=8.00")
-            ->assertRedirect('/pay?msg=13');
+            #[\Override]
+            public function method(): string
+            {
+                return 'stripe';
+            }
 
-        self::assertSame(0, (int) DB::table('brewing')->where('id', $foreign)->value('brewPaid'));
+            #[\Override]
+            public function createCheckout(array $entries, int $entrantUid, string $feeTotal): Checkout
+            {
+                return new Checkout('cs_test', 'https://checkout.stripe.test');
+            }
 
-        DB::table('brewing')->where('id', $foreign)->delete();
+            #[\Override]
+            public function handleCallback(array $payload): PaymentResult
+            {
+                return new PaymentResult(PaymentEvent::Failed, 'evt_unused');
+            }
+
+            #[\Override]
+            public function refund(string $paymentRef): PaymentResult
+            {
+                return new PaymentResult(PaymentEvent::Refunded, 'evt_ref_'.$paymentRef);
+            }
+        };
     }
 }
 

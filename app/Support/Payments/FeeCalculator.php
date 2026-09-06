@@ -39,33 +39,35 @@ final class FeeCalculator
             return '0.00';
         }
 
-        $fee = $p['fee'];
-        $feeDiscount = $p['feeDiscount'];
-        $special = $p['special'];
+        // Canonical 2dp strings: float params come from decimal DB columns,
+        // and '8' vs '8.00' must produce identical cents.
+        $fee = number_format($p['fee'], 2, '.', '');
+        $feeDiscount = number_format($p['feeDiscount'], 2, '.', '');
+        $special = $p['special'] === null ? null : number_format($p['special'], 2, '.', '');
+        $cap = number_format($p['cap'], 2, '.', '');
         $n = max(0, $p['discountNum']);
 
         if ($hasSpecial && $special !== null) {
             if ($p['discountOn'] && $entryCount > $n) {
-                $regular = bcmul((string) $n, (string) $special, 2);
+                $regular = bcmul((string) $n, $special, 2);
                 // Better-of-two for the discounted remainder (:1108-1112).
-                $rate = $special >= $feeDiscount ? $special : $feeDiscount;
-                $total = bcadd($regular, bcmul((string) ($entryCount - $n), (string) $rate, 2), 2);
+                $rate = bccomp($special, $feeDiscount, 2) === -1 ? $feeDiscount : $special;
+                $total = bcadd($regular, bcmul((string) ($entryCount - $n), $rate, 2), 2);
             } else {
-                $total = bcmul((string) $entryCount, (string) $special, 2);
+                $total = bcmul((string) $entryCount, $special, 2);
             }
         } elseif ($p['discountOn'] && $n > 0 && $entryCount > $n) {
             $total = bcadd(
-                bcmul((string) $n, (string) $fee, 2),
-                bcmul((string) ($entryCount - $n), (string) $feeDiscount, 2),
+                bcmul((string) $n, $fee, 2),
+                bcmul((string) ($entryCount - $n), $feeDiscount, 2),
                 2,
             );
         } else {
-            $total = bcmul((string) $entryCount, (string) $fee, 2);
+            $total = bcmul((string) $entryCount, $fee, 2);
         }
 
-        $cap = $p['cap'];
-        if ($cap > 0.0 && bccomp($total, (string) $cap, 2) === 1) {
-            $total = number_format($cap, 2, '.', '');
+        if (bccomp($cap, '0.00', 2) === 1 && bccomp($total, $cap, 2) === 1) {
+            $total = $cap;
         }
 
         return $total;
