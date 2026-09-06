@@ -236,6 +236,11 @@ final class OutputPairsATest extends TestCase
             $this->assertFalse($cell['anon']);
             $this->assertTrue($cell['barcodeQr']);
             $this->assertSame('(512) 555-1234', $cell['contact'][2]);
+            // QR cell embeds a real scannable QR SVG (legacy qRCreate), not
+            // the old "[QR]" text placeholder.
+            $this->assertStringStartsWith('<?xml', $cell['qrSvg']);
+            $this->assertStringContainsString('<svg', $cell['qrSvg']);
+            $this->assertStringContainsString('<path', $cell['qrSvg']);
         }
         $this->assertSame(sprintf('%06d', $ids[0]), $cells[0]['code']);
         $this->assertSame(sprintf('%06d', $ids[1]), $cells[3]['code']);

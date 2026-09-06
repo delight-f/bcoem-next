@@ -98,7 +98,7 @@
                     @if ($cell['barcodeQr'])
                         <div style="text-align:center; margin-top:8px;">
                             <span class="small">[{{ $cell['code'] }}]</span>
-                            <span class="small">[QR]</span>
+                            <img src="data:image/svg+xml;base64,{{ base64_encode($cell['qrSvg']) }}" width="75" height="75" alt="QR">
                         </div>
                     @endif
                 </div>

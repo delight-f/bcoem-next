@@ -7,6 +7,10 @@ namespace App\Http\Controllers\Output;
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\StreamPdf;
 use App\Support\Tenant\TenantContext;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -39,9 +43,12 @@ use Illuminate\Support\Facades\DB;
  *  - Admin-only here; legacy let a logged-in brewer print their own labels
  *    (bid ownership check :32). The port's route group is admin-gated per
  *    ticket.
- *  - Legacy pulled remote code39/QR PNGs from an external service; dompdf
- *    runs with isRemoteEnabled=false so the code value renders as text in
- *    brackets instead of images.
+ *  - Legacy pulled remote code39/QR PNGs from an external service
+ *    (admin.brewingcompetitions.com code39 + api.qrserver.com QR); the
+ *    port renders the QR locally as an inline base64 SVG via
+ *    bacon/bacon-qr-code — payload mirrors legacy "$base_url/qr.php?id=N"
+ *    as url('/qr?id=N') on the request host. The code39 value still renders
+ *    as bracketed text (dompdf has no code39 encoder).
  */
 final class BottleLabelController extends Controller
 {
@@ -137,9 +144,14 @@ final class BottleLabelController extends Controller
             // Barcode value: judging number or entry number per variant.
             $code = sprintf('%06d', $useJudgingNumber ? (int) $entry->brewJudgingNumber : (int) $entry->id);
 
+            // Legacy :155-159 — QR payload "$base_url/qr.php?id=N"; the
+            // port encodes the port's /qr?id=N equivalent on the request host.
+            $qrSvg = self::qrSvg(url('/qr?id='.(int) $entry->id));
+
             for ($i = 0; $i < $copies; $i++) {
                 $cells[] = [
                     'code' => $code,
+                    'qrSvg' => $qrSvg,
                     'styleSet' => $styleSet,
                     'largeNum' => $largeNum,
                     'largeText' => $largeText,
@@ -176,6 +188,14 @@ final class BottleLabelController extends Controller
             ],
             'filename' => str_replace(' ', '_', $contestName).'_Entry_Bottle_Labels.pdf',
         ];
+    }
+
+    /** Legacy qRClas::qRCreate equivalent: QR image as an inline SVG string. */
+    private static function qrSvg(string $payload): string
+    {
+        $renderer = new ImageRenderer(new RendererStyle(150), new SvgImageBackEnd());
+
+        return (new Writer($renderer))->writeString($payload);
     }
 
     /**
