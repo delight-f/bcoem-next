@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Payments\FeeCalculator;
 use App\Support\Results\BestBrewerStandings;
 use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\DateFmt;
@@ -92,20 +93,20 @@ final class DashboardController extends Controller
         $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
         $cap = (float) ($ctx->contestStr('contestEntryCap') ?? 0);
 
-        // ponytail: legacy's per-entrant discount matrix (brewerDiscount +
-        // tiered contestEntryFeeDiscount) is not ported — the port's payment
-        // flow charges flat contestEntryFee per entry. Mirror that here with
-        // legacy's per-entrant contestEntryCap; add the discount tiers if a
-        // competition actually needs them.
+        // Per-entrant fee model incl. discount tiers, special brewer rate
+        // and cap — FeeCalculator (payments plan W4) ports total_fees().
+        $params = FeeCalculator::params($ctx);
         $fees = 0.0;
         $feesPaid = 0.0;
         $perEntrant = DB::table('brewing')
             ->selectRaw('brewBrewerID, COUNT(*) AS n, SUM(brewPaid = 1) AS paid_n')
             ->groupBy('brewBrewerID')
             ->get();
+        $specialUids = DB::table('brewer')->where('brewerDiscount', 'Y')->pluck('uid')->all();
         foreach ($perEntrant as $row) {
-            $fees += $cap > 0 ? min($row->n * $fee, $cap) : $row->n * $fee;
-            $feesPaid += $cap > 0 ? min($row->paid_n * $fee, $cap) : $row->paid_n * $fee;
+            $hasSpecial = in_array((int) $row->brewBrewerID, $specialUids, true);
+            $fees += (float) FeeCalculator::total((int) $row->n, $hasSpecial, $params);
+            $feesPaid += (float) FeeCalculator::total((int) $row->paid_n, $hasSpecial, $params);
         }
 
         $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\GatewayAdapter;
 use App\Support\Payments\PaymentService;
 use App\Support\Tenant\TenantContext;
@@ -58,7 +59,9 @@ final class PayController extends Controller
             // here. Same surface covers the already-paid re-entry.
             if ($unpaid->isNotEmpty() && (float) self::feePerEntry() !== 0.0) {
                 $fee = self::feePerEntry();
-                $total = bcmul((string) count($unpaid), $fee);
+                // Batch total honors the legacy fee tiers + cap + special
+                // brewer rate (payments plan W4, total_fees per-entrant).
+                $total = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($unpaid));
 
                 return view('public.pay', array_merge(app(PublicController::class)->accountData(), [
                     'state' => app()->bound(GatewayAdapter::class) ? 'payable' : 'unavailable',
@@ -89,13 +92,15 @@ final class PayController extends Controller
             return redirect('/pay');
         }
 
+        $ctx = TenantContext::load();
         $ids = array_values(array_map(intval(...), $this->unpaidEntries()->pluck('id')->all()));
 
         if ($ids === []) {
             return redirect('/pay');
         }
 
-        $feeTotal = number_format((float) bcmul((string) count($ids), self::feePerEntry()), 2, '.', '');
+        // Fee snapshot honors the legacy tiers/cap/special-rate model (W4).
+        $feeTotal = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($ids));
 
         $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
 
@@ -120,6 +125,8 @@ final class PayController extends Controller
         if (! Auth::check() || ! app()->bound(GatewayAdapter::class)) {
             return redirect('/pay');
         }
+
+        $ctx = TenantContext::load();
 
         $adapter = app(GatewayAdapter::class);
 
@@ -161,7 +168,7 @@ final class PayController extends Controller
                 $batch,
                 (int) Auth::id(),
                 $adapter->method(),
-                $result->amount ?? number_format((float) bcmul((string) count($batch), self::feePerEntry()), 2, '.', ''),
+                $result->amount ?? FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($batch)),
             );
         }
 

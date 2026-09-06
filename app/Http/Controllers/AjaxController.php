@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Support\Auth\CredentialNormalizer;
+use App\Support\Payments\FeeCalculator;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\JsonResponse;
@@ -324,20 +325,18 @@ final class AjaxController extends Controller
 
     /**
      * total_fees()/total_fees_paid() (common.lib.php), bid=default /
-     * filter=default branch — per-entrant totals with the early-entry
-     * discount, brewer special rate and fee cap, summed over all users.
-     * $paidOnly adds legacy's brewPaid='1' filter (total_fees_paid).
+     * filter=default branch — per-entrant totals summed over all users.
+     * The per-entrant math itself lives in FeeCalculator (payments plan
+     * W4); $paidOnly adds legacy's brewPaid='1' filter (total_fees_paid).
      */
     private static function totalFees(bool $paidOnly): string
     {
         $ctx = TenantContext::load();
-        $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
-        $feeDiscount = (float) ($ctx->contestStr('contestEntryFee2') ?? 0);
-        $discountOn = $ctx->contestStr('contestEntryFeeDiscount') === 'Y';
-        $discountNum = (int) ($ctx->contestStr('contestEntryFeeDiscountNum') ?? 0);
-        $cap = (float) ($ctx->contestStr('contestEntryCap') ?? 0);
-        $specialRate = (string) $ctx->contestStr('contestEntryFeePasswordNum');
-        $special = $specialRate === '' ? null : (float) $specialRate;
+        $params = FeeCalculator::params($ctx);
+
+        $specialUids = $params['special'] !== null
+            ? DB::table('brewer')->where('brewerDiscount', 'Y')->pluck('uid')->all()
+            : [];
 
         $total = 0.0;
 
@@ -350,38 +349,13 @@ final class AjaxController extends Controller
             }
             $numEntries = (int) $entries->count();
 
-            $calc = 0.0;
-
             if ($numEntries > 0) {
-                $brewer = DB::table('brewer')->where('uid', $uid)->value('brewerDiscount');
-                $hasSpecial = $brewer === 'Y' && $special !== null;
-
-                if ($hasSpecial) {
-                    if ($discountOn) {
-                        $a = $discountNum * $special;
-                        $b = ($numEntries - $discountNum) * ($feeDiscount > $special ? $special : $feeDiscount);
-                        $c = $a + $b;
-                        $d = $numEntries * $special;
-                        $sum = $numEntries <= $discountNum ? $d : $c;
-                    } else {
-                        $sum = $numEntries * $special;
-                    }
-                } else {
-                    if ($discountOn) {
-                        $a = $discountNum * $fee;
-                        $b = ($numEntries - $discountNum) * $feeDiscount;
-                        $c = $a + $b;
-                        $d = $numEntries * $fee;
-                        $sum = $numEntries <= $discountNum ? $d : $c;
-                    } else {
-                        $sum = $numEntries * $fee;
-                    }
-                }
-
-                $calc = ($cap > 0 && $sum >= $cap) ? $cap : $sum;
+                $total += (float) FeeCalculator::total(
+                    $numEntries,
+                    in_array((int) $uid, $specialUids, true),
+                    $params,
+                );
             }
-
-            $total += $calc;
         }
 
         return number_format($total, 2);
