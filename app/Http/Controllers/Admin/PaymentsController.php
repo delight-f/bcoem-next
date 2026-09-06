@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Payments\PaymentEvent;
+use App\Support\Payments\PaymentService;
+use App\Support\Payments\StripeGateway;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -58,6 +61,37 @@ final class PaymentsController extends Controller
         DB::table('payments')->where('id', $id)->delete();
 
         return redirect('/admin/payments?msg=deleted');
+    }
+
+    /**
+     * Refund a settled Stripe payment (payments plan W6). Issues the
+     * gateway refund, then PaymentService::markRefunded flips the row +
+     * reverses flags on entries not covered by another paid row (#8).
+     * Manual rows have no provider_ref to refund remotely — refused.
+     */
+    public function refund(Request $request, int $id): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        $row = DB::table('payments')->where('id', $id)->first();
+
+        if ($row === null || $row->status !== 'paid' || $row->method !== 'stripe' || (string) $row->provider_ref === '') {
+            return redirect('/admin/payments?msg=refund-invalid');
+        }
+
+        $result = StripeGateway::forTenant()->refund((string) $row->provider_ref);
+
+        $applied = $result->event === PaymentEvent::Refunded
+            ? app(PaymentService::class)->markRefunded(
+                (string) $row->provider_ref,
+                $result->eventId,
+                'refunded via admin payments screen',
+            )
+            : false;
+
+        return redirect('/admin/payments?msg='.($applied ? 'refunded' : 'refund-invalid'));
     }
 
     /**

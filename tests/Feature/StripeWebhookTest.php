@@ -71,7 +71,7 @@ final class StripeWebhookTest extends PublicSurfaceTestCase
     {
         DB::table('payments')->whereIn('entrant_uid', [7])->delete();
         DB::table('brewing')->whereIn('id', [101, 102])->delete();
-        DB::table('users')->where('id', 8)->delete();
+        DB::table('users')->whereIn('id', [8, 9])->delete();
 
         if ($this->origPrefs !== []) {
             DB::table('preferences')->where('id', 1)->update($this->origPrefs);
@@ -107,6 +107,126 @@ final class StripeWebhookTest extends PublicSurfaceTestCase
             $this->assertSame(1, (int) $flag->brewConfirmed);
         }
         $this->assertNotNull(DB::table('brewing')->where('id', 101)->value('brewUpdated'));
+    }
+
+    public function test_async_succeeded_event_marks_entries_paid(): void
+    {
+        // Stripe-recommended must-handle: bank-settlement methods complete
+        // days later via async_payment_succeeded (payments plan W5).
+        $this->postWebhook('checkout.session.async_payment_succeeded', 'evt_async_1', [
+            'object' => 'checkout.session',
+            'payment_intent' => 'pi_async',
+            'amount_total' => 1600,
+            'metadata' => ['entrant_uid' => '7', 'entry_ids' => '101'],
+        ])->assertStatus(Response::HTTP_OK);
+
+        $row = DB::table('payments')->where('event_id', 'evt_async_1')->first();
+        $this->assertNotNull($row);
+        $this->assertSame('paid', $row->status);
+        $this->assertSame('16.00', (string) $row->amount);
+        $this->assertSame(1, (int) DB::table('brewing')->where('id', 101)->value('brewPaid'));
+    }
+
+    public function test_async_failed_event_never_marks(): void
+    {
+        $this->postWebhook('checkout.session.async_payment_failed', 'evt_async_2', [
+            'object' => 'checkout.session',
+            'metadata' => ['entrant_uid' => '7', 'entry_ids' => '101'],
+        ])->assertStatus(Response::HTTP_OK);
+
+        $this->assertNull(DB::table('payments')->where('event_id', 'evt_async_2')->first());
+        $this->assertSame(0, (int) DB::table('brewing')->where('id', 101)->value('brewPaid'));
+    }
+
+    public function test_paid_event_without_our_metadata_is_rejected(): void
+    {
+        // A foreign/legacy Checkout Session completed on the same connected
+        // account: verified signature but no attribution — fail closed.
+        $this->postWebhook('checkout.session.completed', 'evt_foreign', [
+            'object' => 'checkout.session',
+            'payment_intent' => 'pi_foreign',
+            'amount_total' => 100,
+        ])->assertStatus(Response::HTTP_BAD_REQUEST);
+
+        $this->assertNull(DB::table('payments')->where('event_id', 'evt_foreign')->first());
+        $this->assertSame(0, (int) DB::table('brewing')->where('id', 101)->value('brewPaid'));
+    }
+
+    public function test_admin_refund_issues_gateway_refund_and_reverses_flags(): void
+    {
+        // Settle a payment first (webhook path — the only writer).
+        $this->postWebhook('checkout.session.completed', 'evt_refund_setup', [
+            'object' => 'checkout.session',
+            'payment_intent' => 'pi_refundable',
+            'amount_total' => 1600,
+            'metadata' => ['entrant_uid' => '7', 'entry_ids' => '101-102'],
+        ])->assertStatus(Response::HTTP_OK);
+
+        // Admin clicks refund: gateway call stubbed, flags reversed (#8).
+        $stub = new StripeTestClient([
+            '/refunds' => StripeTestClient::json([
+                'id' => 're_admin_1',
+                'object' => 'refund',
+                'payment_intent' => 'pi_refundable',
+                'amount' => 1600,
+                'status' => 'succeeded',
+            ]),
+        ]);
+        ApiRequestor::setHttpClient($stub);
+
+        $this->loginAdmin();
+        $rowId = (int) DB::table('payments')->where('event_id', 'evt_refund_setup')->value('id');
+        $this->post("/admin/payments/{$rowId}/refund")->assertRedirect('/admin/payments?msg=refunded');
+
+        $row = DB::table('payments')->where('id', $rowId)->first();
+        $this->assertSame('refunded', $row->status);
+        $this->assertSame('re_admin_1', $row->event_id);
+        foreach ([101, 102] as $id) {
+            $this->assertSame(0, (int) DB::table('brewing')->where('id', $id)->value('brewPaid'));
+            $this->assertSame(0, (int) DB::table('brewing')->where('id', $id)->value('brewConfirmed'));
+        }
+    }
+
+    public function test_admin_refund_refuses_non_stripe_or_unsettled_rows(): void
+    {
+        DB::table('payments')->insert([
+            'entrant_uid' => 7,
+            'entry_ids' => json_encode([101]),
+            'amount' => '8.00',
+            'currency' => 'USD',
+            'method' => 'manual',
+            'provider_ref' => null,
+            'event_id' => 'evt_manual_row',
+            'status' => 'paid',
+            'created_at' => now(),
+        ]);
+        $rowId = (int) DB::table('payments')->where('event_id', 'evt_manual_row')->value('id');
+
+        $this->loginAdmin();
+        $this->post("/admin/payments/{$rowId}/refund")->assertRedirect('/admin/payments?msg=refund-invalid');
+        $this->assertSame('paid', (string) DB::table('payments')->where('id', $rowId)->value('status'));
+        $this->assertSame(0, (int) DB::table('brewing')->where('id', 101)->value('brewPaid'));
+
+        DB::table('payments')->where('id', $rowId)->delete();
+    }
+
+    private function loginAdmin(): void
+    {
+        // isAdmin() = userLevel <= 1; the seeded user 7 is an entrant (2),
+        // so create/update a level-0 admin.
+        if (! DB::table('users')->where('id', 9)->exists()) {
+            DB::table('users')->insert([
+                'id' => 9,
+                'user_name' => 'admin-refund@brewingcompetitions.com',
+                'password' => '$2a$08$2qgODWiSaYfLTVhu.2qVSer30aG7cLQZX0To01CqinyFyUbwdO64C',
+                'userLevel' => '0',
+                'userCreated' => '2024-01-01 00:00:01',
+            ]);
+        }
+        $this->post('/login', [
+            'loginUsername' => 'admin-refund@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ]);
     }
 
     public function test_invalid_signature_is_rejected_and_changes_nothing(): void

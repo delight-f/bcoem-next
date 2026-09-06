@@ -28,6 +28,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('admin.payments.index');
     Route::delete('/admin/payments/{id}', [PaymentsController::class, 'destroy'])
         ->name('admin.payments.destroy');
+    // Refund (payments plan W6): verified Stripe refund via the gateway,
+    // flag reversal through PaymentService::markRefunded (#8).
+    Route::post('/admin/payments/{id}/refund', [PaymentsController::class, 'refund'])
+        ->name('admin.payments.refund');
 
     // Entries admin
     Route::get('/backoffice/entries', [EntriesController::class, 'index'])
