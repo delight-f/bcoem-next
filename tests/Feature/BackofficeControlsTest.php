@@ -195,6 +195,13 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
             ->assertSee('All Participants with Entries Email Addresses')
             ->assertSee('All Participants with Paid Entries Email Addresses')
             ->assertSee(self::ENTRANT_EMAIL);
+
+        // Per-row printer icon prints the entry's bottle labels — the
+        // QR-bearing sheet (legacy entry-form-multi → bottle_label.output.php).
+        $this->assertStringContainsString(
+            '/admin/output/bottle_label?',
+            (string) $response->getContent(),
+        );
     }
 
     public function test_mark_all_as_paid_updates_every_row_and_redirects_with_legacy_msg(): void

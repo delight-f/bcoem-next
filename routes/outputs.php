@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 Route::middleware(['web', 'auth'])->group(function () {
     foreach ([
         'pullsheets', 'labels', 'bottle_label', 'table_cards', 'sorting',
-        'shipping_label', 'entry', 'participant_summary',
+        'shipping_label', 'participant_summary',
         'participant_entries_list', 'post_judge_inventory', 'judge_notes',
         'assignments', 'staff_points', 'styles', 'maps', 'dropoff', 'print',
         'entries_print',

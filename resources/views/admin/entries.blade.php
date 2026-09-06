@@ -403,7 +403,10 @@
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-trash-o"></span></button>
                                 </form>
-                                <a class="hide-loader" href="{{ url('/admin/output/entry?bid='.($entry->uid ?? $entry->brewBrewerID).'&filter=admin&id='.$entry->id) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Print the Entry Forms for &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-print"></span></a>
+                                {{-- Legacy admin/entries.admin.php:468 — the icon prints the entry's
+     bottle labels (output.inc.php section=entry-form-multi →
+     bottle_label.output.php), the QR-bearing label sheet. --}}
+<a class="hide-loader" href="{{ url('/admin/output/bottle_label?bid='.($entry->uid ?? $entry->brewBrewerID).'&id='.$entry->id) }}" target="_blank" rel="noopener" data-bs-toggle="tooltip" data-bs-placement="top" title="Print the Entry Forms for &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-print"></span></a>
                                 <a class="hide-loader" href="mailto:{{ $entry->brewBrewerEmail ?? '' }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Email the entry&rsquo;s owner, {{ $name }}, at {{ $entry->brewBrewerEmail ?? '' }}"><span class="fa fa-lg fa-envelope"></span></a>
                             </td>
                         </tr>
