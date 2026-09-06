@@ -557,7 +557,18 @@
                     <div class="col-md-9"><input class="form-control" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}"></div>
                 </div>
                 {{-- PayPal retired (payments plan W3): online payments are
-                     Stripe Connect — see /admin/stripe. --}}
+                     Stripe Connect — status + manage link below. --}}
+                <div class="mb-4 row">
+                    <label class="col-md-4 col-form-label">Online payments</label>
+                    <div class="col-md-9 col-form-label">
+                        @if (str_contains($p('prefsStripe'), 'account_id'))
+                            <span class="text-success-emphasis">Stripe — Connected.</span>
+                        @else
+                            <span class="text-danger-emphasis">Stripe — Not connected.</span>
+                        @endif
+                        <a href="{{ route('admin.stripe') }}">Manage</a>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
             </form>
         @else
