@@ -370,9 +370,9 @@ final class DashboardController extends Controller
         // Organizing.
         $orgItems = [
             ['Assign/Unassign', [
-                $l('/admin/judging/tables?action=assign&filter=judges', 'Judges'),
-                $l('/admin/judging/tables?action=assign&filter=stewards', 'Stewards'),
-                $l('/admin/judging/tables?action=assign&filter=staff', 'Staff'),
+                $l('/admin/judging/pool-assign?filter=judges', 'Judges'),
+                $l('/admin/judging/pool-assign?filter=stewards', 'Stewards'),
+                $l('/admin/judging/pool-assign?filter=staff', 'Staff'),
             ]],
             // Tables row + the planning/competition-mode switch
             // (default.admin.php:1273-1287). Row links are Manage / Add /
@@ -383,7 +383,7 @@ final class DashboardController extends Controller
             // plus the planning/competition switch.
             ['tables-mode', ['links' => array_merge(
                 [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
-                $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
+                $tables > 1 ? [$l('/admin/judging/tables', 'Assign Judges/Stewards')] : [],
             ), 'planning' => $planning]],
         ];
         if ($queued) {
@@ -399,7 +399,7 @@ final class DashboardController extends Controller
             // BOS Judges (default.admin.php:1302-1315) — only when more than
             // one table is defined.
             $orgItems[] = ['BOS Judges', [
-                $l('/admin/judging/tables?action=assign&filter=bos', 'Add'),
+                $l('/admin/judging/pool-assign?filter=bos', 'Add'),
             ]];
         }
         $left[] = ['Organizing', 'fa-tasks', 'organizing',

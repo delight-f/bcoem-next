@@ -256,8 +256,8 @@
                                 <li class="nav-item"><a class="nav-link" href="{{ url('/admin/payments') }}">Manage Payments</a></li>
                             @endif
                             <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Assign Judges</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Assign Stewards</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/pool-assign?filter=judges') }}">Assign Judges</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/pool-assign?filter=stewards') }}">Assign Stewards</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url('/register/judge') }}?view=quick">Quick Register a Judge</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url('/register/steward') }}?view=quick">Quick Register Steward</a></li>
                         </ul>
@@ -280,8 +280,8 @@
                     <div class="collapse" id="oc-g4">
                         <ul class="nav flex-column admin-oc-subnav">
                             <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}">Manage Tables</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign">Assign Judges/Stewards to Tables</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">Add BOS Judges</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/tables') }}">Assign Judges/Stewards to Tables</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url('/admin/judging/pool-assign?filter=bos') }}">Add BOS Judges</a></li>
                         </ul>
                     </div>
                 </li>

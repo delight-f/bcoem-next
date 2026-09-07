@@ -107,13 +107,13 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'],
             ['/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'],
             // Organizing
-            ['/admin/judging/tables?action=assign&filter=judges', 'Judges'],
-            ['/admin/judging/tables?action=assign&filter=stewards', 'Stewards'],
-            ['/admin/judging/tables?action=assign&filter=staff', 'Staff'],
+            ['/admin/judging/pool-assign?filter=judges', 'Judges'],
+            ['/admin/judging/pool-assign?filter=stewards', 'Stewards'],
+            ['/admin/judging/pool-assign?filter=staff', 'Staff'],
             ['/admin/judging/tables', 'Manage'],
             ['/admin/judging/tables/create', 'Add'],
-            ['/admin/judging/tables?action=assign', 'Assign Judges/Stewards'],
-            ['/admin/judging/tables?action=assign&filter=bos', 'Add'],
+            ['/admin/judging/tables', 'Assign Judges/Stewards'],
+            ['/admin/judging/pool-assign?filter=bos', 'Add'],
             ['/admin/judging/flights', 'Manage'],
             // Scoring
             ['/admin/upload-scoresheets', 'Upload Multiple'],

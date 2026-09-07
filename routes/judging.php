@@ -126,3 +126,11 @@ Route::get('/admin/judging/flights/{id}/assign/{role}', [AssignController::class
     ->name('admin.judging.assign.show')->middleware('auth');
 Route::post('/admin/judging/flights/{id}/assign/{role}', [AssignController::class, 'store'])
     ->name('admin.judging.assign.store')->middleware('auth');
+
+// Participant → pool role assignment (judge/steward/staff/BOS pools) —
+// legacy go=judging&action=assign&filter={judges|stewards|staff|bos}
+// (judging_locations.admin.php). The per-table AssignController above is
+// a different screen.
+use App\Http\Controllers\Judging\PoolAssignController;
+Route::get('/admin/judging/pool-assign', [PoolAssignController::class, 'show'])
+    ->name('admin.judging.pool_assign.show')->middleware('auth');

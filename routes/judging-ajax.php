@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Judging\CustomStyleController;
 use App\Http\Controllers\Judging\PracticeSessionController;
+use App\Http\Controllers\Judging\PoolAssignController;
 use App\Http\Controllers\Judging\TablesModeController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/admin/judging/tables-mode', [TablesModeController::class, 'store'])
     ->name('admin.judging.tables_mode');
+
+// Pool assignment checkbox/organizer save (legacy ajax/save.ajax.php
+// action=judging_staff). Admin gate stays in-controller like tables_mode.
+Route::post('/admin/judging/pool-assign/staff', [PoolAssignController::class, 'toggle'])
+    ->name('admin.judging.pool_assign.staff');
 
 Route::post('/admin/judging/practice-session', [PracticeSessionController::class, 'store'])
     ->name('admin.judging.practice_session');
