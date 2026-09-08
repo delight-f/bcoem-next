@@ -27,9 +27,7 @@
                 if (loginModalEl) { bootstrap.Modal.getOrCreateInstance(loginModalEl).show(); }</script>
         @endif
 
-        <p class="fs-5 fw-light">
-            {{ __('site.forgot_password') }}
-            <button type="button" class="link text-primary" data-bs-toggle="modal" data-bs-target="#forgot-modal">{{ __('site.reset_password') }}</button>
-        </p>
+        <p class="fs-5 fw-light mb-1">{{ __('site.forgot_password') }}</p>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#forgot-modal">{{ __('site.reset_password') }}</button>
     </section>
 </x-public-layout>

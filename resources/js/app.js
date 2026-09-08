@@ -73,8 +73,24 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
 
     const pad = (n) => String(n).padStart(2, '0');
     let remaining = total;
+    // Legacy session-end format (eval_warnings.pub.php): > 1440 min →
+    // D:HH:MM:SS, > 60 min → H:MM:SS, else MM:SS — so 120 min reads
+    // "1:59:30", not the ambiguous "119:30".
+    const fmt = () => {
+        const s = remaining;
+        const h = Math.floor(s / 3600);
+        const m = Math.floor((s % 3600) / 60);
+        const sec = s % 60;
+        if (s > 86400) {
+            return Math.floor(s / 86400) + ':' + pad(h) + ':' + pad(m) + ':' + pad(sec);
+        }
+        if (h > 0) {
+            return h + ':' + pad(m) + ':' + pad(sec);
+        }
+        return m + ':' + pad(sec);
+    };
     const render = () => {
-        span.textContent = Math.floor(remaining / 60) + ':' + pad(remaining % 60);
+        span.textContent = fmt();
         if (remaining <= 0) {
             clearInterval(timer);
             const btn = [...document.querySelectorAll('#nav-menu form button')]

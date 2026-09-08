@@ -99,46 +99,251 @@
                                     <div class="card-header">
                                         <h4>
                                             <a href="#" class="text-reset" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $side }}-{{ $loop->index }}" aria-expanded="false" aria-controls="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}<span class="fa {{ $icon }} float-end"></span></a>
-                                            <a href="#" role="button" data-bs-toggle="modal" data-bs-target="#help-{{ $side }}-{{ $loop->index }}"
-                                                onclick="event.stopPropagation()"
-                                                aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
+                                            @if ($help)
+                                                <a href="#" role="button" data-bs-toggle="modal" data-bs-target="#dashboard-help-modal-{{ $help }}"
+                                                    onclick="event.stopPropagation()"
+                                                    aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
+                                            @endif
                                         </h4>
                                     </div>
                                     <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
                                         <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
+                                                @if ($category === '_section')
+                                                    {{-- Reports panel sub-section header (default.admin.php Before Judging
+                                                         :1416-1421; During/After Judging :1785-1788,1967-1971). Before Judging
+                                                         is bare at the panel top; During/After get 25px top spacing + a rule.
+                                                         All three carry 15px bottom padding so the header does not collide
+                                                         with the first report row beneath it. --}}
+                                                    @php
+                                                        $isFirstSection = $rowLinks === 'Before Judging';
+                                                    @endphp
+                                                    <div class="row @if (! $isFirstSection) pt-3 @endif pb-3">
+                                                        <div class="col-12 small">
+                                                            @if (! $isFirstSection)
+                                                                <hr class="my-2">
+                                                            @endif
+                                                            <strong>{{ $rowLinks }}</strong>
+                                                        </div>
+                                                    </div>
+                                                @elseif (isset($rowLinks['blocks']))
+                                                    {{-- Reports panel row (default.admin.php:1411-2198). The body is an
+                                                         ordered list of blocks mirroring legacy's interleaved flat
+                                                         <ul>s and dropdown <div>s: {inline:[..]} list-inline, {block:[..]}
+                                                         list-unstyled, {dd:{button,items,prefix?}} dropdown. Block items
+                                                         are link items or {text:...} literals. --}}
+                                                    <div class="row mb-3">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            @foreach ($rowLinks['blocks'] as $block)
+                                                                @if (isset($block['dd']))
+                                                                    <div class="btn-group bcoem-admin-dashboard-select mb-1 me-2">
+                                                                        @if (! empty($block['dd']['prefix']))
+                                                                            <span class="text-muted me-1 align-middle">{{ $block['dd']['prefix'] }}</span>
+                                                                        @endif
+                                                                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $block['dd']['button'] }}</button>
+                                                                        <ul class="dropdown-menu small">
+                                                                            @forelse ($block['dd']['items'] as $bitem)
+                                                                                <li class="small"><a class="dropdown-item" href="{{ url($bitem['href']) }}"@if (! empty($bitem['target'])) target="{{ $bitem['target'] }}" rel="noopener"@endif>{{ $bitem['label'] }}</a></li>
+                                                                            @empty
+                                                                                <li class="small text-muted"><span class="dropdown-item-text">{{ $block['dd']['empty'] ?? '' }}</span></li>
+                                                                            @endforelse
+                                                                        </ul>
+                                                                    </div>
+                                                                @else
+                                                                    @php
+                                                                        $ulClass = isset($block['block'])
+                                                                            ? 'list-unstyled mb-1'
+                                                                            : 'd-inline list-inline mb-1';
+                                                                    @endphp
+                                                                    <ul class="{{ $ulClass }}">
+                                                                        @foreach ($block['inline'] ?? $block['block'] as $item)
+                                                                            @if (isset($item['text']))
+                                                                                <li class="me-2"><span class="text-muted">{{ $item['text'] }}</span></li>
+                                                                            @elseif (! empty($item['modal']))
+                                                                                <li class="me-2"><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
+                                                                            @elseif (! empty($item['href']))
+                                                                                <li class="me-2"><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a>@if (! empty($item['note'])) <em class="small text-muted">{{ $item['note'] }}</em>@endif</li>
+                                                                            @else
+                                                                                <li class="text-muted me-2" title="{{ $item['todo'] ?? '' }}">{{ $item['label'] }}</li><!-- TODO: legacy output -->
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @elseif ($category === 'tables-mode')
+                                                    {{-- Organizing → Tables + the Planning/Competition mode switch
+                                                         (default.admin.php:1273-1287). Row links on the left; the mode
+                                                         indicator + both switch buttons under them. --}}
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>Tables</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
+                                                                @foreach ($rowLinks['links'] as $item)
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                @endforeach
+                                                            </ul>
+                                                            @php
+                                                                $modePlanning = (bool) ($rowLinks['planning'] ?? false);
+                                                                $modeId = 'tables-mode-'.$side.'-'.$loop->parent->index;
+                                                            @endphp
+                                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                                <strong><span id="tables-mode-indicator-{{ $loop->index }}" class="{{ $modePlanning ? 'text-success' : 'text-primary' }}">{{ $modePlanning ? '*** Tables Planning Mode ***' : '*** Tables Competition Mode ***' }}</span></strong>
+                                                                @if ($modePlanning)
+                                                                    <button type="button" id="tables-competition-button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
+                                                                        Switch to Tables <strong>Competition</strong> Mode
+                                                                    </button>
+                                                                    <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
+                                                                @else
+                                                                    <button type="button" id="table-planning-button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tables-planning-mode-modal">
+                                                                        Switch to Tables <strong>Planning</strong> Mode
+                                                                    </button>
+                                                                    <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received in the system. Pullsheets will not be available."></span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @elseif (isset($rowLinks['dropdown']))
+                                                    {{-- Scoring rows carrying a real "Add … to..." dropdown (default.admin.php:
+                                                         Scores row → score_table_choose; Custom Categories row →
+                                                         score_custom_winning_choose). Links render above the dropdown. --}}
+                                                    <div class="row">
+                                                        <div class="col-12 col-md-4 small">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                        <div class="col-12 col-md-8 small">
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
+                                                                @foreach ($rowLinks['links'] as $item)
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                @endforeach
+                                                            </ul>
+                                                            <div class="btn-group bcoem-admin-dashboard-select">
+                                                                <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $rowLinks['dropdown']['button'] }}</button>
+                                                                <ul class="dropdown-menu small" aria-labelledby="{{ $rowLinks['dropdown']['id'] ?? '' }}">
+                                                                    @forelse ($rowLinks['dropdown']['items'] as $ditem)
+                                                                        <li class="small"><a class="dropdown-item" href="{{ url($ditem['href']) }}">{{ $ditem['label'] }}</a></li>
+                                                                    @empty
+                                                                        <li class="small text-muted"><span class="dropdown-item-text">{{ $rowLinks['dropdown']['empty'] }}</span></li>
+                                                                    @endforelse
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @elseif (isset($rowLinks['matrix']))
+                                                    {{-- Print Bottle/Box Labels matrix (default.admin.php:934-1241): each paper
+                                                         (product link on the left) owns option rows, each with a real
+                                                         "Number of Labels per Entry/Table/Judge" 1-12 dropdown. --}}
+                                                    <div class="row" style="padding-top: 20px;">
+                                                        <div class="col-12">
+                                                            <strong>{{ $category }}</strong>
+                                                        </div>
+                                                    </div>
+                                                    @foreach ($rowLinks['matrix'] as $paper)
+                                                        <div class="row">
+                                                            <div class="col-12 col-md-4 small">
+                                                                @php
+                                                                    // Legacy left-cell tooltip names the product (e.g. "Avery 5160",
+                                                                    // "Online Lables OL32"); it disambiguates the two "Letter" papers.
+                                                                    $base = (string) $paper['href'];
+                                                                    $stem = preg_replace('~[?#].*$~', '', $base);
+                                                                    $stem = preg_replace('~\.[A-Za-z0-9]+$~', '', $stem);
+                                                                    if (preg_match('/(\d+|[A-Z]+\d+[A-Z]*)$/', $stem, $m)) {
+                                                                        $pcode = $m[1];
+                                                                    } else {
+                                                                        $pcode = basename($stem);
+                                                                    }
+                                                                    $ptitle = str_contains($base, 'onlinelabels.com')
+                                                                        ? 'Online Lables '.$pcode
+                                                                        : 'Avery '.$pcode;
+                                                                @endphp
+                                                                <a href="{{ $paper['href'] }}" target="_blank" rel="noopener"
+                                                                   data-bs-toggle="tooltip" data-bs-placement="right"
+                                                                   title="{{ $ptitle }}">{{ $paper['paper'] }} <span class="fa fa-sm fa-external-link"></span></a>
+                                                            </div>
+                                                            <div class="col-12 col-md-8 small">
+                                                                <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
+                                                                    @foreach ($paper['options'] as $opt)
+                                                                        <li class="d-inline-flex align-items-center gap-2">
+                                                                            @if (isset($opt['children']))
+                                                                                <span class="text-muted">{{ $opt['label'] }}</span>
+                                                                                <div class="btn-group">
+                                                                                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                                                                                            aria-haspopup="true" aria-expanded="false">{{ $opt['button'] }}</button>
+                                                                                    <ul class="dropdown-menu">
+                                                                                        @foreach ($opt['children'] as $child)
+                                                                                            <li><a class="dropdown-item" href="{{ url($child['href']) }}" target="_blank" rel="noopener">{{ $child['label'] }}</a></li>
+                                                                                        @endforeach
+                                                                                    </ul>
+                                                                                </div>
+                                                                            @else
+                                                                                <a href="{{ url($opt['href']) }}" target="_blank" rel="noopener">{{ $opt['label'] }}</a>
+                                                                            @endif
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                @else
                                                 <div class="row">
                                                     <div class="col-12 col-md-4 small">
                                                         <strong>{{ $category }}</strong>
                                                     </div>
                                                     <div class="col-12 col-md-8 small">
-                                                        <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
-                                                            @foreach ($rowLinks as $item)
-                                                                @if (isset($item['children']))
-                                                                    <li class="text-muted">
-                                                                        <span class="text-muted">{{ $item['label'] }}</span>
-                                                                        @if (($item['descriptor'] ?? 'labels per entry') !== '')
-                                                                            <span class="text-muted">— {{ $item['descriptor'] }}:</span>
+                                                        {{-- Legacy default.admin.php keeps per-row option groups in separate
+                                                             <ul> blocks (e.g. Participants: Manage alone, then the assign links).
+                                                             A row whose first entry is a bare list of link items renders one
+                                                             <ul> per nested list; otherwise all items share a single <ul>. --}}
+                                                        @if ($rowLinks !== [] && is_array($rowLinks[0]) && array_is_list($rowLinks[0]))
+                                                            @foreach ($rowLinks as $line)
+                                                                <ul class="d-flex flex-wrap list-unstyled gap-2 @if ($loop->last) mb-0 @else mb-1 @endif">
+                                                                    @foreach ($line as $item)
+                                                                        @if (!empty($item['modal']))
+                                                                            <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
+                                                                        @elseif (!empty($item['todo']))
+                                                                            <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
+                                                                        @else
+                                                                            <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
                                                                         @endif
-                                                                        @foreach ($item['children'] as $child)
-                                                                            @if (! empty($child['href']))
-                                                                                <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
-                                                                            @else
-                                                                                <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                    @endforeach
+                                                                </ul>
+                                                            @endforeach
+                                                        @else
+                                                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
+                                                                @foreach ($rowLinks as $item)
+                                                                    @if (isset($item['children']))
+                                                                        <li class="text-muted">
+                                                                            <span class="text-muted">{{ $item['label'] }}</span>
+                                                                            @if (($item['descriptor'] ?? 'labels per entry') !== '')
+                                                                                <span class="text-muted">— {{ $item['descriptor'] }}:</span>
                                                                             @endif
-                                                                        @endforeach
-                                                                    </li>
-                                                                @elseif (!empty($item['modal']))
-                                                                    <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
-                                                                @elseif (!empty($item['todo']))
-                                                                    <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
-                                                                @else
-                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
-                                                                @endif
-                                                        @endforeach
-                                                        </ul>
+                                                                            @foreach ($item['children'] as $child)
+                                                                                @if (! empty($child['href']))
+                                                                                    <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
+                                                                                @else
+                                                                                    <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                                @endif
+                                                                            @endforeach
+                                                                        </li>
+                                                                    @elseif (!empty($item['modal']))
+                                                                        <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
+                                                                    @elseif (!empty($item['todo']))
+                                                                        <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
+                                                                    @else
+                                                                        <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
+                                                                    @endif
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
                                                     </div>
                                                 </div>
+                                                @endif
                                             @endforeach
                                         </div>
                                     </div>
@@ -150,6 +355,71 @@
                 </div>
             </div>
         </div>
+
+        {{-- Tables Planning/Competition mode confirm dialogs + submit
+             (default.admin.php mode-switch JS → ajax/tables_mode.ajax.php;
+             port TablesModeController at POST /admin/judging/tables-mode). --}}
+        <div class="modal fade" id="tables-planning-mode-modal" tabindex="-1" role="dialog" aria-labelledby="tables-planning-mode-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title fw-bold" id="tables-planning-mode-modal-label">Please Confirm</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to switch to Tables Planning Mode? This should only be done <strong>before</strong> entries have been sorted and marked as received.</p>
+                        <p>While in Tables Planning Mode, table entry counts and pullsheets reflect all entries, not only received ones, and any table configurations and associated assignments will <strong>not</strong> be official until you return to Tables Competition Mode.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="tables-planning-button-yes" class="btn btn-success" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="tables-competition-mode-modal" tabindex="-1" role="dialog" aria-labelledby="tables-competition-mode-modal-label" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title fw-bold" id="tables-competition-mode-modal-label">Please Confirm</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to switch to Tables Competition Mode? This should only be done after <strong>all</strong> entries have been sorted and those present are <strong>marked as received</strong> in the system.</p>
+                        <p>Before you do, take note that, after switching to Tables Competition Mode:</p>
+                        <ul class="small mb-0">
+                            <li>Table entry counts will only reflect entries marked as received.</li>
+                            <li>Non-received entries&rsquo; flight designations will be reset to 1 (default) should any be marked as received after switching to Competition Mode. Flight positions and associated rounds should be reviewed prior to judging.</li>
+                            <li>If there are no entries marked as received for a particular sub-style, the sub-style will be removed from the table&rsquo;s styles list.</li>
+                            <li>If there are no entries marked as received for all sub-styles defined for a table, that table will be deleted.</li>
+                            <li>Judges and stewards that have entries at a table where they are assigned will be un-assigned from that table as a failsafe.</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="tables-competition-button-yes" class="btn btn-success" data-bs-dismiss="modal">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.content
+                    || document.querySelector('input[name="_token"]')?.value;
+                const postMode = (section) => fetch('{{ url('/admin/judging/tables-mode') }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': csrf },
+                    body: 'section=' + encodeURIComponent(section),
+                }).then((r) => { if (r.ok) window.location.reload(); });
+                document.getElementById('tables-planning-button')?.addEventListener('click', () =>
+                    new bootstrap.Modal(document.getElementById('tables-planning-mode-modal')).show());
+                document.getElementById('tables-planning-button-yes')?.addEventListener('click', () => postMode('enable-planning'));
+                document.getElementById('tables-competition-button')?.addEventListener('click', () =>
+                    new bootstrap.Modal(document.getElementById('tables-competition-mode-modal')).show());
+                document.getElementById('tables-competition-button-yes')?.addEventListener('click', () => postMode('enable-competition'));
+            });
+        </script>
+
          {{-- sidebar.admin.php: Donate + Competition Status panel --}}
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
@@ -269,28 +539,6 @@
             </div>
         </div>
     </div>
-
-    @foreach (['left' => $left, 'right' => $right] as $side => $sections)
-        @foreach ($sections as $si => [$title, $icon, $help, $links])
-            <div class="modal fade" id="help-{{ $side }}-{{ $si }}" tabindex="-1" role="dialog" aria-labelledby="help-{{ $side }}-{{ $si }}-title" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3 class="modal-title" id="help-{{ $side }}-{{ $si }}-title">{{ $title }}</h3>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                    <p>{{ $help }}</p>
-                    @if (! empty($helpHtml[$title] ?? null)) {!! $helpHtml[$title] !!} @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endforeach
-    @endforeach
 
     {{-- default.admin.php:489-505 Post-Competition Tasks checklist --}}
     @if ($status['postCompTasks'])

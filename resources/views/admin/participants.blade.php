@@ -90,7 +90,7 @@
                 </div>
 
                 {{-- Print Current View... dropdown (TODO: legacy output route). --}}
-                <div class="btn-group d-none d-xl-block" role="group">
+                <div class="btn-group d-none d-xl-inline-flex" role="group">
                     <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-print"></span> Print Current View...
                     </button>
@@ -113,18 +113,10 @@
                     </ul>
                 </div>
 
-                @if ($allEmails !== '')
-                    {{-- All <subtitle> Email Addresses modal (participants.admin.php:660). --}}
-                    <div class="btn-group d-none d-lg-block" role="group">
-                        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#allEmailModal">
-                            All {{ ucwords($subtitle) }} Email Addresses
-                        </button>
-                    </div>
-                @endif
             </div>
 
             <div class="col-12 col-lg-4 col-xl-2">
-                <div class="btn-group float-end d-none d-md-block" role="group">
+                <div class="btn-group float-end d-none d-md-inline-flex" role="group">
                     <div class="btn-group" role="group">
                         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#participantStatusModal">
                             Participant Status
@@ -134,6 +126,23 @@
             </div>
         </div>
     </div>
+
+    {{-- Email button on its own row under the grey controls, like entries
+         (participants.admin.php keeps it inline, but the manage pages now
+         share one layout: blue email buttons sit below the control row). --}}
+    @if ($allEmails !== '')
+    <div class="bcoem-admin-element d-none d-md-block d-print-none">
+        <div class="row">
+            <div class="col-12">
+                <div class="btn-group d-none d-lg-inline-flex" role="group">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#allEmailModal">
+                        All {{ ucwords($subtitle) }} Email Addresses
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Assignment modal(s): one per participant with judge/steward assignment. --}}
     @foreach ($participants as $p)

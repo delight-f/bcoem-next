@@ -1,6 +1,6 @@
 @props(['ctx', 'flow', 'title', 'description', 'threshold' => false])
-<div class="col-md-6">
-    <div class="card h-100">
+<div class="col-md-6" id="flow-{{ $flow }}">
+<div class="card h-100">
         <div class="card-body">
             <h2 class="h5 card-title">{{ $title }}</h2>
             <p class="card-text">{{ $description }}</p>

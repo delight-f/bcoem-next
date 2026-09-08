@@ -21,7 +21,11 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
     /** @var list<int> */
     private array $tableIds = [];
 
-    /** Insert judging tables so tables>0 (and >1) conditional links render. */
+    private ?int $locationId = null;
+
+    /** Insert judging tables so tables>0 (and >1) conditional links render,
+     *  plus a past-dated judging session so judgingStarted is true and the
+     *  During/After Judging Reports rows render (default.admin.php:1777/1963). */
     private function primeTables(): void
     {
         if ($this->tableIds !== []) {
@@ -33,6 +37,15 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
                 'tableNumber' => $n,
             ]);
         }
+        if ($this->locationId === null) {
+            $this->locationId = (int) DB::table('judging_locations')->insertGetId([
+                'judgingLocName' => 'P54 Reports Session',
+                'judgingLocType' => 0,
+                'judgingDate' => (string) (time() - 86400),
+                'judgingDateEnd' => null,
+                'judgingRounds' => 1,
+            ]);
+        }
     }
 
     protected function tearDown(): void
@@ -40,6 +53,10 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
         if ($this->tableIds !== []) {
             DB::table('judging_tables')->whereIn('id', $this->tableIds)->delete();
             $this->tableIds = [];
+        }
+        if ($this->locationId !== null) {
+            DB::table('judging_locations')->where('id', $this->locationId)->delete();
+            $this->locationId = null;
         }
         parent::tearDown();
     }
@@ -90,14 +107,14 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Tables and Associated Styles Master List'],
             ['/admin/output/table_cards?psort=sorting-tables', 'Tables and Associated Styles Placards'],
             // Organizing
-            ['/admin/judging/flights', 'Judges'],
-            ['/admin/judging/flights', 'Stewards'],
-            ['/admin/judging/flights', 'Staff'],
+            ['/admin/judging/tables?action=assign&filter=judges', 'Judges'],
+            ['/admin/judging/tables?action=assign&filter=stewards', 'Stewards'],
+            ['/admin/judging/tables?action=assign&filter=staff', 'Staff'],
             ['/admin/judging/tables', 'Manage'],
             ['/admin/judging/tables/create', 'Add'],
-            ['/admin/judging/flights', 'Assign Judges/Stewards'],
+            ['/admin/judging/tables?action=assign', 'Assign Judges/Stewards'],
+            ['/admin/judging/tables?action=assign&filter=bos', 'Add'],
             ['/admin/judging/flights', 'Manage'],
-            ['/admin/judging/bos', 'Add'],
             // Scoring
             ['/admin/upload-scoresheets', 'Upload Multiple'],
             ['/admin/upload-scoresheets', 'Upload Individually'],
@@ -120,8 +137,8 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'],
             ['/admin/output/bos_mat', 'All Style Types - Judging Numbers'],
             ['/admin/output/pullsheets', 'All By Table'],
-            ['/admin/output/participant_summary', 'Participant Summaries'],
-            ['/admin/output/participant_entries_list', 'Participant Entries List (Address)'],
+            ['/admin/output/participant_summary', 'All Participants with Entries'],
+            ['/admin/output/participant_entries_list', 'All Entries by Particpant'],
             ['/admin/output/staff_points', 'Print'],
             ['/admin/output/post_judge_inventory', 'With Scores'],
             ['/admin/output/post_judge_inventory', 'Without Scores'],
@@ -168,10 +185,17 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             $response->assertSee($title, false);
         }
 
-        // Bottle-label families must be present (not silently dropped).
-        $response->assertSee('Letter (Avery 5160) — Entry Numbers', false)
-            ->assertSee('A4 (Avery 3422) — Entry Numbers', false)
-            ->assertSee('Round (Avery OL5275WR) — All Entries', false);
+        // Bottle/box label matrix papers + their per-option dropdown labels must
+        // be present (not silently dropped). Paper tooltips carry the product
+        // code, so assert on the option text and the shared button labels.
+        $response->assertSee('Print Bottle Labels (PDF)', false)
+            ->assertSee('With Required Info - All Styles (Entry Numbers)', false)
+            ->assertSee('Quicksort - 6 Labels per Entry', false)
+            ->assertSee('Print Box Labels (PDF)', false)
+            ->assertSee('Virtual Judging Box Labels (by Judge Name)', false)
+            ->assertSee('Number of Labels per Entry', false)
+            ->assertSee('Number of Labels per Table', false)
+            ->assertSee('Number of Labels per Judge', false);
     }
 
     public function test_every_active_dashboard_link_renders_with_label(): void

@@ -404,6 +404,12 @@ html {
     padding: 0;
     margin: 15px 0 0 0;
 }
+/* Uniform vertical rhythm across every dashboard section's content rows. */
+/* Some rows carry mb-3/mb-2 utilities; this scoped rule is the single source, */
+/* so every top-level row in an expanded panel body sits 1rem apart. */
+.bcoem-admin-dashboard-accordion .card-body > .row {
+    margin-bottom: 1rem;
+}
 
 /* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
    .badge/.card primitives so the legacy glance look is preserved. ---- */
@@ -518,6 +524,10 @@ html {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    /* BS5 .navbar > .container-fluid is itself flex; without growing, this
+       wrapper shrink-wraps its content (~200px) and the .ms-auto icon group
+       can never reach the right edge. */
+    flex: 1 1 auto;
 }
 [data-bs-theme="bcoem-brux"] #main-content {
     padding-top: 60px;
@@ -530,18 +540,21 @@ html {
     [data-bs-theme="bcoem-brux"] h5 { font-size: 14px; }
     [data-bs-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
-/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). */
-.admin-topbar .nav-link {
+/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). The base
+   .admin-topbar .nav-link color loses to the brux anchor rebind
+   ([data-bs-theme="bcoem-brux"] a:not(.btn) is (0,2,1) vs (0,2,0)), which
+   turned topbar text/icons blue; scope the grey to the theme so it wins. */
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link {
     color: #bec8d8;
     padding-top: 15px;
     padding-bottom: 15px;
     line-height: 20px;
 }
-.admin-topbar .nav-link:visited {
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:visited {
     color: #bec8d8;
 }
-.admin-topbar .nav-link:hover,
-.admin-topbar .nav-link:focus {
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:hover,
+[data-bs-theme="bcoem-brux"] .admin-topbar .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
 }
@@ -863,10 +876,8 @@ html {
     --bs-btn-focus-shadow-rgb: var(--bs-success-rgb);
 }
 .btn-info {
-    --bs-btn-color: #fff;
     --bs-btn-bg: var(--bs-info);
     --bs-btn-border-color: var(--bs-info);
-    --bs-btn-hover-color: #fff;
     --bs-btn-hover-bg: color-mix(in srgb, var(--bs-info) 88%, #000);
     --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-info) 84%, #000);
     --bs-btn-active-bg: color-mix(in srgb, var(--bs-info) 80%, #000);
@@ -874,6 +885,54 @@ html {
     --bs-btn-disabled-bg: var(--bs-info);
     --bs-btn-disabled-border-color: var(--bs-info);
     --bs-btn-focus-shadow-rgb: var(--bs-info-rgb);
+}
+/* Admin (brux) exact legacy toolbars: css/bruxellensis.css btn-default
+   palette + the legacy open/dropdown colors. Scoped to the theme so the
+   public pages keep the BS5 defaults they render today. */
+[data-bs-theme="bcoem-brux"] .btn-secondary {
+    --bs-btn-color: #303E4B;
+    --bs-btn-bg: #DFE4EC;
+    --bs-btn-border-color: #acc0c7;
+    --bs-btn-hover-color: #303E4B;
+    --bs-btn-hover-bg: #bec8d8;
+    --bs-btn-hover-border-color: #67819E;
+    --bs-btn-active-color: #303E4B;
+    --bs-btn-active-bg: #bec8d8;
+    --bs-btn-active-border-color: #67819E;
+    --bs-btn-disabled-color: #303E4B;
+    --bs-btn-disabled-bg: #DFE4EC;
+    --bs-btn-disabled-border-color: #acc0c7;
+    --bs-btn-focus-shadow-rgb: 48, 62, 75;
+}
+[data-bs-theme="bcoem-brux"] .btn-success {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #4CAF50;
+    --bs-btn-border-color: #388E3C;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #388E3C;
+    --bs-btn-hover-border-color: #2E7D32;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #2E7D32;
+    --bs-btn-active-border-color: #246428;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #4CAF50;
+    --bs-btn-disabled-border-color: #388E3C;
+    --bs-btn-focus-shadow-rgb: 76, 175, 80;
+}
+[data-bs-theme="bcoem-brux"] .btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #29B6F6;
+    --bs-btn-border-color: #0288D1;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #039BE5;
+    --bs-btn-hover-border-color: #0288D1;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #0288D1;
+    --bs-btn-active-border-color: #01579B;
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #29B6F6;
+    --bs-btn-disabled-border-color: #0288D1;
+    --bs-btn-focus-shadow-rgb: 41, 182, 246;
 }
 .btn-warning {
     --bs-btn-color: #fff;
