@@ -12,8 +12,17 @@
     body { font-family: 'DejaVu Sans', sans-serif; font-size: {{ $large ? '12px' : '9px' }}; }
     .row::after { content: ""; display: table; clear: both; }
     .cell { float: left; width: 33.33%; box-sizing: border-box;
-            border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '210px' : '150px' }};
+            border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '290px' : '200px' }};
             overflow: hidden; text-align: left; }
+    /* Fixed body region pins the QR block to the cell bottom (legacy
+       min-height 290px; dompdf has no absolute positioning). */
+    .body { height: 190px; overflow: hidden; }
+    /* QR + code value as a deterministic table: right column 75px wide,
+       number centered beneath the QR image (floats render unreliably). */
+    .qrtab { width: 100%; border-collapse: collapse; }
+    .qrtab td { padding: 0; }
+    .qrtab .qrc { width: 75px; text-align: center; font-size: 0.85em; }
+    .qrtab .qrimg img { display: block; }
     .title { text-align: center; font-weight: bold; margin-bottom: 6px;
              font-size: {{ $large ? '1.5em' : '1.1em' }}; }
     .code-large { text-align: center; font-size: 2.6em; font-weight: 900;
@@ -38,6 +47,7 @@
         <div class="row">
             @foreach ($row as $cell)
                 <div class="cell">
+                    <div class="body">
                     <div class="title">{{ $contest }}</div>
 
                     @if ($cell['largeNum'])
@@ -95,11 +105,20 @@
                         @endforeach
                     @endif
 
+                    </div>
                     @if ($cell['barcodeQr'])
-                        <div style="text-align:center; margin-top:8px;">
-                            <span class="small">[{{ $cell['code'] }}]</span>
-                            <span class="small">[QR]</span>
-                        </div>
+                        {{-- QR anchored bottom-right of the label box; the
+                             code39 value centered directly beneath the QR. --}}
+                        <table class="qrtab">
+                            <tr>
+                                <td></td>
+                                <td class="qrc qrimg"><img src="data:image/svg+xml;base64,{{ base64_encode($cell['qrSvg']) }}" width="75" height="75" alt="QR"></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td class="qrc">[{{ $cell['code'] }}]</td>
+                            </tr>
+                        </table>
                     @endif
                 </div>
             @endforeach

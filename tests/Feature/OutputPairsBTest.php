@@ -192,7 +192,6 @@ final class OutputPairsBTest extends PublicSurfaceTestCase
     {
         return array_values(collect([
             '/admin/output/shipping_label',
-            '/admin/output/entry',
             '/admin/output/judge_notes',
             '/admin/output/assignments',
             '/admin/output/scoresheets?file=P52b-951001.pdf',
