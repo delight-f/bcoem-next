@@ -119,7 +119,8 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
             ->assertSee('Print Current View...')
             ->assertSee('All Participants Email Addresses')
             ->assertSee('Participant Status')
-            ->assertSee('<th class="print:hidden">Updated</th>', false);
+            // BS3 marker retired (backlog P4): the port uses BS5 d-print-none.
+            ->assertSee('<th class="d-print-none">Updated</th>', false);
     }
 
     public function test_judges_filter_renders_table_and_entry_columns(): void
@@ -138,7 +139,8 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
             // entries admin filtered by sort.
             ->assertSee('>1A</a>', false)
             ->assertSee('filter=01', false)
-            ->assertSee('<th class="print:hidden">Updated</th>', false);
+            // BS3 marker retired (backlog P4): the port uses BS5 d-print-none.
+            ->assertSee('<th class="d-print-none">Updated</th>', false);
     }
 
     public function test_quick_register_target_resolves(): void

@@ -179,9 +179,12 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
             // the legacy "PayPal Payments" label.
             ->assertSee(': Payments</p>', false)
             ->assertDontSee('PayPal Payments')
-            ->assertSee('<th nowrap>Payer <span class="hidden-xs hidden-sm">Name</span></th>', false)
-            ->assertSee('<span class="hidden-xs">Transaction</span> ID', false)
-            ->assertSee('<span class="hidden-sm">For</span> Entries...', false)
+            // BS3 markers retired (backlog P4): view now uses d-none d-md-* per the BS5 port.
+            ->assertSee('<th nowrap>Payer <span class="d-none d-lg-inline">Name</span></th>', false)
+            ->assertSee('<th class="d-none d-md-table-cell">Item</th>', false)
+            ->assertSee('<th>Am<span class="d-none d-md-inline">ount</span></th>', false)
+            ->assertSee('<th>St<span class="d-none d-md-inline">atus</span></th>', false)
+            ->assertSee('<th nowrap><span class="d-none d-md-inline">Transaction</span> ID</th>', false)
             ->assertSee('Entrant, P57')
             // Legacy cell format: entry ids as %06s.
             ->assertSee('000123, 000124')

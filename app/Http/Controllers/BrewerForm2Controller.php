@@ -185,7 +185,24 @@ final class BrewerForm2Controller extends Controller
      */
     public static function infoData(TenantContext $ctx): array
     {
-        $brewer = DB::table('brewer')->where('uid', Auth::id())->first();
+        $brewerRow = DB::table('brewer')->where('uid', Auth::id())->first();
+        // Seed/org users can lack a brewer row (they still get accounts);
+        // their account info renders as an empty profile instead of 500ing
+        // on ->brewerDropOff below (backlog P1). Empty profile fields match
+        // the brewer schema columns so any future view-side ->read is safe.
+        $brewer = $brewerRow ?? (object) array_fill_keys([
+            'id', 'uid',
+            'brewerFirstName', 'brewerLastName', 'brewerAddress', 'brewerCity',
+            'brewerState', 'brewerZip', 'brewerCountry', 'brewerPhone1',
+            'brewerPhone2', 'brewerClubs', 'brewerEmail', 'brewerStaff',
+            'brewerSteward', 'brewerJudge', 'brewerJudgeID', 'brewerJudgeMead',
+            'brewerJudgeCider', 'brewerJudgeRank', 'brewerJudgeLikes',
+            'brewerJudgeDislikes', 'brewerJudgeLocation', 'brewerStewardLocation',
+            'brewerJudgeExp', 'brewerJudgeNotes', 'brewerAssignment',
+            'brewerJudgeWaiver', 'brewerAHA', 'brewerDiscount', 'brewerProAm',
+            'brewerDropOff', 'brewerBreweryName', 'brewerBreweryInfo',
+            'brewerMHP',
+        ], '');
         $user = (array) (DB::table('users')->where('id', Auth::id())->first() ?? []);
 
         // pub/brewer_info.pub.php: availability CSV entries are "Y-1" —

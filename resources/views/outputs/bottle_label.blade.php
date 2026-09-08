@@ -4,6 +4,13 @@
      QR renders as an inline vector (bacon-qr-code via base64 data-URI —
      dompdf has remote images disabled); the code39 value prints as the
      centered number under the QR (dompdf has no code39 encoder). --}}
+@php
+    // Geometry single source (backlog P2): cell height per legacy
+    // bottle_label.output.php:123/:127; the QR block is the 8px row gap +
+    // 75px QR + ~3px code value; 14px = cell padding + borders.
+    $cellH = $barcodeQr ? 290 : 200;
+    $qrBlock = 86;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +20,13 @@
     body { font-family: 'DejaVu Sans', sans-serif; font-size: {{ $large ? '12px' : '9px' }}; }
     .row::after { content: ""; display: table; clear: both; }
     .cell { float: left; width: 33.33%; box-sizing: border-box;
-            border: 1px solid #000; padding: 6px 4px; height: {{ $barcodeQr ? '290px' : '200px' }};
+            border: 1px solid #000; padding: 6px 4px; height: {{ $cellH }}px;
             overflow: hidden; text-align: left; }
     /* Fixed body region pins the QR block to the cell bottom (legacy
-       min-height 290px; dompdf has no absolute positioning). */
-    .body { height: 190px; overflow: hidden; }
+       min-height 290px; dompdf has no absolute positioning). Height is
+       derived so the number can never re-clip when the cell or QR block
+       changes (backlog P2). */
+    .body { height: {{ $cellH - 14 - $qrBlock }}px; overflow: hidden; }
     /* QR + code value as a deterministic table: right column 75px wide,
        number centered beneath the QR image (floats render unreliably). */
     .qrtab { width: 100%; border-collapse: collapse; }

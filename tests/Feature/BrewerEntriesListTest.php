@@ -283,4 +283,33 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
         $this->login();
         $this->get('/list')->assertOk()->assertSee(self::text('site.no_entries'));
     }
+
+    public function test_user_without_brewer_row_renders_list_not_500(): void
+    {
+        // Backlog P1: seed/org users can have an account with no brewer
+        // row; infoData() used to deref ->brewerDropOff on null and 500.
+        $c = 0;
+        while (DB::table('users')->where('id', 7700 + $c)->exists()) {
+            $c++;
+        }
+        $uid = 7700 + $c;
+        DB::table('users')->insert([
+            'id' => $uid,
+            'user_name' => 'rowless'.$uid.'@brewingcompetitions.com',
+            'password' => '$2a$08$2qgODWiSaYfLTVhu.2qVSer30aG7cLQZX0To01CqinyFyUbwdO64C',
+            'userLevel' => '2',
+            'userCreated' => '2026-01-01 00:00:01',
+        ]);
+        // Deliberately NO brewer row for $uid.
+
+        $this->post('/login', [
+            'loginUsername' => 'rowless'.$uid.'@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ]);
+
+        $this->get('/list')->assertOk();
+        $this->get('/account')->assertOk();
+
+        DB::table('users')->where('id', $uid)->delete();
+    }
 }
