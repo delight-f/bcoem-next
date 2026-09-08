@@ -3,7 +3,7 @@
         <h1>{{ $table->tableNumber }}: {{ $table->tableName }} — Enter Scores</h1>
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -18,7 +18,7 @@
             @csrf
             @method('PUT')
 
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Entry</th>
@@ -45,13 +45,13 @@
                                        @checked($entry->score !== null && (int) $entry->score->scoreMiniBOS === 1)>
                             </td>
                             <td>
-                                <input class="input input-bordered" type="number" step="0.01" min="0" max="50"
+                                <input class="form-control" type="number" step="0.01" min="0" max="50"
                                        name="scoreEntry{{ $entry->id }}"
                                        value="{{ old('scoreEntry'.$entry->id, $entry->score->scoreEntry ?? '') }}">
                             </td>
                             <td>
                                 {{-- '5' is the storage code for HM; it must stay '5' so the public winners filter sees it. --}}
-                                <select class="select select-bordered" name="scorePlace{{ $entry->id }}">
+                                <select class="form-select" name="scorePlace{{ $entry->id }}">
                                     <option value=""></option>
                                     @foreach ([1 => '1st', 2 => '2nd', 3 => '3rd', 4 => '4th'] as $value => $label)
                                         <option value="{{ $value }}"

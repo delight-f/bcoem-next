@@ -274,6 +274,7 @@ CREATE TABLE `baseline_contest_info` (
   `contestRules` mediumtext DEFAULT NULL,
   `contestEntryEditDeadline` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `contestWinnerLink` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
+  `contestInfoExtra` mediumtext DEFAULT NULL COMMENT 'PARITY-028: optional extra competition-info HTML block (custom_competition_info.pub.php equivalent)',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

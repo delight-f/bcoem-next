@@ -75,6 +75,9 @@ final class EntriesController extends Controller
             'brewBrewerID', 'brewBrewerFirstName', 'brewBrewerLastName',
             'brewPaid', 'brewReceived', 'brewConfirmed', 'brewUpdated',
             'brewAdminNotes', 'brewStaffNotes', 'brewBoxNum',
+            'brewPossAllergens', 'brewCoBrewer', 'brewInfo',
+            'brewInfoOptional', 'brewMead1', 'brewMead2', 'brewMead3',
+            'brewABV', 'brewer.brewerEmail AS brewBrewerEmail',
             'brewer.brewerClubs',
         ]);
 
@@ -92,8 +95,6 @@ final class EntriesController extends Controller
         }
 
         // Entry Status modal (entries.admin.php:936): counts scoped to the
-        // current view/filter/participant selection; fees only on the
-        // unscoped view, like legacy's sidebar_extension branches.
         $clone = fn () => clone $base;
         $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
         $entryStatus = [
@@ -101,6 +102,8 @@ final class EntriesController extends Controller
             'unconfirmed' => (clone $base)->where('brewConfirmed', '!=', 1)->count(),
             'received' => (clone $base)->where('brewReceived', '1')->count(),
         ];
+        $entryStatus['paidCount'] = DB::table('brewing')->where('brewPaid', '1')->count();
+        $entryStatus['totalCount'] = DB::table('brewing')->count();
         if ($view === 'default' && $filter === 'default' && $bid === 'default') {
             $entryStatus['paidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '1')->count();
             $entryStatus['unpaidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '!=', 1)->count();
@@ -181,6 +184,49 @@ final class EntriesController extends Controller
         DB::table('brewing')->update([$actions[$action]['column'] => $actions[$action]['value']]);
 
         return redirect('/backoffice/entries?msg='.$actions[$action]['msg']);
+    }
+
+    /**
+     * Legacy entries.admin.php: the whole table is one form; inline
+     * cells (judging number, paid/received checkboxes, box number, admin
+     * and staff notes) posted per-row as `brewJudgingNumber{id}` etc.
+     * Legacy saved each cell via AJAX save_column; the port persists the
+     * whole form in one pass. Redirect carries the legacy updated msg.
+     */
+    public function updateForm(Request $request): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        $ids = $request->input('ids');
+        if (! is_array($ids)) {
+            return redirect('/backoffice/entries?msg=updated');
+        }
+
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id <= 0) {
+                continue;
+            }
+
+            $judging = (string) $request->input('brewJudgingNumber'.$id, '');
+            $box = (string) $request->input('brewBoxNum'.$id, '');
+            $admin = (string) $request->input('brewAdminNotes'.$id, '');
+            $staff = (string) $request->input('brewStaffNotes'.$id, '');
+
+            DB::table('brewing')->where('id', $id)->update([
+                'brewJudgingNumber' => $judging !== '' ? strtolower($judging) : null,
+                'brewPaid' => $request->boolean('brewPaid'.$id) ? 1 : 0,
+                'brewReceived' => $request->boolean('brewReceived'.$id) ? 1 : 0,
+                'brewBoxNum' => self::blankToNull($box),
+                'brewAdminNotes' => self::blankToNull($admin),
+                'brewStaffNotes' => self::blankToNull($staff),
+                'brewUpdated' => now()->format('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return redirect('/backoffice/entries?msg=updated');
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse

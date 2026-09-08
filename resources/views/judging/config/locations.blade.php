@@ -6,7 +6,7 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
-        <p class="print:hidden">
+        <p class="d-print-none">
             <a class="btn btn-primary" href="{{ route($nonJudging ? 'admin.judging.non_judging.create' : 'admin.judging.locations.create') }}">Add a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</a>
         </p>
 
@@ -20,7 +20,7 @@
         @if ($locations->isEmpty())
             <p>No {{ $nonJudging ? 'non-judging sessions' : 'judging sessions' }} have been defined.</p>
         @else
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -55,9 +55,9 @@
                                 <td>{{ $location->judgingRounds }}</td>
                                 <td>{{ $location->judgingLocNotes }}</td>
                             @endif
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 <a href="{{ route($nonJudging ? 'admin.judging.non_judging.edit' : 'admin.judging.locations.edit', ['id' => $location->id]) }}">Edit</a>
-                                <form method="post" action="{{ route($nonJudging ? 'admin.judging.non_judging.destroy' : 'admin.judging.locations.destroy', ['id' => $location->id]) }}" class="inline" onsubmit="return confirm('Delete this session? This cannot be undone.')">
+                                <form method="post" action="{{ route($nonJudging ? 'admin.judging.non_judging.destroy' : 'admin.judging.locations.destroy', ['id' => $location->id]) }}" class="d-inline" onsubmit="return confirm('Delete this session? This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link btn-sm p-0">Delete</button>

@@ -12,7 +12,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -54,9 +54,9 @@
                 <p>{{ count($unpaid) }} unpaid × {{ $fee }} per entry (total computed on save).</p>
 
                 <div class="mb-4 row">
-                    <label for="pay_method" class="col-sm-4 col-form-label">Method</label>
-                    <div class="col-sm-9">
-                        <select id="pay_method" name="pay_method" class="select select-bordered">
+                    <label for="pay_method" class="col-md-4 col-form-label">Method</label>
+                    <div class="col-md-9">
+                        <select id="pay_method" name="pay_method" class="form-select">
                             @foreach ($payMethods as $m)
                                 <option value="{{ $m }}">{{ $m }}</option>
                             @endforeach
@@ -64,16 +64,16 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="reference" class="col-sm-4 col-form-label">Reference</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="reference" name="reference" type="text"
+                    <label for="reference" class="col-md-4 col-form-label">Reference</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="reference" name="reference" type="text"
                                placeholder="check number / transfer id">
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="note" class="col-sm-4 col-form-label">Note</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="note" name="note" type="text">
+                    <label for="note" class="col-md-4 col-form-label">Note</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="note" name="note" type="text">
                     </div>
                 </div>
 

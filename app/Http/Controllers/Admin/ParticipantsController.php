@@ -71,6 +71,8 @@ final class ParticipantsController extends Controller
                 'brewer.brewerSteward', 'brewer.brewerAssignment',
                 'brewer.brewerJudgeLocation', 'brewer.brewerJudgeID',
                 'brewer.brewerJudgeRank', 'brewer.brewerStewardLocation',
+                'brewer.brewerCity', 'brewer.brewerState', 'brewer.brewerPhone1',
+                'brewer.brewerBreweryName',
                 'users.userLevel', 'users.userCreated',
             ]);
 
@@ -95,7 +97,32 @@ final class ParticipantsController extends Controller
             ->groupBy('brewBrewerID')
             ->pluck('n', 'brewBrewerID');
 
+        // "Entry Numbers" / "Judging Numbers" 6-digit CSV per participant
+        // (legacy with_entries row: sprintf("%06s", entry) lists).
+        $entryNumbers = DB::table('brewing')
+            ->select('brewBrewerID', 'id')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('brewBrewerID')
+            ->map(fn ($rows) => $rows->map(fn ($r) => sprintf('%06s', (string) $r->id))->implode(', '));
+        $judgingNumbers = DB::table('brewing')
+            ->select('brewBrewerID', 'brewJudgingNumber')
+            ->whereNotNull('brewJudgingNumber')
+            ->where('brewJudgingNumber', '!=', '')
+            ->orderBy('brewJudgingNumber')
+            ->get()
+            ->groupBy('brewBrewerID')
+            ->map(fn ($rows) => $rows->map(fn ($r) => sprintf('%06s', (string) $r->brewJudgingNumber))->implode(', '));
+
         $uids = $participants->pluck('uid')->all();
+
+        // Judge scoresheet-label gate (legacy brewer_assignment(): staff.staff_judge).
+        $staffJudge = $uids === [] ? [] : DB::table('staff')
+            ->where('staff_judge', 1)
+            ->whereIn('uid', $uids)
+            ->pluck('uid')
+            ->mapWithKeys(fn ($uid) => [$uid => true])
+            ->all();
 
         // "Assigned to Table(s)" (legacy table_assignments method 2=1):
         // judging_assignments ⋈ judging_tables per uid/role, "N - Name".
@@ -104,11 +131,12 @@ final class ParticipantsController extends Controller
             ->whereIn('ja.bid', $uids)
             ->whereIn('ja.assignment', ['J', 'S'])
             ->orderBy('ja.assignTable')
-            ->get(['ja.bid', 'ja.assignment', 'jt.tableNumber', 'jt.tableName'])
+            ->get(['ja.bid', 'ja.assignment', 'jt.id as tableId', 'jt.tableNumber', 'jt.tableName'])
             ->groupBy(fn ($r) => $r->bid.'|'.$r->assignment)
-            ->map(fn ($rows) => $rows
-                ->map(fn ($r) => trim((string) $r->tableNumber).' - '.$r->tableName)
-                ->implode(', '));
+            ->map(fn ($rows) => $rows->map(fn ($r) => [
+                'id' => (string) $r->tableId,
+                'label' => trim((string) $r->tableNumber).' - '.$r->tableName,
+            ]));
 
         // "Has Entries In..." (legacy judge_entries): distinct category+
         // subcategory of the participant's entries, linked to the entries
@@ -134,14 +162,43 @@ final class ParticipantsController extends Controller
             'stewards' => DB::table('brewer')->where('brewerSteward', 'Y')->count(),
         ];
 
+        // Legacy ?action=print (participants.admin.php:52-160): the same
+        // filtered list with a print-oriented column set, rendered for
+        // the browser print dialog (fancybox iframe target). psort drives
+        // the ordering (participants.admin.php:95-99).
+        if ($request->query('action') === 'print') {
+            $psort = (string) ($request->query('psort') ?? 'brewer_name');
+            $sorted = match ($psort) {
+                'club' => $participants->sortBy('brewerClubs')->values(),
+                'organization' => $participants->sortBy('brewerBreweryName')->values(),
+                default => $participants->sortBy('brewerLastName')->values(),
+            };
+
+            return view('admin.participants-print', [
+                'ctx' => TenantContext::load(),
+                'participants' => $sorted,
+                'filter' => $filter,
+                'q' => $q,
+                'psort' => $psort,
+                'locationDisplay' => $locationDisplay,
+                'tableAssignments' => $tableAssignments,
+                'staffJudge' => $staffJudge,
+                'judgeEntries' => $judgeEntries,
+            ]);
+        }
+
         return view('admin.participants', [
             'ctx' => TenantContext::load(),
+            'viewerLevel' => (int) ($request->user()?->userLevel ?? 2),
             'participants' => $participants,
             'entryCounts' => $entryCounts,
+            'entryNumbers' => $entryNumbers,
+            'judgingNumbers' => $judgingNumbers,
             'filter' => $filter,
             'q' => $q,
             'locationDisplay' => $locationDisplay,
             'tableAssignments' => $tableAssignments,
+            'staffJudge' => $staffJudge,
             'judgeEntries' => $judgeEntries,
             'statusCounts' => $statusCounts,
         ]);
@@ -158,9 +215,13 @@ final class ParticipantsController extends Controller
             return redirect('/backoffice/participants?msg=not-found');
         }
 
+        // Account row for the security-question/password section.
+        $user = DB::table('users')->where('id', $uid)->first();
+
         return view('admin.participants_edit', [
             'ctx' => TenantContext::load(),
             'participant' => $participant,
+            'user' => $user,
         ]);
     }
 
@@ -187,6 +248,27 @@ final class ParticipantsController extends Controller
             array_keys($data),
             array_map(self::blankToNull(...), array_values($data)),
         ));
+
+        // Account security section (brewer_form_0.pub.php:154-187 +
+        // process_brewer.inc.php:709-732: changeSecurity=Y updates the
+        // security Q/A; process_users.inc.php change_user_password resets
+        // the password). Both are admin-only.
+        $userUpdates = [];
+        if ($request->input('changeSecurity') === 'Y') {
+            $question = $request->validate(['userQuestion' => ['required', 'string']])['userQuestion'];
+            $userUpdates['userQuestion'] = $question;
+            if ($request->filled('userQuestionAnswer')) {
+                $userUpdates['userQuestionAnswer'] = app('hash')->make((string) $request->input('userQuestionAnswer'));
+            }
+        }
+        $newPassword = (string) $request->input('password', '');
+        if ($newPassword !== '') {
+            $userUpdates['password'] = app('hash')->make($newPassword);
+            $userUpdates['userCreated'] = now()->format('Y-m-d H:i:s');
+        }
+        if ($userUpdates !== []) {
+            DB::table('users')->where('id', $uid)->update($userUpdates);
+        }
 
         return redirect('/backoffice/participants?msg=updated');
     }

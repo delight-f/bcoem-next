@@ -3,7 +3,7 @@
 <div class="card mb-6">
     <div class="card-body">
         <h2 class="h5 mb-1">{{ $entry->brewName }}</h2>
-        <p class="mb-0 text-sm">
+        <p class="mb-0 fs-6">
             Entry #{{ $entry->id }} &middot;
             Style: {{ $entry->brewCategorySort }}{{ $entry->brewSubCategory }} {{ $entry->brewStyle }}
             @if ($style ?? null)
@@ -11,7 +11,7 @@
             @endif
         </p>
         @if (! empty($entry->brewSpecialIngredients))
-            <p class="mb-0 text-sm"><strong>Special ingredients:</strong> {{ $entry->brewSpecialIngredients }}</p>
+            <p class="mb-0 fs-6"><strong>Special ingredients:</strong> {{ $entry->brewSpecialIngredients }}</p>
         @endif
     </div>
 </div>

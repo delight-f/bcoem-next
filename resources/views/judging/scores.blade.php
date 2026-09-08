@@ -3,12 +3,12 @@
         <h1>{{ $ctx->contestStr('contestName') }} Scores</h1>
 
         {{-- Legacy control set: admin/judging_scores.admin.php (dbTable=default, action=default). --}}
-        <div class="bcoem-admin-element print:hidden mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
-                <a class="btn btn-default" href="{{ route('admin.judging.tables.index') }}"><span class="fa fa-arrow-circle-left"></span> All Tables</a>
+                <a class="btn btn-secondary" href="{{ route('admin.judging.tables.index') }}"><span class="fa fa-arrow-circle-left"></span> All Tables</a>
             </div>
             <div class="btn-group" role="group">
-                <a class="btn btn-default" href="{{ route('admin.judging.bos.index') }}"><span class="fa fa-eye"></span> View BOS Entries and Places</a>
+                <a class="btn btn-secondary" href="{{ route('admin.judging.bos.index') }}"><span class="fa fa-eye"></span> View BOS Entries and Places</a>
             </div>
 
             @if (count($tables) > 0)
@@ -16,13 +16,13 @@
                     action=add vs action=edit per table; the port serves both
                     with one grid route (ScoreController::edit). --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-plus-circle"></span> Add or Update Scores For...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ($tables as $table)
-                            <li class="small"><a href="{{ route('admin.judging.scores.edit', ['table' => $table->id]) }}">Table {{ $table->tableNumber }}: {{ $table->tableName }}</a></li>
+                            @php($hasScores = in_array((int) $table->id, $scoredTableIds ?? [], true))
+                            <li><a class="dropdown-item" href="{{ url('/admin/judging/scores') }}?action={{ $hasScores ? 'edit' : 'add' }}&id={{ $table->id }}">Table {{ $table->tableNumber }}: {{ $table->tableName }}</a></li>
                         @endforeach
                     </ul>
                 </div>
@@ -30,18 +30,16 @@
 
             @if (count($bosTypes) > 0)
                 {{-- Position 4: Print Button Dropdown Group (id == "default").
-                    Legacy items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>;
-                    the port pullsheet output is all-tables only, so the
-                    per-style-type targets have no route yet. --}}
-                {{-- TODO: legacy output --}}
-                <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                    Legacy items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>
+                    (judging_scores.admin.php); the port pullsheet output
+                    dispatches the same shape. --}}
+                <div class="btn-group d-none d-lg-block d-print-none" role="group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-print"></span> Print...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ($bosTypes as $type)
-                            <li class="small"><a class="disabled" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
+                            <li><a data-fancybox data-type="iframe" class="dropdown-item modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $type->id]) }}" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
                         @endforeach
                     </ul>
                 </div>
@@ -50,8 +48,8 @@
             @if ($evalOn)
                 {{-- prefsEval == 1: legacy renders the evaluations jump button
                     plus its import UI; the port's import lives on /eval. --}}
-                <div class="btn-group print:hidden" role="group">
-                    <a class="btn btn-block btn-default" href="{{ route('eval.dashboard') }}"><span class="fa fa-chevron-circle-left"></span> Admin: Evaluations</a>
+                <div class="btn-group d-print-none" role="group">
+                    <a class="btn btn-secondary" href="{{ route('eval.dashboard') }}"><span class="fa fa-chevron-circle-left"></span> Admin: Evaluations</a>
                 </div>
             @endif
         </div>
@@ -61,7 +59,7 @@
         @if ($scores->isEmpty())
             <p id="no-scores-entered">No scores have been entered. If tables have been defined, use the &ldquo;Add or Update Scores for...&rdquo; menu above to add scores.</p>
         @else
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>Entry</th>
@@ -85,9 +83,9 @@
                             {{-- '5' is the stored HM code (scoring ledger #1). --}}
                             <td>{{ \App\Support\Results\Place::label($score->scorePlace) }}</td>
                             <td>@if ((int) $score->scoreMiniBOS === 1)<span class="text-success">&#10003;</span>@endif</td>
-                            <td class="print:hidden">
+                            <td class="d-print-none">
                                 <a href="{{ route('admin.judging.scores.edit', ['table' => $score->scoreTable]) }}">Edit</a>
-                                <form method="post" action="{{ route('admin.judging.scores.destroy', ['id' => $score->id]) }}" class="inline"
+                                <form method="post" action="{{ route('admin.judging.scores.destroy', ['id' => $score->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Delete this score? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')

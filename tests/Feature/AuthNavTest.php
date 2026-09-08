@@ -65,6 +65,47 @@ final class AuthNavTest extends PublicSurfaceTestCase
 
         $this->get('/')->assertSee('Admin');
     }
+    public function test_logged_in_sees_auto_log_out_countdown(): void
+    {
+        // pub/nav.pub.php:189 — the user dropdown carries an "Auto Log Out
+        // in <span id=session-end>" countdown footer (P3 Slice 7, PARITY-020
+        // N6).
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ]);
+
+        $this->get('/')
+            ->assertSee('Auto Log Out in')
+            ->assertSee('session-end', false);
+    }
+
+    public function test_judging_dashboard_link_gated_on_eval_and_open(): void
+    {
+        // pub/nav.pub.php:180-183 (PARITY-020 N4): the link renders only
+        // when prefsEval==1 AND the user is an assigned judge
+        // (staff.staff_judge==1) AND brewerJudge==Y AND judging is open
+        // (now > jPrefsJudgingOpen).
+        DB::table('preferences')->where('id', 1)->update(['prefsEval' => 1]);
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsJudgingOpen' => time() - 1000]);
+        DB::table('staff')->updateOrInsert(
+            ['uid' => 1],
+            ['uid' => 1, 'staff_judge' => 1, 'staff_judge_bos' => 0, 'staff_steward' => 0,
+                'staff_organizer' => 0, 'staff_staff' => 0],
+        );
+        DB::table('brewer')->where('uid', 1)->update(['brewerJudge' => 'Y']);
+
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ]);
+
+        $this->get('/')->assertSee('Judging Dashboard');
+
+        // Closing judging hides the link.
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsJudgingOpen' => time() + 100000]);
+        $this->get('/')->assertDontSee('Judging Dashboard');
+    }
 
     public function test_entrant_does_not_see_admin_link(): void
     {

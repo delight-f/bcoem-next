@@ -524,7 +524,12 @@ final class BrewController extends Controller
             ? ltrim((string) $style->brewStyleNum, '0')
             : (string) $style->brewStyleNum;
 
-        return $group.'.'.$num.': '.$style->brewStyle;
+        // Legacy brew-entry select option text (brew.sec.php:187):
+        // style_number_const(...)." ".brewStyle — e.g. "1A American Amber
+        // Ale", no colon. (The judging-prefs checkboxes DO use "1A: Name"
+        // per brewer_form_2.sec.php:58 — that label lives in
+        // BrewerForm2Controller, not here.)
+        return $group.$num.' '.$style->brewStyle;
     }
 
     /**

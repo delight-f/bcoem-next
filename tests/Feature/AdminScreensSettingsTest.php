@@ -138,6 +138,136 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         }
     }
 
+    public function test_all_dates_view_presents_legacy_transliteration(): void
+    {
+        $response = $this->get('/admin/dates');
+
+        $response->assertOk();
+
+        // Lead + both intro sentences (all_dates.admin.php:152-153 verbatim).
+        $response->assertSee('Baseline Data Installation Competition-Related Dates', false);
+        $response->assertSee(
+            '<p>All competition-related dates for various functions are listed below. Useful when resetting the software for another competition instance after archiving or purging or to adjust any function\'s date/time for the current competition iteration.</p>',
+            false,
+        );
+
+        // Section headings (legacy: Entry-Related, Account Registration,
+        // Judging Sessions, Judging Open and Close [prefsEval=1 baseline],
+        // Non-Judging Sessions, Results, Awards Ceremony).
+        foreach ([
+            '<h3>Entry-Related</h3>',
+            '<h3>Account Registration</h3>',
+            '<h3>Judging Sessions</h3>',
+            '<h3>Judging Open and Close</h3>',
+            '<h3>Non-Judging Sessions</h3>',
+            '<h3>Results</h3>',
+            '<h3>Awards Ceremony</h3>',
+        ] as $heading) {
+            $response->assertSee($heading, false);
+        }
+
+        // Field labels.
+        foreach ([
+            'Entry Window Open',
+            'Entry Window Close',
+            'Entry Edit Close Date',
+            'Drop-Off Window Open',
+            'Drop-Off Window Close',
+            'Shipping Window Open',
+            'Shipping Window Close',
+            'Entrant Open',
+            'Entrant Close',
+            'Judge/Steward Open',
+            'Judge/Steward Close',
+            'Display Date and Time',
+            'Date and Time',
+        ] as $label) {
+            $response->assertSee($label);
+        }
+
+        // Help blocks (all_dates.admin.php:178,188,239,253,266,279,431,442).
+        $response->assertSee(
+            'This date is only for restriction of adding <strong>new</strong> entries. Existing entries will be able to be edited beyond this date &ndash; until the drop-off/shipping deadlines &ndash; unless a specific entry editing close date is provided below.',
+            false,
+        );
+        $response->assertSee(
+            'If you wish to restrict editing of any exisiting entry\'s information by non-admin participants, provide a close date here. For example, this could allow competition staff to prepare for sorting prior to the entry drop-off/shipment closure dates.',
+            false,
+        );
+        $response->assertSee('The date and time when general entrants are able to create an account.');
+        $response->assertSee('The deadline for general entrants to create an account.');
+        $response->assertSee('The date and time when judges and stewards are able to create an account and indicate their session preferences.');
+        $response->assertSee('The deadline for judges and stewards to create an account and indicate their session preferences.');
+        $response->assertSee(
+            'Date and time when the system will display winners. If a date and time are specified, winner display will be enabled. If the date and time are removed or blank, winner display will be disabled.',
+        );
+        $response->assertSee('Provide even if the date of judging is the same.');
+
+        // Legacy control/columns (form-horizontal is BS3 — the BS5 migration
+        // (issue 9) dropped it; the form keeps its rows as .row.mb-3).
+        $response->assertSee('class="form-control date-time-picker-system"', false);
+        $response->assertSee('name="submit" type="submit" class="btn btn-primary" value="Update Competition Dates"', false);
+        $response->assertSee('<form data-time-24hr=', false);
+
+        // Baseline has no judging/non-judging sessions → empty-state links.
+        $response->assertSee('No judging sessions have been defined.');
+        $response->assertSee('Add a judging session');
+        $response->assertSee('No non-judging sessions have been defined.');
+        $response->assertSee('Add a non-judging session');
+
+        // prefsEval=1 baseline → judging open/close info trigger + modal.
+        $response->assertSee('Judging Open/Close Dates and Times Info');
+        $response->assertSee('id="judgingWindowModal"', false);
+    }
+
+    public function test_all_dates_view_renders_non_judging_session_start_only(): void
+    {
+        $id = DB::table('judging_locations')->insertGetId([
+            'judgingLocName' => 'P54 bottling',
+            'judgingLocType' => 2,
+            'judgingDate' => strtotime('2030-07-15 10:00 UTC'),
+            'judgingDateEnd' => strtotime('2030-07-15 16:00 UTC'),
+        ]);
+        try {
+            $this->get('/admin/dates')
+                ->assertSee('P54 bottling - Session Start')
+                ->assertSee('Provide a start date and time for the session.')
+                ->assertDontSee('P54 bottling - Session End', false);
+        } finally {
+            DB::table('judging_locations')->delete($id);
+        }
+    }
+
+    public function test_all_dates_view_renders_distributed_session_end_field(): void
+    {
+        $id = DB::table('judging_locations')->insertGetId([
+            'judgingLocName' => 'P54 remote',
+            'judgingLocType' => 1,
+            'judgingDate' => strtotime('2030-07-16 09:00 UTC'),
+            'judgingDateEnd' => strtotime('2030-07-17 04:00 UTC'),
+        ]);
+        try {
+            $this->get('/admin/dates')
+                ->assertSee('P54 remote - Session Start')
+                ->assertSee('P54 remote - Session End')
+                ->assertSee('For a distributed session, it is required that you provide an end date and time that will serve as a deadline for judges to submit their evaluations.');
+        } finally {
+            DB::table('judging_locations')->delete($id);
+        }
+    }
+
+    public function test_all_dates_view_hides_judging_open_close_when_eval_disabled(): void
+    {
+        DB::table('preferences')->where('id', 1)->update(['prefsEval' => 0]);
+        try {
+            $this->get('/admin/dates')
+                ->assertDontSee('<h3>Judging Open and Close</h3>', false)
+                ->assertDontSee('id="judgingWindowModal"', false);
+        } finally {
+            DB::table('preferences')->where('id', 1)->update(['prefsEval' => 1]);
+        }
+    }
+
     public function test_site_preferences_default_tab_writes_display_rows(): void
     {
         $this->remember('preferences');

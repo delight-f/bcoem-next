@@ -3,45 +3,42 @@
         <h1>{{ $ctx->contestStr('contestName') }}: Best of Show (BOS) Entries and Places</h1>
 
         {{-- Legacy control set: admin/judging_scores_bos.admin.php (dbTable=default, action=default). --}}
-        <div class="bcoem-admin-element print:hidden mb-3">
+        <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
-                <a class="btn btn-default" href="{{ route('admin.judging.scores.index') }}"><span class="fa fa-arrow-circle-left"></span> All Scores</a>
+                <a class="btn btn-secondary" href="{{ route('admin.judging.scores.index') }}"><span class="fa fa-arrow-circle-left"></span> All Scores</a>
             </div>
             <div class="btn-group" role="group">
-                <a class="btn btn-default" href="{{ route('admin.judging.tables.index') }}"><span class="fa fa-arrow-circle-left"></span> All Tables</a>
+                <a class="btn btn-secondary" href="{{ route('admin.judging.tables.index') }}"><span class="fa fa-arrow-circle-left"></span> All Tables</a>
             </div>
 
             @if (count($types) > 0)
                 {{-- Position 2: Enter/Edit Dropdown Button Group. --}}
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="fa fa-plus-circle"></span> Add or Update...
-                        <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu">
                         @foreach ($types as $type)
-                            <li class="small"><a href="{{ route('admin.judging.bos.edit', ['styleType' => $type->id]) }}">BOS Places for {{ $type->styleTypeName }}</a></li>
+                            <li><a class="dropdown-item" href="{{ route('admin.judging.bos.edit', ['styleType' => $type->id]) }}">BOS Places for {{ $type->styleTypeName }}</a></li>
                         @endforeach
                     </ul>
                 </div>
             @endif
 
             {{-- Position 4: Print Button Dropdown Group. Legacy per-style-type
-                items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>;
-                the port pullsheet output is all-tables only, so those targets
-                have no route yet. The Cup Mats outputs exist. --}}
-            {{-- TODO: legacy output --}}
-            <div class="btn-group hidden-xs hidden-sm print:hidden" role="group">
-                <button type="button" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
-                    <span class="fa fa-print"></span> Print...
-                    <span class="caret"></span>
-                </button>
+                items open output.inc.php?section=pullsheets&go=judging_scores_bos&id=<styleType>
+                (judging_scores_bos.admin.php:107); the port pullsheet output
+                dispatches the same shape. The Cup Mats outputs exist. --}}
+            <div class="btn-group d-none d-lg-block d-print-none" role="group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="fa fa-print"></span> Print...
+                    </button>
                 <ul class="dropdown-menu">
                     @foreach ($types as $type)
-                        <li class="small"><a class="disabled" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
+                        <li><a data-fancybox data-type="iframe" class="dropdown-item modal-window-link hide-loader menuItem" href="{{ route('outputs.pullsheets', ['go' => 'judging_scores_bos', 'id' => $type->id]) }}" title="Print the {{ $type->styleTypeName }} BOS Pullsheet">BOS Pullsheet for {{ $type->styleTypeName }}</a></li>
                     @endforeach
-                    <li class="small"><a href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
-                    <li class="small"><a href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>
+                    <li><a class="dropdown-item" href="{{ route('outputs.bos_mat') }}" title="Print BOS Cup Mats">BOS Cup Mats (Judging Numbers)</a></li>
+                    <li><a class="dropdown-item" href="{{ route('outputs.bos_mat', ['filter' => 'entry']) }}" title="Print BOS Cup Mats">BOS Cup Mats (Entry Numbers)</a></li>
                 </ul>
             </div>
         </div>
@@ -53,7 +50,7 @@
             @if (count($rows) === 0)
                 <p>No entries are eligible.</p>
             @else
-                <table class="table table-zebra table-bordered">
+                <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Entry</th>

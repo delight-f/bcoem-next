@@ -30,10 +30,8 @@ final class LegacyRedirectController extends Controller
      * (bookmarks are permanent moves); legacy-only pages with no port
      * equivalent get 302 to the closest surface per urls.txt.
      *
-     * TODO gaps (legacy-only, no port page yet — bounce to "/"): entry,
-     * contact, volunteers, sponsors (public list), competition (custom
-     * info), admin make_admin + change_user_password (both need a user id
-     * picker), evaluation go=scoresheet (needs an entry id).
+     * Legacy-only gaps that still bounce home: competition (custom info
+     * page not ported), evaluation go=scoresheet (needs an entry id).
      */
     private const GET_MAP = [
         // ── Anonymous public ──
@@ -43,11 +41,12 @@ final class LegacyRedirectController extends Controller
         'login|password|reset-password' => ['/reset-password'],
         'login|password|' => ['/forgot-password'],
         'past-winners||' => ['/'],
-        'entry||' => ['/', [], 302],
-        'contact||' => ['/', [], 302],
-        'volunteers||' => ['/', [], 302],
-        'sponsors||' => ['/', [], 302],
-        'competition||' => ['/', [], 302],
+        'entry||' => ['/'],
+        'contact||' => ['/contact'],
+        'volunteers||' => ['/volunteers'],
+        'sponsors||' => ['/sponsors'],
+        'competition||' => ['/'],
+
 
         // ── Entrant (userLevel 2) ──
         'list||' => ['/list', ['msg']],
@@ -57,27 +56,39 @@ final class LegacyRedirectController extends Controller
         'brewer||account' => ['/list/edit-account'],
 
         // ?section=user&go=account&action=password → the authenticated
-        // change-password page; username/account variants fold into the
-        // merged account form (the port merged legacy's email change into
-        // /list/edit-account).
+        // change-password page; action=username → the restored distinct
+        // change-email page (/user/username, keeps filter/id for the
+        // admin-change-another-user flow).
         'user||' => ['/list'],
         'user|account|password' => ['/user/password'],
-        'user|account|username' => ['/list/edit-account'],
+        'user|account|username' => ['/user/username', ['filter', 'id'], 301],
+        'brewer|account|edit' => ['/list/edit-account'],
         'user|account|' => ['/list/edit-account'],
 
         // ── Admin (userLevel <= 1) — config ──
         'admin||' => ['/admin'],
         'admin|dates|' => ['/admin/dates'],
         'admin|contest_info|edit' => ['/admin/competition-info'],
+        'admin|contest_info|' => ['/admin/competition-info'],
+        'admin|brewer|edit' => ['/backoffice/participants', ['filter', 'id'], 301],
         'admin|contacts|' => ['/admin/contacts'],
+        'admin|mods|add' => ['/admin/mods/create'],
         'admin|contacts|add' => ['/admin/contacts/create'],
         'admin|special_best|' => ['/admin/judging/special-best'],
+        'admin|special_best|add' => ['/admin/judging/special-best/create'],
         'admin|dropoff|' => ['/admin/dropoff'],
+        'admin|dropoff|add' => ['/admin/dropoff/create'],
         'admin|judging|' => ['/admin/judging/locations'],
+        
+        'admin|judging|add' => ['/admin/judging/locations/create'],
         'admin|non-judging|' => ['/admin/judging/non-judging'],
+        'admin|non-judging|add' => ['/admin/judging/non-judging/create'],
         'admin|sponsors|' => ['/admin/sponsors'],
+        'admin|sponsors|add' => ['/admin/sponsors/create'],
         'admin|styles|' => ['/admin/styles'],
+        'admin|styles|add' => ['/admin/styles/create'],
         'admin|style_types|' => ['/admin/style-types'],
+        'admin|style_types|add' => ['/admin/style-types/create'],
         'admin|upload|html' => ['/admin/upload?action=html'],
         'admin|upload|' => ['/admin/upload'],
         'admin|hero_images|' => ['/admin/hero-images'],
@@ -85,21 +96,29 @@ final class LegacyRedirectController extends Controller
 
         // ── Admin — entries & participants ──
         'admin|entries|' => ['/backoffice/entries'],
-        'admin|count_by_style|' => ['/backoffice/count-by-style'],
-        'admin|count_by_substyle|' => ['/backoffice/count-by-substyle'],
+        'admin|count_by_style|' => ['/backoffice/count-by-style', ['filter'], 301],
+        'admin|count_by_substyle|' => ['/backoffice/count-by-substyle', ['filter'], 301],
         'admin|payments|' => ['/admin/payments'],
         'admin|participants|' => ['/backoffice/participants', ['filter']],
-        'admin|checkin|' => ['/admin/judging/checkin'],
+        'admin|checkin|' => ['/admin/judging/checkin', ['filter'], 301],
         'admin|send_test_email|' => ['/admin/send-test-email'],
 
         // ── Admin — organizing & scoring ──
         'admin|judging_tables|' => ['/admin/judging/tables'],
+        'admin|judging_tables|add' => ['/admin/judging/tables/create'],
+        'admin|judging_tables|assign' => ['/admin/judging/tables', ['action', 'filter', 'id'], 301],
         'admin|judging_flights|' => ['/admin/judging/flights'],
+        'admin|judging_flights|assign' => ['/admin/judging/flights', ['action', 'filter'], 301],
         'admin|judging_preferences|' => ['/admin/judging/preferences'],
         'admin|judging_scores|' => ['/admin/judging/scores'],
+        'admin|judging_scores|add' => ['/admin/judging/scores', ['action'], 301],
         'admin|judging_scores_bos|' => ['/admin/judging/bos'],
         'admin|special_best_data|' => ['/admin/judging/special-best-data'],
         'admin|upload_scoresheets|' => ['/admin/upload-scoresheets'],
+        'admin|upload_scoresheets|html' => ['/admin/upload-scoresheets?action=html'],
+        'admin|judge|register' => ['/register/judge', ['view'], 301],
+        'admin|steward|register' => ['/register/steward', ['view'], 301],
+        'admin|entrant|register' => ['/register/entrant', ['view'], 301],
         'admin|evaluation|default' => ['/eval'],
         'admin|evaluation|' => ['/eval'],
         'evaluation|default|' => ['/eval'],
@@ -113,11 +132,21 @@ final class LegacyRedirectController extends Controller
 
         // ── Admin — data management ──
         'admin|archive|' => ['/admin/archive'],
+        'admin|archive|add' => ['/admin/archive?action=add'],
         'admin|user|' => ['/admin/purge'],
 
-        // ── Legacy-only admin surfaces (no port equivalent yet) ──
-        'admin|make_admin|' => ['/admin', [], 302],
-        'admin|change_user_password|' => ['/admin', [], 302],
+        // ── Legacy-only admin surfaces folded onto port equivalents ──
+        // make_admin: the port's participant edit form carries the level
+        // control (P3.2a); change_user_password: port password page.
+        'admin|make_admin|' => ['/backoffice/participants', [], 301],
+        'admin|change_user_password|edit' => ['/user/password'],
+        'admin|user|username' => ['/user/username', ['filter', 'id'], 301],
+        // entries add for participant N -> the brew form seeded with that
+        // participant (legacy go=entries&action=add&filter=N).
+        'admin|entries|add' => ['/brew', ['filter'], 301],
+        'admin|entries|' => ['/backoffice/entries', ['filter', 'bid', 'view'], 301],
+        // style_types per-id edits
+        'admin|style_types|edit' => ['/admin/style-types', ['id'], 301],
     ];
 
     /**
@@ -148,7 +177,7 @@ final class LegacyRedirectController extends Controller
         'check_discount' => ['/brew', 302],
         'convert_bjcp' => ['/admin/styles', 302],
         'archive' => ['/admin/archive', 302],
-        'publish' => ['/admin/archive', 302],
+        'publish' => ['/admin', 302],  // legacy process.inc.php?action=publish — the POST /admin/results/publish surface is the port equivalent (PARITY-003)
         'email' => ['/backoffice/entries', 302],
         'paypal' => ['/admin/payments', 302],
         'dates' => ['/admin/dates', 302],
@@ -229,6 +258,72 @@ final class LegacyRedirectController extends Controller
             if ($section === 'admin' && $go === 'entries' && $action === 'edit') {
                 return ["/backoffice/entries/{$id}/edit", [], 301];
             }
+            if ($section === 'admin' && $go === 'make_admin' && $id !== '') {
+                return ["/backoffice/participants/{$id}/edit", [], 301];
+            }
+            if ($section === 'admin' && $go === 'brewer' && $action === 'edit' && $id !== '') {
+                return ["/backoffice/participants/{$id}/edit", [], 301];
+            }
+            // ?section=brewer&go=admin&action=edit&filter=1&id=N — admin
+            // editing another participant's account (pool/list pencils).
+            if ($section === 'brewer' && $go === 'admin' && $action === 'edit') {
+                return ["/backoffice/participants/{$id}/edit", [], 301];
+            }
+            if ($section === 'admin' && $go === 'style_types' && $action === 'edit' && $id !== '') {
+                return ["/admin/style-types/{$id}/edit", [], 301];
+            }
+            if ($section === 'admin' && $go === 'judging_tables' && $action === 'edit') {
+                return ["/admin/judging/tables/{$id}/edit", [], 301];
+            }
+            // ?section=admin&go=judging&action=edit&id=N -> edit that
+            // location (legacy judging_locations.admin.php row pencil).
+            if ($section === 'admin' && $go === 'judging' && $action === 'edit' && $id !== '') {
+                return ["/admin/judging/locations/{$id}/edit", [], 301];
+            }
+            // ?section=admin&go=judging_scores&action=add&id=N -> scores
+            // add-form (legacy score_table_choose add-vs-edit).
+            if ($section === 'admin' && $go === 'judging_scores' && $action === 'add' && $id !== '') {
+                return ['/admin/judging/scores', ['action', 'id'], 301];
+            }
+            // ?section=brew&go=entries&action=add&id=N -> the brew form
+            // seeded for participant N (port's canonical filter param —
+            // legacy 'id' becomes 'filter'; built literally so redirect()
+            // doesn't re-append the original id).
+            if ($section === 'brew' && $go === 'entries' && $action === 'add' && $id !== '') {
+                return ['/brew?filter='.$id, [], 301];
+            }
+            // ?section=admin&go=contacts&action=edit&id=N -> edit that
+            // contact (legacy contacts row pencil).
+            if ($section === 'admin' && $go === 'contacts' && $action === 'edit' && $id !== '') {
+                return ["/admin/contacts/{$id}/edit", [], 301];
+            }
+            // ?section=admin&go=judging_flights&filter=define&action=edit
+            // &id=N -> the table's define-flights form.
+            $filter = (string) $request->query('filter', '');
+            if ($section === 'admin' && $go === 'judging_flights' && $action === 'edit' && $filter === 'define') {
+                return ["/admin/judging/flights/{$id}", ['filter'], 301];
+            }
+        }
+
+        if ($id === '' || ! ctype_digit($id)) {
+            // Parameterized without a row id: judging assign — the port
+            // folds the legacy pool screen (judging_locations.admin.php
+            // Assign or Unassign Participants as X) into the
+            // participants page's per-row assignment modals; filter
+            // rides along.
+            if ($section === 'admin' && $go === 'judging' && $action === 'assign') {
+                return ['/backoffice/participants', ['filter', 'view'], 301];
+            }
+            // judging_flights assign rounds -> the rounds page.
+            $f = (string) $request->query('filter', '');
+            if ($section === 'admin' && $go === 'judging_flights' && $action === 'assign' && $f === 'rounds') {
+                return ['/admin/judging/flights/rounds', [], 301];
+            }
+            // ?section=admin&go=judging_scores_bos&action=enter&filter=N
+            // -> edit the BOS places form for style type N.
+            if ($section === 'admin' && $go === 'judging_scores_bos' && $action === 'enter' && $f !== '') {
+                return ["/admin/judging/bos/{$f}/edit", [], 301];
+            }
         }
 
         return null;
@@ -247,7 +342,9 @@ final class LegacyRedirectController extends Controller
         if ($keep !== []) {
             $query = collect($request->query())->only($keep)->filter(fn ($v): bool => (string) $v !== '');
             if ($query->isNotEmpty()) {
-                $target .= '?'.http_build_query($query->all());
+                $params = $query->all();
+                ksort($params); // canonical port form: alphabetical
+                $target .= '?'.http_build_query($params);
             }
         }
 

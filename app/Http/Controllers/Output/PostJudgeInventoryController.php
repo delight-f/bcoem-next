@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\DB;
  * NOT yet have a final placement, with the required-info declarations the
  * judge needs to verify (brewInfo plus mead/cider variant checkboxes).
  *
- * Divergence: legacy's $go == "scores" variant adds a score column; the
- * route is fixed so only the default rendering ships.
+ * go=scores adds the entry's score column (legacy :58-101: scoreEntry
+ * rendered with trailing-zero trim when it contains a decimal point).
  */
 final class PostJudgeInventoryController extends Controller
 {
@@ -32,9 +32,10 @@ final class PostJudgeInventoryController extends Controller
 
         $ctx = TenantContext::load();
         $baSet = $ctx->prefsStr('prefsStyleSet') === 'BA';
+        $withScores = $request->query('go') === 'scores';
 
         // One row per entry in legacy; keyBy mirrors that (last row wins).
-        $places = DB::table('judging_scores')->get(['eid', 'scorePlace'])->keyBy('eid');
+        $places = DB::table('judging_scores')->get(['eid', 'scorePlace', 'scoreEntry'])->keyBy('eid');
 
         $entries = DB::table('brewing')
             ->orderBy('brewCategory')
@@ -64,6 +65,16 @@ final class PostJudgeInventoryController extends Controller
                 }
             }
 
+            // Legacy score render (:95-101): number_format(2) + trailing
+            // zero trim only when a decimal point is present.
+            $scoreValue = null;
+            if ($withScores && $score !== null && $score->scoreEntry !== null && $score->scoreEntry !== '') {
+                $raw = (string) $score->scoreEntry;
+                $scoreValue = str_contains($raw, '.')
+                    ? rtrim(number_format((float) $raw, 2, '.', ''), '0')
+                    : $raw;
+            }
+
             $rows[] = [
                 'entry' => sprintf('%06s', $entry->id),
                 'judging' => OutputFormat::judgingNumber($entry->brewJudgingNumber),
@@ -72,11 +83,13 @@ final class PostJudgeInventoryController extends Controller
                     ? (string) $entry->brewStyle
                     : trim((string) $entry->brewCategorySort.(string) $entry->brewSubCategory.': '.(string) $entry->brewStyle),
                 'info' => $info,
+                'score' => $scoreValue,
             ];
         }
 
         return StreamPdf::response('outputs.post-judge-inventory', [
             'contestName' => $ctx->contestStr('contestName') ?? '',
+            'withScores' => $withScores,
             'rows' => $rows,
         ], 'post-judge-inventory.pdf');
     }

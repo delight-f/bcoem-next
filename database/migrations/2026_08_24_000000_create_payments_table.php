@@ -31,6 +31,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent: a re-imported baseline SQL dump already contains
+        // `payments` but wipes the migrations bookkeeping table, so the
+        // migrator replays this file. Tolerate the existing table.
+        if (Schema::hasTable('payments')) {
+            return;
+        }
         Schema::create('payments', function (Blueprint $table): void {
             $table->id();
             $table->unsignedInteger('entrant_uid')->index();

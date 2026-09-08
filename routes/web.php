@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BrewController;
+use App\Http\Controllers\ChangeEmailController;
 use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
@@ -25,10 +26,20 @@ use Illuminate\Support\Facades\Route;
 // recognized legacy section renders home as before.
 Route::get('/', LegacyRedirectController::class)->name('home.legacy');
 Route::get('/index.php', LegacyRedirectController::class);
+// Legacy awards.php → /awards (301, query preserved) — the awards
+// presentation shipped as a top-level legacy file, so old links land here.
+Route::get('/awards.php', fn (\Illuminate\Http\Request $r) => new \Illuminate\Http\RedirectResponse('/awards'.($r->getQueryString() ? '?'.$r->getQueryString() : ''), 301));
 Route::get('/list', [PublicController::class, 'list'])->name('list');
 // Legacy served archives as ?section=past-winners&go={suffix}; the suffix is a
 // table-name fragment and is sanitized to alphanumerics in the repository.
 Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->name('past-winners');
+// Legacy top-nav pages (volunteers.sec.php / contact.sec.php). The public
+// nav renders these as standalone pages; contact also accepts the form
+// POST (legacy includes/process.inc.php?dbTable=contacts&action=email).
+Route::get('/volunteers', [PublicController::class, 'volunteers'])->name('volunteers');
+Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+Route::get('/sponsors', [PublicController::class, 'sponsors'])->name('sponsors');
+Route::post('/contact', [PublicController::class, 'contactStore'])->name('contact.store');
 
 // Auth (Phase 3 / Slice B). Login lives at clean /login (canonical); the
 // legacy query shapes (?section=login, go=password/action=forgot/reset)
@@ -36,6 +47,12 @@ Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+
+// Legacy ?section=user&action=username: the distinct change-email page
+// (restored per PARITY-007 — the merged /list/edit-account form keeps
+// working, but legacy deep links and the admin-side flow target this).
+Route::get('/user/username', [ChangeEmailController::class, 'show'])->middleware('auth')->name('user.username');
+Route::post('/user/username', [ChangeEmailController::class, 'store'])->middleware('auth');
 
 // Registration (P3.1b). Legacy: ?section=register&go={entrant|judge|steward};
 // clean /register is the canonical URL.
@@ -49,6 +66,22 @@ Route::post('/register/{go?}', [RegisterController::class, 'store'])->name('regi
 Route::post('/entries/{id}', [EntriesController::class, 'destroy'])
     ->name('entries.destroy')
     ->middleware('auth');
+
+// Publish Results (legacy process.inc.php?action=publish): releases winners
+// publicly and forces all future deadlines closed. Lands /admin?msg=36.
+Route::post('/admin/results/publish', [App\Http\Controllers\Admin\PublishResultsController::class, 'store'])
+    ->name('admin.results.publish')->middleware('auth');
+
+// QR mobile check-in (legacy qr.php, PARITY-002). Public, password-gated
+// via contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy.
+Route::get('/qr', [App\Http\Controllers\QrCheckinController::class, 'show'])->name('qr.show');
+Route::post('/qr/password-check', [App\Http\Controllers\QrCheckinController::class, 'authenticate'])->name('qr.authenticate');
+Route::post('/qr/checkin', [App\Http\Controllers\QrCheckinController::class, 'store'])->name('qr.checkin');
+
+// Awards reveal.js presentation (legacy awards.php, PARITY-001).
+// Public gate: judging past + all windows closed + prefsDisplayWinners=Y +
+// delay passed; admins always. ?view= white|black|blue, ?go= table-*.
+Route::get('/awards', [App\Http\Controllers\AwardsController::class, 'show'])->name('awards.show');
 
 // Brewer profile form 0 — account & contact edit (P3.2a). Legacy:
 // ?section=brewer&action=edit&go=account behind a login gate.

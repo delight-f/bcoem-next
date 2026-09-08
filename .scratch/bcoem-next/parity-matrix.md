@@ -1,7 +1,9 @@
-# Parity DIFF triage matrix — run-20260827-012920
+# Parity DIFF triage matrix — run-20260827-225101
 
-Source run: `tools/parity/reports/run-20260826-213414/` (5 PASS, 45 DIFF, 18 skipped — unchanged totals; residual is C-class copy/styling + harness nav/login-state noise, plus `/admin/payments` data-500 from the port-only `payments` table missing in anon-base).
+Source run: `tools/parity/reports/run-20260827-225101/` (5 PASS, 45 DIFF, 21 skipped, 1352 missing links — the admin dashboard now reports **labels-admin 0, pullsheets 0, bos-mat 0, results 0** missing links after the sibling's BosMat/Results controllers (commit `a407153`) landed and the dashboard rows + `tools/parity/urls.txt` mappings were wired. The remaining ~1352 are un-ported surfaces (participants/entries/judging-tables nav links, exports, assignments, notes, inventory) + the bos-mat/results links the legacy admin SUB-pages carry in a shared nav that the port sub-pages do not render — a port-layout gap, not a dashboard-wiring or mapping error).
 Classes: **A** broken function · **B** structural (section/control missing) · **C** styling/copy · **H** harness-noise or bad pairing.
+
+This cycle: **bos-mat** and **results** dashboard rows and their `tools/parity/urls.txt` mappings are wired: the Mini-BOS Cup Mats per-table families, BOS Cup Mats per-style-type + pro-am families, the BOS Results Print row, the Best-Brewer Print rows and the full `Results (…By Table)` matrix (go=judging_scores|all × view=default|winners × tb=scores|none × psort=table-entry-count-asc|desc|none + filter=scores|none winners). Bos-mat 97 → 72 and results 93 → 74 missing across all linkmaps (run-220154 baseline); on the admin dashboard page they both hit 0. Commits so far: `c78230a`, `a962c35`, `6e0d303`, `cf67291`, `8473a10`, `a2cca79`, `bc84460`, `a407153` (sibling), plus this cycle's wiring commit.
 
 ## Counts
 
@@ -72,3 +74,36 @@ Ignored as universal noise everywhere: hostnames `127.0.0.1:8091` vs `:8092`, CS
 | index.php?section=admin&go=upload&action=html | /admin/upload?action=html | A | FIXED (commit "feat(admin): sponsors logo upload, payments ledger, flights controls"): go=upload maps to /admin/upload (multi-file + "Files in the Directory" listing + per-file delete, user_images); ?action=html is the single-file variant; legacy redirect and button rewired | admin/upload.admin.php |
 | index.php?section=admin&go=hero_images | /admin/hero-images | C | Same banner-rotation function and image set with Upload/Save/Delete; layout differs (legacy thumbnails + Select/Deselect All per category + per-image delete modal vs port checkbox fieldsets) | admin/hero_images.admin.php |
 | index.php?section=admin&go=upload_scoresheets | /admin/upload-scoresheets | B | FIXED (commit "989b0d7"): "Files in the Directory" listing added, judging-number (01-234.pdf) naming instruction restored; dropzone→plain input divergence noted in-blade | admin/upload_scoresheets.admin.php |
+
+## 2026-08-29 — Missing-links arc: 1,760 → 63
+
+Runs (tools/parity/reports/): baseline 1,760 → 324 (arc start) → 99
+(run-20260829-060346) → **63** (run-20260829-073729). Suite 807/806/1 green.
+Redirect contract test 163/163 (every urls.txt entry redirects to its
+paired port URL; excluded classes: output.inc.php PDF targets,
+process.inc.php form targets, images/, user_images/, qr.php,
+.admin.php?csrf= script targets, bare /).
+
+Commits this session: c035b39 (redirect map + urls.txt alignment,
+idempotent payments migration), cadd464 (admin chrome on public-shaped
+pages + assign-link canonicalization), c400e55 (redirect coverage for
+new mapping forms), 63e6eac (page-side links: upload/prefs/count/
+checkin/with_entries), f63a5f1 (csrf-script exclusion).
+
+### Remaining 63, by root cause
+1. **Awards presentation (13, dashboard)** — awards.php ×13 unported
+   (Launch Awards Presentation modal + view variants).
+2. **Publish results (1, dashboard)** — process action=publish unported.
+3. **Judging-assign pool page (20 = 4×5 assign filters)** — legacy
+   judging_assign.admin.php (available-pool × tables matrix) unported;
+   the port's assign UI is per-table only. Also needs the participants
+   filter dropdown + per-row entry-count links on the pool page.
+4. **Dashboard residuals (11)** — corpus-gated rows (flights-rounds
+   needs >1 round, scores-add needs BOS tables) + judge/staff links on
+   sidebar rows gated by corpus state.
+5. **Participants print view (1)** — output participants?filter=
+   with_entries unported (disabled-TODO row).
+6. **Singles (17)** — prefs navbar /login link (legacy navbar renders
+   Login button logged-in; port hides it), eval//list/entries-filter
+   per-id delete form targets, bos-edit + scores-add + contest-info
+   per-id shape drift, upload html self-link shape.

@@ -1,270 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400..700;1,400..700&family=Noto+Sans+Display:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;800;900&family=Droid+Sans:wght@400;700&display=swap');
-@import 'tailwindcss';
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+@import 'bootstrap/dist/css/bootstrap.css' layer(bs5);
 
-@plugin "daisyui" {
-    themes: bcoem --default;
+/* Real Bootstrap 5 sits in its own LOWEST cascade layer (bs5). The legacy
+   identity/BS3-replica and custom CSS below is UNLAYERED author CSS, which
+   beats the bs5 layer regardless of specificity — so legacy bcoem /
+   bcoem-brux colors win over BS5 wherever both define a class, while BS5
+   supplies layout primitives (grid, containers, forms, utilities, card,
+   badge) that the unlayered CSS no longer re-declares. */
+@layer bs5;
+/* Public login/forgot dialogs match the legacy modal-box width (~42rem)
+   instead of BS5's default 500px modal-dialog, keeping the look unchanged. */
+#login-modal .modal-dialog,
+#forgot-modal .modal-dialog {
+    max-width: 42rem;
 }
-
-/* Legacy identity theme — palette from legacy default-3.min.css :root */
-@plugin "daisyui/theme" {
-    name: "bcoem";
-    default: true;
-    color-scheme: light;
-    --color-base-100: #ffffff;
-    --color-base-200: #f8f9fa;
-    --color-base-300: #e9ecef;
-    --color-base-content: #212529;
-    --color-primary: #007bff;
-    --color-primary-content: #ffffff;
-    --color-secondary: #6c757d;
-    --color-secondary-content: #ffffff;
-    --color-accent: #17a2b8;
-    --color-accent-content: #ffffff;
-    --color-neutral: #343a40;
-    --color-neutral-content: #f8f9fa;
-    --color-info: #17a2b8;
-    --color-info-content: #ffffff;
-    --color-success: #28a745;
-    --color-success-content: #ffffff;
-    --color-warning: #ffc107;
-    --color-warning-content: #212529;
-    --color-error: #dc3545;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.25rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
-}
-
-/* Bruxellensis admin theme (css/bruxellensis.css palette) — admin side only
-   (site/bootstrap.php:422-425 swaps the theme css when section=admin). */
-@plugin "daisyui/theme" {
-    name: "bcoem-brux";
-    default: false;
-    color-scheme: light;
-    --color-base-100: #ffffff;
-    --color-base-200: #f5f5f5;
-    --color-base-300: #e0e0e0;
-    --color-base-content: #212529;
-    --color-primary: #1565C0;
-    --color-primary-content: #ffffff;
-    --color-secondary: #7e57c2;
-    --color-secondary-content: #ffffff;
-    --color-accent: #29B6F6;
-    --color-accent-content: #ffffff;
-    --color-neutral: #303E4B;
-    --color-neutral-content: #bec8d8;
-    --color-info: #29B6F6;
-    --color-info-content: #ffffff;
-    --color-success: #4CAF50;
-    --color-success-content: #ffffff;
-    --color-warning: #FF9800;
-    --color-warning-content: #ffffff;
-    --color-error: #F44336;
-    --color-error-content: #ffffff;
-    --radius-selector: 0.25rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
-    --border: 1px;
-    --depth: 0;
-    --noise: 0;
-}
-/* ---- Compat layer: Bootstrap-5 layout primitives ---- */
-/* Containers as plain (unlayered) CSS AFTER the tailwind import: wins over
-   Tailwind's built-in `container` utility. Bootstrap 5 breakpoint widths. */
-.container,
-.container-xxl,
-.container-fluid {
-    width: 100%;
-    padding-right: calc(1.5rem * 0.5);
-    padding-left: calc(1.5rem * 0.5);
-    margin-right: auto;
-    margin-left: auto;
-}
-
-@media (min-width: 576px) {
-    .container,
-    .container-xxl {
-        max-width: 540px;
-    }
-}
-
-@media (min-width: 768px) {
-    .container,
-    .container-xxl {
-        max-width: 720px;
-    }
-}
-
-@media (min-width: 992px) {
-    .container,
-    .container-xxl {
-        max-width: 960px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .container,
-    .container-xxl {
-        max-width: 1140px;
-    }
-}
-
-@media (min-width: 1400px) {
-    .container,
-    .container-xxl {
-        max-width: 1320px;
-    }
-}
-
-@layer components {
-    /* 12-col grid (Bootstrap 5 definitions; exact set used in views) */
-    .row {
-        --bs-gutter-x: 1.5rem;
-        --bs-gutter-y: 0;
-        display: flex;
-        flex-wrap: wrap;
-        margin-top: calc(-1 * var(--bs-gutter-y));
-        margin-right: calc(-0.5 * var(--bs-gutter-x));
-        margin-left: calc(-0.5 * var(--bs-gutter-x));
-    }
-    .row > * {
-        flex-shrink: 0;
-        width: 100%;
-        max-width: 100%;
-        padding-right: calc(var(--bs-gutter-x) * 0.5);
-        padding-left: calc(var(--bs-gutter-x) * 0.5);
-        margin-top: var(--bs-gutter-y);
-    }
-    .col { flex: 1 0 0%; }
-    .col-auto { flex: 0 0 auto; width: auto; }
-    .col-12 { flex: 0 0 auto; width: 100%; }
-    @media (min-width: 576px) {
-        .col-xs-12 { flex: 0 0 auto; width: 100%; }
-        .col-sm-1 { flex: 0 0 auto; width: 8.33333333%; }
-        .col-sm-2 { flex: 0 0 auto; width: 16.66666667%; }
-        .col-sm-3 { flex: 0 0 auto; width: 25%; }
-        .col-sm-6 { flex: 0 0 auto; width: 50%; }
-        .col-sm-9 { flex: 0 0 auto; width: 75%; }
-        .offset-sm-3 { margin-left: 25%; }
-    }
-    @media (min-width: 768px) {
-        .col-md-2 { flex: 0 0 auto; width: 16.66666667%; }
-        .col-md-3 { flex: 0 0 auto; width: 25%; }
-        .col-md-4 { flex: 0 0 auto; width: 33.33333333%; }
-        .col-md-6 { flex: 0 0 auto; width: 50%; }
-        .col-md-8 { flex: 0 0 auto; width: 66.66666667%; }
-    }
-    @media (min-width: 992px) {
-        .col-lg-3 { flex: 0 0 auto; width: 25%; }
-        .col-lg-6 { flex: 0 0 auto; width: 50%; }
-        .col-lg-9 { flex: 0 0 auto; width: 75%; }
-        .col-lg-12 { flex: 0 0 auto; width: 100%; }
-    }
-    .g-2 { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0.5rem; }
-    .g-3 { --bs-gutter-x: 1rem; --bs-gutter-y: 1rem; }
-    .g-4 { --bs-gutter-x: 1.5rem; --bs-gutter-y: 1.5rem; }
-    .gy-3 { --bs-gutter-y: 1rem; }
-    .row-cols-auto > * { flex: 0 0 auto; width: auto; }
-    .row-cols-1 > * { flex: 0 0 auto; width: 100%; }
-    @media (min-width: 768px) {
-        .row-cols-md-2 > * { flex: 0 0 auto; width: 50%; }
-    }
-    @media (min-width: 992px) {
-        .row-cols-lg-3 > * { flex: 0 0 auto; width: 33.33333333%; }
-    }
-
-    /* Form helpers */
-    .col-form-label {
-        padding-top: calc(0.375rem + 1px);
-        padding-bottom: calc(0.375rem + 1px);
-        margin-bottom: 0;
-        font-size: inherit;
-        line-height: 1.5;
-    }
-    .form-label { margin-bottom: 0.5rem; }
-    .form-text { margin-top: 0.25rem; font-size: 0.875em; color: #6c757d; }
-    .form-check { display: block; min-height: 1.5rem; padding-left: 1.5em; margin-bottom: 0.125rem; }
-    .form-check-inline { display: inline-flex; align-items: center; padding-left: 0; margin-right: 1rem; }
-    .form-check-inline .form-check-input { margin-left: 0; float: none; }
-    .form-check-input { border-color: var(--gray-dark); }
-    .form-check-input[type="checkbox"],
-    .form-check-input:not([type]) {
-        float: left;
-        width: 1em;
-        height: 1em;
-        margin-left: -1.5em;
-        margin-top: 0.25em;
-    }
-    .small { font-size: 0.875em; }
-    .lead { margin-bottom: 1rem; font-size: 1.25rem; font-weight: 300; }
-    .fw-light { font-weight: 300 !important; }
-    /* Bootstrap 5 reboot heading defaults (pub/* pages have no theme scope) */
-    h1, h2, h3, h4, h5, h6 {
-        margin-top: 0;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        line-height: 1.2;
-    }
-    h1 { font-size: calc(1.375rem + 1.5vw); }
-    h2 { font-size: calc(1.325rem + 0.9vw); }
-    h3 { font-size: calc(1.3rem + 0.6vw); }
-    h4 { font-size: calc(1.275rem + 0.3vw); }
-    h5 { font-size: 1.25rem; }
-    h6 { font-size: 1rem; }
-    @media (min-width: 1200px) {
-        h1 { font-size: 2.5rem; }
-        h2 { font-size: 2rem; }
-        h3 { font-size: 1.75rem; }
-        h4 { font-size: 1.5rem; }
-    }
-    .table-dark th,
-    .table-dark td {
-        color: #fff;
-    }
-    .fw-bold { font-weight: 700 !important; }
-    .d-grid { display: grid !important; }
-    .gap-2 { gap: 0.5rem; }
-    .me-2 { margin-right: 0.5rem !important; }
-    .offset-md-4 { margin-left: 33.33333333%; }
-    @media (min-width: 768px) {
-        .offset-md-4 { margin-left: 33.33333333%; }
-    }
-    .pb-1 { padding-bottom: 0.25rem !important; }
-    .pb-1 { padding-bottom: 0.25rem !important; }
-    .pb-2 { padding-bottom: 0.5rem !important; }
-    .pb-3 { padding-bottom: 1rem !important; }
-
-    /* Nav pills/tabs */
-    .nav { display: flex; flex-wrap: wrap; padding-left: 0; margin-bottom: 0; list-style: none; }
-    .nav-item { list-style: none; }
-    .nav-link { display: block; padding: 0.5rem 1rem; text-decoration: none; }
-    .nav-pills .nav-link { border-radius: 0.375rem; }
-    .nav-pills .nav-link.active { color: #fff; background-color: #007bff; }
-
-    .list-unstyled { list-style: none; padding-left: 0; }
-    /* Bootstrap table helpers still referenced by views */
-    .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table-group-divider { border-top: 2px solid currentcolor; }
-    .table-dark { background-color: #212529; color: #fff; }
-    .text-success-emphasis { color: #0a3622; }
-    /* Bootstrap heading-size utilities still referenced by views */
-    .h5 { font-size: 1.25rem; }
-    .h6 { font-size: 1rem; }
-
-    .table-bordered, .table-bordered th, .table-bordered td { border: 1px solid #dee2e6; }
-}
-
 /* ---- Legacy theme (migrated from default-3.css / common-3.css) ----
-   MUST live inside @layer components: unlayered element selectors like
-   `a { color: … }` would override ALL layered daisyUI component colors
-   (unlayered author CSS wins the cascade regardless of specificity). */
-@layer components {
+   Unlayered on purpose: element selectors like `a { color: … }` must beat
+   the `bs5` cascade layer (unlayered author CSS wins regardless of
+   specificity), keeping the legacy identity colors authoritative. */
     :root {
     --blue: #007bff;
     --indigo: #6610f2;
@@ -305,6 +59,33 @@
     --font-family-serif: "Noto Serif", serif;
     --color-text: var(--gray-dark);
     --font-family-text: var(--font-family-sans-serif);
+
+    /* ---- Bootstrap 5 theme bridge ----
+       Real BS5 sits in the low `bs5` cascade layer. When a migration batch
+       purges daisyUI tokens from a view that keeps BS5 class names (.btn-*,
+       .table, .modal, .form-control), those elements fall through to real
+       BS5 and would otherwise pick up BS5's DEFAULT palette (#0d6efd etc.).
+       Map the BS5 theme variables to the public bcoem palette (shared legacy
+       colors) so purged pages stay visually identical. Unlayered so it
+       outranks BS5's own :root in the `bs5` layer. */
+    --bs-primary: #007bff;
+    --bs-primary-rgb: 0, 123, 255;
+    --bs-secondary: #6c757d;
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-success: #28a745;
+    --bs-success-rgb: 40, 167, 69;
+    --bs-info: #17a2b8;
+    --bs-info-rgb: 23, 162, 184;
+    --bs-warning: #ffc107;
+    --bs-warning-rgb: 255, 193, 7;
+    --bs-danger: #dc3545;
+    --bs-danger-rgb: 220, 53, 69;
+    --bs-light: #f8f9fa;
+    --bs-dark: #343a40;
+    --bs-link-color: #007bff;
+    --bs-link-hover-color: #0056b3;
+    --bs-body-bg: #fff;
+    --bs-body-color: #212529;
 }
 
 body {
@@ -332,16 +113,16 @@ table {
 }
 
 /* Links */
-a {
+a:not(.btn) {
     color: var(--blue);
     text-decoration: none;
 }
-a:visited {
+a:not(.btn):visited {
     text-decoration: none;
 }
-a:hover,
-a:focus,
-a:active {
+a:not(.btn):hover,
+a:not(.btn):focus,
+a:not(.btn):active {
     color: var(--purple);
     text-decoration: none;
 }
@@ -422,9 +203,36 @@ html {
     color: #ffffff;
 }
 
-#site-nav .btn-ghost,
-#site-nav .btn-link {
+#site-nav .btn-link,
+#site-nav .btn-link:hover,
+#site-nav .btn-link:focus {
     color: #ffffff;
+    text-decoration: none;
+}
+
+/* Public navbar links are .nav-item.nav-link <a> DIRECT children of the
+   #nav-menu .navbar-collapse (no .navbar-nav wrapper), so Bootstrap 5's
+   `.navbar-expand-md .navbar-nav .nav-link` horizontal padding never
+   applies and the items collide ("RulesVolunteersEntryInfo…"). Give the
+   row the spacing a real navbar-nav link would carry. Mobile keeps its
+   stacked column layout (#nav-menu media rule below). */
+@media (min-width: 768px) {
+    #site-nav #nav-menu > .nav-link {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    /* The user controls are not direct .nav-link children: the person
+       dropdown is a .dropdown div and the logout button lives inside a
+       <form>, so neither gets the link padding — give them a matching gap
+       so the person and logout icons do not touch. */
+    #site-nav #nav-menu > form {
+        margin-left: 0.5rem;
+    }
+    #site-nav #nav-menu > .dropdown {
+        margin-left: 0.5rem;
+    }
 }
 .site-nav,
 .site-footer {
@@ -560,6 +368,13 @@ html {
     padding: 0 0 10px 0;
 }
 
+/* Entries-list actions that are gate-locked (window closed / edit
+   deadline passed / received / paid-with-fee) are inert placeholders —
+   show a not-allowed cursor so they don't read as clickable. */
+.entry-action-locked {
+    cursor: not-allowed;
+}
+
 /* Modals */
 .modal h3,
 .modal h4,
@@ -589,12 +404,9 @@ html {
     padding: 0;
     margin: 15px 0 0 0;
 }
-}
 
-/* ---- Glance cards (at-a-glance.pub.php). Unlayered on purpose: daisyUI 5.7
-   emits .badge/.card into the UTILITIES layer, which outranks any
-   components-layer rule regardless of specificity. ---- */
-.position-absolute { position: absolute !important; }
+/* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
+   .badge/.card primitives so the legacy glance look is preserved. ---- */
 .glance-card-bg {
     background-color: #fefefe;
     border: 1px solid #aeaeae;
@@ -626,81 +438,60 @@ html {
 .glance-header.text-primary-glance-header { color: #084298; }
 
 /* ---- Bruxellensis admin-side theme (migrated from css/bruxellensis.css).
-   Active only when <html data-theme="bcoem-brux"> (admin/backoffice/eval
-   requests — see public-layout). Unlayered so it outranks daisyUI's
-   utilities-layer component rules. ---- */
-[data-theme="bcoem-brux"] body {
+   Active only when <html data-bs-theme="bcoem-brux"> (admin/backoffice/eval
+   requests — see public-layout). Unlayered: beats the `bs5` layer so the
+   admin palette wins over BS5 defaults. ---- */
+[data-bs-theme="bcoem-brux"] body {
     font-family: "Droid Sans", Arial, sans-serif;
     font-weight: 400;
     font-size: 16px;
 }
-[data-theme="bcoem-brux"] a:not(.btn),
-[data-theme="bcoem-brux"] a:not(.btn):visited {
+[data-bs-theme="bcoem-brux"] a:not(.btn),
+[data-bs-theme="bcoem-brux"] a:not(.btn):visited {
     color: #2196f3;
     text-decoration: none;
 }
-[data-theme="bcoem-brux"] a:not(.btn):hover,
-[data-theme="bcoem-brux"] a:not(.btn):focus,
-[data-theme="bcoem-brux"] a:not(.btn):active {
+[data-bs-theme="bcoem-brux"] a:not(.btn):hover,
+[data-bs-theme="bcoem-brux"] a:not(.btn):focus,
+[data-bs-theme="bcoem-brux"] a:not(.btn):active {
     color: #f37e21;
     text-decoration: none;
 }
-[data-theme="bcoem-brux"] .text-info { color: #01579B; }
-[data-theme="bcoem-brux"] .text-success { color: #1B5E20; }
-[data-theme="bcoem-brux"] .text-danger { color: #B71C1C; }
-[data-theme="bcoem-brux"] .text-warning { color: #732800; }
-[data-theme="bcoem-brux"] h1,
-[data-theme="bcoem-brux"] h2,
-[data-theme="bcoem-brux"] h3,
-[data-theme="bcoem-brux"] h4,
-[data-theme="bcoem-brux"] h5,
-[data-theme="bcoem-brux"] h6 {
+[data-bs-theme="bcoem-brux"] .text-info { color: #01579B; }
+[data-bs-theme="bcoem-brux"] .text-success { color: #1B5E20; }
+[data-bs-theme="bcoem-brux"] .text-danger { color: #B71C1C; }
+[data-bs-theme="bcoem-brux"] .text-warning { color: #732800; }
+[data-bs-theme="bcoem-brux"] h1,
+[data-bs-theme="bcoem-brux"] h2,
+[data-bs-theme="bcoem-brux"] h3,
+[data-bs-theme="bcoem-brux"] h4,
+[data-bs-theme="bcoem-brux"] h5,
+[data-bs-theme="bcoem-brux"] h6 {
     font-family: "Merriweather", Georgia, serif;
     font-weight: 800;
     margin: 0;
     padding: 10px 0 20px 0;
 }
-[data-theme="bcoem-brux"] h1 {
+[data-bs-theme="bcoem-brux"] h1 {
     padding: 15px 0 25px 0;
 }
-[data-theme="bcoem-brux"] .page-header h1 {
-    font-size: 2em;
-}
-[data-theme="bcoem-brux"] .page-header {
-    margin: 0 0 15px 0;
-    padding: 0;
-}
-[data-theme="bcoem-brux"] .lead {
+[data-bs-theme="bcoem-brux"] .lead {
     font-weight: 400;
 }
-[data-theme="bcoem-brux"] #site-nav {
+[data-bs-theme="bcoem-brux"] #site-nav {
     background: #303E4B;
     background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
     box-shadow: 0 3px 3px 0 rgba(230, 230, 230, 0.75);
 }
-[data-theme="bcoem-brux"] .site-footer {
+[data-bs-theme="bcoem-brux"] .site-footer {
     background: linear-gradient(to bottom, #bec8d8 0%, #DFE4EC 100%);
 }
-[data-theme="bcoem-brux"] .site-footer,
-[data-theme="bcoem-brux"] .site-footer a {
+[data-bs-theme="bcoem-brux"] .site-footer,
+[data-bs-theme="bcoem-brux"] .site-footer a {
     color: #303E4B;
 }
 
-/* Competition Status panel — brux .panel-info */
-.panel-info {
-    border: 1px solid #B3E5FC;
-    border-radius: 0.25rem;
-}
-.panel-info > .panel-heading {
-    color: #01579B;
-    background-color: #E1F5FE;
-    border-bottom: 1px solid #B3E5FC;
-    padding: 10px 15px;
-}
-.panel-info > .panel-body {
-    padding: 15px;
-}
-.bcoem-sidebar-panel {
+.bcoem-stat-row {
     margin-bottom: 0.4rem;
     display: flex;
     justify-content: space-between;
@@ -708,8 +499,8 @@ html {
 }
 
 /* ---- Admin top bar + off-canvas menu (legacy sections/nav.sec.php) ----
-   Scoped to .navbar-inverse so daisyUI's .navbar (public pages) is untouched. */
-.navbar-inverse {
+   Scoped to .admin-topbar so daisyUI's .navbar (public pages) is untouched. */
+.admin-topbar {
     min-height: 50px;
     position: fixed;
     top: 0;
@@ -728,131 +519,31 @@ html {
     flex-wrap: wrap;
     align-items: center;
 }
-[data-theme="bcoem-brux"] #main-content {
+[data-bs-theme="bcoem-brux"] #main-content {
     padding-top: 60px;
 }
-.pull-right {
-    float: right;
-}
 @media (min-width: 768px) {
-    [data-theme="bcoem-brux"] h1 { font-size: 36px; }
-    [data-theme="bcoem-brux"] h2 { font-size: 30px; }
-    [data-theme="bcoem-brux"] h3 { font-size: 24px; }
-    [data-theme="bcoem-brux"] h4 { font-size: 18px; }
-    [data-theme="bcoem-brux"] h5 { font-size: 14px; }
-    [data-theme="bcoem-brux"] h6 { font-size: 12px; }
+    [data-bs-theme="bcoem-brux"] h1 { font-size: 36px; }
+    [data-bs-theme="bcoem-brux"] h2 { font-size: 30px; }
+    [data-bs-theme="bcoem-brux"] h3 { font-size: 24px; }
+    [data-bs-theme="bcoem-brux"] h4 { font-size: 18px; }
+    [data-bs-theme="bcoem-brux"] h5 { font-size: 14px; }
+    [data-bs-theme="bcoem-brux"] h6 { font-size: 12px; }
 }
-.navbar-inverse .navbar-nav > li > a {
+/* Brux topbar nav links (BS5 .navbar-nav/.nav-link markup). */
+.admin-topbar .nav-link {
     color: #bec8d8;
     padding-top: 15px;
     padding-bottom: 15px;
     line-height: 20px;
 }
-/* brux a:not(.btn):visited outranks the base rule — pin all states grey */
-.navbar-inverse .navbar-nav > li > a:visited {
+.admin-topbar .nav-link:visited {
     color: #bec8d8;
 }
-.navbar-inverse .navbar-nav > li > a:hover,
-.navbar-inverse .navbar-nav > li > a:focus {
+.admin-topbar .nav-link:hover,
+.admin-topbar .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
-}
-.navbar-nav {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding-left: 0;
-    margin-bottom: 0;
-    list-style: none;
-}
-.navbar-nav > li {
-    position: relative;
-}
-.navbar-nav > li > a {
-    display: block;
-    padding: 10px 15px;
-    line-height: 20px;
-}
-.navbar-right {
-    margin-left: auto;
-    display: flex;
-    flex-direction: row;
-}
-.navbar-nav .open > a {
-    background-color: #303E4B;
-    color: #DFE4EC;
-}
-.caret {
-    display: inline-block;
-    width: 0;
-    height: 0;
-    margin-left: 2px;
-    vertical-align: middle;
-    border-top: 4px dashed;
-    border-top: 4px solid;
-    border-right: 4px solid transparent;
-    border-left: 4px solid transparent;
-}
-.dropdown {
-    position: relative;
-}
-.dropdown-menu {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 1000;
-    display: none;
-    float: left;
-    min-width: 160px;
-    padding: 5px 0;
-    margin: 2px 0 0;
-    font-size: 14px;
-    text-align: left;
-    list-style: none;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-}
-.dropdown-menu > li > a,
-.dropdown-menu .dropdown-item {
-    display: block;
-    padding: 3px 20px;
-    clear: both;
-    font-weight: 400;
-    line-height: 1.42857143;
-    color: #333;
-    white-space: nowrap;
-    background: none;
-    border: 0;
-    width: 100%;
-    text-align: left;
-}
-.dropdown-menu > li > a:hover,
-.dropdown-menu > li > a:focus,
-.dropdown-menu .dropdown-item:hover,
-.dropdown-menu .dropdown-item:focus {
-    color: #262626;
-    text-decoration: none;
-    background-color: #f5f5f5;
-}
-.dropdown-menu .dropdown-header {
-    display: block;
-    padding: 3px 20px;
-    font-size: 12px;
-    line-height: 1.42857143;
-    color: #777;
-    white-space: nowrap;
-}
-.dropdown-menu .divider {
-    height: 1px;
-    margin: 9px 0;
-    overflow: hidden;
-    background-color: #e5e5e5;
-}
-.dropdown.open .dropdown-menu {
-    display: block;
 }
 /* pub/nav.pub.php user dropdown: Bootstrap 5 dark theme, right-aligned */
 .dropdown-menu-end {
@@ -891,79 +582,67 @@ html {
     height: 1px;
     opacity: 1;
 }
-.navmenu {
+/* ---- Admin Essentials off-canvas (Bootstrap 5 offcanvas, issue 6) ----
+   The admin offcanvas keeps the brux dark look: .admin-topbar (unlayered)
+   provides the gradient; these rules shape the BS5 offcanvas panel + its
+   collapse groups. */
+.admin-nav-offcanvas {
     width: 300px;
-    height: 100%;
-    overflow-y: auto;
-    position: fixed;
-    top: 0;
-    z-index: 1040;
-    padding-top: 50px;
-    display: none;
-}
-.navmenu-fixed-right {
-    /* .navbar-inverse sets left:0 for the top bar; without left:auto
-       the panel anchors screen-left instead of right. */
-    left: auto;
-    right: 0;
-}
-.navmenu.in {
-    display: block;
-}
-.navmenu-brand {
-    padding: 10px 15px;
-    font-size: 18px;
-    line-height: 20px;
-}
-.navmenu .nav > li > a {
-    color: #bec8d8;
-    padding: 10px 15px;
-}
-.navmenu .nav > li > a:hover,
-.navmenu .nav > li > a:focus {
+    background: #303E4B;
+    background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
     color: #DFE4EC;
-    background-color: transparent;
 }
-.navmenu .navmenu-nav {
-    padding-left: 0;
-    margin-bottom: 0;
-    list-style: none;
-}
-.navmenu .navmenu-nav > li > a {
-    display: block;
-    padding: 10px 15px;
-    color: #bec8d8;
-}
-.navmenu .navmenu-nav > li > a:hover,
-.navmenu .navmenu-nav > li > a:focus {
+.admin-nav-offcanvas .offcanvas-header {
+    border-bottom: 1px solid rgba(223, 228, 236, 0.15);
     color: #DFE4EC;
-    background-color: #303E4B;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
-.navmenu .navmenu-nav .dropdown-menu {
-    position: static;
-    float: none;
-    width: auto;
-    margin-top: 0;
-    background-color: transparent;
-    border: 0;
-    box-shadow: none;
-    display: none;
-    padding: 0 0 0 15px;
-}
-.navmenu .navmenu-nav > li.open > .dropdown-menu {
-    display: block;
-}
-.navmenu .navmenu-nav .dropdown-menu > li {
+.admin-nav-offcanvas .offcanvas-title {
+    font-family: "Merriweather", Georgia, serif;
+    font-weight: 800;
+    font-size: 1rem;
     margin: 0;
+    padding: 0;
 }
-.navmenu .navmenu-nav .dropdown-menu > li > a {
+.admin-nav-offcanvas .offcanvas-body {
+    padding-top: 0.5rem;
+}
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link {
+    color: #bec8d8;
+    padding: 10px 15px;
+}
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link:hover,
+.admin-nav-offcanvas .admin-oc-nav > .nav-item > .nav-link:focus {
+    color: #DFE4EC;
+    background-color: transparent;
+}
+.admin-nav-offcanvas .admin-oc-subnav {
+    padding-left: 15px;
+}
+.admin-nav-offcanvas .admin-oc-subnav .nav-link {
     color: #bec8d8;
     padding: 4px 15px;
     line-height: 20px;
+    font-size: 0.9rem;
 }
-.navmenu .navmenu-nav .dropdown-menu > li > a:hover {
+.admin-nav-offcanvas .admin-oc-subnav .nav-link:hover,
+.admin-nav-offcanvas .admin-oc-subnav .nav-link:focus {
     color: #DFE4EC;
     background-color: transparent;
+}
+.admin-nav-offcanvas .oc-group-toggle::after {
+    content: "";
+    display: inline-block;
+    margin-left: 0.35em;
+    vertical-align: 0.15em;
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-left: 0.3em solid transparent;
+    transition: transform 0.2s ease;
+}
+.admin-nav-offcanvas .oc-group-toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
 }
 .bcoem-admin-menu-disabled {
     color: #acc0c7 !important;
@@ -973,105 +652,321 @@ html {
     font-weight: bold;
 }
 
-/* ---- Bootstrap panels (admin dashboard accordion + Competition Status) ---- */
-.panel {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+
+/* INTERACTION-PARITY: CSS tooltip, loader overlay, sticky back-to-top
+   (legacy Bootstrap tooltip init + #loader-submit + #sticky-home). */
+[data-toggle="tooltip"], [data-tooltip="true"] {
+    position: relative;
 }
-.panel-default {
-    border-color: #bec8d8;
-}
-.panel-default > .panel-heading {
-    color: #303E4B;
-    background-color: #DFE4EC;
-    border-color: #bec8d8;
-}
-.panel-heading {
-    padding: 10px 15px;
-    border-bottom: 1px solid transparent;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-}
-.panel-title {
-    margin-top: 0;
-    margin-bottom: 0;
-    font-size: 16px;
-    color: inherit;
-}
-.panel-title > a,
-[data-theme="bcoem-brux"] .panel-title > a,
-[data-theme="bcoem-brux"] .panel-heading .panel-title > a,
-[data-theme="bcoem-brux"] .panel-heading .panel-title > a:hover {
-    color: inherit;
-    text-decoration: none;
-}
-.panel-info {
-    border-color: #B3E5FC;
-}
-.panel-body {
-    padding: 15px;
-}
-.panel-collapse {
+.bcoem-tooltip {
     display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1200;
+    max-width: 240px;
+    padding: .35rem .6rem;
+    border-radius: .375rem;
+    background: #212529;
+    color: #fff;
+    font-size: .75rem;
+    line-height: 1.25;
+    text-align: center;
+    white-space: normal;
+    pointer-events: none;
 }
-.panel-collapse.in {
+[data-toggle="tooltip"]:hover .bcoem-tooltip,
+[data-toggle="tooltip"]:focus .bcoem-tooltip,
+[data-tooltip="true"]:hover .bcoem-tooltip,
+[data-tooltip="true"]:focus .bcoem-tooltip {
     display: block;
-}
-.panel-title .pull-right {
-    margin-top: 2px;
 }
 
-/* ---- Bootstrap buttons (admin action row + sidebar) ---- */
-.btn-info {
-    color: #fff !important;
-    background-color: #29B6F6;
-    border-color: #0288D1;
+.loader-submit {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(255, 255, 255, .7);
+    cursor: wait;
 }
-.btn-info:hover,
-.btn-info:focus {
-    color: #fff !important;
-    background-color: #039BE5;
-    border-color: #0288D1;
+.loader-submit.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.loader-submit.show::after {
+    content: '';
+    width: 3rem;
+    height: 3rem;
+    border: .3rem solid rgba(0, 0, 0, .2);
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: bcoem-spin .8s linear infinite;
+}
+@keyframes bcoem-spin {
+    to { transform: rotate(360deg); }
+}
+
+.sticky-home {
+    display: none;
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 1500;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: #212529;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .3);
+    text-decoration: none;
+}
+.sticky-home:hover { color: #fff; text-decoration: none; }
+.sticky-home.show { display: flex; }
+/* PARITY-023: DataTables-parity client sort/pagination. */
+.data-dt-sortable { user-select: none; }
+.data-dt-sortable::after {
+    content: ' ⇅';
+    opacity: .45;
+}
+.data-dt-pager {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .5rem .25rem;
+    font-size: .85rem;
+    color: #6c757d;
+}
+.data-dt-pager button {
+    min-width: 2rem;
+    padding: .25rem .5rem;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    background: #fff;
+    cursor: pointer;
+}
+.data-dt-pager button:disabled { opacity: .4; cursor: default; }
+
+/* ---- Custom admin chrome helpers (formerly inside the BS3-replica block) ---- */
+.admin-page-title {
+    padding-bottom: 9px;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+}
+.admin-page-title .lead,
+.admin-page-title p { margin-bottom: 0; }
+.bcoem-admin-element { padding: 0 0 15px 0; }
+.date-time-picker-system { cursor: pointer; }
+.hide-loader { cursor: pointer; }
+
+/* ==== Legacy utility classes (formerly Tailwind/daisy) ====
+   Issue 12 deleted the Tailwind + daisyUI stacks. A small set of utility /
+   component classes still referenced by port blades had no BS5 equivalent,
+   so they are re-declared here as unlayered author CSS (beats the `bs5`
+   layer). */
+.mt-6 { margin-top: 1.5rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.text-teal { color: var(--teal); }
+.bg-black { background-color: #000; }
+.alert-teal {
+    color: #0f5132;
+    background-color: #d2f4ea;
+    border: 1px solid #a6dfcf;
+    border-radius: var(--bs-border-radius);
+    padding: var(--bs-alert-padding-y) var(--bs-alert-padding-x);
+}
+.help-content p { margin-bottom: .5rem; }
+.help-content ol, .help-content ul { margin-bottom: .5rem; padding-left: 1.25rem; }
+.help-content li { margin-bottom: .25rem; }
+
+/* Mobile public navbar: stack the nav items + dropdown vertically when the
+   collapse is shown below the md breakpoint (BS5 .navbar-expand-md forces
+   them into a row on md+). */
+@media (max-width: 767.98px) {
+    #nav-menu { flex-direction: column; align-items: stretch; gap: .25rem; padding-top: .5rem; padding-bottom: .5rem; }
+    #nav-menu .nav-item, #nav-menu > a { display: block; }
+    #nav-menu .dropdown-menu { position: static; }
+}
+
+/* ==== Theme-scoped identity palettes (issue 12: BS3-replica deleted) ====
+   Real Bootstrap 5 hard-codes component colors per rule (.btn-*, .alert-*),
+   so they cannot inherit --bs-* by themselves. The legacy identity palettes
+   are re-applied two ways: (1) --bs-* theme variables are overridden under
+   the brux admin data-bs-theme scope (public bcoem values stay on :root
+   above), and (2) the button/alert components are rebound to source their
+   color vars from --bs-*, so each theme flows through one mechanism. */
+[data-bs-theme="bcoem-brux"] {
+    --bs-primary: #1565C0;
+    --bs-primary-rgb: 21, 101, 192;
+    --bs-secondary: #6c757d;
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-success: #4CAF50;
+    --bs-success-rgb: 76, 175, 80;
+    --bs-info: #29B6F6;
+    --bs-info-rgb: 41, 182, 246;
+    --bs-warning: #FF9800;
+    --bs-warning-rgb: 255, 152, 0;
+    --bs-danger: #F44336;
+    --bs-danger-rgb: 244, 67, 54;
+    --bs-light: #f5f5f5;
+    --bs-dark: #262626;
+    --bs-link-color: #2196f3;
+    --bs-link-hover-color: #f37e21;
+}
+
+/* Legacy admin icon colors (common-3.css 900 shades) for FA flag icons —
+   e.g. the accepted-styles Requirements column (styles.admin.php:45-70). */
+[data-bs-theme="bcoem-brux"] .text-orange { color: #E65100; }
+[data-bs-theme="bcoem-brux"] .text-purple { color: #311B92; }
+[data-bs-theme="bcoem-brux"] .text-gold { color: #D4AF37; }
+[data-bs-theme="bcoem-brux"] .text-teal { color: #004D40; }
+
+/* Rebind BS5 solid buttons to the theme palette. Each variant sources its
+   component vars from the matching --bs-* theme variable so the public
+   bcoem (:root) and admin brux ([data-bs-theme]) palettes both flow through
+   one mechanism. Hover/active darken toward black via color-mix. */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-primary) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-primary) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-primary);
+    --bs-btn-disabled-border-color: var(--bs-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+.btn-secondary {
+    --bs-btn-bg: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-secondary) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-secondary) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-secondary);
+    --bs-btn-disabled-border-color: var(--bs-secondary);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
+}
+.btn-success {
+    --bs-btn-bg: var(--bs-success);
+    --bs-btn-border-color: var(--bs-success);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-success) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-success) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-success) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-success) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-success);
+    --bs-btn-disabled-border-color: var(--bs-success);
+    --bs-btn-focus-shadow-rgb: var(--bs-success-rgb);
+}
+.btn-info {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-info);
+    --bs-btn-border-color: var(--bs-info);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-info) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-info) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-info) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-info) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-info);
+    --bs-btn-disabled-border-color: var(--bs-info);
+    --bs-btn-focus-shadow-rgb: var(--bs-info-rgb);
+}
+.btn-warning {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: var(--bs-warning);
+    --bs-btn-border-color: var(--bs-warning);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-warning) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-warning) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-warning) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-warning) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-warning);
+    --bs-btn-disabled-border-color: var(--bs-warning);
+    --bs-btn-focus-shadow-rgb: var(--bs-warning-rgb);
+}
+.btn-danger {
+    --bs-btn-bg: var(--bs-danger);
+    --bs-btn-border-color: var(--bs-danger);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-danger) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-danger) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-danger) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-danger) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-danger);
+    --bs-btn-disabled-border-color: var(--bs-danger);
+    --bs-btn-focus-shadow-rgb: var(--bs-danger-rgb);
 }
 .btn-dark {
-    color: #ffffff !important;
-    background-color: #262626;
-    border-color: #212121;
+    --bs-btn-bg: var(--bs-dark);
+    --bs-btn-border-color: var(--bs-dark);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-dark) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-dark) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-dark);
+    --bs-btn-disabled-border-color: var(--bs-dark);
+    --bs-btn-focus-shadow-rgb: 38, 38, 38;
 }
-.btn-dark:hover,
-.btn-dark:focus {
-    color: #ffffff !important;
-    background-color: #424242;
-    border-color: #212121;
+.btn-light {
+    --bs-btn-bg: var(--bs-light);
+    --bs-btn-border-color: var(--bs-light);
+    --bs-btn-hover-bg: color-mix(in srgb, var(--bs-light) 88%, #000);
+    --bs-btn-hover-border-color: color-mix(in srgb, var(--bs-light) 84%, #000);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-light) 80%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-light) 76%, #000);
+    --bs-btn-disabled-bg: var(--bs-light);
+    --bs-btn-disabled-border-color: var(--bs-light);
+    --bs-btn-focus-shadow-rgb: 248, 249, 250;
 }
-.btn-sm {
-    padding: 5px 10px;
-    font-size: 12px;
-    line-height: 1.5;
-    border-radius: 3px;
+/* Outline buttons: text/border/background tint follow the theme color. */
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-primary) 85%, #000);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
 }
-.btn-block {
-    display: block;
-    width: 100%;
+.btn-outline-secondary {
+    --bs-btn-color: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-secondary);
+    --bs-btn-hover-border-color: var(--bs-secondary);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-secondary) 85%, #000);
+    --bs-btn-focus-shadow-rgb: var(--bs-secondary-rgb);
 }
-.list-inline {
-    padding-left: 0;
-    list-style: none;
-    margin-left: -5px;
+.btn-outline-dark {
+    --bs-btn-color: var(--bs-dark);
+    --bs-btn-border-color: var(--bs-dark);
+    --bs-btn-hover-bg: var(--bs-dark);
+    --bs-btn-hover-border-color: var(--bs-dark);
+    --bs-btn-active-bg: color-mix(in srgb, var(--bs-dark) 85%, #000);
+    --bs-btn-active-border-color: color-mix(in srgb, var(--bs-dark) 85%, #000);
+    --bs-btn-focus-shadow-rgb: 38, 38, 38;
 }
-.list-inline > li {
-    display: inline-block;
-    padding-right: 5px;
-    padding-left: 5px;
+
+/* ---- Public sidebar cards (public-sidebar: BS3 .panel -> BS5 .card) ----
+   Preserve the legacy public sidebar panel look: tinted header band, subtle
+   border, plain body. */
+.sidebar .card { border: 1px solid #dee2e6; border-radius: 0.25rem; }
+.sidebar .card-header {
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #f8f9fa;
 }
-.hidden-xs { display: none; }
-@media (min-width: 768px) {
-    .hidden-sm { display: none; }
-}
-@media (min-width: 992px) {
-    .hidden-md { display: none; }
-}
-.hide-loader { cursor: pointer; }
+.sidebar .card-title { font-weight: 700; }
+.sidebar .card-body { padding: 0.75rem; font-size: 0.95rem; }
+.sidebar-panel-info { border-color: #B3E5FC !important; }
+.sidebar-panel-info > .card-header { background-color: #E1F5FE; color: #01579B; border-bottom-color: #B3E5FC; }
+.sidebar-panel-success { border-color: #C3E6CB !important; }
+.sidebar-panel-success > .card-header { background-color: #D4EDDA; color: #155724; border-bottom-color: #C3E6CB; }
+.sidebar-panel-danger { border-color: #F5C6CB !important; }
+.sidebar-panel-danger > .card-header { background-color: #F8D7DA; color: #721C24; border-bottom-color: #F5C6CB; }
+.sidebar-panel-default { border-color: #bec8d8 !important; }
+.sidebar-panel-default > .card-header { background-color: #DFE4EC; color: #303E4B; border-bottom-color: #bec8d8; }

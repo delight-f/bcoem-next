@@ -4,7 +4,11 @@
 .env.backup
 .env.production
 .phpactor.json
-.phpunit.result.cache
++/phpunit.dusk.xml
++/phpunit.dusk.xml.dist
+/tests/Browser/console
+/tests/Browser/screenshots
+/tests/Browser/source
 /.codex
 /.cursor/
 /.idea
@@ -27,3 +31,13 @@ Homestead.yaml
 Thumbs.db
 .scratch/
 tools/parity/reports/
+docs/parity/PARITY-PLAN-*.md
+tools/parity/screenshots/
+/mods/*
+!/mods/.gitkeep
+.phpunit.result.cache
+graphify-out/
+resources/graphify-out/
+
+# runtime/derived artifacts (not source)
+/storage/user_docs/

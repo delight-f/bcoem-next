@@ -24,7 +24,7 @@
         <th>Judging</th>
         <th>Name</th>
         <th>Style</th>
-        <th>Required Info</th>
+        @if ($withScores)<th>Score</th>@endif
     </tr>
     </thead>
     <tbody>
@@ -34,7 +34,7 @@
             <td>{{ $row['judging'] }}</td>
             <td>{{ $row['name'] }}</td>
             <td>{{ $row['style'] }}</td>
-            <td>{{ $row['info'] }}</td>
+            @if ($withScores)<td>{{ $row['score'] }}</td>@endif
         </tr>
     @endforeach
     </tbody>

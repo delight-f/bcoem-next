@@ -175,10 +175,10 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
         $response = $this->get('/admin/payments');
 
         $response->assertOk()
-            ->assertSee(': PayPal Payments</h1>', false)
-            ->assertSee('<th>Payer Name</th>', false)
-            ->assertSee('<th>Transaction ID</th>', false)
-            ->assertSee('<th>For Entries...</th>', false)
+            ->assertSee(': PayPal Payments</p>', false)
+            ->assertSee('<th nowrap>Payer <span class="hidden-xs hidden-sm">Name</span></th>', false)
+            ->assertSee('<span class="hidden-xs">Transaction</span> ID', false)
+            ->assertSee('<span class="hidden-sm">For</span> Entries...', false)
             ->assertSee('Entrant, P57')
             // Legacy cell format: entry ids as %06s.
             ->assertSee('000123, 000124')

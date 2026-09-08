@@ -3,9 +3,55 @@
         left column (page-header h1 + default.admin.php), right sidebar. --}}
     <div class="row g-4">
         <div class="col-lg-9">
-            <div class="page-header">
+            <div class="admin-page-title">
                 <h1>Administration Dashboard</h1>
             </div>
+
+            {{-- mods_top.inc.php — the admin-side (go=default) missing-module-
+                 file alert. Legacy renders one danger list for enabled mods
+                 whose mods/<mod_filename> file is absent and one warning list
+                 for disabled ones; public pages render nothing for a missing
+                 file (PARITY-027). --}}
+            @php
+                $modsRealDir = realpath(base_path('mods'));
+                $missingEnabled = [];
+                $missingDisabled = [];
+                foreach (DB::table('mods')->get() as $mod) {
+                    $real = realpath(base_path('mods/'.$mod->mod_filename));
+                    if ($real === false || $modsRealDir === false
+                        || ! str_starts_with($real, $modsRealDir.DIRECTORY_SEPARATOR)) {
+                        if ((int) $mod->mod_enable === 1) {
+                            $missingEnabled[] = $mod->mod_filename;
+                        } else {
+                            $missingDisabled[] = $mod->mod_filename;
+                        }
+                    }
+                }
+            @endphp
+            @if ($missingEnabled !== [])
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fa fa-exclamation-triangle"></i>
+                    <strong>The following <u>enabled</u> custom module files were not found in the mods directory.</strong> These cannot be included or rendered:
+                    <ul class="mb-0 mt-1">
+                        @foreach ($missingEnabled as $file)
+                            <li>{{ $file }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            @if ($missingDisabled !== [])
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="fa fa-exclamation-circle"></i>
+                    <strong>The following <u>disabled</u> custom module files were not found in the mods directory.</strong> These cannot be included or rendered if enabled:
+                    <ul class="mb-0 mt-1">
+                        @foreach ($missingDisabled as $file)
+                            <li>{{ $file }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <p class="lead">Hello, {{ $firstName }}. <span class="small">Select the headings or icons below to view the options available to you in each category. Help is available for each overall section by selecting the question mark icon.</span></p>
 
@@ -14,16 +60,31 @@
                 Presentation have no port equivalent and are omitted. --}}
             <div class="row bcoem-admin-element mb-4">
                 <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                    <a class="btn btn-info btn-sm btn-block" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
+                    <a class="btn btn-info btn-sm d-block w-100" href="http://brewingcompetitions.com/reset-comp" target="_blank" rel="noopener">Reset Competition Info <span class="fa fa-lg fa-info-circle"></span></a>
                 </div>
+                @if (request('msg') === '36')
+                    <div class="col-12">
+                        <div class="alert alert-success"><strong>Results are published.</strong></div>
+                    </div>
+                @endif
+                @if (! $status['winnersPublished'])
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <button type="button" class="btn btn-warning btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#publish-results">Publish Results <span class="fa fa-lg fa-bullhorn"></span></button>
+                    </div>
+                @endif
                 @if ($status['postCompTasks'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <a class="btn btn-info btn-sm btn-block" href="#" data-open-modal="post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
+                        <a class="btn btn-info btn-sm d-block w-100" href="#" data-bs-toggle="modal" data-bs-target="#post-comp">Post-Competition Tasks <span class="fa fa-lg fa-clipboard-list"></span></a>
+                    </div>
+                @endif
+                @if ($status['judgingStarted'] && $status['winnerMethodTable'])
+                    <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
+                        <button type="button" class="btn btn-info btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#presentationLaunch">Launch Awards Presentation <span class="fa fa-lg fa-award"></span></button>
                     </div>
                 @endif
                 @if ($status['showBest'])
                     <div class="col-lg-3 col-md-12" style="padding-bottom: 5px;">
-                        <button type="button" class="btn btn-info btn-sm btn-block" data-open-modal="preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
+                        <button type="button" class="btn btn-info btn-sm d-block w-100" data-bs-toggle="modal" data-bs-target="#preview-best">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results <span class="fa fa-lg fa-trophy"></span></button>
                     </div>
                 @endif
             </div>
@@ -31,43 +92,50 @@
             <div class="bcoem-admin-dashboard-accordion">
                 <div class="row">
                     @foreach (['left' => $left, 'right' => $right] as $side => $sections)
-                        <div class="col col-lg-6 col-md-12 col-sm-12 col-xs-12">
-                            <div class="panel-group" id="accordion-{{ $side }}">
+                        <div class="col-12 col-lg-6">
+                            <div id="accordion-{{ $side }}">
                             @foreach ($sections as [$title, $icon, $help, $links])
-                                <div id="dashboard-{{ Str::slug($title) }}" class="panel panel-default">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title">
-                                            <a href="#" class="panel-collapse-toggle" data-target="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}
-                                                <a href="#" role="button" data-open-modal="help-{{ $side }}-{{ $loop->index }}"
-                                                    onclick="event.stopPropagation()"
-                                                    aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a><span class="fa {{ $icon }} pull-right"></span>
-                                            </a>
+                                <div id="dashboard-{{ Str::slug($title) }}" class="card mb-3">
+                                    <div class="card-header">
+                                        <h4>
+                                            <a href="#" class="text-reset" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $side }}-{{ $loop->index }}" aria-expanded="false" aria-controls="collapse-{{ $side }}-{{ $loop->index }}">{{ $title }}<span class="fa {{ $icon }} float-end"></span></a>
+                                            <a href="#" role="button" data-bs-toggle="modal" data-bs-target="#help-{{ $side }}-{{ $loop->index }}"
+                                                onclick="event.stopPropagation()"
+                                                aria-label="About {{ $title }}"><span class="fa fa-sm fa-question-circle text-primary"></span></a>
                                         </h4>
                                     </div>
-                                    <div id="collapse-{{ $side }}-{{ $loop->index }}" class="panel-collapse">
-                                        <div class="panel-body">
+                                    <div id="collapse-{{ $side }}-{{ $loop->index }}" class="collapse" data-bs-parent="#accordion-{{ $side }}">
+                                        <div class="card-body d-block p-3 fs-6">
                                             @foreach ($links as [$category, $rowLinks])
                                                 <div class="row">
-                                                    <div class="col col-lg-4 col-md-4 col-sm-4 col-xs-12 small">
+                                                    <div class="col-12 col-md-4 small">
                                                         <strong>{{ $category }}</strong>
                                                     </div>
-                                                    <div class="col col-lg-8 col-md-8 col-sm-8 col-xs-12 small">
-                                                        <ul class="list-inline">
+                                                    <div class="col-12 col-md-8 small">
+                                                        <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
                                                             @foreach ($rowLinks as $item)
-                                                                @if (!empty($item['children']))
+                                                                @if (isset($item['children']))
                                                                     <li class="text-muted">
                                                                         <span class="text-muted">{{ $item['label'] }}</span>
-                                                                        <span class="text-muted">— labels per entry:</span>
+                                                                        @if (($item['descriptor'] ?? 'labels per entry') !== '')
+                                                                            <span class="text-muted">— {{ $item['descriptor'] }}:</span>
+                                                                        @endif
                                                                         @foreach ($item['children'] as $child)
-                                                                            <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                            @if (! empty($child['href']))
+                                                                                <a href="{{ url($child['href']) }}">{{ $child['label'] }}</a>
+                                                                            @else
+                                                                                <span class="text-muted" title="{{ $child['todo'] ?? '' }}">{{ $child['label'] }}</span><!-- TODO: legacy output -->
+                                                                            @endif
                                                                         @endforeach
                                                                     </li>
+                                                                @elseif (!empty($item['modal']))
+                                                                    <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#{{ $item['modal'] }}">{{ $item['label'] }}</a></li>
                                                                 @elseif (!empty($item['todo']))
                                                                     <li><span class="text-muted" title="{{ $item['todo'] }}">{{ $item['label'] }}</span><!-- TODO: legacy output --></li>
                                                                 @else
-                                                                    <li><a href="{{ url($item['href']) }}">{{ $item['label'] }}</a></li>
+                                                                    <li><a href="{{ url($item['href']) }}"@if (! empty($item['target'])) target="{{ $item['target'] }}" rel="noopener"@endif>{{ $item['label'] }}</a></li>
                                                                 @endif
-                                                            @endforeach
+                                                        @endforeach
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -85,90 +153,90 @@
          {{-- sidebar.admin.php: Donate + Competition Status panel --}}
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
-                <button type="button" class="btn btn-dark btn-sm btn-block mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
-                 <a class="btn btn-dark btn-sm btn-block" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
+                <button type="button" class="btn btn-dark btn-sm d-block w-100 mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
+                 <a class="btn btn-dark btn-sm d-block w-100" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
              </div>
 
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h4 style="margin: 0px; padding-bottom: 5px;">Competition Status<span class="fa fa-2x fa-bar-chart text-info pull-right"></span></h4>
+            <div class="card border-info mb-3">
+                <div class="card-header bg-info-subtle">
+                    <h4 style="margin: 0px; padding-bottom: 5px;">Competition Status<span class="fa fa-2x fa-bar-chart text-info float-end"></span></h4>
                     <p class="small m-0"><span class="small text-muted">Updated {{ $status['updated'] }}</span></p>
                 </div>
-                <div class="panel-body small">
-                    <div class="bcoem-sidebar-panel">
+                <div class="card-body d-block p-3 fs-6 small">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Confirmed Entries</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/entries') }}">{{ $status['confirmed'] }}</a>@if (filled($status['entryLimit'])) / {{ $status['entryLimit'] }}@endif</span>
+                        <span class="float-end"><a href="{{ url('/backoffice/entries') }}">{{ $status['confirmed'] }}</a>@if (filled($status['entryLimit'])) / {{ $status['entryLimit'] }}@endif</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Unconfirmed Entries</strong>
-                        <span class="pull-right">{{ $status['unconfirmed'] }}</span>
+                        <span class="float-end">{{ $status['unconfirmed'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Paid Entries</strong>
-                        <span class="pull-right">{{ $status['paid'] }}@if (filled($status['paidLimit'])) / {{ $status['paidLimit'] }}@endif</span>
+                        <span class="float-end">{{ $status['paid'] }}@if (filled($status['paidLimit'])) / {{ $status['paidLimit'] }}@endif</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Paid/Rec'd Entries</strong>
-                        <span class="pull-right">{{ $status['paidReceived'] }}</span>
+                        <span class="float-end">{{ $status['paidReceived'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Entry Counts</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/count-by-style') }}">Style</a> / <a href="{{ url('/backoffice/count-by-substyle') }}">Sub-Style</a></span>
+                        <span class="float-end"><a href="{{ url('/backoffice/count-by-style') }}">Style</a> / <a href="{{ url('/backoffice/count-by-substyle') }}">Sub-Style</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Total Fees</strong>
-                        <span class="pull-right">{{ $status['currencySymbol'] }}{{ number_format($status['fees'], 2) }}</span>
+                        <span class="float-end">{{ $status['currencySymbol'] }}{{ number_format($status['fees'], 2) }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Total Fees Paid</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/payments/mark') }}">{{ $status['currencySymbol'] }}{{ number_format($status['feesPaid'], 2) }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/payments/mark') }}">{{ $status['currencySymbol'] }}{{ number_format($status['feesPaid'], 2) }}</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Tables Planning Mode</strong>
-                        <span class="pull-right">{{ $status['tablesPlanning'] ? 'On' : 'Off' }}</span>
+                        <span class="float-end">{{ $status['tablesPlanning'] ? 'On' : 'Off' }}</span>
                     </div>
                     @if ($status['evalsOn'])
-                        <div class="bcoem-sidebar-panel">
+                        <div class="bcoem-stat-row">
                             <strong class="text-info">Evaluations</strong>
-                            <span class="pull-right">{{ $status['evalTotal'] }} / {{ $status['evalEntries'] }}</span>
+                            <span class="float-end">{{ $status['evalTotal'] }} / {{ $status['evalEntries'] }}</span>
                         </div>
                     @endif
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Participants</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/participants') }}">{{ $status['participants'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/backoffice/participants') }}">{{ $status['participants'] }}</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Participants with Entries</strong>
-                        <span class="pull-right">{{ $status['participantsWithEntries'] }}</span>
+                        <span class="float-end">{{ $status['participantsWithEntries'] }}</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Available Judges</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/participants?filter=judges') }}">{{ $status['judges'] }}</a>@if (filled($status['judgeCap'])) / {{ $status['judgeCap'] }}@endif</span>
+                        <span class="float-end"><a href="{{ url('/backoffice/participants?filter=judges') }}">{{ $status['judges'] }}</a>@if (filled($status['judgeCap'])) / {{ $status['judgeCap'] }}@endif</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Assigned Judges</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=judges') }}">{{ $status['judgesAssigned'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/flights?filter=judges') }}">{{ $status['judgesAssigned'] }}</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Available Stewards</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/participants?filter=stewards') }}">{{ $status['stewards'] }}</a>@if (filled($status['stewardCap'])) / {{ $status['stewardCap'] }}@endif</span>
+                        <span class="float-end"><a href="{{ url('/backoffice/participants?filter=stewards') }}">{{ $status['stewards'] }}</a>@if (filled($status['stewardCap'])) / {{ $status['stewardCap'] }}@endif</span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Assigned Stewards</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=stewards') }}">{{ $status['stewardsAssigned'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards" data-bs-toggle="tooltip" title="View assigned stewards">{{ $status['stewardsAssigned'] }}</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Available Staff</strong>
-                        <span class="pull-right"><a href="{{ url('/backoffice/participants?filter=staff') }}">{{ $status['staff'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff&view=yes" data-bs-toggle="tooltip" title="View available staff">{{ $status['staff'] }}</a></span>
                     </div>
-                    <div class="bcoem-sidebar-panel">
+                    <div class="bcoem-stat-row">
                         <strong class="text-info">Assigned Staff</strong>
-                        <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=staff') }}">{{ $status['staffAssigned'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-bs-toggle="tooltip" title="View assigned staff">{{ $status['staffAssigned'] }}</a></span>
                     </div>
                     @if ($status['organizer'] !== null)
-                        <div class="bcoem-sidebar-panel">
+                        <div class="bcoem-stat-row">
                             <strong class="text-info">Organizer</strong>
-                            <span class="pull-right"><a href="{{ url('/admin/judging/flights?filter=staff') }}">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
+                            <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-bs-toggle="tooltip" title="View assigned staff and organizer">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
                         </div>
                     @endif
                     @foreach ([
@@ -178,19 +246,19 @@
                         'Registration' => $status['windows']['registration'],
                         'Judge/Steward Registration' => $status['windows']['judge'],
                     ] as $label => $open)
-                        <div class="bcoem-sidebar-panel">
+                        <div class="bcoem-stat-row">
                             <strong class="text-info">{{ $label }}</strong>
                             @if ($open)
-                                <span class="pull-right text-success"><span class="fa fa-lg fa-check"></span> Open</span>
+                                <span class="float-end text-success"><span class="fa fa-lg fa-check"></span> Open</span>
                             @else
-                                <span class="pull-right text-danger"><span class="fa fa-lg fa-times"></span> Closed</span>
+                                <span class="float-end text-danger"><span class="fa fa-lg fa-times"></span> Closed</span>
                             @endif
                         </div>
                     @endforeach
                     {{-- sidebar.admin.php tail: server environment line --}}
                     <div class="small" style="margin-top: 10px; margin-bottom: 0px;">
                         <em><span class="text-muted">
-                            <ul class="list-inline">
+                            <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
                                 <li>Environment Info:</li>
                                 <li>PHP Version &ndash; {{ $status['phpVersion'] }}</li>
                                 <li>{{ str_contains($status['dbVersion'], 'MariaDB') ? 'MariaDB Version' : 'MySQL Version' }} &ndash; {{ $status['dbVersion'] }}</li>
@@ -204,23 +272,36 @@
 
     @foreach (['left' => $left, 'right' => $right] as $side => $sections)
         @foreach ($sections as $si => [$title, $icon, $help, $links])
-            <dialog id="help-{{ $side }}-{{ $si }}" class="modal">
-                <div class="modal-box">
-                    <h3 class="text-lg font-bold">{{ $title }}</h3>
+            <div class="modal fade" id="help-{{ $side }}-{{ $si }}" tabindex="-1" role="dialog" aria-labelledby="help-{{ $side }}-{{ $si }}-title" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title" id="help-{{ $side }}-{{ $si }}-title">{{ $title }}</h3>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
                     <p>{{ $help }}</p>
-                    <div class="modal-action">
-                        <form method="dialog"><button class="btn">Close</button></form>
+                    @if (! empty($helpHtml[$title] ?? null)) {!! $helpHtml[$title] !!} @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
-            </dialog>
+            </div>
+        </div>
         @endforeach
     @endforeach
 
     {{-- default.admin.php:489-505 Post-Competition Tasks checklist --}}
     @if ($status['postCompTasks'])
-        <dialog id="post-comp" class="modal">
-            <div class="modal-box max-w-3xl">
-                <h3 class="text-lg font-bold">Post-Competition Tasks</h3>
+        <div class="modal fade" id="post-comp" tabindex="-1" role="dialog" aria-labelledby="post-comp-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="post-comp-title">Post-Competition Tasks</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
                 <p>Below is a list of common tasks that organizers typically complete after publishing competition results.</p>
                 <p><strong>If this competition is BJCP sanctioned</strong>, send or complete the BJCP Organizer's Report within 21 days of the conclusion of judging. You have two options when submitting your competition support to the BJCP:</p>
                 <ul>
@@ -231,18 +312,25 @@
                 <p><strong>If this competition is part of a regional circuit</strong>, download the <a href="{{ url('/admin/output/export?go=csv&tb=circuit') }}">Winners: Circuit Data</a> report. You can find this report under the Data Exports header on the Administration Dashboard.</p>
                 <p><strong>If this competition is mailing physical scoresheets or awards to entrants</strong>, generate the appropriate Award/Medal Labels, Address Labels, and Participant Summaries by expanding the Reports header on the Administration Dashboard in the After Judging section.</p>
                 <p><strong>Send thank you emails to judges, stewards, and staff.</strong> You can export email addresses by expanding the Data Exports header and selecting the appropriate exports in the Email Addresses and Associated Contact Data (CSV) list.</p>
-                <div class="modal-action">
-                    <form method="dialog"><button class="btn btn-error">Close</button></form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
-        </dialog>
+        </div>
+    </div>
     @endif
 
     {{-- default.admin.php:594+ Best Brewer/Best Club modal (bestbrewer.sec.php) --}}
     @if ($status['showBest'])
-        <dialog id="preview-best" class="modal">
-            <div class="modal-box max-w-3xl">
-                <h3 class="text-lg font-bold">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results</h3>
+        <div class="modal fade" id="preview-best" tabindex="-1" role="dialog" aria-labelledby="preview-best-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="preview-best-title">Best Brewer{{ (int) \App\Support\Tenant\TenantContext::load()->prefsStr('prefsProEdition') === 0 ? '/Best Club' : '' }} Results</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
                 @if ($status['bestBrewers'] === [])
                     <p>No results are available yet.</p>
                 @else
@@ -272,10 +360,109 @@
                         </table>
                     @endif
                 @endif
-                <div class="modal-action">
-                    <form method="dialog"><button class="btn btn-error">Close</button></form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
-        </dialog>
+        </div>
+    </div>
     @endif
+
+    {{-- Launch Awards Presentation modal (legacy #presentationLaunch,
+        default.admin.php:519-560): 4 methods × 3 themes link table. --}}
+    @if ($status['judgingStarted'] && $status['winnerMethodTable'])
+        <div class="modal fade" id="presentationLaunch" tabindex="-1" role="dialog" aria-labelledby="presentationLaunch-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="presentationLaunch-title">Launch Awards Presentation</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                <p>PowerPoint-style presentation of placing entries and Best of Show winner(s). Intended to be projected or screen-shared during your awards ceremony.</p>
+                <p><strong>Only Admin-level users can access the presentation before results are published.</strong></p>
+                <table class="table table-striped table-bordered mt-4">
+                    <thead><tr><th>Method</th><th>Available Themes</th></tr></thead>
+                    <tbody>
+                        @foreach ([
+                            ['By Table Number', ''],
+                            ['By Table Number – Table/Medal Group Name Only', 'go=table-name-only'],
+                            ['By Table/Medal Group Entry Count – Ascending', 'go=table-entry-count-asc'],
+                            ['By Table/Medal Group Entry Count – Descending', 'go=table-entry-count-desc'],
+                        ] as [$method, $qs])
+                            <tr>
+                                <td>{{ $method }}</td>
+                                <td>
+                                    <a href="{{ url('/awards'.($qs !== '' ? '?'.$qs : '')) }}" target="_blank" rel="noopener">Light</a> |
+                                    <a href="{{ url('/awards?'.($qs !== '' ? $qs.'&' : '').'view=black') }}" target="_blank" rel="noopener">Dark</a> |
+                                    <a href="{{ url('/awards?'.($qs !== '' ? $qs.'&' : '').'view=blue') }}" target="_blank" rel="noopener">Blue-Green</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    @if (! $status['winnersPublished'])
+        <div class="modal fade" id="publish-results" tabindex="-1" role="dialog" aria-labelledby="publish-results-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="publish-results-title">Publish Results</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                <p class="py-4">Publishes winners publicly and closes the competition. All future deadlines (registration, entry, judge, judging) are snapped to now. <strong>Cannot be undone.</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ route('admin.results.publish') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-warning">Publish Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    {{-- JN regenerate confirms (legacy jn-random/jn-style/jn-entry modals). --}}
+    @foreach ([
+        ['jn-random-modal', 'Random Judging Numbers', 'default',
+            'Assigns a new random six-digit judging number (digits 1–9) to every entry. Existing numbers and scoresheets are not re-matched — regenerate before judging starts.'],
+        ['jn-style-modal', 'Style-Prefixed Judging Numbers', 'legacy',
+            'Assigns per-category sequence numbers (e.g. 21-001) continuing each category’s current sequence.'],
+        ['jn-entry-modal', 'Judging Numbers = Entry Numbers', 'identical',
+            'Sets every judging number to the zero-padded entry id.'],
+    ] as [$id, $title, $method, $blurb])
+        <div class="modal fade" id="{{ $id }}" tabindex="-1" role="dialog" aria-labelledby="{{ $id }}-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="{{ $id }}-title">{{ $title }}</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                <p class="py-4">{{ $blurb }}</p>
+                <p class="text-danger fs-6">This wipes and reassigns ALL judging numbers. Cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ route('admin.judging.regenerate_numbers') }}">
+                        @csrf
+                        <input type="hidden" name="method" value="{{ $method }}">
+                        <button type="submit" class="btn btn-danger">Regenerate Now</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endforeach
+    @include('admin.partials.dashboard-help-modals')
 </x-public-layout>

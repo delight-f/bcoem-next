@@ -64,7 +64,22 @@ final class DashboardController extends Controller
 
         $sections = $this->sections((int) $user->userLevel, (int) $user->userAdminObfuscate, $prefs, $counts);
 
+        $helpHtml = [
+            'Organizing' => implode('', [
+                '<p>Organization in BCOE&amp;M begins with assigning individual participants as a <a href="'.url('/backoffice/participants?filter=staff').'">staff</a> member and/or <a href="'.url('/backoffice/participants?filter=judges').'">judge</a> or <a href="'.url('/backoffice/participants?filter=stewards').'">steward</a>. This builds a pool of available participants to assign to various duties in the competition.</p>',
+                '<p>Once assignments have been given, the next steps are to:</p>',
+                '<ol>',
+                '<li><a href="'.url('/admin/judging/tables').'">Define tables</a> where specific sub-styles will be judged.</li>',
+                '<li>Add flights to tables (if queued judging is disabled).</li>',
+                '<li>Assign <a href="'.url('/admin/judging/flights').'?action=assign&filter=rounds">tables to rounds</a>.</li>',
+                '<li>Assign judges and stewards to tables (and flights, if applicable).</li>',
+                '</ol>',
+            ]),
+        ];
+
         return view('admin.dashboard', [
+            'helpHtml' => $helpHtml,
+            'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],
             'status' => $this->status($ctx, $windows, $now),
@@ -154,6 +169,8 @@ final class DashboardController extends Controller
             'judgingStarted' => $judgingStarted,
             'judgingPast' => $judgingPast,
             'postCompTasks' => ! $judgingPast && $now >= (int) ($ctx->prefsStr('prefsWinnerDelay') ?: 0),
+            'winnersPublished' => ($ctx->prefsStr('prefsDisplayWinners') ?? 'N') === 'Y',
+            'winnerMethodTable' => (int) ($ctx->prefsStr('prefsWinnerMethod') ?? 0) === 0,
             'showBest' => ((int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0
                 || (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0) && $judgingStarted,
             'bestBrewers' => $judgingStarted ? ResultsRepository::current()->bestBrewers(
@@ -177,18 +194,19 @@ final class DashboardController extends Controller
     {
         $l = static fn (string $href, string $label): array => ['label' => $label, 'href' => $href];
         $todo = static fn (string $label, string $src): array => ['label' => $label, 'href' => null, 'todo' => 'TODO: legacy output — '.$src];
-        $family = static fn (string $label, array $children): array => ['label' => $label, 'children' => $children];
+        $family = static fn (string $label, array $children, string $descriptor = 'labels per entry'): array => ['label' => $label, 'children' => $children, 'descriptor' => $descriptor];
 
-        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown, where the
-        // port backend for the underlying label surface does not exist yet.
-        $countFamily = function (string $label, string $hrefTemplate) use ($todo): array {
-            $children = [];
-            for ($i = 1; $i <= 12; $i++) {
-                $children[] = ['label' => (string) $i, 'href' => null, 'todo' => $todo((string) $i, $hrefTemplate.'&sort='.$i)['todo']];
-            }
-
-            return ['label' => $label, 'children' => $children];
-        };
+        // A legacy `for($i=1;$i<=12;$i++)` label-count dropdown. The bottle
+        // and box label families all route through /admin/output/labels, so
+        // each count maps to the port route with the `section=labels-admin`
+        // segment dropped (it selects that route).
+        $countFamily = fn (string $label, string $hrefTemplate): array => [
+            'label' => $label,
+            'children' => collect(range(1, 12))->map(
+                fn (int $i): array => ['label' => (string) $i,
+                    'href' => '/admin/output/labels?'.str_replace('section=labels-admin&', '', $hrefTemplate).'&sort='.$i],
+            )->all(),
+        ];
 
         $level0 = $level === 0;
         $barcodes = $prefs['barcodes'];
@@ -202,13 +220,13 @@ final class DashboardController extends Controller
                 'Your competition&#39;s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
                 [
                     ['All Competition Dates', [$l('/admin/dates', 'Edit')]],
-                    ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload', 'Upload Logo')]],
+                    ['Competition Info', [$l('/admin/competition-info', 'Edit'), $l('/admin/upload?action=html', 'Upload Logo')]],
                     ['Contacts', [$l('/admin/contacts', 'Manage'), $l('/admin/contacts/create', 'Add')]],
                     ['Custom Categories', [$l('/admin/judging/special-best', 'Manage'), $l('/admin/judging/special-best/create', 'Add')]],
                     ['Drop-Off Locations', [$l('/admin/dropoff', 'Manage'), $l('/admin/dropoff/create', 'Add')]],
                     ['Judging Sessions', [$l('/admin/judging/locations', 'Manage'), $l('/admin/judging/locations/create', 'Add')]],
                     ['Non-Judging Sessions', [$l('/admin/judging/non-judging', 'Manage'), $l('/admin/judging/non-judging/create', 'Add')]],
-                    ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload', 'Upload Logos')]],
+                    ['Sponsors', [$l('/admin/sponsors', 'Manage'), $l('/admin/sponsors/create', 'Add'), $l('/admin/upload?action=html', 'Upload Logos')]],
                     ['Styles Accepted', [$l('/admin/styles', 'Manage'), $l('/admin/styles/create', 'Add')]],
                     ['Style Types', [$l('/admin/style-types', 'Manage'), $l('/admin/style-types/create', 'Add')]],
                 ],
@@ -217,7 +235,7 @@ final class DashboardController extends Controller
 
         // Entries, Payments, and Participants — legacy Entries/Payments and Participants.
         $entriesItems = [];
-        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
+        $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage'), $l('/backoffice/entries?view=paid', 'Paid')]];
         if ($prefs['paypalIpn']) {
             $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
         }
@@ -225,12 +243,17 @@ final class DashboardController extends Controller
         if ($level0) {
             array_push(
                 $participantLinks,
-                $l('/admin/judging/flights', 'Assign/Unassign Judges'),
-                $l('/admin/judging/flights', 'Assign/Unassign Stewards'),
-                $l('/admin/judging/flights', 'Assign/Unassign Staff'),
+                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
+                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
+                $l('/backoffice/participants?filter=staff', 'Assign/Unassign Staff'),
+                $l('/backoffice/participants?filter=staff&view=yes', 'Assign/Unassign Staff (Interested Only)'),
             );
         } else {
-            array_push($participantLinks, $l('/admin/judging/flights', 'Assign/Unassign Judges'), $l('/admin/judging/flights', 'Assign/Unassign Stewards'));
+            array_push(
+                $participantLinks,
+                $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),
+                $l('/backoffice/participants?filter=stewards', 'Assign/Unassign Stewards'),
+            );
         }
         $entriesItems[] = ['Participants', $participantLinks];
         $entriesItems[] = ['Register', [
@@ -250,9 +273,9 @@ final class DashboardController extends Controller
         $sortItems = [];
         if ($obfuscate === 0) {
             $sortItems[] = ['Regenerate', [
-                $todo('Judging Numbers (Random)', 'go=... js regen modal'),
-                $todo('Judging Numbers (With Style Number Prefix)', 'go=... js regen modal'),
-                $todo('Judging Numbers (Same as Entry Numbers)', 'go=... js regen modal'),
+                ['label' => 'Judging Numbers (Random)', 'modal' => 'jn-random-modal'],
+                ['label' => 'Judging Numbers (With Style Number Prefix)', 'modal' => 'jn-style-modal'],
+                ['label' => 'Judging Numbers (Same as Entry Numbers)', 'modal' => 'jn-entry-modal'],
             ]];
             if ($barcodes) {
                 $sortItems[] = ['Using Barcodes/QR Codes?', [
@@ -263,7 +286,7 @@ final class DashboardController extends Controller
         $checkIn = [$l('/backoffice/entries', 'Manually')];
         if ($obfuscate === 0) {
             if ($barcodes) {
-                $checkIn[] = $todo('Via Mobile Devices', 'qr.php not ported');
+                $checkIn[] = ['label' => 'Via Mobile Devices', 'href' => '/qr', 'target' => '_blank'];
             }
             $checkIn[] = $l('/admin/judging/checkin', 'Via Barcode Scanner (Entry/Judging Numbers Only)');
             $checkIn[] = $l('/admin/judging/checkin?filter=box-paid', 'Via Barcode Scanner (Entry/Judging Numbers, Box, and Paid)');
@@ -299,14 +322,31 @@ final class DashboardController extends Controller
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Entry Numbers)', $countFamily('With Required Info, Only Styles Where Required (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422')['children']);
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, All Styles (Judging Numbers)', $countFamily('With Required Info, All Styles (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=all&psort=3422')['children']);
             $bottle[] = $family('A4 (Avery 3422) — With Required Info, Only Styles Where Required (Judging Numbers)', $countFamily('With Required Info, Only Styles Where Required (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=5160&tb=received')['children']);
+            $bottle[] = $family('Letter (Avery 5160) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=5160&tb=received')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Received Only (Entry Numbers)', $countFamily('Received Only (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry&filter=default&view=special&psort=3422&tb=received')['children']);
+            $bottle[] = $family('A4 (Avery 3422) — Received Only (Judging Numbers)', $countFamily('Received Only (Judging Numbers)', 'section=labels-admin&go=entries&action=bottle-judging&filter=default&view=special&psort=3422&tb=received')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — All Entries', $countFamily('All Entries', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL5275WR')['children']);
             $bottle[] = $family('Round (Avery OL5275WR) — Entries Added By Admins', $countFamily('Entries Added By Admins', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=recent&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Category Only', $countFamily('Category Only', 'section=labels-admin&go=entries&action=bottle-category-round&filter=default&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL32) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL32')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Entry Numbers', $countFamily('Entry Numbers', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=default&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Judging Numbers', $countFamily('Judging Numbers', 'section=labels-admin&go=entries&action=bottle-judging-round&filter=default&psort=OL5275WR')['children']);
+            $bottle[] = $family('Round (Avery OL5275WR) — Added After Reg Close (Entry Numbers)', $countFamily('Added After Reg Close (Entry Numbers)', 'section=labels-admin&go=entries&action=bottle-entry-round&filter=recent&psort=OL5275WR')['children']);
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=5160', 'Entry Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=5160', 'Judging Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-entry&filter=default&psort=3422', 'Entry Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&psort=3422', 'Judging Numbers');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167', 'Quicksort — 6 Labels per Entry');
+            $bottle[] = $l('/admin/output/labels?go=entries&action=bottle-judging&filter=default&view=quicksort&psort=5167&tb=short', 'Quicksort — 3 Labels per Entry');
             $sortItems[] = ['Print Bottle Labels (PDF)', $bottle];
 
             // Print Box Labels (PDF).
             $box = [];
-            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=5160')['children']);
-            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=5160')['children']);
+            $box[] = $family('Letter (Avery 5160) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables')['children']);
+            $box[] = $family('Letter (Avery 5160) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges')['children']);
             $box[] = $family('A4 (Avery 3422) — Box Labels (by Table)', $countFamily('Box Labels (by Table)', 'section=labels-admin&go=judging_tables&psort=3422')['children']);
             $box[] = $family('A4 (Avery 3422) — Virtual Judging Box Labels (by Judge Name)', $countFamily('Virtual Judging Box Labels (by Judge Name)', 'section=labels-admin&go=judging_tables&filter=judges&psort=3422')['children']);
             $sortItems[] = ['Print Box Labels (PDF)', $box];
@@ -320,16 +360,16 @@ final class DashboardController extends Controller
         // Organizing.
         $orgItems = [
             ['Assign/Unassign', [
-                $l('/admin/judging/flights', 'Judges'),
-                $l('/admin/judging/flights', 'Stewards'),
-                $l('/admin/judging/flights', 'Staff'),
+                $l('/admin/judging/tables?action=assign&filter=judges', 'Judges'),
+                $l('/admin/judging/tables?action=assign&filter=stewards', 'Stewards'),
+                $l('/admin/judging/tables?action=assign&filter=staff', 'Staff'),
             ]],
             ['Tables', array_merge(
                 [$l('/admin/judging/tables', 'Manage'), $l('/admin/judging/tables/create', 'Add')],
-                $tables > 1 ? [$l('/admin/judging/flights', 'Assign Judges/Stewards')] : [],
+                $tables > 1 ? [$l('/admin/judging/tables?action=assign', 'Assign Judges/Stewards')] : [],
             )],
-            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights', 'Add')]],
-            ['BOS Judges', [$l('/admin/judging/bos', 'Add')]],
+            ['Flights', [$l('/admin/judging/flights', 'Manage'), $l('/admin/judging/flights/rounds', 'Assign Tables to Rounds'), $l('/admin/judging/flights', 'Add')]],
+            ['BOS Judges', [$l('/backoffice/participants?filter=bos', 'Add')]],
         ];
         $left[] = ['Organizing', 'fa-tasks',
             'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
@@ -340,7 +380,7 @@ final class DashboardController extends Controller
         $scoreItems = [
             ['Scoresheets and Docs', [
                 $l('/admin/upload-scoresheets', 'Upload Multiple'),
-                $l('/admin/upload-scoresheets', 'Upload Individually'),
+                $l('/admin/upload-scoresheets?action=html', 'Upload Individually'),
             ]],
         ];
         if ($obfuscate === 0) {
@@ -348,9 +388,32 @@ final class DashboardController extends Controller
         }
         $scoreLinks = [$l('/admin/judging/scores', 'Manage')];
         if ($prefs['eval']) {
-            $scoreLinks[] = $todo('Import Scores', 'import_scores.eval.php modal');
+            $scoreLinks[] = ['label' => 'Import Scores', 'href' => '/eval/import-scores'];
         }
         $scoreItems[] = ['Scores', $scoreLinks];
+        // "Add Scores to..." dropdown (legacy score_table_choose,
+        // lib/admin.lib.php:445): per-table add/edit link.
+        $scoreAddItems = DB::table('judging_tables')->orderBy('tableNumber')
+            ->get(['id', 'tableNumber', 'tableName'])
+            ->map(fn ($t) => $l('/admin/judging/scores?action=add&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))
+            ->all();
+        if ($scoreAddItems !== []) {
+            $scoreItems[] = ['Add Scores to...', $scoreAddItems];
+        }
+        // "Add Entries to..." dropdown (legacy score_custom_winning_choose,
+        // lib/admin.lib.php:474): per special-best category, add when no
+        // data rows exist yet, edit otherwise.
+        $customEntries = DB::table('special_best_info')->orderBy('sbi_name')
+            ->get(['id', 'sbi_name'])
+            ->map(function ($sbi) use ($l): array {
+                $has = DB::table('special_best_data')->where('sid', $sbi->id)->exists();
+
+                return ['label' => (string) $sbi->sbi_name,
+                    'href' => '/admin/judging/special-best-data?action='.($has ? 'edit' : 'add').'&id='.$sbi->id];
+            })->all();
+        if ($customEntries !== []) {
+            $scoreItems[] = $family('Add Entries to...', $customEntries, '');
+        }
         if ($level0 || $obfuscate === 0) {
             $scoreItems[] = ['BOS Entries and Places', [$l('/admin/judging/bos', 'Manage')]];
         }
@@ -367,8 +430,8 @@ final class DashboardController extends Controller
 
         // Before Judging.
         $reportsItems[] = ['Staff Availability', [
-            $todo('By Last Name', 'section=assignments&go=judging_assignments&filter=staff&view=name'),
-            $todo('By Non-Judging Session', 'section=assignments&go=judging_assignments&filter=staff'),
+            $l('/admin/output/assignments?filter=staff&view=name', 'By Last Name'),
+            $l('/admin/output/assignments?filter=staff', 'By Non-Judging Session'),
         ]];
         $reportsItems[] = ['Notes', [
             $l('/admin/output/judge_notes?go=org_notes', 'Notes to Organizer'),
@@ -383,84 +446,133 @@ final class DashboardController extends Controller
         ]];
         if ($tables > 0 && $obfuscate === 0) {
             $reportsItems[] = ['Additional Info', [
-                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=all_entry_info&view=entry&id=default'),
-                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=all_entry_info&id=default'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers'),
             ]];
             $reportsItems[] = ['Judge Inventories', [
-                $todo('Entries for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J'),
-                $todo('Judging Numbers for Session...', 'section=pullsheets&go=all_entry_info&view=judge_inventory&filter=J&sort=entry'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J', 'Entries for Session...'),
+                $l('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry', 'Judging Numbers for Session...'),
             ]];
         }
+        $tableCardPerTable = DB::table('judging_tables')->orderBy('tableNumber')->get()
+            ->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all();
         $reportsItems[] = ['Table Cards', [
             $l('/admin/output/table_cards', 'All Tables'),
-            $todo('For Table...', 'table_choose("table-cards","judging_tables")'),
-            $todo('For Session...', 'table-cards judging_locations round'),
+            $l('/admin/output/table_cards?psort=sorting-placards', 'Sorting Placards'),
+            $l('/admin/output/table_cards?psort=sorting-placards&view=master-list', 'Sorting Placards (Master List)'),
+            $l('/admin/output/table_cards?psort=sorting-tables', 'Sorting Tables'),
+            $l('/admin/output/table_cards?psort=sorting-tables&view=master-list', 'Sorting Tables (Master List)'),
+            $l('/admin/output/table_cards?id=1', 'For Table...'),
+            $family('For Table (choose)...', $tableCardPerTable, ''),
+            $family('For Session...', DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => collect(range(1, max(1, (int) $loc->judgingRounds)))
+                    ->map(fn (int $round) => $l('/admin/output/table_cards?go=judging_locations&location='.$loc->id.'&round='.$round, (string) $loc->judgingLocName.' - Round '.$round)))->all(), ''),
         ]];
         $reportsItems[] = ['Sign In Sheets', [
-            $todo('Judges', 'section=assignments&go=judging_assignments&filter=judges&view=sign-in'),
-            $todo('Stewards', 'section=assignments&go=judging_assignments&filter=stewards&view=sign-in'),
+            $l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
+            $l('/admin/output/assignments?filter=stewards&view=sign-in', 'Stewards'),
         ]];
         if ($tables > 0) {
+            $judgeSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => [
+                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                    $l('/admin/output/assignments?filter=judges&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
+                ])->all();
+            $stewardSessionLinks = DB::table('judging_locations')->orderBy('id')->get()
+                ->flatMap(fn ($loc) => [
+                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=name', $loc->judgingLocName.' By Name'),
+                    $l('/admin/output/assignments?filter=stewards&location='.$loc->id.'&view=table', $loc->judgingLocName.' By Table'),
+                ])->all();
             $reportsItems[] = ['Assignments', [
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Last Name'),
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Table'),
-                $l('/admin/output/assignments?filter=judges', 'All Judges By Session'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards Last Name'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Table'),
-                $l('/admin/output/assignments?filter=stewards', 'All Stewards By Session'),
+                $l('/admin/output/assignments?filter=judges&view=name', 'All Judges By Last Name'),
+                $l('/admin/output/assignments?filter=judges&view=table', 'All Judges By Table'),
+                $l('/admin/output/assignments?filter=judges&view=location', 'All Judges By Session'),
+                $family('Judges for Session...', $judgeSessionLinks, ''),
+                $l('/admin/output/assignments?filter=stewards&view=name', 'All Stewards Last Name'),
+                $l('/admin/output/assignments?filter=stewards&view=table', 'All Stewards By Table'),
+                $l('/admin/output/assignments?filter=stewards&view=location', 'All Stewards By Session'),
+                $family('Stewards for Session...', $stewardSessionLinks, ''),
             ]];
         }
         $reportsItems[] = ['Judge Scoresheet Labels', [
-            $todo('Letter', 'section=labels-admin&go=participants&action=judging_labels&psort=5160'),
-            $todo('A4', 'section=labels-admin&go=participants&action=judging_labels&psort=3422'),
+            $l('/admin/output/labels?go=participants&action=judging_labels&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=participants&action=judging_labels&psort=3422', 'A4'),
         ]];
         if ($obfuscate === 0) {
             $reportsItems[] = ['Name Tags', [
-                $todo('Letter', 'section=labels-admin&go=participants&action=judging_nametags&psort=5395'),
+                $l('/admin/output/labels?go=participants&action=judging_nametags&psort=5395', 'Letter'),
             ]];
         }
 
         // During Judging (tables>0 && obfuscate 0).
         if ($tables > 0 && $obfuscate === 0) {
             $reportsItems[] = ['Mini-BOS Pullsheets', [
-                $todo('All - Entry Numbers', 'section=pullsheets&go=mini_bos&view=entry'),
-                $todo('All By Table - Entry Numbers', 'section=pullsheets&go=judging_tables&view=entry&filter=mini_bos&id=default'),
-                $todo('All - Judging Numbers', 'section=pullsheets&go=mini_bos'),
-                $todo('All By Table - Judging Numbers', 'section=pullsheets&go=judging_tables&filter=mini_bos&id=default'),
+                $l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers'),
+                $l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
+                $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers'),
             ]];
             $reportsItems[] = ['Mini-BOS Cup Mats', [
-                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank'),
+                $l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank (Mini-BOS)'),
+                $l('/admin/output/bos_mat?action=blank&view=pro-am', 'Blank (Pro-Am)'),
+                $l('/admin/output/bos_mat?action=blank', 'Blank'),
                 $l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers'),
-                $todo('For Table...', 'bos-mat mini-bos per-table'),
+                $family('For Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=mini-bos&view='.$t->id.'&filter=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/bos_mat?action=mini-bos&view='.$t->id, (string) $t->tableNumber.' (Judging)')])->all(), ''),
                 $l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers'),
-                $todo('For Table... (Judging)', 'bos-mat mini-bos per-table judging'),
             ]];
+        $bosStyleTypes = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
             $reportsItems[] = ['BOS Pullsheets', [
-                $todo('All Style Types - Entry Numbers', 'section=pullsheets&go=judging_scores_bos&view=entry'),
-                $todo('For Style Type...', 'pullsheets judging_scores_bos per-style'),
-                $todo('All Style Types - Judging Numbers', 'section=pullsheets&go=judging_scores_bos'),
-                $todo('For Style Type... (Judging)', 'pullsheets judging_scores_bos per-style judging'),
+                $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers'),
+                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all(), ''),
+                $l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers'),
+                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all(), ''),
             ]];
             $reportsItems[] = ['BOS Cup Mats', [
                 $l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers'),
-                $todo('For Style Type...', 'bos-mat per-style'),
+                $family('For Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id.'&filter=entry', $t->styleTypeName))->all(), ''),
                 $l('/admin/output/bos_mat', 'All Style Types - Judging Numbers'),
-                $todo('For Style Type... (Judging)', 'bos-mat per-style judging'),
+                $family('For Style Type... (Judging)', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all(), ''),
+                $family('Pro-Am...', collect(range(1, 3))->flatMap(fn ($sort) => $bosStyleTypes->flatMap(fn ($t) => [$l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id.'&filter=entry', $t->styleTypeName.' ('.$sort.')'), $l('/admin/output/bos_mat?action=pro-am&sort='.$sort.'&view='.$t->id, $t->styleTypeName.' ('.$sort.')')])->all())->all(), ''),
             ]];
+        // Legacy ps_loc_* session dropdowns: per-location × per-round
+        // children, entry/judging number variants.
+        $sessionEntry = [];
+        $sessionJudging = [];
+        foreach (DB::table('judging_locations')->orderBy('id')->get() as $loc) {
+            foreach (range(1, max(1, (int) $loc->judgingRounds)) as $round) {
+                $name = (string) $loc->judgingLocName.' - Round '.$round;
+                $sessionEntry[] = $l('/admin/output/pullsheets?go=judging_locations&view=entry&location='.$loc->id.'&round='.$round, $name);
+                $sessionJudging[] = $l('/admin/output/pullsheets?go=judging_locations&view=default&location='.$loc->id.'&round='.$round, $name);
+            }
+        }
             $reportsItems[] = ['Pullsheets', [
                 $l('/admin/output/pullsheets', 'All By Table'),
+                $l('/admin/output/pullsheets?go=judging_tables&id=default&view=entry', 'All By Table - Entry Numbers'),
+                $family('Entry Numbers for Session...', $sessionEntry, ''),
+                $family('Judging Numbers for Session...', $sessionJudging, ''),
+                $family('Judging Numbers for Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()
+                    ->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, (string) $t->tableNumber))->all(), ''),
+                $family('Mini-BOS per Table...', DB::table('judging_tables')->orderBy('tableNumber')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=entry', (string) $t->tableNumber.' (Entry)'), $l('/admin/output/pullsheets?go=judging_tables&action=default&filter=mini_bos&id='.$t->id.'&view=default', (string) $t->tableNumber.' (Judging)')])->all(), ''),
+                $family('Mini-BOS per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=entry', (string) $t->judgingLocName.' (Entry)'), $l('/admin/output/pullsheets?go=judging_locations&filter=mini_bos&location='.$t->id.'&round=1&view=default', (string) $t->judgingLocName.' (Judging)')])->all(), ''),
+                $family('Judge Inventory per Location...', DB::table('judging_locations')->orderBy('id')->get()->flatMap(fn ($t) => [$l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory', (string) $t->judgingLocName), $l('/admin/output/pullsheets?go=all_entry_info&filter=J&location='.$t->id.'&view=judge_inventory&sort=entry', (string) $t->judgingLocName.' (Entry)')])->all(), ''),
+                $family('Pro-Am per Style Type...', collect(range(1, 3))->flatMap(fn ($f) => $bosStyleTypes->map(fn ($t) => [$l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id.'&view=entry', $t->styleTypeName.' ('.$f.')'), $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$f.'&id='.$t->id, $t->styleTypeName.' ('.$f.')')])->all())->flatten(1)->all(), ''),
             ]];
         }
 
         // After Judging.
         $reportsItems[] = ['Award Labels', [
-            $todo('Award Labels', 'section=labels-admin&go=awards'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=default&psort=3422', 'A4'),
         ]];
-        $reportsItems[] = ['Medal Labels (Round)', [
-            $todo('Medal Labels (Round)', 'section=labels-admin&go=medals'),
+        $reportsItems[] = ['Winner Address Labels', [
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=5160', 'Letter'),
+            $l('/admin/output/labels?go=judging_scores&action=awards&filter=address&psort=3422', 'A4'),
         ]];
         $reportsItems[] = ['Address Labels', [
-            $todo('Address Labels', 'section=labels-admin&go=participants&action=address_labels'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=5160', 'Letter (All Participants)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=default&psort=3422', 'A4 (All Participants)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=5160', 'Letter (With Entries)'),
+            $l('/admin/output/labels?go=participants&action=address_labels&filter=with_entries&psort=3422', 'A4 (With Entries)'),
         ]];
         $reportsItems[] = ['Summaries', [
             $l('/admin/output/participant_summary', 'Participant Summaries'),
@@ -470,29 +582,66 @@ final class DashboardController extends Controller
         ]];
         $reportsItems[] = ['BJCP Points', [
             $l('/admin/output/staff_points', 'Print'),
+            $l('/admin/output/staff_points?action=download&view=pdf', 'PDF'),
         ]];
         $reportsItems[] = ['Inventory', [
-            $l('/admin/output/post_judge_inventory', 'With Scores'),
+            $l('/admin/output/post_judge_inventory?go=scores', 'With Scores'),
             $l('/admin/output/post_judge_inventory', 'Without Scores'),
         ]];
         $reportsItems[] = ['BOS Results', [
-            $todo('Print', 'section=results&go=judging_scores_bos&action=print&tb=bos&view=default'),
-            $todo('PDF', 'section=export-results&go=judging_scores_bos&action=download&view=pdf'),
-            $todo('HTML', 'section=export-results&go=judging_scores_bos&action=download&view=html'),
+            $l('/admin/output/results?go=judging_scores_bos&action=print&tb=bos&view=default', 'Print'),
+            $l('/admin/output/results?go=judging_scores_bos&action=download&view=pdf', 'PDF'),
+            $l('/admin/output/results?go=judging_scores_bos&action=download&view=html', 'HTML'),
         ]];
         if ($prefs['showBestBrewer'] || $prefs['showBestClub']) {
             $reportsItems[] = ['Best Brewer'.($prefs['proEdition'] === 0 ? ' and/or Club' : ''), [
-                $todo('Print', 'section=results&go=best&action=print&view=default'),
+                $l('/admin/output/results?go=best&action=print&filter=default&view=default', 'Print'),
+                $l('/admin/output/results?go=best&action=print&view=default', 'Print (No Filter)'),
             ]];
         }
-        $reportsItems[] = ['Results ('.$this->resultsMethodLabel($prefs['winnerMethod']).')', [
-            $todo('All with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=default'),
-            $todo('All without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=default'),
-            $todo('Winners Only with Scores: By Table Number', 'section=results&go=judging_scores&action=print&tb=scores&view=winners'),
-            $todo('Winners Only without Scores: By Table Number', 'section=results&go=judging_scores&action=print&view=winners'),
-            $todo('PDF report', 'section=export-results&go=judging_scores&action=default&tb=none&view=pdf'),
-            $todo('HTML report', 'section=export-results&go=judging_scores&action=default&tb=none&view=html'),
-        ]];
+        // default.admin.php:1998-2110 — the results matrix. Method 0
+        // (table/medal group): four dropdown families per category (with
+        // scores / winners-only-with-scores via tb=scores; the without-
+        // scores pair without tb), each with the three sort orders. Two
+        // categories: "Results" (go=judging_scores) and "All Results -
+        // Single Report" (go=all). Other methods: four flat links.
+        $resultsFamily = static function (string $label, string $go, string $view, bool $tb) use ($l): array {
+            $base = '/admin/output/results?go='.$go.'&action=print'.($tb ? '&tb=scores' : '').'&view='.$view;
+
+            return [
+                'label' => $label.'...',
+                'descriptor' => '',
+                'children' => [
+                    $l($base, 'By Table Number'),
+                    $l($base.'&psort=table-entry-count-asc', 'By Table/Medal Group Entry Count - Ascending'),
+                    $l($base.'&psort=table-entry-count-desc', 'By Table/Medal Group Entry Count - Descending'),
+                ],
+            ];
+        };
+        $methodLabel = $this->resultsMethodLabel($prefs['winnerMethod']);
+        if ($prefs['winnerMethod'] === 0) {
+            $reportsItems[] = ['Results ('.$methodLabel.')', [
+                $resultsFamily('All with Scores', 'judging_scores', 'default', true),
+                $resultsFamily('Winners Only with Scores', 'judging_scores', 'winners', true),
+                $resultsFamily('All without Scores', 'judging_scores', 'default', false),
+                $resultsFamily('Winners Only without Scores', 'judging_scores', 'winners', false),
+                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=pdf', 'PDF'),
+                $l('/admin/output/results?action=default&go=judging_scores&tb=none&view=html', 'HTML'),
+            ]];
+            $reportsItems[] = ['All Results ('.$methodLabel.' - Single Report)', [
+                $resultsFamily('All with Scores', 'all', 'default', true),
+                $resultsFamily('Winners Only with Scores', 'all', 'winners', true),
+                $resultsFamily('All without Scores', 'all', 'default', false),
+                $resultsFamily('Winners Only without Scores', 'all', 'winners', false),
+            ]];
+        } else {
+            $reportsItems[] = ['Results ('.$methodLabel.')', [
+                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=default', 'All with Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners', 'Winners Only with Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print', 'All without Scores'),
+                $l('/admin/output/results?go=judging_scores&action=print&view=winners', 'Winners Only without Scores'),
+            ]];
+        }
 
         $right = [['Reports', 'fa-file',
             'A wide range of reports is available for all stages of your competition - before, during, and after your designated judging sessions.',
@@ -502,28 +651,28 @@ final class DashboardController extends Controller
         // Data Exports.
         $dataExportItems = [];
         $emailCsv = [
-            $todo('Available Judges', 'section=export-emails&go=csv&filter=avail_judges&action=email'),
-            $todo('Available Stewards', 'section=export-emails&go=csv&filter=avail_stewards&action=email'),
-            $todo('Assigned Judges', 'section=export-emails&go=csv&filter=judges&action=email'),
-            $todo('Assigned Stewards', 'section=export-emails&go=csv&filter=stewards&action=email'),
-            $todo('Available and Assigned Staff', 'section=export-emails&go=csv&filter=staff&action=email'),
+            $l('/admin/output/export?go=csv&filter=avail_judges&action=email', 'Available Judges'),
+            $l('/admin/output/export?go=csv&filter=avail_stewards&action=email', 'Available Stewards'),
+            $l('/admin/output/export?go=csv&filter=judges&action=email', 'Assigned Judges'),
+            $l('/admin/output/export?go=csv&filter=stewards&action=email', 'Assigned Stewards'),
+            $l('/admin/output/export?go=csv&filter=staff&action=email', 'Available and Assigned Staff'),
         ];
         $participantCsv = [
-            $todo('All Participants', 'section=export-participants&go=csv'),
-            $todo('Winners: Limited Data', 'section=export-entries&go=csv&tb=winners'),
-            $todo('Winners: Circuit Data', 'section=export-entries&go=csv&tb=circuit'),
-            $todo('Winners: Master Homebrewer Program Member Data', 'section=export-entries&go=csv&tb=circuit&filter=mhp'),
+            $l('/admin/output/export?go=csv&action=participants', 'All Participants'),
+            $l('/admin/output/export?go=csv&tb=winners', 'Winners: Limited Data'),
+            $l('/admin/output/export?go=csv&tb=circuit', 'Winners: Circuit Data'),
+            $l('/admin/output/export?filter=mhp&go=csv&tb=circuit', 'Winners: Master Homebrewer Program Member Data'),
         ];
         $entriesCsv = [
             $l('/admin/output/export?go=csv&action=all&tb=all', 'All Entries: All Data'),
             $l('/admin/output/export?go=csv', 'All Entries: Limited Data'),
-            $todo('All Entries: Limited Data with Participant Contact Info', 'section=export-entries&go=csv&tb=brewer_contact_info'),
-            $todo('Paid Entries', 'section=export-entries&go=csv&tb=paid&view=all'),
-            $todo('Paid & Received Entries', 'section=export-entries&go=csv&tb=paid'),
-            $todo('Paid Entries Not Received', 'section=export-entries&go=csv&tb=paid&view=not_received'),
-            $todo('Non-Paid Entries', 'section=export-entries&go=csv&tb=nopay&view=all'),
-            $todo('Non-Paid & Received Entries', 'section=export-entries&go=csv&tb=nopay'),
-            $todo('Entries with Required & Optional Info', 'section=export-entries&go=csv&action=required&tb=required'),
+            $l('/admin/output/export?go=csv&tb=brewer_contact_info', 'All Entries: Limited Data with Participant Contact Info'),
+            $l('/admin/output/export?go=csv&tb=paid&view=all', 'Paid Entries'),
+            $l('/admin/output/export?go=csv&tb=paid', 'Paid & Received Entries'),
+            $l('/admin/output/export?go=csv&tb=paid&view=not_received', 'Paid Entries Not Received'),
+            $l('/admin/output/export?go=csv&tb=nopay&view=all', 'Non-Paid Entries'),
+            $l('/admin/output/export?go=csv&tb=nopay', 'Non-Paid & Received Entries'),
+            $l('/admin/output/export?action=required&go=csv&tb=required', 'Entries with Required & Optional Info'),
         ];
         $dataExportItems[] = ['Email Addresses and Associated Contact Data (CSV)', $emailCsv];
         $dataExportItems[] = ['Participant Data (CSV)', $participantCsv];
@@ -539,22 +688,22 @@ final class DashboardController extends Controller
             // Data Management.
             $dataMgmtItems = [];
             $dataMgmtItems[] = ['Integrity', [
-                $todo('Clean-Up Data', 'cleanUp modal'),
+                $l('/admin/purge?flow=cleanup', 'Clean-Up Data'),
             ]];
             $dataMgmtItems[] = ['Entries', [
-                $todo('Confirm All Unconfirmed', 'confirmAll modal'),
-                $todo('Purge All Unconfirmed', 'purgeUnconfirmed modal'),
-                $todo('Purge All Unpaid', 'purgeUnpaid modal'),
+                $l('/admin/purge?flow=confirmed', 'Confirm All Unconfirmed'),
+                $l('/admin/purge?flow=unconfirmed', 'Purge All Unconfirmed'),
+                $l('/admin/purge?flow=unpaid', 'Purge All Unpaid'),
             ]];
             $dataMgmtItems[] = ['Purge', [
-                $l('/admin/purge', 'Entries'),
-                $todo('Payments', 'purgePayments modal'),
-                $todo('Participants', 'purgeParticipants modal'),
-                $todo('Judging Tables', 'purgeTables modal'),
+                $l('/admin/purge?flow=entries', 'Entries'),
+                $l('/admin/purge?flow=payments', 'Payments'),
+                $l('/admin/purge?flow=participants', 'Participants'),
+                $l('/admin/purge?flow=tables', 'Judging Tables'),
             ]];
             $dataMgmtItems[] = ['Archives', [
                 $l('/admin/archive', 'Manage'),
-                $l('/admin/archive', 'Archive Current Data'),
+                $l('/admin/archive?action=add', 'Archive Current Data'),
             ]];
             $right[] = ['Data Management', 'fa-archive',
                 'Actions to help maintain the data collected by your installation including various archive and purge functions.',
@@ -586,15 +735,15 @@ final class DashboardController extends Controller
         // More Help (legacy dashboard-help panel).
         $helpItems = [
             ['How Do I...', [
-                $todo('Competition Preparation', 'help modal #dashboard-help-modal-comp-prep'),
-                $todo('Entries and Participants', 'help modal #dashboard-help-modal-entries-participants'),
-                $todo('Entry Sorting', 'help modal #dashboard-help-modal-sorting'),
-                $todo('Organizing', 'help modal #dashboard-help-modal-organizing'),
-                $todo('Scoring', 'help modal #dashboard-help-modal-scoring'),
-                $todo('Preferences', 'help modal #dashboard-help-modal-preferences'),
-                $todo('Reports', 'help modal #dashboard-help-modal-reports'),
-                $todo('Data Exports', 'help modal #dashboard-help-modal-data-exports'),
-                $todo('Data Management', 'help modal #dashboard-help-modal-data-mgmt'),
+                ['label' => 'Competition Preparation', 'modal' => 'dashboard-help-modal-comp-prep'],
+                ['label' => 'Entries and Participants', 'modal' => 'dashboard-help-modal-entries-participants'],
+                ['label' => 'Entry Sorting', 'modal' => 'dashboard-help-modal-sorting'],
+                ['label' => 'Organizing', 'modal' => 'dashboard-help-modal-organizing'],
+                ['label' => 'Scoring', 'modal' => 'dashboard-help-modal-scoring'],
+                ['label' => 'Preferences', 'modal' => 'dashboard-help-modal-preferences'],
+                ['label' => 'Reports', 'modal' => 'dashboard-help-modal-reports'],
+                ['label' => 'Data Exports', 'modal' => 'dashboard-help-modal-data-exports'],
+                ['label' => 'Data Management', 'modal' => 'dashboard-help-modal-data-mgmt'],
                 ['label' => 'Report an Issue', 'href' => 'https://github.com/geoffhumphrey/brewcompetitiononlineentry/issues/new/choose'],
             ]],
         ];
@@ -606,16 +755,13 @@ final class DashboardController extends Controller
         return ['left' => $left, 'right' => $right];
     }
 
-    /** Legacy $results_method[$_SESSION['prefsWinnerMethod']] label. */
+    /** Legacy $results_method (constants.inc.php:594). */
     private function resultsMethodLabel(int $method): string
     {
         return match ($method) {
-            1 => 'Winners Only',
-            2 => 'Winners Only No Scores',
-            3 => 'Entry Order',
-            4 => 'Average Score',
-            5 => 'Highest Score',
-            default => 'All with Scores',
+            1 => 'By Style',
+            2 => 'By Sub-Style',
+            default => 'By Table/Medal Group',
         };
     }
 }

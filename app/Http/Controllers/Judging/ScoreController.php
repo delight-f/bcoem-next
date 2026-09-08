@@ -63,6 +63,9 @@ final class ScoreController extends Controller
             'ctx' => $ctx,
             'scores' => $scores,
             'tables' => DB::table('judging_tables')->orderBy('tableNumber')->get(['id', 'tableNumber', 'tableName']),
+            // Tables that already have scores (legacy score_table_choose,
+            // lib/admin.lib.php:445 picks action=edit for them).
+            'scoredTableIds' => DB::table('judging_scores')->distinct()->pluck('scoreTable')->map(fn ($v) => (int) $v)->all(),
             'bosTypes' => DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get(['id', 'styleTypeName']),
             'scoresEntered' => DB::table('judging_scores')->count(),
             'paidReceived' => DB::table('brewing')->where('brewPaid', '1')->where('brewReceived', '1')->count(),

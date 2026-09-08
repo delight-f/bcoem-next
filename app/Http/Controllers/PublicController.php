@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactMail;
 use App\Support\Entries\EntryGates;
 use App\Support\Results\ResultsRepository;
+use App\Support\Tenant\ContestRules;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
@@ -15,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Read-only public surface (Phase 2 / Slice A).
@@ -128,6 +131,16 @@ final class PublicController extends Controller
                 : null,
             'judgingStarted' => $judgingStarted,
             'sponsorsVisible' => $sponsorsVisible,
+            'sponsors' => DB::table('sponsors')->orderBy('id')->get(),
+            'logos' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
+            'logoFor' => static function (object $sponsor): string {
+                $image = (string) $sponsor->sponsorImage;
+                if ($image !== '' && is_file(public_path('user_images/'.$image))) {
+                    return asset('user_images/'.$image);
+                }
+
+                return asset('images/no_image.png');
+            },
             'glance' => $this->glanceCards($ctx, $windows, $langLong, $request->user() !== null),
             'heroImage' => self::heroImage($ctx),
             'salutation' => $salutation,
@@ -186,6 +199,169 @@ final class PublicController extends Controller
         return view('public.account', $this->accountData());
     }
 
+    /**
+     * Legacy ?section=volunteers (volunteers.sec.php): public volunteers
+     * page. Faithful to the legacy branches — judge-window blurb,
+     * non-judging staff-session list, and the contestVolunteers body.
+     */
+    public function volunteers(Request $request): View|RedirectResponse
+    {
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $now = time();
+
+        $tz = $ctx->prefsStr('prefsTimeZone');
+        $df = $ctx->prefsStr('prefsDateFormat');
+        $tf = $ctx->prefsStr('prefsTimeFormat');
+
+        // judging_locations.db.php:56-60 — staff sessions are judgingLocType 2.
+        $staffLocations = DB::table('judging_locations')
+            ->where('judgingLocType', 2)
+            ->orderBy('judgingDate')
+            ->orderBy('judgingLocName')
+            ->get(['judgingLocName', 'judgingDate'])
+            ->map(static fn (object $loc): array => [
+                'name' => (string) $loc->judgingLocName,
+                'when' => DateFmt::dateTime($loc->judgingDate, $tz, $df, $tf, 'long') ?? '',
+            ])
+            ->all();
+
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
+            && (int) DB::table('sponsors')->count() > 0;
+
+        return view('public.volunteers', [
+            'ctx' => $ctx,
+            'windows' => $windows,
+            'judgingStarted' => $judgingStarted,
+            'sponsorsVisible' => $sponsorsVisible,
+            // Legacy volunteers.sec.php: judge_window_open > 0 (Open or After).
+            'judgeOpen' => $windows->judge !== WindowState::Before,
+            // Legacy: registration_open < 2 gates the staff block.
+            'registrationClosed' => $windows->registration === WindowState::After,
+            'judgeOpenWhen' => DateFmt::dateTime($ctx->contestEpoch('contestJudgeOpen'), $tz, $df, $tf, 'long') ?? null,
+            'salutation' => $this->publicSalutation($request, $ctx),
+            'staffLocations' => $staffLocations,
+        ]);
+    }
+
+    /**
+     * Legacy ?section=contact (contact.sec.php): public contact page with
+     * the officials list (prefsContact=N) or the message form (mode Y).
+     */
+    public function contact(Request $request): View|RedirectResponse
+    {
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $now = time();
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
+            && (int) DB::table('sponsors')->count() > 0;
+
+        return view('public.contact', [
+            'ctx' => $ctx,
+            'mode' => $ctx->prefsStr('prefsContact'),
+            'contacts' => DB::table('contacts')->orderBy('id')->get(),
+            'judgingStarted' => $judgingStarted,
+            'sponsorsVisible' => $sponsorsVisible,
+            'futureJudgingSessions' => $windows->futureJudgingSessions,
+            'salutation' => $this->publicSalutation($request, $ctx),
+        ]);
+    }
+
+    /**
+     * Legacy ?section=sponsors (sections/sponsors.sec.php): standalone
+     * sponsors page. Same gate as the landing sponsors section —
+     * prefsSponsors=Y and at least one sponsor row.
+     */
+    public function sponsors(Request $request): View|RedirectResponse
+    {
+        $ctx = TenantContext::load();
+        $windows = Windows::derive($ctx, time());
+        $now = time();
+
+        $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
+            && (int) DB::table('sponsors')->count() > 0;
+        if (! $sponsorsVisible) {
+            return redirect('/');
+        }
+
+        $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
+        $logos = $ctx->prefsStr('prefsSponsorLogos') === 'Y';
+        $logoFor = static function (object $sponsor) use ($logos): string {
+            $image = (string) $sponsor->sponsorImage;
+            if ($image !== '' && is_file(public_path('user_images/'.$image))) {
+                return asset('user_images/'.$image);
+            }
+
+            return asset('images/no_image.png');
+        };
+
+        return view('public.sponsors', [
+            'ctx' => $ctx,
+            'sponsors' => DB::table('sponsors')->orderBy('id')->get(),
+            'logos' => $logos,
+            'logoFor' => $logoFor,
+            'judgingStarted' => $judgingStarted,
+            'sponsorsVisible' => $sponsorsVisible,
+            'futureJudgingSessions' => $windows->futureJudgingSessions,
+            'salutation' => $this->publicSalutation($request, $ctx),
+        ]);
+    }
+
+    /**
+     * Legacy includes/process.inc.php?dbTable=contacts&action=email: sends
+     * the contact message to the chosen official. Laravel validation +
+     * CSRF + rate-limit stand in for legacy's anti-spam/captcha layer
+     * (ponytail: see ContactMail docblock).
+     */
+    public function contactStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'to' => ['required', 'integer', 'exists:contacts,id'],
+            'from_name' => ['required', 'string', 'max:120'],
+            'from_email' => ['required', 'email', 'max:255'],
+            'subject' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $contact = DB::table('contacts')->where('id', (int) $validated['to'])->first();
+        if ($contact === null) {
+            return back()->withInput()->withErrors(['to' => __('validation.exists')]);
+        }
+
+        $ctx = TenantContext::load();
+        Mail::send(new ContactMail(
+            toName: $contact->contactFirstName.' '.$contact->contactLastName,
+            toEmail: $contact->contactEmail,
+            fromName: $validated['from_name'],
+            fromEmail: $validated['from_email'],
+            subjectLine: $validated['subject'],
+            body: $validated['message'],
+            contestName: $ctx->contestStr('contestName'),
+        ));
+
+        return redirect()->route('contact')->with('contactSent', true);
+    }
+
+    /**
+     * Section-page salutation for standalone public surfaces (volunteers,
+     * contact, sponsors). Legacy index.pub.php:106-111 renders for
+     * non-default sections: the contest-name h1 plus the logged-in
+     * "Welcome {name}!" line. The interest line is landing-only
+     * (default/maintenance/numeric sections, index.pub.php:129-135), so
+     * it must NOT appear here.
+     */
+    private function publicSalutation(Request $request, TenantContext $ctx): string
+    {
+        $salutation = '<h1 class="fw-bold animate__animated animate__fadeInDown">'.e($ctx->contestStr('contestName')).'</h1>';
+        if ($request->user() !== null) {
+            $firstName = DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '';
+            $salutation .= '<p class="landing-page-salutation">'.self::t('site.welcome').' '.e($firstName).'!</p>';
+        }
+
+        return $salutation;
+    }
     /**
      * View payload for the pub/list.pub.php account surface, shared by
      * /list and /pay (index.pub.php renders the same block for both).

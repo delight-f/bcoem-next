@@ -7,10 +7,10 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
         @if (session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -19,12 +19,12 @@
             </div>
         @endif
 
-        <p class="text-xl font-light">Archiving preserves the current competition data in sibling
+        <p class="fs-5 fw-light">Archiving preserves the current competition data in sibling
             <code>&lt;table&gt;_&lt;suffix&gt;</code> tables and resets the live tables for the next competition.</p>
 
         @if ($archives->isNotEmpty())
             <h2 class="h4 mt-4">Existing Archives</h2>
-            <table class="table table-zebra table-sm w-auto">
+            <table class="table table-striped table-sm w-auto">
                 <thead>
                     <tr><th>Suffix</th><th>Style Set</th><th>Scoresheet Naming</th></tr>
                 </thead>
@@ -45,9 +45,9 @@
             <input type="hidden" name="confirm" value="yes">
 
             <div class="mb-4 row">
-                <label for="archiveSuffix" class="col-sm-4 col-form-label">Archive Name (suffix) <span class="text-error">*</span></label>
-                <div class="col-sm-6">
-                    <input class="input input-bordered" id="archiveSuffix" name="archiveSuffix" type="text"
+                <label for="archiveSuffix" class="col-md-4 col-form-label">Archive Name (suffix) <span class="text-danger">*</span></label>
+                <div class="col-md-6">
+                    <input class="form-control" id="archiveSuffix" name="archiveSuffix" type="text"
                         placeholder="{{ date('Y') }} or Q2{{ date('y') }}, etc."
                         pattern="^[a-zA-Z0-9]+$" required value="{{ $suffix }}">
                     <div class="form-text">Letters and numbers only. This becomes the suffix on every archived table
@@ -58,39 +58,39 @@
             <fieldset class="mb-4">
                 <legend class="h5">Data to Retain (not archived away)</legend>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepSpecialBest" id="keepSpecialBest" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepSpecialBest" id="keepSpecialBest" value="1">
                     <label class="form-check-label" for="keepSpecialBest">Custom special-best categories</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepStyleTypes" id="keepStyleTypes" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepStyleTypes" id="keepStyleTypes" value="1">
                     <label class="form-check-label" for="keepStyleTypes">Custom style types</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepDropoff" id="keepDropoff" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepDropoff" id="keepDropoff" value="1">
                     <label class="form-check-label" for="keepDropoff">Drop-off locations</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepLocations" id="keepLocations" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepLocations" id="keepLocations" value="1">
                     <label class="form-check-label" for="keepLocations">Judging locations</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepParticipants" id="keepParticipants" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepParticipants" id="keepParticipants" value="1">
                     <label class="form-check-label" for="keepParticipants">Participants</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepSponsors" id="keepSponsors" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepSponsors" id="keepSponsors" value="1">
                     <label class="form-check-label" for="keepSponsors">Sponsors</label>
                 </div>
                 <div class="form-check">
-                    <input class="checkbox" type="checkbox" name="keepEvaluations" id="keepEvaluations" value="1">
+                    <input class="form-check-input" type="checkbox" name="keepEvaluations" id="keepEvaluations" value="1">
                     <label class="form-check-label" for="keepEvaluations">Evaluations</label>
                 </div>
                 <div class="form-text">Unchecked items are destroyed from the live tables. Absence of a checkbox
                     means destroy — check everything you want to carry into the next competition.</div>
             </fieldset>
 
-            <details class="border rounded p-4 mb-4 bg-base-200">
-                <summary class="font-bold text-error">⚠ Irreversible — read before confirming</summary>
+            <details class="border rounded p-4 mb-4 bg-light">
+                <summary class="fw-bold text-danger">⚠ Irreversible — read before confirming</summary>
                 <div class="mt-2">
                     <p class="mb-2">With the default options, archiving irreversibly destroys:</p>
                     <ol class="mb-2">
@@ -102,7 +102,7 @@
                     <p class="mb-0"><strong>Nothing here is recoverable from within the application.
                         Hosting-layer backups are the only safety net.</strong></p>
                 </div>
-                <button type="submit" class="btn btn-error mt-4">Yes — archive current data now</button>
+                <button type="submit" class="btn btn-danger mt-4">Yes — archive current data now</button>
             </details>
         </form>
     </section>

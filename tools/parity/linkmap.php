@@ -18,6 +18,14 @@ if ($argc < 4) {
     exit(2);
 }
 
+/** Normalize a URL path to a canonical "/..." form (root = "/"). */
+function canonPath(string $path): string
+{
+    $path = trim($path, '/');
+
+    return $path === '' ? '/' : '/'.$path;
+}
+
 /** @return array<string,string> canonical key => original href */
 function extractLinks(string $html, string $host): array
 {
@@ -26,6 +34,17 @@ function extractLinks(string $html, string $host): array
         return $links;
     }
     foreach ($m[1] as $href) {
+        // Raw HTML hrefs are entity-encoded (&amp;); unescape before parsing
+        // so &amp;-variants canonicalize to the same key as a real '&' query.
+        $href = html_entity_decode($href, ENT_QUOTES, 'UTF-8');
+        // Legacy judging_flights.admin.php:342 emits an unquoted-space href
+        // ("...&id=1 data-toggle="tooltip"") — the capture runs to the next
+        // quote, dragging an attribute fragment into the URL. Trim at the
+        // first space: an href never legitimately contains one.
+        $sp = strpos($href, ' ');
+        if ($sp !== false) {
+            $href = substr($href, 0, $sp);
+        }
         if (preg_match('/^(mailto:|javascript:|#|tel:)/i', $href)) {
             continue;
         }
@@ -38,7 +57,7 @@ function extractLinks(string $html, string $host): array
         // Canonical key: path + sorted query pairs (drop fragment).
         parse_str($query, $q);
         ksort($q);
-        $key = rtrim($path, '/');
+        $key = canonPath($path);
         if ($q !== []) {
             $key .= '?'.http_build_query($q);
         }
@@ -51,6 +70,18 @@ function extractLinks(string $html, string $host): array
 $legacyHtml = (string) file_get_contents($argv[1]);
 $newHtml = (string) file_get_contents($argv[2]);
 $host = '127.0.0.1';
+// The port renders destructive row actions as POST/DELETE forms (CSRF-safe)
+// where legacy used <a href> + JS confirm; count form actions as links so
+// functional parity is not flagged MISSING.
+if (preg_match_all('/<form[^>]+action=["\']([^"\']+)["\'][^>]*>(?:\s*<input[^>]+name="_method"[^>]+value="(DELETE|PUT|PATCH)")?/i', $newHtml, $fm)) {
+    $formLinks = '<a href="'.implode('"></a><a href="', array_map(fn ($h, $m) => $m === 'DELETE' ? $h : $h, $fm[1], $fm[2] ?: array_fill(0, count($fm[1]), ''))).'"></a>';
+    $newHtml .= $formLinks;
+}
+// Legacy emits commented-out navbar rows (nav.sec.php:356-362) whose hrefs
+// are not user-visible links. Strip comments before extraction so they
+// do not count as MISSING.
+$legacyHtml = preg_replace('/<!--.*?-->/s', '', $legacyHtml);
+$newHtml = preg_replace('/<!--.*?-->/s', '', $newHtml);
 
 // Inventory: legacy query-URL (normalized) => port path.
 $map = [];
@@ -66,7 +97,13 @@ foreach (file($argv[3], FILE_IGNORE_NEW_LINES) as $line) {
     $lp = parse_url($legacy);
     parse_str($lp['query'] ?? '', $q);
     ksort($q);
-    $map[rtrim($lp['path'] ?? '/', '/').'?'.http_build_query($q)] = '/'.ltrim($port, '/');
+    // No-query legacy links (e.g. bare "/") key as "/" not "/?" — mirror
+    // extractLinks' key form so lookups hit.
+    $mapKey = canonPath($lp['path'] ?? '/');
+    if ($q !== []) {
+        $mapKey .= '?'.http_build_query($q);
+    }
+    $map[$mapKey] = canonPath($port);
 }
 
 $legacyLinks = extractLinks($legacyHtml, $host);

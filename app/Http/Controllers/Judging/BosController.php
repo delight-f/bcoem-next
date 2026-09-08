@@ -68,6 +68,7 @@ final class BosController extends Controller
             'ctx' => TenantContext::load(),
             'type' => $type,
             'rows' => self::eligible($styleType),
+            'types' => DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get(),
             'maxBos' => $maxBos,
         ]);
     }

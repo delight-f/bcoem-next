@@ -39,7 +39,7 @@
 
         @if ($files !== [])
             <h2>Files in the Directory</h2>
-            <table class="table table-zebra table-bordered">
+            <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
                         <th>File Name</th>
@@ -50,20 +50,14 @@
                 <tbody>
                     @foreach ($files as $f)
                         <tr>
-                            <td><a href="{{ asset('user_images/'.$f['name']) }}" title="{{ $f['name'] }}"
-                                   target="_blank" rel="noopener">{{ $f['name'] }}</a></td>
+                            <td><a data-fancybox="gallery" class="user_images hide-loader" rel="group1"
+                                   href="{{ asset('user_images/'.$f['name']) }}" title="{{ $f['name'] }}">{{ $f['name'] }}</a></td>
                             <td>{{ date('l, F j, Y H:i', $f['mtime']) }}</td>
                             <td>
-                                <form method="post" action="{{ url('/admin/upload/delete') }}" class="inline"
-                                      onsubmit="return confirm('Are you sure? This will remove the image named {{ $f['name'] }} from the server.');">
-                                    @csrf
-                                    <input type="hidden" name="file" value="{{ $f['name'] }}">
-                                    @if ($single)
-                                        <input type="hidden" name="view" value="html">
-                                    @endif
-                                    <button type="submit" class="btn btn-link btn-sm p-0"
-                                            title="Delete {{ $f['name'] }}"><span class="fa fa-lg fa-trash"></span></button>
-                                </form>
+                                {{-- Legacy upload.admin.php: delete is a plain
+                                     link to the process image-delete target
+                                     (data-confirm handles the prompt). --}}
+                                <a class="hide-loader" href="{{ url('/admin/upload/delete') }}?action=delete&filter={{ urlencode($f['name']) }}&go=image&view={{ $single ? 'html' : 'default' }}" data-confirm="Are you sure? This will remove the image named {{ $f['name'] }} from the server."><span class="fa fa-lg fa-trash"></span></a>
                             </td>
                         </tr>
                     @endforeach

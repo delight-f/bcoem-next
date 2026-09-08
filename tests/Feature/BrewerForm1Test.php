@@ -28,6 +28,8 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
 
     /** @var mixed */
     private $contestClubsBackup;
+    private $contestEntryOpenBackup;
+    private $contestEntryDeadlineBackup;
 
     protected function setUp(): void
     {
@@ -51,6 +53,8 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
 
         $this->brewerBackup = (array) DB::table('brewer')->where('uid', 1)->first();
         $this->contestClubsBackup = DB::table('contest_info')->where('id', 1)->value('contestClubs');
+        $this->contestEntryOpenBackup = DB::table('contest_info')->where('id', 1)->value('contestEntryOpen');
+        $this->contestEntryDeadlineBackup = DB::table('contest_info')->where('id', 1)->value('contestEntryDeadline');
 
         // Second corpus brewer whose stored club feeds the known list.
         DB::table('brewer')->updateOrInsert(
@@ -68,7 +72,11 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
     {
         DB::table('brewer')->where('uid', 1)->update($this->brewerBackup);
         DB::table('brewer')->where('uid', 906)->delete();
-        DB::table('contest_info')->where('id', 1)->update(['contestClubs' => $this->contestClubsBackup]);
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestClubs' => $this->contestClubsBackup,
+            'contestEntryOpen' => $this->contestEntryOpenBackup,
+            'contestEntryDeadline' => $this->contestEntryDeadlineBackup,
+        ]);
 
         parent::tearDown();
     }
@@ -124,6 +132,31 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
             ->assertSee('123456789')
             ->assertSee('name="brewerMHP"', false)
             ->assertSee('Opt out');
+    }
+    public function test_style_labels_match_legacy_format(): void
+    {
+        // Legacy renders style options as ltrim(brewStyleGroup,'0').
+        // brewStyleNum — "1A", no dot/colon (lib/common.lib.php:1803-1805).
+        // Regression: the port rendered "1.A: " until P4 Slice 2.
+        $this->login();
+        // Ensure uid 1 has a brewer row (baseline fixture may have been
+        // deleted by a prior test in the full suite).
+        DB::table('brewer')->updateOrInsert(
+            ['uid' => 1],
+            ['uid' => 1, 'brewerFirstName' => 'Form', 'brewerLastName' => 'Test',
+                'brewerEmail' => self::LOGIN_EMAIL, 'brewerCountry' => 'United States',
+                'brewerJudge' => 'N', 'brewerSteward' => 'N', 'brewerProAm' => '0'],
+        );
+        // The /brew form renders style labels only while the entry window
+        // is open (brew.sec.php:112 gate); the fixture has it closed.
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => now()->subDays(2)->getTimestamp(),
+            'contestEntryDeadline' => now()->addDays(7)->getTimestamp(),
+        ]);
+
+        $html = (string) $this->get('/brew')->assertOk()->getContent();
+        $this->assertStringContainsString('1A:', $html);
+        $this->assertStringNotContainsString('1.A:', $html);
     }
 
     public function test_corpus_club_round_trips_byte_for_byte(): void

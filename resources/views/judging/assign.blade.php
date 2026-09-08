@@ -7,6 +7,12 @@
             <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}">Stewards</a>
         </p>
 
+        <nav class="mb-4 fs-6">
+            <a href="{{ url('/backoffice/participants') }}">All Participants</a> |
+            <a href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a> |
+            <a href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a>
+        </nav>
+
         @if ($flights->isEmpty())
             <p>No flights have been defined for this table yet. Define flights first.</p>
         @elseif ($rows === [])
@@ -14,7 +20,7 @@
         @else
             <form method="post" action="{{ route('admin.judging.assign.store', ['id' => $table->id, 'role' => $role]) }}">
                 @csrf
-                <table class="table table-zebra table-bordered">
+                <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -38,7 +44,7 @@
                                             <input type="hidden" name="{{ $name }}" value="0">
                                             &mdash;
                                         @else
-                                            <select name="{{ $name }}" class="select select-bordered select-sm">
+                                            <select name="{{ $name }}" class="form-select form-select-sm">
                                                 <option value="0">Do Not Assign</option>
                                                 @foreach ($flights as $choice)
                                                     <option value="{{ $choice->flightNumber }}"
@@ -50,13 +56,13 @@
                                         @endif
 
                                         @if ($cell['status'] === 'assigned')
-                                            <span class="text-warning block"><strong>Assigned.</strong></span>
+                                            <span class="text-warning d-block"><strong>Assigned.</strong></span>
                                         @elseif ($cell['status'] === 'busy')
-                                            <span class="text-primary block">Assigned to another table in this round.</span>
+                                            <span class="text-primary d-block">Assigned to another table in this round.</span>
                                         @elseif ($cell['status'] === 'preferred')
-                                            <span class="text-success block">Available and Preferred Style(s).</span>
+                                            <span class="text-success d-block">Available and Preferred Style(s).</span>
                                         @elseif ($cell['status'] === 'non-preferred')
-                                            <span class="text-error block">Available but Non-Preferred Style(s).</span>
+                                            <span class="text-danger d-block">Available but Non-Preferred Style(s).</span>
                                         @endif
                                     </td>
                                 @endforeach

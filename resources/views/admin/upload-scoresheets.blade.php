@@ -11,6 +11,8 @@
              plain multi-file input; legacy's Dropzone drag-and-drop has no
              port dependency, so it is kept as-is (no JS added for dropzone
              parity). --}}
+        <p class="lead">The <a href="{{ url('/admin/upload-scoresheets?action=html') }}">single file upload function</a> is also available as an alternative to this multiple file uploader.</p>
+
         <p>For entrants to be able to view their scoresheets, each PDF should:</p>
         <ul style="margin-bottom: 30px;" class="list-disc">
             <li>Contain all judges' scoresheets and other documentation (cover sheet, etc.) in <strong>a single file</strong>.</li>
@@ -26,10 +28,10 @@
         <form method="post" action="{{ url('/admin/upload-scoresheets') }}" enctype="multipart/form-data" class="mb-5">
             @csrf
             <div class="mb-4 row">
-                <label for="scoresheetFiles" class="col-sm-3 col-form-label"><strong>PDF Files *</strong></label>
-                <div class="col-sm-9">
-                    <input class="input input-bordered" type="file" name="files[]" id="scoresheetFiles" multiple accept=".pdf" required>
-                    @error('files.*')<div class="text-error">{{ $message }}</div>@enderror
+                <label for="scoresheetFiles" class="col-md-3 col-form-label"><strong>PDF Files *</strong></label>
+                <div class="col-md-9">
+                    <input class="form-control" type="file" name="files[]" id="scoresheetFiles" multiple accept=".pdf" required>
+                    @error('files.*')<div class="text-danger">{{ $message }}</div>@enderror
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Upload PDF File(s)</button>

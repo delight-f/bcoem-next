@@ -83,7 +83,11 @@ export LEGACY_BASE_URL="http://127.0.0.1:${PORT_LEGACY}/"
 php -S "127.0.0.1:$PORT_LEGACY" -t "$LEGACY_DIR" \
     >"$REPORT/legacy-server.log" 2>&1 &
 LEGACY_PID=$!
-php -S "127.0.0.1:$PORT_NEW" "$NEW_DIR/tools/parity/router-port.php" \
+# -t public: the router's static branch serves real files from public/,
+# but when it returns false the built-in server resolves against the
+# docroot — without -t it uses the CWD and every Vite build asset 404s
+# (pages render unstyled and picker JS never runs in harness captures).
+php -S "127.0.0.1:$PORT_NEW" -t "$NEW_DIR/public" "$NEW_DIR/tools/parity/router-port.php" \
     >"$REPORT/new-server.log" 2>&1 &
 NEW_PID=$!
 sleep 2
@@ -133,6 +137,8 @@ if grep -q '^admin|' urls.txt; then
 fi
 
 pass=0; fail=0; skipped=0
+link_missing=0
+noise=0
 while IFS= read -r url; do
     case "$url" in ''|'#'*) skipped=$((skipped+1)); continue;; esac
     safe="$(echo "$url" | tr '/?=&|' '_____')"
@@ -142,6 +148,14 @@ while IFS= read -r url; do
     legacy_url="${url%%|*}"; new_url="${url#*|}"
     [ "$new_url" = "$legacy_url" ] && new_url="$legacy_url"
     legacy_url="${legacy_url#/}"; new_url="${new_url#/}"
+    # output.inc.php URLs are PDF link targets (labels, pullsheets, results),
+    # not crawlable HTML pages — they live in urls.txt purely as linkmap map
+    # entries so the harness can translate a legacy dashboard link to its port
+    # route. Fetching them here would compare two PDF binaries as text.
+    # process.inc.php URLs are POST form targets (login, delete, mark-all,
+    # logout): legacy GETs bounce to /?msg=98 (process.inc.php tail) — not a
+    # comparable page. Same linkmap-only class as output.inc.php.
+    case "$legacy_url" in *output.inc.php*|*process.inc.php*) continue;; esac
     curl -sL -b "$REPORT/jar-legacy-$role" -w '%{http_code}' "http://127.0.0.1:$PORT_LEGACY/$legacy_url" -o "$REPORT/$safe.legacy.raw" \
         > "$REPORT/$safe.legacy.code" \
         || { echo "SKIP (legacy error $(cat "$REPORT/$safe.legacy.code")) $url"; skipped=$((skipped+1)); continue; }
@@ -158,13 +172,26 @@ while IFS= read -r url; do
     if diff -q "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" >/dev/null; then
         echo "PASS $url"; pass=$((pass+1))
     else
+        verdict="$(php classify.php "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" 2>/dev/null || true)"
+        case "$verdict" in VERDICT\ NOISE*)
+            echo "NOISE $url"; noise=$((noise+1)); continue;;
+        esac
         diff -u "$REPORT/$safe.legacy.text" "$REPORT/$safe.new.text" > "$REPORT/$safe.content-diff" || true
         diff "$REPORT/$safe.legacy.clean" "$REPORT/$safe.new.clean" > "$REPORT/$safe.markup-diff" || true
-        echo "DIFF $url  (content: $safe.content-diff, markup: $safe.markup-diff)"; fail=$((fail+1))
+        # Link-map (DIFF pairs only — cheap): MISSING links in the port page
+        # vs the legacy link graph. linkmap.php exits 1 when MISSING > 0.
+        link_count=0
+        if ! php linkmap.php "$REPORT/$safe.legacy.raw" "$REPORT/$safe.new.raw" "urls.txt" > "$REPORT/$safe.linkmap" 2>/dev/null; then
+            link_count=$(grep -c '^MISSING' "$REPORT/$safe.linkmap" || true)
+        fi
+        if [ "$link_count" -gt 0 ]; then
+            link_missing=$((link_missing + link_count))
+        fi
+        echo "DIFF $url  (content: $safe.content-diff, markup: $safe.markup-diff, missing-links: $link_count -> $safe.linkmap)"; fail=$((fail+1))
     fi
 done < urls.txt
 
 echo
-echo "== parity report: $pass pass, $fail fail/diff, $skipped skipped =="
+echo "== parity report: $pass pass, $fail fail/diff, $noise noise, $skipped skipped, $link_missing missing links =="
 echo "== artifacts: $REPORT =="
 [ "$fail" -eq 0 ]

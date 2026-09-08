@@ -203,6 +203,21 @@ final class PayPageTest extends PublicSurfaceTestCase
         self::assertStringContainsString((string) route('pay.checkout'), $html);
 
     }
+    public function test_currency_symbol_matches_legacy_map(): void
+    {
+        // Legacy currency_info(...,1) (lib/common.lib.php:662-698): AUD
+        // renders the symbol "$" with code AUD, not the literal "A$" option
+        // value (P4 Slice 3). Regression: the port rendered "A$8.00".
+        DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'A$']);
+        $this->setFee('8');
+        $this->bindFakeGateway();
+        $this->login();
+
+        $this->makeEntry(['brewName' => 'Aud Ale']);
+        $html = $this->html();
+        self::assertStringContainsString('$8.00', $html);
+        self::assertStringNotContainsString('A$8.00', $html);
+    }
 
     public function test_unconfirmed_entries_are_not_charged_or_listed(): void
     {

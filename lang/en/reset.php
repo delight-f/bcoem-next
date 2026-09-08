@@ -8,6 +8,8 @@ return [
     'answer_wrong' => 'That security answer is incorrect.',
     'token_invalid' => 'That reset token is invalid.',
     'token_expired' => 'That reset token has expired.',
+    'reset_token_invalid' => 'The token provided is invalid or has already been used. Please use the reset password function again to generate a new token.',
+    'reset_token_expired' => 'The token provided has expired. Please use the reset password function again to generate a new token.',
     'reset_password_heading' => 'Reset Password',
     'forgot_password_heading' => 'Forgot Password',
     'security_answer_label' => 'Security Answer',

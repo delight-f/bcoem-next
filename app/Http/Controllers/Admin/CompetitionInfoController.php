@@ -34,6 +34,11 @@ use Illuminate\Support\Facades\DB;
  * Divergence: legacy gated this screen AND its processor to top-level admins
  * only ($_SESSION['userLevel'] == 0); the port uses the uniform admin gate
  * (userLevel <= 1) like every other ported admin surface.
+ *
+ * PARITY-028 (2026-08-31): `contestInfoExtra` is the port's safe equivalent
+ * of the legacy `custom_competition_info.pub.php` deploy-time drop-in —
+ * stored in the DB instead of a file, rendered on the landing page's
+ * competition-info surface + gating the "Other Info" nav item.
  */
 final class CompetitionInfoController extends Controller
 {
@@ -102,6 +107,7 @@ final class CompetitionInfoController extends Controller
             'contestID' => ['nullable', 'string', 'max:50'],
             'contestClubs' => ['nullable', 'string'],
             'contestWinnerLink' => ['nullable', 'string', 'max:255'],
+            'contestInfoExtra' => ['nullable', 'string'],
         ]);
 
         // Empty strings arrive as null via ConvertEmptyStringsToNull.
@@ -170,6 +176,7 @@ final class CompetitionInfoController extends Controller
             'contestID' => self::blankToNull((string) ($data['contestID'] ?? '')),
             'contestClubs' => $clubs,
             'contestWinnerLink' => self::checkHttp((string) ($data['contestWinnerLink'] ?? '')), // null on empty
+            'contestInfoExtra' => self::blankToNull((string) ($data['contestInfoExtra'] ?? '')),
         ];
     }
 

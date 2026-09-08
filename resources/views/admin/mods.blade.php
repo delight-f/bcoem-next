@@ -8,26 +8,26 @@
             <div class="alert alert-success">Custom modules updated.</div>
         @endif
         @if ($errors->any())
-            <div class="alert alert-error"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+            <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
         @foreach ($mods as $mod)
-            <div class="border-bottom pb-2 mb-2 row items-center">
+            <div class="border-bottom pb-2 mb-2 row align-items-center">
                 <div class="col-md-8">
                     <strong>{{ $mod->mod_name }}</strong>
-                    <span class="text-muted block text-sm">{{ $mod->mod_filename }}</span>
+                    <span class="text-muted d-block fs-6">{{ $mod->mod_filename }}</span>
                 </div>
                 <div class="col-auto form-check">
-                    <input class="checkbox" type="checkbox" id="mod_enable{{ $mod->id }}" form="mods-bulk" name="mod_enable{{ $mod->id }}" value="1" @checked(((int) $mod->mod_enable) === 1)>
-                    <label class="form-check-label text-sm" for="mod_enable{{ $mod->id }}">Enabled</label>
+                    <input class="form-check-input" type="checkbox" id="mod_enable{{ $mod->id }}" form="mods-bulk" name="mod_enable{{ $mod->id }}" value="1" @checked(((int) $mod->mod_enable) === 1)>
+                    <label class="form-check-label fs-6" for="mod_enable{{ $mod->id }}">Enabled</label>
                 </div>
                 <div class="col-md-3 text-end">
                     <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/mods/'.$mod->id.'/edit') }}">Edit</a>
-                    <form method="post" action="{{ url('/admin/mods/'.$mod->id) }}" class="inline"
+                    <form method="post" action="{{ url('/admin/mods/'.$mod->id) }}" class="d-inline"
                         onsubmit="return confirm('Are you sure you want to delete this module? This cannot be undone.');">
                         @csrf
                         @method('delete')
-                        <button type="submit" class="btn btn-sm btn-outline btn-error">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
                     </form>
                 </div>
             </div>
@@ -56,24 +56,24 @@
                 @csrf
                 @method($row !== null ? 'put' : 'post')
                 <div class="mb-4 row">
-                    <label for="mod_name" class="col-sm-4 col-form-label">Name</label>
-                    <div class="col-sm-9"><input class="input input-bordered" id="mod_name" name="mod_name" type="text" value="{{ $row->mod_name ?? '' }}" required></div>
+                    <label for="mod_name" class="col-md-4 col-form-label">Name</label>
+                    <div class="col-md-9"><input class="form-control" id="mod_name" name="mod_name" type="text" value="{{ $row->mod_name ?? '' }}" required></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_filename" class="col-sm-4 col-form-label">File Name</label>
-                    <div class="col-sm-9">
-                        <input class="input input-bordered" id="mod_filename" name="mod_filename" type="text" pattern="^[A-Za-z0-9_\-]+\.php$" value="{{ $row->mod_filename ?? '' }}" placeholder="your_file_name.php" required>
-                        <span class="help-block">Letters, numbers, underscores, or hyphens; must end in .php.</span>
+                    <label for="mod_filename" class="col-md-4 col-form-label">File Name</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="mod_filename" name="mod_filename" type="text" pattern="^[A-Za-z0-9_\-]+\.php$" value="{{ $row->mod_filename ?? '' }}" placeholder="your_file_name.php" required>
+                        <span class="form-text">Letters, numbers, underscores, or hyphens; must end in .php.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_description" class="col-sm-4 col-form-label">Description</label>
-                    <div class="col-sm-9"><textarea class="textarea textarea-bordered" id="mod_description" name="mod_description" rows="8">{{ $row->mod_description ?? '' }}</textarea></div>
+                    <label for="mod_description" class="col-md-4 col-form-label">Description</label>
+                    <div class="col-md-9"><textarea class="form-control" id="mod_description" name="mod_description" rows="8">{{ $row->mod_description ?? '' }}</textarea></div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_type" class="col-sm-4 col-form-label">Type</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_type" name="mod_type" style="width:auto;">
+                    <label for="mod_type" class="col-md-4 col-form-label">Type</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_type" name="mod_type" style="width:auto;">
                             <option value="0" @selected(($row->mod_type ?? '0') === '0')>Informational (Static HTML)</option>
                             <option value="1" @selected(($row->mod_type ?? '') === '1')>Report</option>
                             <option value="2" @selected(($row->mod_type ?? '') === '2')>Export</option>
@@ -82,9 +82,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_permission" class="col-sm-4 col-form-label">Permission</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_permission" name="mod_permission" style="width:auto;">
+                    <label for="mod_permission" class="col-md-4 col-form-label">Permission</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_permission" name="mod_permission" style="width:auto;">
                             <option value="0" @selected(($row->mod_permission ?? '0') === '0')>Top Level Admins</option>
                             <option value="1" @selected(($row->mod_permission ?? '') === '1')>Admins</option>
                             <option value="2" @selected(($row->mod_permission ?? '') === '2')>All Users</option>
@@ -92,9 +92,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_extend_function" class="col-sm-4 col-form-label">Extends Core Function</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_extend_function" name="mod_extend_function" style="width:auto;">
+                    <label for="mod_extend_function" class="col-md-4 col-form-label">Extends Core Function</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_extend_function" name="mod_extend_function" style="width:auto;">
                             <option value="0" @selected(($row->mod_extend_function ?? '0') === '0')>All Public Pages</option>
                             <option value="1" @selected(($row->mod_extend_function ?? '') === '1')>Public Home Page Only</option>
                             <option value="6" @selected(($row->mod_extend_function ?? '') === '6')>Public Registration Page Only</option>
@@ -104,9 +104,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_extend_function_admin" class="col-sm-4 col-form-label">Extends Admin Function</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_extend_function_admin" name="mod_extend_function_admin" style="width:auto;">
+                    <label for="mod_extend_function_admin" class="col-md-4 col-form-label">Extends Admin Function</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_extend_function_admin" name="mod_extend_function_admin" style="width:auto;">
                             <option value=""></option>
                             <option value="default" @selected(($row->mod_extend_function_admin ?? '') === 'default')>Administration Dashboard</option>
                             <option value="archives" @selected(($row->mod_extend_function_admin ?? '') === 'archives')>Archives</option>
@@ -122,9 +122,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_rank" class="col-sm-4 col-form-label">Rank</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_rank" name="mod_rank" style="width:auto;">
+                    <label for="mod_rank" class="col-md-4 col-form-label">Rank</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_rank" name="mod_rank" style="width:auto;">
                             @for ($i = 1; $i <= 25; $i++)
                                 <option value="{{ $i }}" @selected((string) ($row->mod_rank ?? '1') === (string) $i)>{{ $i }}</option>
                             @endfor
@@ -132,9 +132,9 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="mod_display_rank" class="col-sm-4 col-form-label">Display Order</label>
-                    <div class="col-sm-9">
-                        <select class="select select-bordered" id="mod_display_rank" name="mod_display_rank" style="width:auto;">
+                    <label for="mod_display_rank" class="col-md-4 col-form-label">Display Order</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="mod_display_rank" name="mod_display_rank" style="width:auto;">
                             <option value="0" @selected(($row->mod_display_rank ?? '0') === '0')>N/A (Stand Alone)</option>
                             <option value="1" @selected(($row->mod_display_rank ?? '') === '1')>Before Core Content</option>
                             <option value="2" @selected(($row->mod_display_rank ?? '') === '2')>After Core Content</option>
@@ -142,14 +142,14 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-sm-4 col-form-label">Enable?</label>
-                    <div class="col-sm-9">
+                    <label class="col-md-4 col-form-label">Enable?</label>
+                    <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="mod_enable" value="1" id="mod_enableYes" @checked($row === null || ((int) $row->mod_enable) === 1)>
+                            <input class="form-check-input" type="radio" name="mod_enable" value="1" id="mod_enableYes" @checked($row === null || ((int) $row->mod_enable) === 1)>
                             <label class="form-check-label" for="mod_enableYes">Yes</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="radio" type="radio" name="mod_enable" value="0" id="mod_enableNo" @checked($row !== null && ((int) $row->mod_enable) === 0)>
+                            <input class="form-check-input" type="radio" name="mod_enable" value="0" id="mod_enableNo" @checked($row !== null && ((int) $row->mod_enable) === 0)>
                             <label class="form-check-label" for="mod_enableNo">No</label>
                         </div>
                     </div>

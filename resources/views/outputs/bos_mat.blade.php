@@ -27,7 +27,7 @@
                 @foreach ($rowTiles as $tile)
                     <td>
                         <p class="head"><strong>*** {{ $heading }} ***</strong></p>
-                        <p class="head">Style _____________________________</p>
+                        <p class="head">Style ___________________________</p>
                         <div class="num" style="margin-top: 130pt;">Entry # ____________</div>
                     </td>
                 @endforeach
@@ -35,75 +35,78 @@
         @endforeach
     </table>
 @else
-    @php
-        // Flatten groups → pages of six tiles so the trailing page break is exact.
-        $pages = [];
-        foreach ($groups as $group) {
-            if ($group['rows'] === []) {
-                continue;
-            }
-            foreach (array_chunk($group['rows'], 6) as $tiles) {
-                $pages[] = ['title' => $group['title'], 'type' => $group['type'], 'tiles' => $tiles];
-            }
-        }
-    @endphp
-
-    @if ($pages === [])
-        <h1>No {{ strtolower($heading) }} entries are present.</h1>
-    @endif
-
-    @foreach ($pages as $page)
+            @foreach ($groups as $group)
+        @php
+            // Legacy renders one table per group, each a 2×3 page padded
+            // with empty mats to six cells, page-break-after every group —
+            // an empty group still emits an empty mat page (view=2 Cider
+            // above). The "No entries" message only fires when no group
+            // was displayed at all, hence the count($groups) test.
+            $tiles = $group['rows'];
+        @endphp
         <table class="mat">
-            @foreach (array_chunk($page['tiles'], 3) as $rowTiles)
+            @for ($i = 0; $i < 2; $i++)
                 <tr>
-                    @foreach ($rowTiles as $row)
-                        @php($style = $row->brewCategory.$row->brewSubCategory)
+                    @for ($j = 0; $j < 3; $j++)
+                                                @php
+                            $idx = $i * 3 + $j;
+                        @endphp
                         <td>
-                            @if ($page['title'] !== null)
-                                <p class="head"><strong>{{ $page['title'] }}</strong></p>
-                            @endif
-                            <h3>{{ $style }}: {{ $row->brewStyle }}</h3>
-                            @if ($labelByTable)
-                                <h4>{{ $tables->get($row->scoreTable, 'Table') }}</h4>
+                            @if (isset($tiles[$idx]))
+                                                                @php
+                                    $row = $tiles[$idx];
+                                    $style = $row->brewCategory.$row->brewSubCategory;
+                                @endphp
+                                @if ($group['title'] !== null)
+                                    <p class="head"><strong>{{ $group['title'] }}</strong></p>
+                                @endif
+                                <h3>{{ $style }}: {{ $row->brewStyle }}</h3>
+                                @if ($labelByTable)
+                                    <h4>{{ $tables->get($row->scoreTable, 'Table') }}</h4>
+                                @else
+                                    <h4>{{ ltrim((string) $row->brewCategory, '0') }}: {{ $subcats[$row->brewCategorySort] ?? '' }}</h4>
+                                @endif
+
+                                @if ($action === 'default' && $group['type'] === 2 && ((string) $row->brewMead1 !== '' || (string) $row->brewMead2 !== ''))
+                                    <p class="note">{{ collect([$row->brewMead1, $row->brewMead2])->filter(fn ($v) => (string) $v !== '')->implode(', ') }}</p>
+                                @elseif ($action === 'default' && $group['type'] === 3)
+                                    <p class="note">{{ collect([$row->brewMead1, $row->brewMead2, $row->brewMead3])->filter(fn ($v) => (string) $v !== '')->implode(', ') }}</p>
+                                @endif
+
+                                @if ((string) $row->brewInfo !== '')
+                                    <p class="note">{{ str_replace('^', ' | ', $row->brewInfo) }}</p>
+                                @endif
+                                @if ((string) $row->brewInfoOptional !== '')
+                                    <p class="note">{{ str_replace('^', ' | ', $row->brewInfoOptional) }}</p>
+                                @endif
+                                @if ((string) $row->brewComments !== '')
+                                    <p class="note">{{ $row->brewComments }}</p>
+                                @endif
+                                @if ((string) $row->brewPossAllergens !== '')
+                                    <div class="allergens"><strong>Possible allergens:</strong> <em>{{ $row->brewPossAllergens }}</em></div>
+                                @endif
+                                @if ($action === 'default' && (int) $row->brewerProAm === 1)
+                                    <p class="note"><strong>** NOT ELIGIBLE FOR PRO-AM **</strong></p>
+                                @endif
+
+                                <div class="num">#{{ str_pad((string) ($showEntryNumber ? $row->id : $row->brewJudgingNumber), 6, '0', STR_PAD_LEFT) }}</div>
+                                @if (! $labelByTable)
+                                    <div class="tablename">{{ $tables->get($row->scoreTable, 'Table') }}</div>
+                                @endif
                             @else
-                                <h4>{{ ltrim((string) $row->brewCategory, '0') }}: {{ $subcats[$row->brewCategorySort] ?? '' }}</h4>
-                            @endif
-
-                            @if ($page['type'] === 2 && ((string) $row->brewMead1 !== '' || (string) $row->brewMead2 !== ''))
-                                <p class="note">{{ collect([$row->brewMead1, $row->brewMead2])->filter(fn ($v) => (string) $v !== '')->implode(', ') }}</p>
-                            @elseif ($page['type'] === 3)
-                                <p class="note">{{ collect([$row->brewMead1, $row->brewMead2, $row->brewMead3])->filter(fn ($v) => (string) $v !== '')->implode(', ') }}</p>
-                            @endif
-
-                            @if ((string) $row->brewInfo !== '')
-                                <p class="note">{{ str_replace('^', ' | ', $row->brewInfo) }}</p>
-                            @endif
-                            @if ((string) $row->brewInfoOptional !== '')
-                                <p class="note">{{ str_replace('^', ' | ', $row->brewInfoOptional) }}</p>
-                            @endif
-                            @if ((string) $row->brewComments !== '')
-                                <p class="note">{{ $row->brewComments }}</p>
-                            @endif
-                            @if ((string) $row->brewPossAllergens !== '')
-                                <div class="allergens"><strong>Possible allergens:</strong> <em>{{ $row->brewPossAllergens }}</em></div>
-                            @endif
-                            @if ($page['type'] !== null && (int) $row->brewerProAm === 1)
-                                <p class="note"><strong>** NOT ELIGIBLE FOR PRO-AM **</strong></p>
-                            @endif
-
-                            <div class="num">#{{ str_pad((string) ($showEntryNumber ? $row->id : $row->brewJudgingNumber), 6, '0', STR_PAD_LEFT) }}</div>
-                            @if (! $labelByTable)
-                                <div class="tablename">{{ $tables->get($row->scoreTable, 'Table') }}</div>
+                                &nbsp;
                             @endif
                         </td>
-                    @endforeach
+                    @endfor
                 </tr>
-            @endforeach
+            @endfor
         </table>
-        @unless ($loop->last)
-            <div class="page-break"></div>
-        @endunless
+        <div class="page-break"></div>
     @endforeach
+
+        @if (count($groups) === 0)
+        <h1>No {{ strtolower($heading) }} entries are present.</h1>
+    @endif
 @endif
 
 </body>

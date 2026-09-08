@@ -87,4 +87,26 @@ final class DateFmt
 
         return $date.' '.$time.($withZone ? ', '.$dt->format('T') : '');
     }
+
+    /**
+     * Value format for the flatpickr .date-time-picker-system admin inputs
+     * (app.js dateFormat 'Y-m-d H:i' / 'Y-m-d h:i K' chosen by the form's
+     * data-time-24hr). The 12h variant is zero-padded ('h') so flatpickr's
+     * token parser accepts a prefilled value untouched.
+     *
+     * @param  int|string|null  $epoch  UTC epoch or null/'' for an empty field
+     */
+    public static function dateTimeInput(
+        int|string|null $epoch,
+        string|int|float|null $tzOffset,
+        bool $time24hr,
+    ): ?string {
+        if ($epoch === null || $epoch === '' || ! is_numeric($epoch)) {
+            return null;
+        }
+
+        $dt = self::carbon((int) $epoch, $tzOffset);
+
+        return $dt->format($time24hr ? 'Y-m-d H:i' : 'Y-m-d h:i A');
+    }
 }

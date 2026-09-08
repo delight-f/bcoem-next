@@ -15,7 +15,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 /**
- * BOS cup mats — 2×3 tiles per letter page (legacy output/bos_mat.output.php
+ * BOS cup mats — 2×3 tiles per page (legacy output/bos_mat.output.php
  * + db/output_bos_mat.db.php).
  *
  * Modes via ?action=, mirroring legacy:
@@ -35,6 +35,8 @@ use Illuminate\Support\Facades\DB;
  *    number, both zero-padded to six digits.
  *  - prefsWinnerMethod=0 labels tiles by judging table; >0 by category.
  *  - A brewer flagged brewerProAm=1 gets legacy's "NOT ELIGIBLE" note.
+ *  - Legacy renders one table per group, each padded to 6 mats (2×3) and
+ *    page-break-after; an empty group still emits an empty mat page.
  *  - Divergence: the BA style-set tile variant (style_convert() heading)
  *    is not reproduced — BA tenants get the standard category+subcategory
  *    label. Revisit if a BA tenant actually prints mats.
@@ -60,7 +62,17 @@ final class BosMatController extends Controller
             ->keyBy('id')
             ->map(fn ($t): string => 'Table '.$t->tableNumber.': '.$t->tableName);
 
-        /** @var list<array{title: string|null, rows: list<object>}> $groups */
+        // Blank-page heading tracks ?view= ("mini-bos" / "pro-am"),
+        // exactly like legacy's blank branch.
+        $heading = match (true) {
+            $action === 'mini-bos' => 'Mini-BOS',
+            $action === 'pro-am' => 'Pro-Am/Scale-Up',
+            $action === 'blank' && $view === 'mini-bos' => 'Mini-BOS',
+            $action === 'blank' && $view === 'pro-am' => 'Pro-Am/Scale-Up',
+            default => 'Best of Show',
+        };
+
+        /** @var list<array{title: string|null, type: int|null, rows: list<object>}> $groups */
         $groups = [];
 
         if ($action === 'blank') {
@@ -89,7 +101,9 @@ final class BosMatController extends Controller
 
             foreach ($ids as $typeId) {
                 $type = $types->get($typeId);
-                if ($type === null || ($action !== 'pro-am' && $type->styleTypeBOS !== 'Y')) {
+                // Legacy gates every non-mini-bos group (including pro-am)
+                // on styleTypeBOS == 'Y'.
+                if ($type === null || $type->styleTypeBOS !== 'Y') {
                     continue;
                 }
 
@@ -100,8 +114,11 @@ final class BosMatController extends Controller
                     : Place::bosEligiblePlaces((int) $type->styleTypeBOSMethod);
 
                 // Legacy type-4 group merges the Mead (3) and Cider (2) rounds.
+                // Pro-am keeps legacy's stray "*" in the heading quirk.
                 $groups[] = [
-                    'title' => '*** '.($action === 'pro-am' ? 'Pro-Am/Scale-Up' : 'Best of Show').': '.$type->styleTypeName.' ***',
+                    'title' => $action === 'pro-am'
+                        ? '*** Pro-Am: '.$type->styleTypeName.' * ***'
+                        : '*** Best of Show: '.$type->styleTypeName.' ***',
                     'type' => (int) $typeId,
                     'rows' => self::rows(function ($q) use ($typeId, $places) {
                         if ($typeId == 4) {
@@ -119,7 +136,9 @@ final class BosMatController extends Controller
         return StreamPdf::response('outputs.bos_mat', [
             'groups' => $groups,
             'blank' => $action === 'blank',
-            'heading' => $action === 'mini-bos' ? 'Mini-BOS' : ($action === 'pro-am' ? 'Pro-Am/Scale-Up' : 'Best of Show'),
+            'heading' => $heading,
+            'action' => $action,
+            'view' => $view,
             'tables' => $tables,
             'labelByTable' => (string) $ctx->prefsStr('prefsWinnerMethod') === '0',
             'showEntryNumber' => $filter === 'entry',
@@ -137,7 +156,9 @@ final class BosMatController extends Controller
 
     /**
      * Placed entries for one mat group, ordered category → subcategory
-     * like output_bos_mat.db.php.
+     * like output_bos_mat.db.php. The `$filter` closure applies the group's
+     * scoreType/place/mini-bos selection; no brewReceived restriction exists
+     * in the legacy query.
      *
      * @param  callable(Builder): mixed  $filter
      * @return list<object>
@@ -147,9 +168,10 @@ final class BosMatController extends Controller
         $query = DB::table('judging_scores as js')
             ->join('brewing as b', 'js.eid', '=', 'b.id')
             ->join('brewer as br', 'b.brewBrewerID', '=', 'br.uid')
-            ->where('b.brewReceived', 1)
             ->orderBy('b.brewCategorySort')
             ->orderBy('b.brewSubCategory');
+
+        $filter($query);
 
         return array_values($query->get([
             'js.scoreTable',

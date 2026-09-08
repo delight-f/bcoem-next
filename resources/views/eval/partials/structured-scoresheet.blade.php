@@ -16,7 +16,7 @@
 
         @forelse ($ticks[$section] ?? [] as $tickLabel => $field)
             <div class="form-check form-check-inline">
-                <input class="checkbox" type="checkbox" name="{{ $section }}Ticks[]"
+                <input class="form-check-input" type="checkbox" name="{{ $section }}Ticks[]"
                        value="{{ $tickLabel }}" id="{{ $field }}"
                        @checked(str_contains((string) $evaluation?->{'eval'.ucfirst($section).'Checklist'}, $tickLabel))>
                 <label class="form-check-label" for="{{ $field }}">{{ $tickLabel }}</label>
@@ -25,9 +25,9 @@
         @endforelse
 
         <div class="row g-2 mb-2 mt-1">
-            <div class="col-sm-3">
+            <div class="col-md-3">
                 <label class="form-label" for="eval{{ ucfirst($section) }}Score">Score</label>
-                <select class="select select-bordered" id="eval{{ ucfirst($section) }}Score"
+                <select class="form-select" id="eval{{ ucfirst($section) }}Score"
                         name="eval{{ ucfirst($section) }}Score" required>
                     <option value=""></option>
                     @for ($i = $points[$section]; $i >= 1; $i--)
@@ -38,7 +38,7 @@
             </div>
         </div>
         <label class="form-label" for="eval{{ ucfirst($section) }}Comments">Comments</label>
-        <textarea class="textarea textarea-bordered" id="eval{{ ucfirst($section) }}Comments"
+        <textarea class="form-control" id="eval{{ ucfirst($section) }}Comments"
                   name="eval{{ ucfirst($section) }}Comments" rows="4">{{ $evaluation?->{'eval'.ucfirst($section).'Comments'} }}</textarea>
     </fieldset>
 @endforeach
@@ -47,7 +47,7 @@
     <legend>Flaws (mark all that apply)</legend>
     @foreach ($flaws as $flaw)
         <div class="form-check form-check-inline">
-            <input class="checkbox" type="checkbox" name="flaws[]" value="{{ $flaw }}"
+            <input class="form-check-input" type="checkbox" name="flaws[]" value="{{ $flaw }}"
                    id="flaw-{{ $loop->index }}"
                    @checked(str_contains((string) $evaluation?->evalFlaws, $flaw))>
             <label class="form-check-label" for="flaw-{{ $loop->index }}">{{ $flaw }}</label>
@@ -60,7 +60,7 @@
         <legend>Descriptors (mark all that apply)</legend>
         @foreach ($descriptors as $descriptor => $description)
             <div class="form-check">
-                <input class="checkbox" type="checkbox" name="evalDescriptors[]"
+                <input class="form-check-input" type="checkbox" name="evalDescriptors[]"
                        value="{{ $descriptor }}" id="descr-{{ $loop->index }}"
                        @checked(str_contains((string) $evaluation?->evalDescriptors, $descriptor))>
                 <label class="form-check-label" for="descr-{{ $loop->index }}">

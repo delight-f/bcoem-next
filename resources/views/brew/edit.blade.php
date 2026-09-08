@@ -7,7 +7,7 @@
         <h1>{{ __('site.edit_entry') }}</h1>
 
         @if ($errors->any())
-            <div class="alert alert-error">
+            <div class="alert alert-danger">
                 <ul class="mb-0">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -27,7 +27,7 @@
             @include('brew._fields', ['entry' => $entry])
 
             <div class="row mb-4">
-                <div class="col-sm-9 offset-sm-3">
+                <div class="col-md-9 offset-md-3">
                     <button type="submit" class="btn btn-lg btn-primary">{{ __('site.save') }}</button>
                 </div>
             </div>

@@ -64,6 +64,15 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
             if ($port === null || $port === '') {
                 continue; // "/" itself — nothing to redirect.
             }
+            if (str_contains($legacy, 'output.inc.php') || str_contains($legacy, 'process.inc.php') || str_starts_with($legacy, 'images/') || str_starts_with($legacy, 'user_images/') || str_starts_with($legacy, 'qr.php') || str_contains($legacy, '.admin.php?csrf=') || trim($legacy, '/') === '') {
+                // output.inc.php entries are PDF link targets,
+                // process.inc.php entries are form targets (mark-all,
+                // delete, purge), images/ are static assets, and the bare
+                // "/" rows are root linkmap anchors — none are redirect
+                // pages. process GET traffic is covered by the dedicated
+                // logout test below.
+                continue;
+            }
             $cases[] = [$legacy, $port];
         }
 
@@ -134,12 +143,23 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
         $this->get('/?msg=99')->assertOk();
     }
 
-    public function test_legacy_only_section_bounces_temporarily_home(): void
+    public function test_ported_sponsors_section_redirects_to_sponsors_page(): void
     {
-        $response = $this->get('/index.php?section=contact');
+        $response = $this->get('/index.php?section=sponsors');
 
-        $response->assertStatus(302);
-        $this->assertSame('/', $response->headers->get('Location'));
+        $response->assertStatus(301);
+        $this->assertSame('/sponsors', $response->headers->get('Location'));
+    }
+
+    public function test_volunteers_and_contact_sections_redirect_to_standalone_pages(): void
+    {
+        $this->get('/index.php?section=volunteers')
+            ->assertStatus(301)
+            ->assertRedirect('/volunteers');
+
+        $this->get('/index.php?section=contact')
+            ->assertStatus(301)
+            ->assertRedirect('/contact');
     }
 
     public function test_login_post_via_process_inc_is_307_to_login(): void
