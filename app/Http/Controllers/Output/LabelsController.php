@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Outputs\OutputFormat;
 use App\Support\Outputs\StreamPdf;
 use App\Support\Tenant\TenantContext;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -102,22 +103,23 @@ final class LabelsController extends Controller
             $data = $filter === 'judges'
                 ? self::virtualJudgeLabels($ctx, $psort, $sort)
                 : self::boxLabels($ctx, $psort, $sort);
+            $viewName = $filter === 'judges' ? 'outputs.labels' : 'outputs.labels_box';
 
-            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+            return StreamPdf::response($viewName, $data['view'], $data['filename']);
         }
 
         // go=participants judging_nametags / judging_labels (id=default).
         if ($action === 'judging_nametags') {
             $data = self::nametags($ctx);
 
-            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+            return StreamPdf::response('outputs.labels_nametag', $data['view'], $data['filename']);
         }
 
         if ($action === 'judging_labels') {
             $psort = (string) $request->query('psort', '5160');
             $data = self::judgingLabels($ctx, $psort);
 
-            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+            return StreamPdf::response('outputs.labels', $data['view'], $data['filename']);
         }
 
         // go=judging_scores&action=awards: award labels (filter=default),
@@ -127,8 +129,9 @@ final class LabelsController extends Controller
             $filter = (string) $request->query('filter', 'default');
             $psort = (string) $request->query('psort', '5160');
             $data = self::awardLabels($ctx, $filter, $psort);
+            $viewName = $filter === 'round' ? 'outputs.labels_round' : 'outputs.labels';
 
-            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+            return StreamPdf::response($viewName, $data['view'], $data['filename']);
         }
         if (str_starts_with($action, 'bottle-')) {
             $view = (string) $request->query('view', 'default');
@@ -138,6 +141,13 @@ final class LabelsController extends Controller
             $location = (string) $request->query('location', 'default');
             $sort = max(1, (int) $request->query('sort', '1'));
 
+            $viewName = match (true) {
+                $action === 'bottle-category-round' => 'outputs.labels_round',
+                str_ends_with($action, '-round') => 'outputs.labels_round',
+                $view === 'quicksort' => 'outputs.labels_quicksort',
+                $view === 'default' => 'outputs.labels',
+                default => 'outputs.labels',
+            };
             if ($action === 'bottle-category-round') {
                 $data = self::bottleCategoryRound($ctx, $filter, $sort, $psort);
             } elseif (str_ends_with($action, '-round')) {
@@ -150,7 +160,7 @@ final class LabelsController extends Controller
                 $data = self::bottleRequiredInfo($ctx, $action, $view, $filter, $tb, $location, $sort, $psort);
             }
 
-            return StreamPdf::response($data['view_name'], $data['view'], $data['filename']);
+            return StreamPdf::response($viewName, $data['view'], $data['filename']);
         }
 
         $psort = (string) $request->query('psort', '5160');
@@ -365,17 +375,39 @@ final class LabelsController extends Controller
 
                     if (! in_array($style, $meadStyles, true)) {
                         $lowerInfo = mb_strtolower((string) $e->brewInfo);
-                        if (str_contains($lowerInfo, 'session strength')) { $beerStrength .= '*Session* '; }
-                        if (str_contains($lowerInfo, 'standard strength')) { $beerStrength .= '*Standard* '; }
-                        if (str_contains($lowerInfo, 'double strength')) { $beerStrength .= '*Double* '; }
-                        if (str_contains($lowerInfo, 'table strength')) { $beerStrength .= '*Table* '; }
-                        if (str_contains($lowerInfo, 'super strength')) { $beerStrength .= '*Super* '; }
-                        if (str_contains($lowerInfo, 'low/none sweetness')) { $beerSweetness .= '*Low/No Sweet* '; }
-                        if (str_contains($lowerInfo, 'medium sweetness')) { $beerSweetness .= '*Med Sweet* '; }
-                        if (str_contains($lowerInfo, 'high sweetness')) { $beerSweetness .= '*High Sweet* '; }
-                        if (str_contains($lowerInfo, 'low carbonation')) { $beerCarbonation .= '*Low Carb* '; }
-                        if (str_contains($lowerInfo, 'medium carbonation')) { $beerCarbonation .= '*Med Carb* '; }
-                        if (str_contains($lowerInfo, 'high carbonation')) { $beerCarbonation .= '*High Carb* '; }
+                        if (str_contains($lowerInfo, 'session strength')) {
+                            $beerStrength .= '*Session* ';
+                        }
+                        if (str_contains($lowerInfo, 'standard strength')) {
+                            $beerStrength .= '*Standard* ';
+                        }
+                        if (str_contains($lowerInfo, 'double strength')) {
+                            $beerStrength .= '*Double* ';
+                        }
+                        if (str_contains($lowerInfo, 'table strength')) {
+                            $beerStrength .= '*Table* ';
+                        }
+                        if (str_contains($lowerInfo, 'super strength')) {
+                            $beerStrength .= '*Super* ';
+                        }
+                        if (str_contains($lowerInfo, 'low/none sweetness')) {
+                            $beerSweetness .= '*Low/No Sweet* ';
+                        }
+                        if (str_contains($lowerInfo, 'medium sweetness')) {
+                            $beerSweetness .= '*Med Sweet* ';
+                        }
+                        if (str_contains($lowerInfo, 'high sweetness')) {
+                            $beerSweetness .= '*High Sweet* ';
+                        }
+                        if (str_contains($lowerInfo, 'low carbonation')) {
+                            $beerCarbonation .= '*Low Carb* ';
+                        }
+                        if (str_contains($lowerInfo, 'medium carbonation')) {
+                            $beerCarbonation .= '*Med Carb* ';
+                        }
+                        if (str_contains($lowerInfo, 'high carbonation')) {
+                            $beerCarbonation .= '*High Carb* ';
+                        }
 
                         if ($beerStrength !== '' || $beerSweetness !== '' || $beerCarbonation !== '') {
                             $special = strtr($special, self::SPECIAL_STRENGTH);
@@ -398,9 +430,15 @@ final class LabelsController extends Controller
 
                 // :610-622 — mead/cider markers.
                 if (in_array($style, $meadStyles, true)) {
-                    if ((string) $e->brewMead1 !== '') { $sweetCarb .= sprintf('*%s* ', $e->brewMead1); }
-                    if ((string) $e->brewMead2 !== '') { $sweetCarb .= sprintf('*%s* ', $e->brewMead2); }
-                    if ((string) $e->brewMead3 !== '') { $sweetCarb .= sprintf('*%s* ', $e->brewMead3); }
+                    if ((string) $e->brewMead1 !== '') {
+                        $sweetCarb .= sprintf('*%s* ', $e->brewMead1);
+                    }
+                    if ((string) $e->brewMead2 !== '') {
+                        $sweetCarb .= sprintf('*%s* ', $e->brewMead2);
+                    }
+                    if ((string) $e->brewMead3 !== '') {
+                        $sweetCarb .= sprintf('*%s* ', $e->brewMead3);
+                    }
 
                     $sweetCarb = str_replace('Medium Sweet', 'Med Sweet', $sweetCarb);
                     $sweetCarb = str_replace('Medium Dry', 'Med Dry', $sweetCarb);
@@ -425,14 +463,26 @@ final class LabelsController extends Controller
 
                 // :647-659 — tighten special/optional when allergens/mead present.
                 if ($allergens !== '' && $sweetCarb === '') {
-                    if ($special !== '') { $special = self::truncate($special, self::CHARACTER_LIMIT * 4, ''); }
-                    if ($optional !== '') { $optional = self::truncate($optional, self::CHARACTER_LIMIT, ''); }
+                    if ($special !== '') {
+                        $special = self::truncate($special, self::CHARACTER_LIMIT * 4, '');
+                    }
+                    if ($optional !== '') {
+                        $optional = self::truncate($optional, self::CHARACTER_LIMIT, '');
+                    }
                 } elseif ($allergens === '' && $sweetCarb !== '') {
-                    if ($special !== '') { $special = self::truncate($special, self::CHARACTER_LIMIT * 4, ''); }
-                    if ($optional !== '') { $optional = self::truncate($optional, self::CHARACTER_LIMIT, ''); }
+                    if ($special !== '') {
+                        $special = self::truncate($special, self::CHARACTER_LIMIT * 4, '');
+                    }
+                    if ($optional !== '') {
+                        $optional = self::truncate($optional, self::CHARACTER_LIMIT, '');
+                    }
                 } elseif ($allergens !== '' && $sweetCarb !== '') {
-                    if ($special !== '') { $special = self::truncate($special, self::CHARACTER_LIMIT * 3, ''); }
-                    if ($optional !== '') { $optional = self::truncate($optional, self::CHARACTER_LIMIT, ''); }
+                    if ($special !== '') {
+                        $special = self::truncate($special, self::CHARACTER_LIMIT * 3, '');
+                    }
+                    if ($optional !== '') {
+                        $optional = self::truncate($optional, self::CHARACTER_LIMIT, '');
+                    }
                 }
 
                 // :658-665 — view=special only emits special/mead entries (and
@@ -641,7 +691,7 @@ final class LabelsController extends Controller
         ];
     }
 
-    /** @return \Illuminate\Database\Query\Builder */
+    /** @return Builder */
     private static function entriesQuery(string $action, string $filter, string $tb)
     {
         $q = DB::table('brewing');
@@ -707,6 +757,9 @@ final class LabelsController extends Controller
     private static function truncate(string $string, int $width, string $append = '', int $maxWordLength = 20): string
     {
         $parts = preg_split('/([\s\n\r]+)/', $string, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) {
+            return $string;
+        }
         $partsCount = count($parts);
 
         // Single word: truncate by character count.
@@ -718,7 +771,7 @@ final class LabelsController extends Controller
 
         $length = 0;
         $lastPart = 0;
-        for (; $lastPart < $partsCount; ++$lastPart) {
+        for (; $lastPart < $partsCount; $lastPart++) {
             $length += mb_strlen($parts[$lastPart]);
             if ($length > $width) {
                 $part = $parts[$lastPart];
@@ -752,8 +805,12 @@ final class LabelsController extends Controller
         return Str::ascii($value);
     }
 
-    /** Quicksort bottle cell: two aligned lines (leading blank line dropped;
-     *  the Blade applies the top padding the legacy leading "\n" provided). */
+    /**
+     * Quicksort bottle cell: two aligned lines (leading blank line dropped;
+     * the Blade applies the top padding the legacy leading "\n" provided).
+     *
+     * @return list<string>
+     */
     private static function quicksortBottleLines(string $style, string $judgingNumber, string $bottle): array
     {
         return [
@@ -967,29 +1024,60 @@ final class LabelsController extends Controller
             $advCicerone = '';
             $mastCicerone = '';
 
-            if ((string) $r->brewerJudgeMead === 'Y') { $mead = 'Certified Mead Judge'; }
-            if (in_array('Certified Cider Guide', $bjcpRank, true)) { $cider = 'Certified Cider Guide'; }
-            if (in_array('Certified Pommelier', $bjcpRank, true)) { $cider = 'Certified Pommelier'; }
-            if ((string) $r->brewerJudgeCider === 'Y') { $cider = 'Certified Cider Judge'; }
-            if (in_array('Professional Brewer', $bjcpRank, true)) { $pro = 'Professional Brewer'; }
-            if (in_array('Certified Cicerone', $bjcpRank, true)) { $certCicerone = 'Certified Cicerone'; }
-            if (in_array('Advanced Cicerone', $bjcpRank, true)) { $advCicerone = 'Advanced Cicerone'; }
-            if (in_array('Master Cicerone', $bjcpRank, true)) { $mastCicerone = 'Master Cicerone'; }
+            if ((string) $r->brewerJudgeMead === 'Y') {
+                $mead = 'Certified Mead Judge';
+            }
+            if (in_array('Certified Cider Guide', $bjcpRank, true)) {
+                $cider = 'Certified Cider Guide';
+            }
+            if (in_array('Certified Pommelier', $bjcpRank, true)) {
+                $cider = 'Certified Pommelier';
+            }
+            if ((string) $r->brewerJudgeCider === 'Y') {
+                $cider = 'Certified Cider Judge';
+            }
+            if (in_array('Professional Brewer', $bjcpRank, true)) {
+                $pro = 'Professional Brewer';
+            }
+            if (in_array('Certified Cicerone', $bjcpRank, true)) {
+                $certCicerone = 'Certified Cicerone';
+            }
+            if (in_array('Advanced Cicerone', $bjcpRank, true)) {
+                $advCicerone = 'Advanced Cicerone';
+            }
+            if (in_array('Master Cicerone', $bjcpRank, true)) {
+                $mastCicerone = 'Master Cicerone';
+            }
 
             $cicerone = [];
             $other = [];
-            if ($mastCicerone !== '') { $cicerone[] = $mastCicerone; }
-            elseif ($mastCicerone === '' && $certCicerone === '' && $advCicerone !== '') { $cicerone[] = $advCicerone; }
-            elseif ($mastCicerone === '' && $advCicerone === '' && $certCicerone !== '') { $cicerone[] = $certCicerone; }
+            if ($mastCicerone !== '') {
+                $cicerone[] = $mastCicerone;
+            } elseif ($certCicerone === '' && $advCicerone !== '') {
+                $cicerone[] = $advCicerone;
+            } elseif ($advCicerone === '' && $certCicerone !== '') {
+                $cicerone[] = $certCicerone;
+            }
 
-            if ($mead !== '') { $other[] = $mead; }
-            if ($cider !== '') { $other[] = $cider; }
-            if ($pro !== '') { $other[] = $pro; }
+            if ($mead !== '') {
+                $other[] = $mead;
+            }
+            if ($cider !== '') {
+                $other[] = $cider;
+            }
+            if ($pro !== '') {
+                $other[] = $pro;
+            }
 
-            if ($cicerone !== [] && $other !== []) { $otherCombined = array_merge($cicerone, $other); }
-            elseif ($cicerone !== [] && $other === []) { $otherCombined = $cicerone; }
-            elseif ($cicerone === [] && $other !== []) { $otherCombined = $other; }
-            else { $otherCombined = ''; }
+            if ($cicerone !== [] && $other !== []) {
+                $otherCombined = array_merge($cicerone, $other);
+            } elseif ($cicerone !== [] && $other === []) {
+                $otherCombined = $cicerone;
+            } elseif ($other !== []) {
+                $otherCombined = $other;
+            } else {
+                $otherCombined = '';
+            }
             $otherRanks = $otherCombined !== '' ? implode(', ', $otherCombined) : '';
             $otherRanks = ltrim($otherRanks, ' ,');
             $otherRanks = ltrim($otherRanks, ' , ');
@@ -1003,7 +1091,9 @@ final class LabelsController extends Controller
             $email = strtolower((string) $r->brewerEmail);
 
             $labelLines = [$firstName.' '.$lastName, $rankLine];
-            if ($otherLine !== '') { $labelLines[] = $otherLine; }
+            if ($otherLine !== '') {
+                $labelLines[] = $otherLine;
+            }
             $labelLines[] = $email;
             $labelLines = array_map(fn ($l) => self::ascii($l), $labelLines);
 
@@ -1047,10 +1137,18 @@ final class LabelsController extends Controller
             }
 
             $assignment = '';
-            if ($r->staff_judge == 1) { $assignment .= 'Judge, '; }
-            if ($r->staff_steward == 1) { $assignment .= 'Steward, '; }
-            if ($r->staff_staff == 1) { $assignment .= 'Staff, '; }
-            if ($r->staff_organizer == 1) { $assignment .= 'Organizer'; }
+            if ($r->staff_judge == 1) {
+                $assignment .= 'Judge, ';
+            }
+            if ($r->staff_steward == 1) {
+                $assignment .= 'Steward, ';
+            }
+            if ($r->staff_staff == 1) {
+                $assignment .= 'Staff, ';
+            }
+            if ($r->staff_organizer == 1) {
+                $assignment .= 'Organizer';
+            }
             $assignment = rtrim($assignment, ', ');
             $assignment = rtrim($assignment, ' ');
             $assignment = rtrim($assignment, ',');
@@ -1339,7 +1437,10 @@ final class LabelsController extends Controller
         return self::ascii((string) $name);
     }
 
-    /** @param list<list<string>> $labels */
+    /**
+     * @param  list<list<string>>  $labels
+     * @return list<list<string>>
+     */
     private static function cellsFromLines(array $labels): array
     {
         return array_map(static fn (array $lines): array => $lines, $labels);

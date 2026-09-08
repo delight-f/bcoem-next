@@ -55,6 +55,7 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
             // when the body is empty — no coming-soon fallback, Slice 4).
             ->assertDontSee('Other Volunteer Info');
     }
+
     public function test_volunteers_page_other_info_block_from_body_only(): void
     {
         // Legacy volunteers.sec.php:62-74: the "Other Volunteer Info"
@@ -62,11 +63,13 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         // there is no fallback text (P3 Slice 4, PARITY-009).
         DB::table('contest_info')->where('id', 1)->update(['contestVolunteers' => '<p>Volunteer information coming soon!</p>']);
         $html = $this->get('/volunteers')->assertOk()->getContent();
+        self::assertIsString($html);
         $this->assertStringContainsString('Other Volunteer Info', $html);
         $this->assertStringContainsString('Volunteer information coming soon!', $html);
 
         DB::table('contest_info')->where('id', 1)->update(['contestVolunteers' => '']);
         $html = $this->get('/volunteers')->assertOk()->getContent();
+        self::assertIsString($html);
         $this->assertStringNotContainsString('Other Volunteer Info', $html);
         $this->assertStringNotContainsString('coming soon', $html);
 
@@ -97,6 +100,7 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
             ->assertSee('Use the form below to contact a competition official. All fields with a star are required.')
             ->assertSee('Send Message');
     }
+
     public function test_contact_page_renders_empty_when_mode_x(): void
     {
         // Legacy contact.sec.php has no prefsContact == "X" branch — a
@@ -107,7 +111,9 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'X']);
 
         $response = $this->get('/contact')->assertOk();
-        $this->assertStringNotContainsString('Display of competition contacts has been disabled', $response->getContent());
+        $html = $response->getContent();
+        self::assertIsString($html);
+        $this->assertStringNotContainsString('Display of competition contacts has been disabled', $html);
     }
 
     public function test_contact_page_uses_section_salutation_not_interest_line(): void
@@ -117,6 +123,7 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         // your interest..." interest line is landing-only (129-135).
         $response = $this->get('/contact')->assertOk();
         $html = $response->getContent();
+        self::assertIsString($html);
         $this->assertStringContainsString('<h1', $html);
         $this->assertStringNotContainsString('Thank you for your interest in the', $html);
     }

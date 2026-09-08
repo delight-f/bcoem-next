@@ -23,7 +23,7 @@ final class UploadScoresheetsController extends Controller
     public function show(): View
     {
         $files = collect(is_dir(UserDocs::root()) ? scandir(UserDocs::root()) : [])
-            ->filter(fn (string $f): bool => str_ends_with(strtolower($f), '.pdf'))
+            ->filter(fn (string|false $f): bool => is_string($f) && str_ends_with(strtolower($f), '.pdf'))
             ->sort()
             ->values();
 

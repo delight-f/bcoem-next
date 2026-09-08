@@ -28,7 +28,11 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
 
     /** @var mixed */
     private $contestClubsBackup;
+
+    /** @var int|string|null */
     private $contestEntryOpenBackup;
+
+    /** @var int|string|null */
     private $contestEntryDeadlineBackup;
 
     protected function setUp(): void
@@ -133,6 +137,7 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
             ->assertSee('name="brewerMHP"', false)
             ->assertSee('Opt out');
     }
+
     public function test_style_labels_match_legacy_format(): void
     {
         // Legacy renders style options as ltrim(brewStyleGroup,'0').

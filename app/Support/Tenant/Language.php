@@ -21,12 +21,18 @@ final class Language
      * Available language codes from the installed lang/ packs.
      * Mirrors legacy's get_available_language_codes() (common.lib.php:160-170)
      * which globs the lang folders.
+     *
+     * @return list<string>
      */
     public static function availableCodes(): array
     {
         $base = lang_path();
         $codes = [];
-        foreach (glob("$base/*/site.php") as $file) {
+        $files = glob("$base/*/site.php");
+        if ($files === false) {
+            return [];
+        }
+        foreach ($files as $file) {
             $folder = basename(dirname($file));
             if (preg_match('/^[a-z]{2}$/', $folder)) {
                 $codes[] = $folder === 'en' ? 'en-US' : strtoupper(substr($folder, 0, 2)).'-'.ucfirst($folder);

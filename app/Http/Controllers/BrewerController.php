@@ -41,6 +41,9 @@ final class BrewerController extends Controller
         // (:370). The port page always loads by session uid, so the email
         // match is the live condition.
         $user = Auth::user();
+        if ($user === null) {
+            abort(403);
+        }
         $ownsProfile = strtolower((string) $brewer->brewerEmail) === strtolower((string) $user->user_name)
             || (int) $user->userLevel <= 1;
 

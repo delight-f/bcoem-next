@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Eval;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,12 +32,17 @@ final class EvalProcessController extends Controller
 
     public function update(Request $request, int $evaluationId): RedirectResponse
     {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
+
         $existing = DB::table('evaluation')->where('id', $evaluationId)->first();
         if ($existing === null) {
             abort(404);
         }
 
-        if (! ($request->user()?->isAdmin() ?? false) && $existing->evalJudgeInfo !== (int) $request->user()->id) {
+        if (! $user->isAdmin() && $existing->evalJudgeInfo !== (int) $user->id) {
             abort(403);
         }
 
@@ -51,9 +57,12 @@ final class EvalProcessController extends Controller
     private function judgeId(Request $request): int
     {
         $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
 
         // Non-staff judges always sign their own scoresheets.
-        return ($user?->isAdmin() ?? false) && is_numeric($request->input('evalJudgeInfo'))
+        return $user->isAdmin() && is_numeric($request->input('evalJudgeInfo'))
             ? (int) $request->input('evalJudgeInfo')
             : (int) $user->id;
     }

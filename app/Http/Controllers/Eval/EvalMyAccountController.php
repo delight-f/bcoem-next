@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Eval;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -22,8 +23,12 @@ final class EvalMyAccountController extends Controller
 {
     public function show(Request $request): View
     {
+        $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
         $ctx = TenantContext::load();
-        $uid = (int) $request->user()->id;
+        $uid = (int) $user->id;
 
         $brewer = DB::table('brewer'.EvalDashboardController::archiveSuffix($request))
             ->where('uid', $uid)

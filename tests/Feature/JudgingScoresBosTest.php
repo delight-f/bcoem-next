@@ -158,6 +158,7 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
         $this->assertSame(2, $rows->count());
 
         $bitterRow = $rows[$bitter];
+        self::assertNotNull($bitterRow, 'bitter row must exist after scoring');
         $this->assertSame(36.0, (float) $bitterRow->scoreEntry);
         $this->assertSame('1', (string) $bitterRow->scorePlace);
         $this->assertSame(1, (int) $bitterRow->scoreMiniBOS);
@@ -165,6 +166,7 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
 
         // Mini-BOS empty ⇒ 0 written, not NULL (#4).
         $ciderRow = $rows[$cider];
+        self::assertNotNull($ciderRow, 'cider row must exist after scoring');
         $this->assertNotNull($ciderRow->scoreMiniBOS, 'empty checkbox must write 0, not NULL');
         $this->assertSame(0, (int) $ciderRow->scoreMiniBOS);
         $this->assertNull($ciderRow->scoreEntry, 'blank_to_null: empty score column is NULL');
@@ -191,9 +193,11 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
 
         $rows = DB::table('judging_scores')->where('scoreTable', $this->tableId)->get()->keyBy('eid');
         $this->assertSame(2, $rows->count(), 're-save must not duplicate rows');
-        $this->assertSame('5', (string) $rows[$cider]->scorePlace, 'place preserved across partial re-save');
-        $this->assertSame(1, (int) $rows[$cider]->scoreMiniBOS);
-        $this->assertNull($rows[$cider]->scoreEntry);
+        $ciderRow = $rows[$cider];
+        self::assertNotNull($ciderRow, 'cider row must survive partial re-save');
+        $this->assertSame('5', (string) $ciderRow->scorePlace, 'place preserved across partial re-save');
+        $this->assertSame(1, (int) $ciderRow->scoreMiniBOS);
+        $this->assertNull($ciderRow->scoreEntry);
 
         // A fully-empty slot writes NO row at all (#5).
         $third = $this->entry(['brewJudgingNumber' => '400003']);
@@ -365,13 +369,15 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
 
         $data = DB::table('special_best_data')->where('sid', (int) $sbi->id)->get();
         $this->assertCount(1, $data, 'unknown judging number skipped');
-        $this->assertSame($entry, (int) $data[0]->eid);
-        $this->assertSame(self::ENTRANT_ID, (int) $data[0]->bid);
-        $this->assertSame('1', (string) $data[0]->sbd_place);
-        $this->assertNull($data[0]->sbd_comments, 'blank_to_null on comments');
+        $row = $data[0];
+        self::assertNotNull($row, 'resolved data row must exist');
+        $this->assertSame($entry, (int) $row->eid);
+        $this->assertSame(self::ENTRANT_ID, (int) $row->bid);
+        $this->assertSame('1', (string) $row->sbd_place);
+        $this->assertNull($row->sbd_comments, 'blank_to_null on comments');
 
         // Edit path: update the existing row by its real row-id slot key.
-        $rowKey = (string) $data[0]->id;
+        $rowKey = (string) $row->id;
         $this->put('/admin/judging/special-best/'.((int) $sbi->id).'/entries', [
             'slot_id' => [$rowKey],
             'sid'.$rowKey => (string) $sbi->id,
@@ -435,6 +441,8 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
         }
 
         $table = DB::table('judging_tables')->find($this->tableId);
+        /** @var \stdClass|null $table */
+        self::assertNotNull($table, 'table must exist for status-line render');
         $response->assertSee("Table {$table->tableNumber}: {$table->tableName}", false);
 
         // Following one dropdown selection lands on the score grid, 200.

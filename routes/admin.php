@@ -10,7 +10,6 @@ declare(strict_types=1);
 // guarantees a user, not an admin.
 
 use App\Http\Controllers\Admin\AllDatesController;
-use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\ChangeUserPasswordController;
 use App\Http\Controllers\Admin\CompetitionInfoController;
 use App\Http\Controllers\Admin\ContactsController;
@@ -21,9 +20,10 @@ use App\Http\Controllers\Admin\ModsController;
 use App\Http\Controllers\Admin\SendTestEmailController;
 use App\Http\Controllers\Admin\SitePreferencesController;
 use App\Http\Controllers\Admin\SponsorsController;
-use App\Http\Controllers\Admin\UploadScoresheetsController;
 use App\Http\Controllers\Admin\StylesAdminController;
 use App\Http\Controllers\Admin\StyleTypesController;
+use App\Http\Controllers\Admin\UploadController;
+use App\Http\Controllers\Admin\UploadScoresheetsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth'])->group(function (): void {

@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
  */
 final class BestBrewerStandingsTest extends AdminScreensTestCase
 {
+    /** @var array<string, mixed> */
     private array $prefBackup = [];
 
     /** @var list<array{eid:int,uid:int,table:int}> */

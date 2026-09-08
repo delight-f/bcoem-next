@@ -15,8 +15,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class AwardsPresentationDetailTest extends AdminScreensTestCase
 {
+    /** @var array<string, list<int>> */
     private array $ids = [];
 
+    /** @var array<string, mixed> */
     private array $prefBackup = [];
 
     protected function setUp(): void
@@ -145,6 +147,8 @@ final class AwardsPresentationDetailTest extends AdminScreensTestCase
 
     /**
      * Seed N placed entries (brewers 999999+i) that belong to category 21A.
+     *
+     * @param  list<string>  $clubs
      */
     private function seedEntries(int $n, string $coBrewer = '', string $brewery = '', array $clubs = []): void
     {

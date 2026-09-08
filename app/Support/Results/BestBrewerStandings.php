@@ -63,15 +63,15 @@ final class BestBrewerStandings
         $maxBrewer = (int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0);
         $maxClub = (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0);
 
-        $tiebreakers = array_map(
+        $tiebreakers = array_values(array_map(
             static fn (string $k): string => (string) ($ctx->prefs[$k] ?? ''),
             ['prefsTieBreakRule1', 'prefsTieBreakRule2', 'prefsTieBreakRule3', 'prefsTieBreakRule4', 'prefsTieBreakRule5', 'prefsTieBreakRule6'],
-        );
+        ));
 
-        $placePointPrefs = array_map(
+        $placePointPrefs = array_values(array_map(
             static fn (string $k): float => (float) ($ctx->prefs[$k] ?? 0),
             ['prefsFirstPlacePts', 'prefsSecondPlacePts', 'prefsThirdPlacePts', 'prefsFourthPlacePts', 'prefsHMPts'],
-        );
+        ));
 
         $useBos = (int) ($ctx->prefs['prefsBestUseBOS'] ?? 0) === 1;
 
@@ -183,9 +183,7 @@ final class BestBrewerStandings
                 }
                 $q->orWhere('brewStyleOwn', 'custom');
             })
-            ->select('s.brewStyleGroup')
             ->distinct()
-            ->get()
             ->pluck('brewStyleGroup');
 
         $pools = [];
@@ -206,7 +204,7 @@ final class BestBrewerStandings
     private static function accumulate(
         array &$brewerAcc,
         array &$clubAcc,
-        object $r,
+        \stdClass $r,
         int $winnerMethod,
         bool $proEdition,
         bool $coa,
@@ -287,7 +285,10 @@ final class BestBrewerStandings
     }
 
     /**
-     * @param  array<string,array{Name?:string,Clubs?:string|null,Places:list<int>,Scores:list<float>,Places-data?:array<string|int,int>}>  $rows
+     * @param  array<string,array{Name?:string,Clubs?:string|null,Places:list<int>,Scores:list<float>,Places-data?:array<string|int,int>}>  $acc
+     * @param  array<string|int, float>  $poolSizes
+     * @param  list<string>  $tiebreakers
+     * @param  list<float>  $placePointPrefs
      * @return list<object{name:string,club:string|null,points:float,places:list<int>}>
      */
     private static function scoreRows(

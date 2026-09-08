@@ -18,6 +18,7 @@ final class StreamPdf
     /**
      * Render a Blade view to an inline PDF response.
      *
+     * @param  view-string  $view
      * @param  array<string, mixed>  $data
      */
     public static function response(string $view, array $data, string $filename, bool $download = false): Response
@@ -35,8 +36,10 @@ final class StreamPdf
         ]);
     }
 
-    /** Render a Blade view straight to raw PDF bytes (tests).
+    /**
+     * Render a Blade view straight to raw PDF bytes (tests).
      *
+     * @param  view-string  $view
      * @param  array<string, mixed>  $data
      */
     public static function bytes(string $view, array $data): string

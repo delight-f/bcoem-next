@@ -54,7 +54,7 @@ final class AwardDeckBuilder
 
         $slides = [];
         foreach ($tables as $table) {
-            $rows = $this->scoresFor($ctx, 0, ['table' => $table]);
+            $rows = $this->scoresFor($ctx, ['table' => $table]);
             $count = $this->tableEntryCount($table);
 
             $slides[] = new AwardSlide(
@@ -81,10 +81,14 @@ final class AwardDeckBuilder
             if ($cat === '') {
                 continue;
             }
-            $rows = $this->scoresFor($ctx, 1, ['categorySort' => $cat]);
+            $first = $groupStyles->first();
+            if ($first === null) {
+                continue;
+            }
+            $rows = $this->scoresFor($ctx, ['categorySort' => $cat]);
             $count = $this->categoryEntryCount($ctx, $cat);
 
-            $title = $this->categoryTitle($ctx, $groupStyles->first(), $cat, null);
+            $title = $this->categoryTitle($ctx, $first, $cat, null);
 
             $slides[] = new AwardSlide(
                 title: $title,
@@ -111,7 +115,7 @@ final class AwardDeckBuilder
             $first = $subStyles->first();
             $group = (string) ($first->brewStyleGroup ?? '');
             $num = (string) ($first->brewStyleNum ?? '');
-            $rows = $this->scoresFor($ctx, 2, ['group' => $group, 'num' => $num]);
+            $rows = $this->scoresFor($ctx, ['group' => $group, 'num' => $num]);
             $count = $this->subcategoryEntryCount($group, $num);
 
             $slides[] = new AwardSlide(
@@ -127,7 +131,11 @@ final class AwardDeckBuilder
         return $slides;
     }
 
-    /** BOS per style type. @return list<AwardSlide> */
+    /**
+     * BOS per style type.
+     *
+     * @return list<AwardSlide>
+     */
     public function bosSlides(TenantContext $ctx): array
     {
         // Same scored-entries gate as legacy (inside :108-440).
@@ -157,7 +165,11 @@ final class AwardDeckBuilder
         return $slides;
     }
 
-    /** Special/custom best-of categories. @return list<AwardSlide> */
+    /**
+     * Special/custom best-of categories.
+     *
+     * @return list<AwardSlide>
+     */
     public function specialBestSlides(TenantContext $ctx): array
     {
         $slides = [];
@@ -182,7 +194,7 @@ final class AwardDeckBuilder
 
             $displayPlaces = (int) $row->sbi_display_places === 1;
             $seq = 0;
-            $winners = $rows->map(function ($r) use ($ctx, $displayPlaces, &$seq): AwardWinner {
+            $winners = array_values($rows->map(function ($r) use ($ctx, $displayPlaces, &$seq): AwardWinner {
                 $placeInt = (int) $r->sbd_place;
                 $showPlace = $displayPlaces && $r->sbd_place !== '' && $placeInt >= 1 && $placeInt <= 5;
 
@@ -210,7 +222,7 @@ final class AwardDeckBuilder
                     brewStyle: (string) $r->brewStyle,
                     coBrewer: (string) $r->brewCoBrewer,
                 );
-            })->values()->all();
+            })->all());
 
             $slides[] = new AwardSlide(
                 title: (string) $row->sbi_name,
@@ -225,7 +237,11 @@ final class AwardDeckBuilder
         return $slides;
     }
 
-    /** Build the Best Brewer + Best Club slides (legacy :962-1101). @return list<BestBrewerSlide> */
+    /**
+     * Build the Best Brewer + Best Club slides (legacy :962-1101).
+     *
+     * @return list<BestBrewerSlide>
+     */
     public function bestBrewerSlides(TenantContext $ctx): array
     {
         $standings = BestBrewerStandings::forAwards($ctx);
@@ -261,19 +277,21 @@ final class AwardDeckBuilder
 
     // ---------------------------------------------------------------
 
-    /** @return list<object> raw judging_scores rows joined to brewing+brewer */
-    private function scoresFor(TenantContext $ctx, int $method, array $where): array
+    /**
+     * @param  array{table: \stdClass}|array{categorySort: string}|array{group: string, num: string}  $where
+     * @return list<\stdClass> raw judging_scores rows joined to brewing+brewer
+     */
+    private function scoresFor(TenantContext $ctx, array $where): array
     {
         $q = DB::table('judging_scores as js')
             ->join('brewing as b', 'js.eid', '=', 'b.id')
             ->join('brewer as br', 'b.brewBrewerID', '=', 'br.uid')
             ->whereIn('js.scorePlace', ['1', '2', '3', '4', '5']);
 
-        if ($method === 0) {
+        if (isset($where['table'])) {
             $q->where('js.scoreTable', $where['table']->id);
-        } elseif ($method === 1) {
-            $catSort = $where['categorySort'];
-            $q->where('b.brewCategorySort', $catSort);
+        } elseif (isset($where['categorySort'])) {
+            $q->where('b.brewCategorySort', $where['categorySort']);
         } else {
             $q->where('b.brewCategorySort', $where['group'])
                 ->where('b.brewSubCategory', $where['num']);
@@ -281,16 +299,16 @@ final class AwardDeckBuilder
 
         // Legacy scores.db.php: action=awards-pres ORDER BY scorePlace DESC →
         // 1st first (scorePlace 1 is highest).
-        return $q->orderBy('js.scorePlace')
+        return array_values($q->orderBy('js.scorePlace')
             ->get([
                 'js.scorePlace', 'b.brewName', 'b.brewStyle', 'b.brewCategory',
                 'b.brewCategorySort', 'b.brewSubCategory', 'b.brewCoBrewer',
                 'br.brewerFirstName', 'br.brewerLastName', 'br.brewerBreweryName',
                 'br.brewerClubs',
-            ])->all();
+            ])->all());
     }
 
-    /** @return list<object> BOS rows, with legacy type-4 combined scoreType 2/3/4 */
+    /** @return list<\stdClass> BOS rows, with legacy type-4 combined scoreType 2/3/4 */
     private function bosRows(int $typeId): array
     {
         $q = DB::table('judging_scores_bos as jsb')
@@ -307,18 +325,21 @@ final class AwardDeckBuilder
             $q->where('jsb.scoreType', $typeId);
         }
 
-        return $q->get([
+        return array_values($q->get([
             'jsb.scorePlace', 'b.brewName', 'b.brewStyle', 'b.brewCategory',
             'b.brewCategorySort', 'b.brewSubCategory', 'b.brewCoBrewer',
             'br.brewerFirstName', 'br.brewerLastName', 'br.brewerBreweryName',
             'br.brewerClubs',
-        ])->all();
+        ])->all());
     }
 
-    /** @param  list<object>  $rows */
+    /**
+     * @param  list<\stdClass>  $rows
+     * @return list<AwardWinner>
+     */
     private function winners(TenantContext $ctx, array $rows): array
     {
-        return array_map(fn ($r): AwardWinner => $this->winnerFrom(
+        return array_values(array_map(fn ($r): AwardWinner => $this->winnerFrom(
             $ctx,
             place: Place::label((string) $r->scorePlace),
             fh: $this->hierarchy((string) $r->scorePlace),
@@ -332,7 +353,7 @@ final class AwardDeckBuilder
             subCategory: (string) $r->brewSubCategory,
             brewStyle: (string) $r->brewStyle,
             coBrewer: (string) $r->brewCoBrewer,
-        ), $rows);
+        ), $rows));
     }
 
     private function winnerFrom(
@@ -408,7 +429,7 @@ final class AwardDeckBuilder
     }
 
     /** Table entry count via tableStyles (get_table_info count_total). */
-    private function tableEntryCount(object $table): int
+    private function tableEntryCount(\stdClass $table): int
     {
         $styles = array_filter(array_map('trim', explode(',', (string) $table->tableStyles)));
 
@@ -451,7 +472,10 @@ final class AwardDeckBuilder
         return (int) DB::table('brewing')->where('brewCategorySort', $group)->where('brewSubCategory', $num)->where('brewReceived', 1)->count();
     }
 
-    /** @param  list<AwardSlide>  $slides */
+    /**
+     * @param  list<AwardSlide>  $slides
+     * @return list<AwardSlide>
+     */
     private function orderTableSlides(array $slides, string $go): array
     {
         usort($slides, function (AwardSlide $a, AwardSlide $b) use ($go): int {
@@ -474,7 +498,6 @@ final class AwardDeckBuilder
 
         return $slides;
     }
-
 
     /**
      * "Judges: A, B (Head Judge)" line for a table slide (legacy :157-170).

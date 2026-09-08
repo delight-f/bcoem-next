@@ -188,10 +188,11 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
         ])->assertRedirect('/list?msg=2');
         $after = date('Y-m-d H:i:s');
 
-        $row = DB::table('users')->find(1);
-        $this->assertTrue(password_verify('brand-new-pw', (string) $row->password));
+        $row = (array) DB::table('users')->find(1);
+        self::assertNotEmpty($row);
+        $this->assertTrue(password_verify('brand-new-pw', (string) $row['password']));
         $this->assertTrue(
-            (string) $row->userCreated >= $before && (string) $row->userCreated <= $after,
+            (string) $row['userCreated'] >= $before && (string) $row['userCreated'] <= $after,
             'legacy stamps userCreated with the change time',
         );
 

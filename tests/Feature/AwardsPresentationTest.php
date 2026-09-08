@@ -53,6 +53,7 @@ final class AwardsPresentationTest extends AdminScreensTestCase
 
         $response->assertOk();
         $html = $response->getContent();
+        self::assertIsString($html);
         self::assertStringContainsString('reveal', $html);
         self::assertStringContainsString('vendor/reveal/theme/white.css', $html);
         self::assertStringContainsString('AWRD Test Table', $html);

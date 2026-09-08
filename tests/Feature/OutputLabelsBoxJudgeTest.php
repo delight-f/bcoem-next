@@ -212,7 +212,9 @@ final class OutputLabelsBoxJudgeTest extends TestCase
 
         $data = LabelsController::boxLabels($this->ctx(), '5160', 1);
         $this->assertStringContainsString('_Box_Labels_Avery5160.pdf', $data['filename']);
-        $flat = collect($data['view']['labels'])->map(fn ($l) => implode('|', $l))->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->map(fn ($l) => implode('|', $l))->implode("\n");
         $this->assertStringContainsString(self::PREFIX.' Table', $flat);
         $this->assertStringContainsString('99', $flat);
         $this->assertStringContainsString('21B', $flat);
@@ -229,7 +231,9 @@ final class OutputLabelsBoxJudgeTest extends TestCase
 
         $data = LabelsController::virtualJudgeLabels($this->ctx(), '5160', 1);
         $this->assertStringContainsString('_Virtual_Judge_Labels_Avery5160.pdf', $data['filename']);
-        $flat = collect($data['view']['labels'])->map(fn ($l) => implode('|', $l))->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->map(fn ($l) => implode('|', $l))->implode("\n");
         $this->assertStringContainsString(self::PREFIX.'Virtual Judge', $flat);
         $this->assertStringContainsString('Table 99', $flat);
     }
@@ -244,7 +248,9 @@ final class OutputLabelsBoxJudgeTest extends TestCase
 
         $data = LabelsController::nametags($this->ctx());
         $this->assertStringContainsString('_Nametags_Avery5395.pdf', $data['filename']);
-        $flat = collect($data['view']['labels'])->map(fn ($l) => implode('|', $l))->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->map(fn ($l) => implode('|', $l))->implode("\n");
         $this->assertStringContainsString(self::PREFIX.'First '.self::PREFIX.'Last', $flat);
         $this->assertStringContainsString('Judge', $flat);
         $this->assertStringContainsString('Austin, TX', $flat);

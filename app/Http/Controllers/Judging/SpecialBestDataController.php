@@ -71,7 +71,7 @@ final class SpecialBestDataController extends Controller
         return DB::table('special_best_info')->orderBy('sbi_name')->get(['id', 'sbi_name'])
             ->map(static fn (\stdClass $c): array => [
                 'id' => (int) $c->id,
-                'name' => $c->sbi_name,
+                'name' => (string) $c->sbi_name,
                 'hasData' => (int) ($counts[$c->id] ?? 0) > 0,
             ]);
     }
@@ -134,10 +134,13 @@ final class SpecialBestDataController extends Controller
                     continue;
                 }
 
+                /** @var \stdClass $row */
+                $row = $entry->first();
+
                 $data = [
                     'sid' => self::blankToNull(self::str($request, "sid{$key}")),
-                    'bid' => self::blankToNull((string) $entry[0]->brewBrewerID),
-                    'eid' => self::blankToNull((string) $entry[0]->id),
+                    'bid' => self::blankToNull((string) $row->brewBrewerID),
+                    'eid' => self::blankToNull((string) $row->id),
                     // sbd_place is a numeric column; legacy relied on silent
                     // MySQL truncation of junk — write NULL for non-numeric.
                     'sbd_place' => ctype_digit(self::str($request, "sbd_place{$key}"))

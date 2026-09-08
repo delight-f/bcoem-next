@@ -77,7 +77,10 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
         $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
     }
 
-    /** @return int brewing.id */
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return int brewing.id
+     */
     private function makeEntry(array $overrides = []): int
     {
         DB::table('brewing')->insert(array_merge([

@@ -313,7 +313,7 @@ return [
     'fyi_js_open' => ':roles registration is open.',
     'fyi_js_close' => ':roles registration will close :date.',
     // ── Volunteers standalone page (legacy volunteers.sec.php) ──
-    'volunteer_logged_in' => 'Since you have already registered, access your account to see if you have volunteered to be a judge or steward.','volunteer_logged_in' => 'Since you have already registered, <a href=":link">access your account</a> to see if you have volunteered to be a judge or steward.',
+    'volunteer_logged_in' => 'Since you have already registered, access your account to see if you have volunteered to be a judge or steward.', 'volunteer_logged_in' => 'Since you have already registered, <a href=":link">access your account</a> to see if you have volunteered to be a judge or steward.',
     'volunteer_not_registered' => 'If you have <em>not</em> registered and are willing to be a judge or steward, please register.',
     'volunteer_register_on' => 'If you are willing to judge or steward, please return to register on or after',
     'volunteer_staff_nudge' => 'If you would like to volunteer to be a competition staff member, please register or update your account to indicate that you wish to be a part of the competition staff.',

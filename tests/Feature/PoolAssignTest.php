@@ -30,9 +30,6 @@ final class PoolAssignTest extends PublicSurfaceTestCase
 
     private const UID_MAX = 9549;
 
-    /** @var list<int> */
-    private array $brewerUids = [];
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -87,7 +84,6 @@ final class PoolAssignTest extends PublicSurfaceTestCase
             'brewerSteward' => $steward,
             'brewerStaff' => $staff,
         ]);
-        $this->brewerUids[] = $uid;
     }
 
     // -----------------------------------------------------------------
@@ -145,7 +141,7 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         $response->assertJsonPath('status', '1');
 
         $row = (array) DB::table('staff')->where('uid', 9530)->first();
-        self::assertNotNull($row);
+        self::assertNotEmpty($row);
         self::assertSame(1, (int) $row['staff_judge']);
         self::assertSame(0, (int) $row['staff_steward']);
         self::assertSame(0, (int) $row['staff_staff']);

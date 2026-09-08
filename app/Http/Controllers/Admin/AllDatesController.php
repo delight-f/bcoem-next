@@ -65,8 +65,8 @@ final class AllDatesController extends Controller
         // Legacy placeholder "current_date current_time" (getTimeZoneDateTime
         // 'system' date + 'time-gmt') — e.g. "2026-08-27 09:20, AEST".
         $now = time();
-        $currentDateTime = $now ? DateFmt::dateTime($now, $tz, $df, $tf, 'system', true) : '';
-        [$currentDate, $currentTime] = $currentDateTime ? explode(' ', $currentDateTime, 2) : ['', ''];
+        $currentDateTime = DateFmt::dateTime($now, $tz, $df, $tf, 'system', true) ?? '';
+        [$currentDate, $currentTime] = $currentDateTime !== '' ? explode(' ', $currentDateTime, 2) : ['', ''];
 
         $prefsEval = (int) ($ctx->prefsStr('prefsEval') ?: 0) === 1;
 
@@ -232,7 +232,7 @@ final class AllDatesController extends Controller
             }
             $judgingOpenDate = $fmt($jOpen);
         } else {
-            $suggestedOpenDate = $judgingEarliest !== '' ? $judgingEarliest : round($now / (15 * 60)) * (15 * 60);
+            $suggestedOpenDate = $judgingEarliest !== '' ? $judgingEarliest : (int) (round($now / (15 * 60)) * (15 * 60));
             $judgingOpenDate = $fmt($suggestedOpenDate);
             $suggestedOpen = true;
         }
@@ -268,7 +268,7 @@ final class AllDatesController extends Controller
                 } elseif ($judgingEarliest !== '') {
                     $suggestedCloseDate = $judgingEarliest + 86400;
                 } else {
-                    $suggestedCloseDate = round(($now + 86400) / (15 * 60)) * (15 * 60);
+                    $suggestedCloseDate = (int) (round(($now + 86400) / (15 * 60)) * (15 * 60));
                 }
             }
             $judgingCloseDate = $fmt($suggestedCloseDate);

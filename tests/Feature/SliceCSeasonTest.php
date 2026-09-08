@@ -178,11 +178,13 @@ final class SliceCSeasonTest extends PublicSurfaceTestCase
         $scores = DB::table('judging_scores')->where('scoreTable', $tableId)->orderBy('eid')->get();
         $this->assertCount(2, $scores);
         $first = $scores[0];
+        self::assertNotNull($first);
         $this->assertSame($e1, (int) $first->eid);
         $this->assertSame('38.5', (string) $first->scoreEntry);
         $this->assertSame('1', (string) $first->scorePlace);
         $this->assertSame(1, (int) $first->scoreMiniBOS); // posted checkbox
         $hm = $scores[1];
+        self::assertNotNull($hm);
         $this->assertSame('5', (string) $hm->scorePlace); // HM stores '5'
         $this->assertSame(0, (int) $hm->scoreMiniBOS); // empty box ⇒ 0, never NULL
 

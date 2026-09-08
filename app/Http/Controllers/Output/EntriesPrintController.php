@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
-use App\Support\Outputs\StreamPdf;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

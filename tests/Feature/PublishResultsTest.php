@@ -55,6 +55,7 @@ final class PublishResultsTest extends AdminScreensTestCase
             (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsJudgingClosed'),
         );
         $loc = DB::table('judging_locations')->where('id', $locId)->first();
+        self::assertNotNull($loc);
         self::assertLessThan(self::FUTURE, (int) $loc->judgingDate);
         self::assertGreaterThan(0, (int) $loc->judgingDateEnd);
 

@@ -1,17 +1,17 @@
 <?php
+
 /**
  * PARITY-026: generate non-en site.php lang packs from legacy lang files.
- * 
+ *
  * Usage: LEGACY_DIR=~/dev/bcoe/brewcompetitiononlineentry php tools/parity/generate_lang_packs.php
- * 
+ *
  * Reads the port's en/site.php keys + legacy lang files for each locale,
  * maps legacy $label_* vars to port array keys by name (strip 'label_'
  * prefix), and writes lang/{locale}/site.php for each non-en locale.
  * Unmapped keys get the English value as fallback (partial coverage).
  */
-
 $legacyDir = getenv('LEGACY_DIR') ?: $_SERVER['HOME'].'/dev/bcoe/brewcompetitiononlineentry';
-$portDir   = getenv('PORT_DIR')   ?: $_SERVER['HOME'].'/dev/bcoe/bcoem-next';
+$portDir = getenv('PORT_DIR') ?: $_SERVER['HOME'].'/dev/bcoe/bcoem-next';
 
 $locales = [
     'cs' => 'cs-CZ',
@@ -28,8 +28,9 @@ $enValues = $portLang; // English fallback
 // For each locale, load the legacy lang file and build the port key → translated value map
 foreach ($locales as $folder => $legacyCode) {
     $legacyFile = "$legacyDir/lang/$folder/$legacyCode.lang.php";
-    if (!file_exists($legacyFile)) {
+    if (! file_exists($legacyFile)) {
         echo "SKIP $folder: $legacyFile not found\n";
+
         continue;
     }
 

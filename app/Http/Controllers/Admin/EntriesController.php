@@ -9,8 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -211,7 +213,7 @@ final class EntriesController extends Controller
         $go = (string) $request->input('go');
         $ids = match ($go) {
             'unpaid' => DB::table('brewing')
-                ->where(fn ($q): \Illuminate\Database\Query\Builder => $q->where('brewPaid', '0')->orWhereNull('brewPaid'))
+                ->where(fn ($q): Builder => $q->where('brewPaid', '0')->orWhereNull('brewPaid'))
                 ->pluck('id'),
             'unconfirmed' => DB::table('brewing')->where('brewConfirmed', '0')
                 ->pluck('id')
@@ -237,9 +239,9 @@ final class EntriesController extends Controller
      * style sets span two seeded versions; every other set matches its own
      * version).
      *
-     * @return \Illuminate\Support\Collection<int, int>
+     * @return Collection<int, int>
      */
-    private function missingSpecialInfoIds(): \Illuminate\Support\Collection
+    private function missingSpecialInfoIds(): Collection
     {
         $set = TenantContext::load()->prefsStr('prefsStyleSet');
 

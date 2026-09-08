@@ -106,9 +106,9 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             'contactPosition' => 'Head Registrar',
             'contactEmail' => 'janet@example.org',
         ])->assertRedirect('/admin/contacts?msg=9');
-        $contact = DB::table('contacts')->find($row['id']);
-        self::assertNotNull($contact);
-        self::assertSame('Head Registrar', $contact->contactPosition);
+        $contact = (array) DB::table('contacts')->find($row['id']);
+        self::assertNotEmpty($contact);
+        self::assertSame('Head Registrar', $contact['contactPosition']);
 
         $this->delete('/admin/contacts/'.$row['id'])->assertRedirect('/admin/contacts?msg=9');
         self::assertNull(DB::table('contacts')->find($row['id']));
@@ -190,9 +190,9 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             'id' => [$row['id']],
             'mod_enable'.$row['id'] => '0',
         ])->assertRedirect('/admin/mods?msg=9');
-        $mod = DB::table('mods')->find($row['id']);
-        self::assertNotNull($mod);
-        self::assertSame(0, (int) $mod->mod_enable);
+        $mod = (array) DB::table('mods')->find($row['id']);
+        self::assertNotEmpty($mod);
+        self::assertSame(0, (int) $mod['mod_enable']);
 
         $this->delete('/admin/mods/'.$row['id'])->assertRedirect('/admin/mods?msg=9');
         self::assertNull(DB::table('mods')->find($row['id']));
@@ -231,12 +231,12 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             self::assertSame(0, DB::table('judging_scores_bos')->whereIn('scoreType', [2, 3])->count());
 
             $this->post('/admin/style-types/separate')->assertRedirect('/admin/style-types?msg=2');
-            $typeTwo = DB::table('style_types')->find(2);
-            $typeThree = DB::table('style_types')->find(3);
-            self::assertNotNull($typeTwo);
-            self::assertNotNull($typeThree);
-            self::assertSame('Y', $typeTwo->styleTypeBOS);
-            self::assertSame('Y', $typeThree->styleTypeBOS);
+            $typeTwo = (array) DB::table('style_types')->find(2);
+            $typeThree = (array) DB::table('style_types')->find(3);
+            self::assertNotEmpty($typeTwo);
+            self::assertNotEmpty($typeThree);
+            self::assertSame('Y', $typeTwo['styleTypeBOS']);
+            self::assertSame('Y', $typeThree['styleTypeBOS']);
             $meadCiderAfter = (array) DB::table('style_types')->where('styleTypeName', 'Mead/Cider')->first();
             self::assertSame('N', $meadCiderAfter['styleTypeBOS']);
         } finally {
@@ -354,9 +354,9 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             'userLevel' => '2',
             'userCreated' => '2024-01-01 00:00:01',
         ]);
-        $originalUser = DB::table('users')->find(9403);
-        self::assertNotNull($originalUser);
-        $originalHash = (string) $originalUser->password;
+        $originalUser = (array) DB::table('users')->find(9403);
+        self::assertNotEmpty($originalUser);
+        $originalHash = (string) $originalUser['password'];
 
         try {
             $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
@@ -366,18 +366,18 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
                 'password1' => 'brand-new-secret',
                 'password' => 'different-confirm',
             ])->assertSessionHasErrors('password');
-            $unchanged = DB::table('users')->find(9403);
-            self::assertNotNull($unchanged);
-            self::assertSame($originalHash, $unchanged->password);
+            $unchanged = (array) DB::table('users')->find(9403);
+            self::assertNotEmpty($unchanged);
+            self::assertSame($originalHash, $unchanged['password']);
 
             $this->put('/admin/users/9403/password', [
                 'password1' => 'brand-new-secret',
                 'password' => 'brand-new-secret',
             ])->assertRedirect('/admin/users/9403/password?msg=2');
 
-            $updatedUser = DB::table('users')->find(9403);
-            self::assertNotNull($updatedUser);
-            $hash = (string) $updatedUser->password;
+            $updatedUser = (array) DB::table('users')->find(9403);
+            self::assertNotEmpty($updatedUser);
+            $hash = (string) $updatedUser['password'];
             self::assertNotSame($originalHash, $hash);
             self::assertTrue(password_verify('brand-new-secret', $hash));
 

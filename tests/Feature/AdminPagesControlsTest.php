@@ -200,6 +200,7 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
      * Seed 2 tables × entries in judging_flights. Table A has flights 1-2
      * already assigned to rounds 1-2; table B one flight, unassigned.
      */
+    /** @param array<string, mixed> $overrides */
     private function seedFlightTables(array $overrides = []): void
     {
         foreach (['A' => 'P57 Main table', 'B' => 'P57 Side table'] as $key => $name) {

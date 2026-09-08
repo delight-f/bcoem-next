@@ -14,6 +14,7 @@ use Tests\DuskTestCase;
 final class RegressionProbeTest extends DuskTestCase
 {
     private const ADMIN_EMAIL = 'smoke.p57@brewingcompetitions.com';
+
     private const ADMIN_PASS = 'bcoem';
 
     private function login(Browser $browser): Browser

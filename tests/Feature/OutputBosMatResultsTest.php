@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Testing\TestResponse;
 
 /**
  * BOS cup mats and results PDF families (spec §7 P5.1): every legacy
@@ -243,7 +245,10 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
         $this->get('/admin/output/results')->assertRedirect('/?msg=99');
     }
 
-    private function decodePdfText($response): string
+    /**
+     * @param  TestResponse<Response>  $response
+     */
+    private function decodePdfText(TestResponse $response): string
     {
         $tmp = tempnam(sys_get_temp_dir(), 'pdf');
         file_put_contents($tmp, (string) $response->getContent());

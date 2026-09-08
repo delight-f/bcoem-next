@@ -21,7 +21,6 @@ declare(strict_types=1);
  * single-sided signatures here cover insert-only chrome that never
  * appears on the legacy side.
  */
-
 $classify = in_array('--classify', $argv, true);
 
 $html = stream_get_contents(STDIN);

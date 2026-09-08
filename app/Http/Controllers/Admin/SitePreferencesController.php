@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -122,26 +123,30 @@ final class SitePreferencesController extends Controller
             'languages' => self::LANGUAGES,
             'timezones' => self::TIMEZONES,
             'styleSet' => TenantContext::load()->prefsStr('prefsStyleSet'),
-            'styleLimitRows' => $this->styleLimitRows(TenantContext::load()->prefsStr('prefsStyleSet')),
+            'styleLimitRows' => $this->styleLimitRows(TenantContext::load()->prefsStr('prefsStyleSet') ?? ''),
         ]);
     }
 
-    /** Per-style limit grid rows for a style set: group key + label + current limit. */
+    /**
+     * Per-style limit grid rows for a style set: group key + label + current limit.
+     *
+     * @return list<array{key: string, label: string, value: string}>
+     */
     private function styleLimitRows(string $set): array
     {
         $limits = json_decode((string) TenantContext::load()->prefsStr('prefsStyleLimits'), true) ?: [];
 
-        return $this->activeStyleCategoryQuery($set)->get()
+        return array_values($this->activeStyleCategoryQuery($set)->get()
             ->map(fn ($s): array => [
                 'key' => (string) $s->brewStyleGroup,
                 'label' => (string) $s->brewStyleGroup.' - '.($s->brewStyleCategory ?: $s->brewStyle),
                 'value' => (string) ($limits[$s->brewStyleGroup] ?? ''),
             ])
-            ->all();
+            ->all());
     }
 
     /** Style query matching the rebuildSelectedStyles active-set predicate. */
-    private function activeStyleCategoryQuery(string $set)
+    private function activeStyleCategoryQuery(string $set): Builder
     {
         $query = DB::table('styles')
             ->select('brewStyleGroup', 'brewStyleCategory', 'brewStyle')

@@ -213,6 +213,7 @@ final class BrewerForm2Controller extends Controller
             $rows = [];
             foreach (array_filter(explode(',', (string) $csv)) as $item) {
                 $loc = DB::table('judging_locations')->find((int) substr($item, 2));
+                /** @var \stdClass|null $loc */
                 if ($loc === null || ($maxType !== null && (int) $loc->judgingLocType >= $maxType)) {
                     continue;
                 }

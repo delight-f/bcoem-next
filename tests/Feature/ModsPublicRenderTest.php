@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * PARITY-027 — public mods render the mods/<mod_filename> FILE, never
@@ -45,7 +46,7 @@ final class ModsPublicRenderTest extends PublicSurfaceTestCase
         DB::table('users')->where('user_name', 'assign.admin@brewingcompetitions.com')->delete();
         DB::table('users')->insert([
             'user_name' => 'assign.admin@brewingcompetitions.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('bcoem'),
+            'password' => Hash::make('bcoem'),
             'userLevel' => '1',
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
@@ -63,6 +64,7 @@ final class ModsPublicRenderTest extends PublicSurfaceTestCase
         parent::tearDown();
     }
 
+    /** @param array<string, mixed> $overrides */
     private function seedMod(array $overrides = []): void
     {
         DB::table('preferences')->where('id', 1)->update(['prefsUseMods' => 'Y']);
@@ -154,6 +156,7 @@ final class ModsPublicRenderTest extends PublicSurfaceTestCase
         $this->seedFile();
 
         $admin = User::query()->where('user_name', 'assign.admin@brewingcompetitions.com')->first();
+        self::assertNotNull($admin);
         $this->actingAs($admin)
             ->get('/')
             ->assertOk()

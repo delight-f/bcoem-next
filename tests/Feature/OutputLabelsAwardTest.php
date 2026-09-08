@@ -210,7 +210,9 @@ final class OutputLabelsAwardTest extends TestCase
         $this->assertStringContainsString('_Award_Labels_Avery5160.pdf', (string) $response->headers->get('Content-Disposition'));
 
         $data = LabelsController::awardLabels($this->ctx(), 'default', '5160');
-        $flat = collect($data['view']['labels'])->map(fn ($l) => implode("\n", $l))->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->map(fn ($l) => implode("\n", $l))->implode("\n");
 
         // Best-of-show line: display_place(1) . " - Best of Show (Beer)".
         $this->assertStringContainsString('1st - Best of Show (Beer)', $flat);

@@ -224,7 +224,9 @@ final class HomePageTest extends PublicSurfaceTestCase
         }
     }
 
-    /** Card titles in the #at-a-glance section, in render order. */
+    /** Card titles in the #at-a-glance section, in render order.
+     * @return list<string>
+     */
     private function glanceHeaders(string $html): array
     {
         $start = strpos($html, '<section id="at-a-glance"');
@@ -238,18 +240,25 @@ final class HomePageTest extends PublicSurfaceTestCase
         return $m[1];
     }
 
-    /** @return array{contest: array, prefs: array, judging: array} */
+    /** @return array{contest: array<string, mixed>, prefs: array<string, mixed>, judging: list<array<string, mixed>>} */
     private function snapshotFixture(): array
     {
-        return [
-            'contest' => (array) DB::table('contest_info')->where('id', 1)->first(),
-            'prefs' => (array) DB::table('preferences')->where('id', 1)->first(),
-            'judging' => DB::table('judging_locations')->get()
-                ->map(static fn (object $r): array => (array) $r)->all(),
-        ];
+        $contestRow = DB::table('contest_info')->where('id', 1)->first();
+        $prefsRow = DB::table('preferences')->where('id', 1)->first();
+
+        /** @var array<string, mixed> $contest */
+        $contest = $contestRow === null ? [] : (array) $contestRow;
+        /** @var array<string, mixed> $prefs */
+        $prefs = $prefsRow === null ? [] : (array) $prefsRow;
+        /** @var list<array<string, mixed>> $judging */
+        $judging = DB::table('judging_locations')->get()
+            ->map(static fn (object $r): array => (array) $r)
+            ->all();
+
+        return ['contest' => $contest, 'prefs' => $prefs, 'judging' => $judging];
     }
 
-    /** @param array{contest: array, prefs: array, judging: array} $snap */
+    /** @param array{contest: array<string, mixed>, prefs: array<string, mixed>, judging: list<array<string, mixed>>} $snap */
     private function restoreFixture(array $snap): void
     {
         DB::table('contest_info')->where('id', 1)->update($snap['contest']);

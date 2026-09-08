@@ -44,6 +44,7 @@ Route::delete('/admin/judging/locations/{id}', [LocationController::class, 'dest
 // Regenerate all judging numbers (legacy regenerate.ajax.php /
 // generate_judging_numbers; methods: default|legacy|identical).
 use App\Http\Controllers\Judging\RegenerateNumbersController;
+
 Route::post('/admin/judging/regenerate-numbers', [RegenerateNumbersController::class, '__invoke'])
     ->name('admin.judging.regenerate_numbers')->middleware('auth');
 
@@ -132,5 +133,6 @@ Route::post('/admin/judging/flights/{id}/assign/{role}', [AssignController::clas
 // (judging_locations.admin.php). The per-table AssignController above is
 // a different screen.
 use App\Http\Controllers\Judging\PoolAssignController;
+
 Route::get('/admin/judging/pool-assign', [PoolAssignController::class, 'show'])
     ->name('admin.judging.pool_assign.show')->middleware('auth');

@@ -457,15 +457,14 @@ final class PayPageTest extends PublicSurfaceTestCase
         $this->login();
         $entryId = $this->makeEntry(['brewName' => 'Return Check']);
 
-        $gateway = $this->sessionGateway((object) ['payment_status' => 'paid']);
-        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $gateway);
+        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $this->sessionGateway((object) ['payment_status' => 'paid']));
 
         $this->get('/pay/callback?session_id=cs_paid')->assertRedirect('/pay?msg=13');
 
-        $gateway->session = (object) ['payment_status' => 'unpaid'];
+        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $this->sessionGateway((object) ['payment_status' => 'unpaid']));
         $this->get('/pay/callback?session_id=cs_unpaid')->assertRedirect('/pay?msg=14');
 
-        $gateway->session = null;
+        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $this->sessionGateway(null));
         $this->get('/pay/callback?session_id=cs_gone')->assertRedirect('/pay?msg=14');
 
         // Idempotency (#7) and the single-writer rule: nothing local moved.

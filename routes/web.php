@@ -2,22 +2,28 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\PublishResultsController;
 use App\Http\Controllers\AjaxController;
+use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\AwardsController;
 use App\Http\Controllers\BrewController;
-use App\Http\Controllers\ChangeEmailController;
 use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
+use App\Http\Controllers\ChangeEmailController;
 use App\Http\Controllers\EntriesController;
 use App\Http\Controllers\LegacyRedirectController;
 use App\Http\Controllers\ManualPaymentController;
 use App\Http\Controllers\PayController;
 use App\Http\Controllers\PublicController;
+use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\StripeWebhookController;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Home (Phase 2) doubles as the legacy URL entry point: old bookmarks hit
@@ -28,7 +34,7 @@ Route::get('/', LegacyRedirectController::class)->name('home.legacy');
 Route::get('/index.php', LegacyRedirectController::class);
 // Legacy awards.php → /awards (301, query preserved) — the awards
 // presentation shipped as a top-level legacy file, so old links land here.
-Route::get('/awards.php', fn (\Illuminate\Http\Request $r) => new \Illuminate\Http\RedirectResponse('/awards'.($r->getQueryString() ? '?'.$r->getQueryString() : ''), 301));
+Route::get('/awards.php', fn (Request $r) => new RedirectResponse('/awards'.($r->getQueryString() ? '?'.$r->getQueryString() : ''), 301));
 Route::get('/list', [PublicController::class, 'list'])->name('list');
 // Legacy served archives as ?section=past-winners&go={suffix}; the suffix is a
 // table-name fragment and is sanitized to alphanumerics in the repository.
@@ -69,19 +75,19 @@ Route::post('/entries/{id}', [EntriesController::class, 'destroy'])
 
 // Publish Results (legacy process.inc.php?action=publish): releases winners
 // publicly and forces all future deadlines closed. Lands /admin?msg=36.
-Route::post('/admin/results/publish', [App\Http\Controllers\Admin\PublishResultsController::class, 'store'])
+Route::post('/admin/results/publish', [PublishResultsController::class, 'store'])
     ->name('admin.results.publish')->middleware('auth');
 
 // QR mobile check-in (legacy qr.php, PARITY-002). Public, password-gated
 // via contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy.
-Route::get('/qr', [App\Http\Controllers\QrCheckinController::class, 'show'])->name('qr.show');
-Route::post('/qr/password-check', [App\Http\Controllers\QrCheckinController::class, 'authenticate'])->name('qr.authenticate');
-Route::post('/qr/checkin', [App\Http\Controllers\QrCheckinController::class, 'store'])->name('qr.checkin');
+Route::get('/qr', [QrCheckinController::class, 'show'])->name('qr.show');
+Route::post('/qr/password-check', [QrCheckinController::class, 'authenticate'])->name('qr.authenticate');
+Route::post('/qr/checkin', [QrCheckinController::class, 'store'])->name('qr.checkin');
 
 // Awards reveal.js presentation (legacy awards.php, PARITY-001).
 // Public gate: judging past + all windows closed + prefsDisplayWinners=Y +
 // delay passed; admins always. ?view= white|black|blue, ?go= table-*.
-Route::get('/awards', [App\Http\Controllers\AwardsController::class, 'show'])->name('awards.show');
+Route::get('/awards', [AwardsController::class, 'show'])->name('awards.show');
 
 // Brewer profile form 0 — account & contact edit (P3.2a). Legacy:
 // ?section=brewer&action=edit&go=account behind a login gate.
@@ -92,9 +98,9 @@ Route::post('/list/edit-account', [BrewerController::class, 'saveEdit'])
 
 // Authenticated password change. Legacy: ?section=user&go=account&action=password
 // (form) + process.inc.php go=password (save).
-Route::get('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'show'])
+Route::get('/user/password', [ChangePasswordController::class, 'show'])
     ->name('user.password')->middleware('auth');
-Route::post('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'update'])
+Route::post('/user/password', [ChangePasswordController::class, 'update'])
     ->name('user.password.update')->middleware('auth');
 
 // Password reset (P3.1c). Legacy: ?section=login&go=password&action=

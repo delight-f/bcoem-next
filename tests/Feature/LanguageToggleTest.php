@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * PARITY-026 — Language toggle + locale resolution layer.
@@ -23,7 +24,7 @@ final class LanguageToggleTest extends PublicSurfaceTestCase
         DB::table('users')->where('user_name', 'assign.admin@brewingcompetitions.com')->delete();
         DB::table('users')->insert([
             'user_name' => 'assign.admin@brewingcompetitions.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('bcoem'),
+            'password' => Hash::make('bcoem'),
             'userLevel' => '1',
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,

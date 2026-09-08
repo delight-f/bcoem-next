@@ -189,7 +189,7 @@ final class ParticipantsController extends Controller
 
         return view('admin.participants', [
             'ctx' => TenantContext::load(),
-            'viewerLevel' => (int) ($request->user()?->userLevel ?? 2),
+            'viewerLevel' => (int) ($request->user()->userLevel ?? 2),
             'participants' => $participants,
             'entryCounts' => $entryCounts,
             'entryNumbers' => $entryNumbers,
@@ -244,10 +244,12 @@ final class ParticipantsController extends Controller
             'brewerBreweryName' => ['nullable', 'string', 'max:255'],
         ]);
 
-        DB::table('brewer')->where('uid', $uid)->update(array_combine(
+        /** @var array<string, string|null> $update */
+        $update = array_combine(
             array_keys($data),
             array_map(self::blankToNull(...), array_values($data)),
-        ));
+        );
+        DB::table('brewer')->where('uid', $uid)->update($update);
 
         // Account security section (brewer_form_0.pub.php:154-187 +
         // process_brewer.inc.php:709-732: changeSecurity=Y updates the

@@ -82,7 +82,7 @@ final class JudgeNotesController extends Controller
      * round/flight), mirroring legacy get_flight_info().
      *
      * @param  Collection<int, \stdClass>  $entries
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, non-empty-array<string, mixed>>
      */
     private function withPlacement($entries)
     {
@@ -100,7 +100,7 @@ final class JudgeNotesController extends Controller
             }
         }
 
-        return $entries->map(static function (\stdClass $entry) use ($placement): array {
+        $placed = $entries->map(static function (\stdClass $entry) use ($placement): array {
             $p = $placement[$entry->id] ?? ['tableNumber' => null, 'tableName' => null, 'flightNumber' => null, 'flightRound' => null];
 
             $row = [];
@@ -108,7 +108,15 @@ final class JudgeNotesController extends Controller
                 $row[(string) $key] = $value;
             }
 
-            return array_merge($row, $p);
+            $row['tableNumber'] = $p['tableNumber'];
+            $row['tableName'] = $p['tableName'];
+            $row['flightNumber'] = $p['flightNumber'];
+            $row['flightRound'] = $p['flightRound'];
+
+            return $row;
         });
+
+        /** @var Collection<int, non-empty-array<string, mixed>> $placed */
+        return $placed;
     }
 }

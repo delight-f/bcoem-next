@@ -61,6 +61,10 @@ final class SetLocale
     {
         $options = json_decode((string) ($ctx->prefsStr('prefsLanguageOptions') ?? ''), true);
 
-        return is_array($options) ? $options : Language::availableCodes();
+        if (! is_array($options)) {
+            return Language::availableCodes();
+        }
+
+        return array_values(array_filter($options, fn ($v): bool => is_string($v)));
     }
 }

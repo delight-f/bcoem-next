@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
 
 /**
  * Legacy URL redirect contract (HANDOVER §4.3). Old bookmarks and emails
@@ -47,7 +47,6 @@ final class LegacyRedirectController extends Controller
         'sponsors||' => ['/sponsors'],
         'competition||' => ['/'],
 
-
         // ── Entrant (userLevel 2) ──
         'list||' => ['/list', ['msg']],
         'list|account|' => ['/list/edit-judging'],
@@ -79,7 +78,7 @@ final class LegacyRedirectController extends Controller
         'admin|dropoff|' => ['/admin/dropoff'],
         'admin|dropoff|add' => ['/admin/dropoff/create'],
         'admin|judging|' => ['/admin/judging/locations'],
-        
+
         'admin|judging|add' => ['/admin/judging/locations/create'],
         'admin|non-judging|' => ['/admin/judging/non-judging'],
         'admin|non-judging|add' => ['/admin/judging/non-judging/create'],
@@ -95,7 +94,6 @@ final class LegacyRedirectController extends Controller
         'admin|mods|' => ['/admin/mods'],
 
         // ── Admin — entries & participants ──
-        'admin|entries|' => ['/backoffice/entries'],
         'admin|count_by_style|' => ['/backoffice/count-by-style', ['filter'], 301],
         'admin|count_by_substyle|' => ['/backoffice/count-by-substyle', ['filter'], 301],
         'admin|payments|' => ['/admin/payments'],
@@ -258,10 +256,10 @@ final class LegacyRedirectController extends Controller
             if ($section === 'admin' && $go === 'entries' && $action === 'edit') {
                 return ["/backoffice/entries/{$id}/edit", [], 301];
             }
-            if ($section === 'admin' && $go === 'make_admin' && $id !== '') {
+            if ($section === 'admin' && $go === 'make_admin') {
                 return ["/backoffice/participants/{$id}/edit", [], 301];
             }
-            if ($section === 'admin' && $go === 'brewer' && $action === 'edit' && $id !== '') {
+            if ($section === 'admin' && $go === 'brewer' && $action === 'edit') {
                 return ["/backoffice/participants/{$id}/edit", [], 301];
             }
             // ?section=brewer&go=admin&action=edit&filter=1&id=N — admin
@@ -269,7 +267,7 @@ final class LegacyRedirectController extends Controller
             if ($section === 'brewer' && $go === 'admin' && $action === 'edit') {
                 return ["/backoffice/participants/{$id}/edit", [], 301];
             }
-            if ($section === 'admin' && $go === 'style_types' && $action === 'edit' && $id !== '') {
+            if ($section === 'admin' && $go === 'style_types' && $action === 'edit') {
                 return ["/admin/style-types/{$id}/edit", [], 301];
             }
             if ($section === 'admin' && $go === 'judging_tables' && $action === 'edit') {
@@ -277,24 +275,24 @@ final class LegacyRedirectController extends Controller
             }
             // ?section=admin&go=judging&action=edit&id=N -> edit that
             // location (legacy judging_locations.admin.php row pencil).
-            if ($section === 'admin' && $go === 'judging' && $action === 'edit' && $id !== '') {
+            if ($section === 'admin' && $go === 'judging' && $action === 'edit') {
                 return ["/admin/judging/locations/{$id}/edit", [], 301];
             }
             // ?section=admin&go=judging_scores&action=add&id=N -> scores
             // add-form (legacy score_table_choose add-vs-edit).
-            if ($section === 'admin' && $go === 'judging_scores' && $action === 'add' && $id !== '') {
+            if ($section === 'admin' && $go === 'judging_scores' && $action === 'add') {
                 return ['/admin/judging/scores', ['action', 'id'], 301];
             }
             // ?section=brew&go=entries&action=add&id=N -> the brew form
             // seeded for participant N (port's canonical filter param —
             // legacy 'id' becomes 'filter'; built literally so redirect()
             // doesn't re-append the original id).
-            if ($section === 'brew' && $go === 'entries' && $action === 'add' && $id !== '') {
+            if ($section === 'brew' && $go === 'entries' && $action === 'add') {
                 return ['/brew?filter='.$id, [], 301];
             }
             // ?section=admin&go=contacts&action=edit&id=N -> edit that
             // contact (legacy contacts row pencil).
-            if ($section === 'admin' && $go === 'contacts' && $action === 'edit' && $id !== '') {
+            if ($section === 'admin' && $go === 'contacts' && $action === 'edit') {
                 return ["/admin/contacts/{$id}/edit", [], 301];
             }
             // ?section=admin&go=judging_flights&filter=define&action=edit

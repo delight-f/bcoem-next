@@ -15,6 +15,7 @@ use Tests\DuskTestCase;
 final class Issue12ShimGoneProbeTest extends DuskTestCase
 {
     private const ADMIN_EMAIL = 'smoke.p57@brewingcompetitions.com';
+
     private const ADMIN_PASS = 'bcoem';
 
     public function test_public_home_layout_intact_after_shim_removal(): void

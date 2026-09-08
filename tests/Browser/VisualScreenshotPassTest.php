@@ -17,8 +17,10 @@ use Tests\DuskTestCase;
 final class VisualScreenshotPassTest extends DuskTestCase
 {
     private const ADMIN_EMAIL = 'smoke.p57@brewingcompetitions.com';
+
     private const ADMIN_PASS = 'bcoem';
-    private const SHOT_PREFIX = 'issue13-';
+
+    private const SHOT_DIR = __DIR__.'/../../tools/parity/screenshots';
 
     public function test_issue13_visual_screenshot_pass(): void
     {

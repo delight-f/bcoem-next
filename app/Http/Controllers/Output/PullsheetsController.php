@@ -11,6 +11,7 @@ use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -62,7 +63,7 @@ final class PullsheetsController extends Controller
      * (go=judging_tables&id=default, no filter). Public so the feature test
      * can assert the exact rows that feed the PDF.
      *
-     * @return array{queued: bool, tables: list<array<string, mixed>>}
+     * @return array{tables: list<array<string, mixed>>, queued: bool, miniBos: bool, view: string, round: string, styleSet: string}
      */
     public static function build(TenantContext $ctx): array
     {
@@ -77,7 +78,7 @@ final class PullsheetsController extends Controller
      * go=judging_tables / go=judging_locations — per-table pull sheets.
      *
      * @param  array<string, string>  $p
-     * @return array<string, mixed>
+     * @return array{tables: list<array<string, mixed>>, queued: bool, miniBos: bool, view: string, round: string, styleSet: string}
      */
     public static function tableReport(TenantContext $ctx, array $p): array
     {
@@ -104,7 +105,7 @@ final class PullsheetsController extends Controller
      * one table; otherwise ALL tables ordered by tableNumber ASC.
      *
      * @param  array<string, string>  $p
-     * @return \Illuminate\Support\Collection<int, object>
+     * @return Collection<int, \stdClass>
      */
     private static function tableList(TenantContext $ctx, array $p)
     {
@@ -117,7 +118,7 @@ final class PullsheetsController extends Controller
         if ($p['id'] !== 'default') {
             $q->where('id', (int) $p['id']);
         } else {
-            $q->orderBy('tableNumber', 'ASC');
+            $q->orderBy('tableNumber', 'asc');
         }
 
         return $q->get();
@@ -250,7 +251,7 @@ final class PullsheetsController extends Controller
      *
      * @return list<array<string, mixed>>
      */
-    private static function styleEntries(TenantContext $ctx, object $style, string $view, string $filter): array
+    private static function styleEntries(TenantContext $ctx, \stdClass $style, string $view, string $filter): array
     {
         if ($filter === 'mini_bos') {
             // Only mini-bos-scored entries (scoreMiniBOS='1').
@@ -287,7 +288,7 @@ final class PullsheetsController extends Controller
      *
      * @return array<string, mixed>
      */
-    private static function entryRow(TenantContext $ctx, object $e, object $style, string $view, string $filter): array
+    private static function entryRow(TenantContext $ctx, \stdClass $e, ?\stdClass $style, string $view, string $filter): array
     {
         $styleSet = self::styleSet($ctx);
         $id = (int) $e->id;
@@ -462,7 +463,7 @@ final class PullsheetsController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private static function bosGroup(TenantContext $ctx, object $type, string $view, string $action, string $filter, string $styleSet): array
+    private static function bosGroup(TenantContext $ctx, \stdClass $type, string $view, string $action, string $filter, string $styleSet): array
     {
         $query = DB::table('judging_scores as a')
             ->join('brewing as b', 'a.eid', '=', 'b.id')
@@ -551,7 +552,11 @@ final class PullsheetsController extends Controller
         return ['view' => $viewEntry, 'styleSet' => $styleSet, 'tables' => $tables];
     }
 
-    /** Legacy show_record guard: only entries with any additional info text. */
+    /**
+     * Legacy show_record guard: only entries with any additional info text.
+     *
+     * @param  array<string, mixed>  $entry
+     */
     private static function hasAdditionalInfo(array $entry): bool
     {
         $info = $entry['info'];

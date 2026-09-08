@@ -53,8 +53,8 @@ final class Bs5MarkerHarnessTest extends DuskTestCase
             // detector runs over it without error.
             $html = $browser->driver->getPageSource();
             $this->assertNotEmpty($html);
-            $this->assertIsArray(self::markersInHtml($html, $this->bs3OnlyClasses));
-            $this->assertIsArray(self::markersInHtml($html, $this->daisyOnlyMarkers));
+            self::markersInHtml($html, $this->bs3OnlyClasses);
+            self::markersInHtml($html, $this->daisyOnlyMarkers);
         });
     }
 

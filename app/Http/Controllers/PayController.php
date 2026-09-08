@@ -155,7 +155,7 @@ final class PayController extends Controller
      * Confirmed, unpaid entries in the legacy list order
      * (entries.db.php: brewCategorySort, brewSubCategory).
      *
-     * @return Collection<int, object>
+     * @return Collection<int, \stdClass>
      */
     private function unpaidEntries()
     {

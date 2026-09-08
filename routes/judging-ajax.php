@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Judging\CustomStyleController;
-use App\Http\Controllers\Judging\PracticeSessionController;
 use App\Http\Controllers\Judging\PoolAssignController;
+use App\Http\Controllers\Judging\PracticeSessionController;
 use App\Http\Controllers\Judging\TablesModeController;
 use Illuminate\Support\Facades\Route;
 

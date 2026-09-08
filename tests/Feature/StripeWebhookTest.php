@@ -179,6 +179,7 @@ final class StripeWebhookTest extends PublicSurfaceTestCase
         $this->post("/admin/payments/{$rowId}/refund")->assertRedirect('/admin/payments?msg=refunded');
 
         $row = DB::table('payments')->where('id', $rowId)->first();
+        $this->assertNotNull($row);
         $this->assertSame('refunded', $row->status);
         $this->assertSame('re_admin_1', $row->event_id);
         foreach ([101, 102] as $id) {

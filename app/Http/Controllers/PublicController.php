@@ -7,7 +7,6 @@ namespace App\Http\Controllers;
 use App\Mail\ContactMail;
 use App\Support\Entries\EntryGates;
 use App\Support\Results\ResultsRepository;
-use App\Support\Tenant\ContestRules;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
@@ -133,7 +132,7 @@ final class PublicController extends Controller
             'sponsorsVisible' => $sponsorsVisible,
             'sponsors' => DB::table('sponsors')->orderBy('id')->get(),
             'logos' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
-            'logoFor' => static function (object $sponsor): string {
+            'logoFor' => static function (\stdClass $sponsor): string {
                 $image = (string) $sponsor->sponsorImage;
                 if ($image !== '' && is_file(public_path('user_images/'.$image))) {
                     return asset('user_images/'.$image);
@@ -288,7 +287,7 @@ final class PublicController extends Controller
 
         $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
         $logos = $ctx->prefsStr('prefsSponsorLogos') === 'Y';
-        $logoFor = static function (object $sponsor) use ($logos): string {
+        $logoFor = static function (\stdClass $sponsor): string {
             $image = (string) $sponsor->sponsorImage;
             if ($image !== '' && is_file(public_path('user_images/'.$image))) {
                 return asset('user_images/'.$image);
@@ -338,7 +337,7 @@ final class PublicController extends Controller
             fromEmail: $validated['from_email'],
             subjectLine: $validated['subject'],
             body: $validated['message'],
-            contestName: $ctx->contestStr('contestName'),
+            contestName: $ctx->contestStr('contestName') ?? '',
         ));
 
         return redirect()->route('contact')->with('contactSent', true);
@@ -362,6 +361,7 @@ final class PublicController extends Controller
 
         return $salutation;
     }
+
     /**
      * View payload for the pub/list.pub.php account surface, shared by
      * /list and /pay (index.pub.php renders the same block for both).

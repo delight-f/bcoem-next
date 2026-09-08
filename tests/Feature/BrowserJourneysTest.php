@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 final class BrowserJourneysTest extends PublicSurfaceTestCase
 {
     private const EMAIL = 'journey.entrant@example.com';
+
     private const PASS = 'correct-horse-battery';
 
     /** @var array<string, mixed> */

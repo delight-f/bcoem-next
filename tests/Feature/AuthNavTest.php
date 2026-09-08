@@ -65,6 +65,7 @@ final class AuthNavTest extends PublicSurfaceTestCase
 
         $this->get('/')->assertSee('Admin');
     }
+
     public function test_logged_in_sees_auto_log_out_countdown(): void
     {
         // pub/nav.pub.php:189 — the user dropdown carries an "Auto Log Out

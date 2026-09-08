@@ -194,7 +194,7 @@ final class BottleLabelController extends Controller
     /** Legacy qRClas::qRCreate equivalent: QR image as an inline SVG string. */
     private static function qrSvg(string $payload): string
     {
-        $renderer = new ImageRenderer(new RendererStyle(150), new SvgImageBackEnd());
+        $renderer = new ImageRenderer(new RendererStyle(150), new SvgImageBackEnd);
 
         return (new Writer($renderer))->writeString($payload);
     }

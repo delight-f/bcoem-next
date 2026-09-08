@@ -27,6 +27,7 @@ final class OutputLabelsBottleTest extends TestCase
     private const HASH = '$2a$08$2qgODWiSaYfLTVhu.2qVSer30aG7cLQZX0To01CqinyFyUbwdO64C';
 
     private const NON_ADMIN_ID = 52502;
+
     private const BREWER_ID = 52503;
 
     private const PREFIX = 'P52l';
@@ -177,7 +178,9 @@ final class OutputLabelsBottleTest extends TestCase
         $this->assertStringContainsString('_Bottle_Labels_Entry_Numbers_Avery5160.pdf', (string) $response->headers->get('Content-Disposition'));
 
         $data = LabelsController::bottleDefaults($this->ctx(), 'bottle-entry', 'default', 'default', '5160');
-        $flat = collect($data['view']['labels'])->flatten()->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->flatten()->implode("\n");
         $this->assertStringContainsString(sprintf('%06s (21B)', $ids['special']), $flat);
         $this->assertStringContainsString('(02B)', $flat);
     }
@@ -195,7 +198,9 @@ final class OutputLabelsBottleTest extends TestCase
         // "_Bottle_Labels_Entry_Numbers" filename.
         $data = LabelsController::bottleDefaults($this->ctx(), 'bottle-judging', 'default', 'default', '5160');
         $this->assertStringContainsString('_Bottle_Labels_Entry_Numbers', $data['filename']);
-        $flat = collect($data['view']['labels'])->flatten()->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->flatten()->implode("\n");
         $this->assertStringContainsString(sprintf('%06s', 52501), $flat);
     }
 
@@ -211,7 +216,9 @@ final class OutputLabelsBottleTest extends TestCase
         $data = LabelsController::bottleRequiredInfo($this->ctx(), 'bottle-entry', 'special', 'default', 'default', 'default', 1, '5160');
         $this->assertStringContainsString('_Bottle_Labels_Entry_Numbers_Req_Info_Avery5160.pdf', $data['filename']);
 
-        $flat = collect($data['view']['labels'])->map(fn ($lines) => implode("\n", $lines))->implode("\n");
+        /** @var list<list<string>> $labels */
+        $labels = $data['view']['labels'];
+        $flat = collect($labels)->map(fn ($lines) => implode("\n", $lines))->implode("\n");
         $this->assertStringContainsString('Allergens: Wheat, Barley', $flat);
         $this->assertStringContainsString('*Standard*', $flat);
         $this->assertStringContainsString('*Spark*', $flat);
@@ -230,7 +237,9 @@ final class OutputLabelsBottleTest extends TestCase
 
         $data = LabelsController::bottleQuicksort($this->ctx(), 'default');
         $this->assertStringContainsString('_QuickSort_Labels_Judging_Numbers.pdf', $data['filename']);
-        $flat = collect($data['view']['cells'])->map(fn ($c) => implode('|', $c['lines']))->implode("\n");
+        /** @var list<array{lines: list<string>}> $cells */
+        $cells = $data['view']['cells'];
+        $flat = collect($cells)->map(fn ($c) => implode('|', $c['lines']))->implode("\n");
         $this->assertStringContainsString('#3/BOS', $flat);
 
         // 5-digit judging numbers become split+hyphenated (readable_judging_number).
@@ -248,7 +257,9 @@ final class OutputLabelsBottleTest extends TestCase
 
         $data = LabelsController::bottleRound($this->ctx(), 'bottle-entry-round', 'default', 1, 'OL32');
         $this->assertStringContainsString('_Round_Bottle_Labels_Entry_Numbers_.50_Inch.pdf', $data['filename']);
-        $flat = collect($data['view']['cells'])->map(fn ($lines) => implode('|', $lines))->implode("\n");
+        /** @var list<list<string>> $cells */
+        $cells = $data['view']['cells'];
+        $flat = collect($cells)->map(fn ($lines) => implode('|', $lines))->implode("\n");
         $this->assertStringContainsString('(21B)', $flat);
         // Round labels use brewCategory (already ltrim'd of leading zeros in
         // the seed), so category "02" shows as "(2B)" — a legacy quirk.
@@ -270,7 +281,9 @@ final class OutputLabelsBottleTest extends TestCase
 
         $data = LabelsController::bottleCategoryRound($this->ctx(), 'default', 1, 'OL32');
         $this->assertStringContainsString('_Round_Bottle_Labels_Category_Only_.50_Inch.pdf', $data['filename']);
-        $flat = collect($data['view']['cells'])->map(fn ($lines) => implode('|', $lines))->implode("\n");
+        /** @var list<list<string>> $cells */
+        $cells = $data['view']['cells'];
+        $flat = collect($cells)->map(fn ($lines) => implode('|', $lines))->implode("\n");
         $this->assertStringContainsString('21B', $flat);
     }
 }

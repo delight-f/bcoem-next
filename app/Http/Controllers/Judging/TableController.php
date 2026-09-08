@@ -58,6 +58,7 @@ final class TableController extends Controller
             $id = $request->query('id');
             if (is_numeric($id)) {
                 $role = in_array($filter, ['judges', 'stewards'], true) ? $filter : 'judges';
+
                 return redirect()->route('admin.judging.assign.show', [
                     'id' => (int) $id,
                     'role' => $role,
@@ -71,12 +72,13 @@ final class TableController extends Controller
             if ($filter === 'staff' && $request->query('view') === 'yes') {
                 $target .= '&view=yes';
             }
+
             return redirect($target);
         }
 
         // jPrefsTablePlanning drives the mode alert + switch buttons
         // (judging_tables.admin.php:594-651).
-               $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
+        $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
 
         $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
 
@@ -124,14 +126,14 @@ final class TableController extends Controller
 
         return view('judging.config.tables', [
             'ctx' => TenantContext::load(),
-                        'tables' => $tables,
+            'tables' => $tables,
             'planning' => $planning,
             // Print "By Location" items render only when >1 judging session
             // (legacy $totalRows_judging > 1, judging_tables.admin.php:799-813).
             'sessionCount' => DB::table('judging_locations')->whereIn('judgingLocType', [0, 1])->count(),
             // Pullsheets by Table only when the admin does not obfuscate entry
             // data (judging_tables.admin.php:800-803).
-            'obfuscate' => (int) ($request->user()?->userAdminObfuscate ?? 0) === 1,
+            'obfuscate' => (int) ($request->user()->userAdminObfuscate ?? 0) === 1,
             // Judges/Stewards Not Assigned to a Table modals (legacy
             // lib/admin.lib.php not_assigned()).
             'unassignedJudges' => $this->unassigned('J', 'staff_judge'),
@@ -168,7 +170,7 @@ final class TableController extends Controller
         DB::table('judging_tables')
             ->get(['id', 'tableNumber', 'tableName', 'tableStyles'])
             ->each(function ($t) use (&$out) {
-                foreach (array_filter(explode(',', (string) $t->tableStyles), 'strlen') as $sid) {
+                foreach (array_filter(explode(',', (string) $t->tableStyles), fn (string $s): bool => strlen($s) > 0) as $sid) {
                     $out[(int) $sid] ??= (object) ['id' => (int) $t->id, 'tableNumber' => (string) $t->tableNumber, 'tableName' => (string) $t->tableName];
                 }
             });
@@ -321,7 +323,7 @@ final class TableController extends Controller
      * a Table" view-menu modals (mirrors Output\AssignmentsController's
      * bull pen).
      *
-     * @return Collection<int, array<string, string>>
+     * @return Collection<int, array{name: string, rank: string}>
      */
     private function unassigned(string $role, string $staffColumn): Collection
     {

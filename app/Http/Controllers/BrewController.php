@@ -98,7 +98,7 @@ final class BrewController extends Controller
             // Variant fieldsets render when the previously posted (failed
             // validation) style requires them.
             'variantFlags' => self::styleFlags(is_string(old('brewStyle')) ? old('brewStyle') : null, $ctx),
-            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet')),
+            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet') ?? ''),
             'styleFlagMap' => self::styleFlagMap(self::activeStyles($ctx)),
             'salutation' => __('site.add_entry'),
         ]);
@@ -274,7 +274,7 @@ final class BrewController extends Controller
                 is_string($reposted = old('brewStyle')) ? $reposted : $code,
                 $ctx,
             ),
-            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet')),
+            'optionalStyles' => self::optionalInfoStyles($ctx->prefsStr('prefsStyleSet') ?? ''),
             'styleFlagMap' => self::styleFlagMap(self::activeStyles($ctx)),
         ]);
     }
@@ -648,6 +648,7 @@ final class BrewController extends Controller
      * Per-style client-side flag map for the entry form's show/hide JS
      * (entry.min.js parity): keyed by the <option> style code.
      *
+     * @param  Collection<int, \stdClass>  $styles
      * @return array<string, array{reqSpec: bool, carb: bool, sweet: bool, strength: bool, type: string, group: string, num: string, entry: string}>
      */
     private static function styleFlagMap(Collection $styles): array

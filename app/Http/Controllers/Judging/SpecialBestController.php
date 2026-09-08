@@ -57,7 +57,7 @@ final class SpecialBestController extends Controller
         return DB::table('special_best_info')->orderBy('sbi_name')->get(['id', 'sbi_name'])
             ->map(static fn (\stdClass $c): array => [
                 'id' => (int) $c->id,
-                'name' => $c->sbi_name,
+                'name' => (string) $c->sbi_name,
                 'hasData' => (int) ($counts[$c->id] ?? 0) > 0,
             ]);
     }

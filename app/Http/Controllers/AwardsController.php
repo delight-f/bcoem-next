@@ -7,8 +7,8 @@ namespace App\Http\Controllers;
 use App\Support\Awards\AwardDeckBuilder;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
-use App\Support\Tenant\WindowState;
 use App\Support\Tenant\Windows;
+use App\Support\Tenant\WindowState;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -72,7 +72,7 @@ final class AwardsController extends Controller
             $go = 'table-numbers';
         }
 
-        $builder = new AwardDeckBuilder();
+        $builder = new AwardDeckBuilder;
         $staffRolls = $this->staffRolls();
         $proEdition = (int) $ctx->prefsStr('prefsProEdition') === 1;
         $winnerMethod = (int) ($ctx->prefsStr('prefsWinnerMethod') ?? 0);
@@ -125,24 +125,28 @@ final class AwardsController extends Controller
         ]);
     }
 
-    /** @return list<object{id:string,url:string}> */
+    /** @return list<object{id:string,url:string}&\stdClass> */
     private function sponsors(TenantContext $ctx): array
     {
         if ($ctx->prefsStr('prefsSponsorLogos') !== 'Y') {
             return [];
         }
 
-        return DB::table('sponsors')
+        return array_values(DB::table('sponsors')
             ->where('sponsorEnable', 1)
             ->whereNotNull('sponsorImage')
             ->where('sponsorImage', '!=', '')
             ->orderBy('sponsorLevel')->orderBy('sponsorName')
             ->get()
             ->map(fn ($s): object => (object) ['id' => (string) $s->id, 'url' => url('/storage/user_images/'.(string) $s->sponsorImage)])
-            ->all();
+            ->all());
     }
 
-    /** Legacy staff roll lists (:59-110). @return array{judges:string,bos:string,stewards:string,staff:string,organizers:string} */
+    /**
+     * Legacy staff roll lists (:59-110).
+     *
+     * @return array{judges:string,bos:string,stewards:string,staff:string,organizers:string}
+     */
     private function staffRolls(): array
     {
         $rows = DB::table('staff')
@@ -174,7 +178,11 @@ final class AwardsController extends Controller
         return array_map(static fn (string $r): string => rtrim($r, ', '), $rolls);
     }
 
-    /** Legacy stats slide (:1285-1315). @return array{entries:int,entrants:int,judges:int,stewards:int,staff:int,placing:int} */
+    /**
+     * Legacy stats slide (:1285-1315).
+     *
+     * @return array{entries:int,entrants:int,judges:int,stewards:int,staff:int,placing:int}
+     */
     private function stats(): array
     {
         $placers = DB::table('judging_scores')

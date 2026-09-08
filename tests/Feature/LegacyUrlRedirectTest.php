@@ -61,7 +61,7 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
                 continue;
             }
             [, $legacy, $port] = array_pad(explode('|', $line), 3, null);
-            if ($port === null || $port === '') {
+            if ($legacy === null || $port === null || $port === '') {
                 continue; // "/" itself — nothing to redirect.
             }
             if (str_contains($legacy, 'output.inc.php') || str_contains($legacy, 'process.inc.php') || str_starts_with($legacy, 'images/') || str_starts_with($legacy, 'user_images/') || str_starts_with($legacy, 'qr.php') || str_contains($legacy, '.admin.php?csrf=') || trim($legacy, '/') === '') {

@@ -25,7 +25,6 @@ use PHPUnit\Framework\Attributes\BeforeClass;
  */
 abstract class DuskTestCase extends BaseTestCase
 {
-
     /**
      * Prepare for Dusk test execution.
      *
@@ -40,7 +39,7 @@ abstract class DuskTestCase extends BaseTestCase
     #[BeforeClass]
     public static function prepare(): void
     {
-        $url = $_ENV['GECKODRIVER_URL'] ?? env('GECKODRIVER_URL') ?? 'http://127.0.0.1:4444';
+        $url = $_ENV['GECKODRIVER_URL'] ?? (getenv('GECKODRIVER_URL') ?: 'http://127.0.0.1:4444');
         $port = (int) (parse_url($url, PHP_URL_PORT) ?: 4444);
 
         if (! self::portIsListening('127.0.0.1', $port)) {
@@ -66,7 +65,7 @@ abstract class DuskTestCase extends BaseTestCase
         })->reject(fn ($a) => $a === '')->all());
 
         return RemoteWebDriver::create(
-            $_ENV['GECKODRIVER_URL'] ?? env('GECKODRIVER_URL') ?? 'http://127.0.0.1:4444',
+            $_ENV['GECKODRIVER_URL'] ?? (getenv('GECKODRIVER_URL') ?: 'http://127.0.0.1:4444'),
             DesiredCapabilities::firefox()->setCapability(
                 FirefoxOptions::CAPABILITY, $options
             )

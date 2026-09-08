@@ -62,6 +62,7 @@ final class QrCheckinTest extends AdminScreensTestCase
 
         $entry = DB::table('brewing')->where('id', $this->entryId)
             ->first(['brewReceived', 'brewJudgingNumber', 'brewBoxNum', 'brewPaid']);
+        self::assertNotNull($entry);
         self::assertSame(1, (int) $entry->brewReceived);
         self::assertSame('123456', (string) $entry->brewJudgingNumber);
         self::assertSame('7', (string) $entry->brewBoxNum);

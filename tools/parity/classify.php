@@ -20,7 +20,6 @@ declare(strict_types=1);
  *   VERDICT REAL    >=1 real hunk, followed by up to 5 example lines
  * Exit code 0 always; parity.sh buckets on the verdict.
  */
-
 $signatures = [
     // Navbar session block: legacy renders its full logged-in navbar
     // (Toggle navigation Home <email> ... Log Out [Auto Log Out in N])
@@ -33,6 +32,7 @@ $signatures = [
         $nav = '/^(?:Toggle navigation )?Home \S+@\S+.*Log Out/';
         $aNav = preg_match($nav, trim($a)) === 1;
         $bNav = preg_match($nav, trim($b)) === 1;
+
         return ($aNav && $bNav) || (trim($a) === '' && $bNav) || (trim($b) === '' && $aNav);
     },
     // Session countdown tail.
@@ -46,6 +46,7 @@ $signatures = [
     // both sides; the single x can land in its own hunk).
     'glyph' => static function (string $a, string $b): bool {
         $lone = static fn (string $x): bool => in_array(trim($x), ['ReqSpec', '×', '*'], true);
+
         return $lone($a) || $lone($b);
     },
 ];
@@ -129,6 +130,6 @@ if ($real === []) {
 
 echo "VERDICT REAL\n";
 foreach (array_slice($real, 0, 5) as [$a, $b]) {
-    echo "- [".mb_substr($a, 0, 90)."]\n";
-    echo "+ [".mb_substr($b, 0, 90)."]\n";
+    echo '- ['.mb_substr($a, 0, 90)."]\n";
+    echo '+ ['.mb_substr($b, 0, 90)."]\n";
 }

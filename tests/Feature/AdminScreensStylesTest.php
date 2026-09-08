@@ -99,12 +99,12 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
             'brewStyleAtLimit'.$a => '1',
             // $b unchecked → dropped from the selection map entirely.
         ])->assertRedirect('/admin/styles?msg=2');
-        $styleA = DB::table('styles')->find($a);
-        $styleB = DB::table('styles')->find($b);
-        self::assertNotNull($styleA);
-        self::assertNotNull($styleB);
-        self::assertSame(1, (int) $styleA->brewStyleAtLimit);
-        self::assertNull($styleB->brewStyleAtLimit);
+        $styleA = (array) DB::table('styles')->find($a);
+        $styleB = (array) DB::table('styles')->find($b);
+        self::assertNotEmpty($styleA);
+        self::assertNotEmpty($styleB);
+        self::assertSame(1, (int) $styleA['brewStyleAtLimit']);
+        self::assertNull($styleB['brewStyleAtLimit']);
 
         $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
         self::assertSame(
@@ -190,12 +190,12 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
                 'brewStyleActive' => 'Y',
             ])->assertRedirect('/admin/styles?msg=9');
 
-            $renamed = DB::table('styles')->find($styleId);
-            $brewing = DB::table('brewing')->find($entryId);
-            self::assertNotNull($renamed);
-            self::assertNotNull($brewing);
-            self::assertSame('P54 New Name', $renamed->brewStyle);
-            self::assertSame('P54 New Name', $brewing->brewStyle);
+            $renamed = (array) DB::table('styles')->find($styleId);
+            $brewing = (array) DB::table('brewing')->find($entryId);
+            self::assertNotEmpty($renamed);
+            self::assertNotEmpty($brewing);
+            self::assertSame('P54 New Name', $renamed['brewStyle']);
+            self::assertSame('P54 New Name', $brewing['brewStyle']);
         } finally {
             DB::table('brewing')->delete($entryId);
         }

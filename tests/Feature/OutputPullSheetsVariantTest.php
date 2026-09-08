@@ -98,9 +98,9 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
 
     /**
      * One table, one location, two styles, two received entries (one per
-     * style), both in flight 1 with no manual order. Returns nothing.
+     * style), both in flight 1 with no manual order.
      *
-     * @return array{entry1: int, entry2: int}
+     * @return array{1: int, 2: int}
      */
     private function seedStyle(): array
     {
@@ -169,6 +169,7 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
             ]);
         }
 
+        /** @var array{1: int, 2: int} $eids */
         return $eids;
     }
 
@@ -216,11 +217,11 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
         $data = PullsheetsController::tableReport(TenantContext::load(), $this->params(['view' => 'entry']));
         $html = view('outputs.pullsheets', $data)->render();
 
-        $this->assertStringContainsString(sprintf('%06d', $eids['1']), $html);
-        $this->assertStringContainsString(sprintf('%06d', $eids['2']), $html);
+        $this->assertStringContainsString(sprintf('%06d', $eids[1]), $html);
+        $this->assertStringContainsString(sprintf('%06d', $eids[2]), $html);
         // Style-grouped order: style 01A (group "01") before style 02B.
-        $e1 = sprintf('%06d', $eids['1']);
-        $e2 = sprintf('%06d', $eids['2']);
+        $e1 = sprintf('%06d', $eids[1]);
+        $e2 = sprintf('%06d', $eids[2]);
         $this->assertLessThan(strpos($html, $e2), strpos($html, $e1));
     }
 
@@ -239,7 +240,10 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
         $this->assertSame(['000001', '000002'], array_column($flat, 'judgingNo'));
     }
 
-    /** @param  array{tables: list<array<string, mixed>>}  $data */
+    /**
+     * @param  array{tables: list<array<string, mixed>>}  $data
+     * @return array<string, mixed>
+     */
     private function myTable(array $data, int $tableId): array
     {
         foreach ($data['tables'] as $t) {

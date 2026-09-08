@@ -19,9 +19,9 @@ namespace App\Support\Results;
 final class BestBrewerPoints
 {
     /**
-     * @param  list<int>  $places  win counts per position ([1st, 2nd, 3rd, 4th, HM])
+     * @param  list<int>|array<int|string, int>  $places  win counts per position ([1st, 2nd, 3rd, 4th, HM]); method '1' receives Places-data keyed by pool id instead
      * @param  list<float>  $entryScores  the brewer's entry scores
-     * @param  list<float>  $pointsPrefs  method 0: five place-point prefs; method 1: pool sizes per placed entry
+     * @param  list<float>|array<int|string, float>  $pointsPrefs  method 0: five place-point prefs; method 1: pool sizes keyed by pool id
      * @param  list<string>  $tiebreaker  method 0 tie-breaker chain identifiers
      */
     public static function calculate(
@@ -38,8 +38,8 @@ final class BestBrewerPoints
     }
 
     /**
-     * @param  list<int>  $places
-     * @param  list<float>  $poolSizes
+     * @param  list<int>|array<int|string, int>  $places
+     * @param  list<float>|array<int|string, float>  $poolSizes
      */
     private static function coa(array $places, array $poolSizes): float
     {
@@ -59,9 +59,9 @@ final class BestBrewerPoints
     }
 
     /**
-     * @param  list<int>  $places
+     * @param  list<int>|array<int|string, int>  $places
      * @param  list<float>  $entryScores
-     * @param  list<float>  $pointsPrefs
+     * @param  list<float>|array<int|string, float>  $pointsPrefs
      * @param  list<string>  $tiebreaker
      */
     private static function classic(

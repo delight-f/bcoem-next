@@ -12,7 +12,6 @@
  * Usage: php linkmap.php <raw-legacy-html> <raw-new-html> <urls.txt>
  * Exit 0 if no MISSING links (EXTRA is informational).
  */
-
 if ($argc < 4) {
     fwrite(STDERR, "usage: php linkmap.php <legacy.html> <new.html> <urls.txt>\n");
     exit(2);

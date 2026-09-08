@@ -76,10 +76,10 @@ final class FeeCalculator
     /**
      * Inputs from the tenant's competition row + one brewer's discount flag.
      *
-     * @param  array<string, mixed>|object|null  $brewer  brewer row (brewerDiscount)
-     * @return array{fee: float, feeDiscount: float, discountOn: bool, discountNum: int, special: ?float, cap: float}
+     * @param  array<string, mixed>|\stdClass|null  $brewer  brewer row (brewerDiscount)
+     * @return array{fee: float, feeDiscount: float, discountOn: bool, discountNum: int, special: ?float, cap: float, hasSpecial: bool}
      */
-    public static function params(TenantContext $ctx, array|object|null $brewer = null): array
+    public static function params(TenantContext $ctx, array|\stdClass|null $brewer = null): array
     {
         $specialRate = (string) ($ctx->contestStr('contestEntryFeePasswordNum') ?? '');
 
@@ -91,7 +91,7 @@ final class FeeCalculator
             'special' => $specialRate === '' ? null : (float) $specialRate,
             'cap' => (float) ($ctx->contestStr('contestEntryCap') ?? 0),
             'hasSpecial' => $specialRate !== ''
-                && (string) (is_array($brewer) ? ($brewer['brewerDiscount'] ?? '') : ($brewer?->brewerDiscount ?? '')) === 'Y',
+                && (string) (is_array($brewer) ? ($brewer['brewerDiscount'] ?? '') : ($brewer instanceof \stdClass ? ($brewer->brewerDiscount ?? '') : '')) === 'Y',
         ];
     }
 

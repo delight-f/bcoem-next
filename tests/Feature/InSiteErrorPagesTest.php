@@ -23,6 +23,7 @@ final class InSiteErrorPagesTest extends PublicSurfaceTestCase
         $response->assertNotFound();
 
         $html = $response->getContent();
+        self::assertIsString($html);
         $this->assertStringContainsString('404 Error.', $html);
         $this->assertStringContainsString('Page not found.', $html);
         // Contest chrome (public layout) is present — not a bare error page.

@@ -119,7 +119,7 @@ final class ManualPaymentController extends Controller
      * Confirmed, unpaid entries in the legacy list order — same shape the
      * public pay page lists (PayController::unpaidEntries).
      *
-     * @return Collection<int, object>
+     * @return Collection<int, \stdClass>
      */
     private function unpaidEntries(): Collection
     {

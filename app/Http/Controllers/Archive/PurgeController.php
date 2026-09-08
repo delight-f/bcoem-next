@@ -244,11 +244,11 @@ final class PurgeController extends Controller
     {
         $adminIds = DB::table('users')->where('userLevel', '<', '2')->pluck('id');
 
-        $victims = DB::table('users')->where('userLevel', '2');
+        $victims = DB::table('users')->where('userLevel', '2')->whereNotIn('id', $adminIds);
         if ($threshold !== '') {
             $victims->where(fn ($q) => $q->where('userCreated', '<', $threshold)->orWhereNull('userCreated'));
         }
-        $victimIds = $victims->pluck('id')->diff($adminIds);
+        $victimIds = $victims->pluck('id');
 
         foreach ($victimIds as $id) {
             DB::table('users')->where('id', $id)->delete();

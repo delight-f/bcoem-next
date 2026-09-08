@@ -1,16 +1,16 @@
 <?php
+
 /**
  * PARITY-026 helper: extract legacy lang values for each port site.php key.
- * 
+ *
  * Usage: php tools/parity/extract_lang_map.php
- * 
+ *
  * Reads the port's lang/en/site.php keys and the legacy lang files to
  * build a mapping. For each port key, finds the best-matching legacy
  * variable by name similarity + value match.
  */
-
 $legacyDir = getenv('LEGACY_DIR') ?: $_SERVER['HOME'].'/dev/bcoe/brewcompetitiononlineentry';
-$portDir   = getenv('PORT_DIR')   ?: $_SERVER['HOME'].'/dev/bcoe/bcoem-next';
+$portDir = getenv('PORT_DIR') ?: $_SERVER['HOME'].'/dev/bcoe/bcoem-next';
 
 // Load port keys + en values
 $portLang = include "$portDir/lang/en/site.php";
@@ -34,6 +34,7 @@ foreach ($portKeys as $key) {
     $candidate = 'label_'.$key;
     if (isset($legacyLabels[$candidate])) {
         $mapping[$key] = $candidate;
+
         continue;
     }
     // Try underscore variants
@@ -46,7 +47,7 @@ foreach ($portKeys as $key) {
             break;
         }
     }
-    if (!$found) {
+    if (! $found) {
         $mapping[$key] = null; // unmapped
     }
 }
@@ -56,6 +57,6 @@ echo json_encode([
     'port_keys' => count($portKeys),
     'legacy_labels' => count($legacyLabels),
     'mapped' => count(array_filter($mapping)),
-    'unmapped' => count(array_filter($mapping, fn($v) => $v === null)),
+    'unmapped' => count(array_filter($mapping, fn ($v) => $v === null)),
     'mapping' => $mapping,
 ], JSON_PRETTY_PRINT).PHP_EOL;

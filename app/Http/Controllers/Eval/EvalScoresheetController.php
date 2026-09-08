@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Eval;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Support\Eval\Descriptors;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -26,6 +27,9 @@ final class EvalScoresheetController extends Controller
     public function show(Request $request, int $entryId): View
     {
         $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
         $ctx = TenantContext::load();
         $archive = EvalDashboardController::archiveSuffix($request);
 
@@ -63,6 +67,9 @@ final class EvalScoresheetController extends Controller
     public function output(Request $request, int $entryId): View
     {
         $user = $request->user();
+        if (! $user instanceof User) {
+            abort(403);
+        }
         $ctx = TenantContext::load();
         $archive = EvalDashboardController::archiveSuffix($request);
 

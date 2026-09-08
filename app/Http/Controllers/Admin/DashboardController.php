@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Admin landing dashboard — port of admin/default.admin.php. Renders the
@@ -180,6 +181,8 @@ final class DashboardController extends Controller
      *   '_section' category           full-width sub-section heading (Reports
      *                                 Before/During/After Judging)
      *
+     * @param  array<string, mixed>  $prefs
+     * @param  array<string, int>  $counts
      * @return array{left: list<array>, right: list<array>}
      */
     private function sections(int $level, int $obfuscate, array $prefs, array $counts): array
@@ -597,7 +600,6 @@ final class DashboardController extends Controller
             ]]];
         }
 
-
         // Pro-Am/Scale-Up method captions (default.admin.php:140-157).
         $proAmCaption = static fn (int $i): string => $i === 1 ? '1st Place Only'
             : ($i === 2 ? '1st and 2nd Places' : '1st, 2nd, and 3rd Places');
@@ -726,7 +728,6 @@ final class DashboardController extends Controller
             ]]];
         }
 
-
         $right = [['Reports', 'fa-file', 'reports',
             $reportsItems,
         ]];
@@ -796,7 +797,7 @@ final class DashboardController extends Controller
                 'label' => $label,
                 'href' => '/admin/purge#flow-'.$flow,
             ];
-            $hasPayments = \Illuminate\Support\Facades\Schema::hasTable('payments');
+            $hasPayments = Schema::hasTable('payments');
 
             $dataMgmtItems = [];
             $dataMgmtItems[] = ['Integrity', ['blocks' => [
