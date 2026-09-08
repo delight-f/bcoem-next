@@ -1518,6 +1518,6 @@ CREATE TABLE `baseline_payments` (
   UNIQUE KEY `payments_event_id_unique` (`event_id`),
   KEY `payments_entrant_uid_index` (`entrant_uid`),
   KEY `payments_provider_ref_index` (`provider_ref`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 COMMIT;
