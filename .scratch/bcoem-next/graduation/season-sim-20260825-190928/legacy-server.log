@@ -1,0 +1,146 @@
+[Tue Aug 25 19:09:39 2026] PHP 8.4.23 Development Server (http://127.0.0.1:8393) started
+[Tue Aug 25 19:09:41 2026] 127.0.0.1:39702 Accepted
+[Tue Aug 25 19:09:41 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:41 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:41 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:42 2026] PHP Warning:  session_name(): Session name cannot be changed after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 47
+[Tue Aug 25 19:09:42 2026] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 48
+[Tue Aug 25 19:09:42 2026] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated when there is no active session in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 49
+[Tue Aug 25 19:09:42 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 17
+[Tue Aug 25 19:09:42 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 18
+[Tue Aug 25 19:09:42 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 19
+[Tue Aug 25 19:09:42 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 20
+[Tue Aug 25 19:09:42 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 21
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39702 [200]: GET /index.php
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39702 Closing
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39710 Accepted
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39710 [200]: GET /index.php
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39710 Closing
+[Tue Aug 25 19:09:42 2026] 127.0.0.1:39716 Accepted
+[Tue Aug 25 19:09:43 2026] 127.0.0.1:39716 [302]: POST /includes/process.inc.php?section=login&action=login
+[Tue Aug 25 19:09:43 2026] 127.0.0.1:39716 Closing
+[Tue Aug 25 19:09:43 2026] 127.0.0.1:39720 Accepted
+[Tue Aug 25 19:09:43 2026] 127.0.0.1:39720 [200]: GET /index.php?section=admin&go=entries
+[Tue Aug 25 19:09:43 2026] 127.0.0.1:39720 Closing
+[Tue Aug 25 19:09:44 2026] 127.0.0.1:39728 Accepted
+[Tue Aug 25 19:09:44 2026] 127.0.0.1:39728 [200]: GET /index.php?section=register&go=entrant
+[Tue Aug 25 19:09:44 2026] 127.0.0.1:39728 Closing
+[Tue Aug 25 19:09:44 2026] 127.0.0.1:39734 Accepted
+[Tue Aug 25 19:09:44 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:44 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:44 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:45 2026] 127.0.0.1:39734 [302]: POST /includes/process.inc.php?action=add&dbTable=users&section=register&go=entrant&view=default
+[Tue Aug 25 19:09:45 2026] 127.0.0.1:39734 Closing
+[Tue Aug 25 19:09:46 2026] 127.0.0.1:39748 Accepted
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39748 [200]: GET /index.php?section=brew&go=entries&action=add&id=7
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39748 Closing
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39756 Accepted
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39756 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=7
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39756 Closing
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39770 Accepted
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39770 [200]: GET /index.php?section=brew&go=entries&action=add&id=7
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39770 Closing
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39786 Accepted
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39786 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=7
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39786 Closing
+[Tue Aug 25 19:09:47 2026] 127.0.0.1:39788 Accepted
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:39788 [200]: GET /index.php?section=brew&go=entries&action=add&id=7
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:39788 Closing
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:39792 Accepted
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:39792 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=7
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:39792 Closing
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45560 Accepted
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Undefined array key "pouring" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/admin/entries.admin.php on line 255
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Undefined array key "pouring" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/admin/entries.admin.php on line 255
+[Tue Aug 25 19:09:48 2026] PHP Warning:  Undefined array key "pouring" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/admin/entries.admin.php on line 255
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45560 [200]: GET /index.php?section=admin&go=entries
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45560 Closing
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45574 Accepted
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45574 [302]: POST /includes/process.inc.php?action=update&dbTable=brewing&filter=admin
+[Tue Aug 25 19:09:48 2026] 127.0.0.1:45574 Closing
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45578 Accepted
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45578 [200]: GET /index.php?section=admin&go=judging&action=add
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45578 Closing
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45580 Accepted
+[Tue Aug 25 19:09:49 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:49 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:49 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45580 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_locations
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45580 Closing
+[Tue Aug 25 19:09:49 2026] 127.0.0.1:45582 Accepted
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45582 [200]: GET /index.php?section=admin&go=judging_tables&action=add
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45582 Closing
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45588 Accepted
+[Tue Aug 25 19:09:50 2026] PHP Warning:  Undefined array key "tableEntryLimit" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/process/process_judging_tables.inc.php on line 41
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45588 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_tables
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45588 Closing
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45604 Accepted
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45604 [302]: GET /includes/process.inc.php?action=received&dbTable=brewing
+[Tue Aug 25 19:09:50 2026] 127.0.0.1:45604 Closing
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45616 Accepted
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45616 [200]: GET /index.php?section=admin&go=judging_scores&action=add&id=2&filter=1
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45616 Closing
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45618 Accepted
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45618 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_scores&id=2
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45618 Closing
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45632 Accepted
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45632 [200]: GET /index.php?section=admin&go=judging_scores_bos&action=enter&filter=1
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45632 Closing
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45646 Accepted
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45646 [302]: POST /includes/process.inc.php?action=enter&dbTable=judging_scores_bos
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45646 Closing
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45660 Accepted
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45660 [200]: GET /includes/output.inc.php?section=export-entries&go=csv&action=all&tb=all
+[Tue Aug 25 19:09:51 2026] 127.0.0.1:45660 Closing
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45674 Accepted
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45674 [200]: GET /includes/output.inc.php?section=export-results&go=judging_scores_bos&view=pdf
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45674 Closing
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45676 Accepted
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45676 [200]: GET /includes/output.inc.php?section=pullsheets
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45676 Closing
+[Tue Aug 25 19:09:52 2026] 127.0.0.1:45680 Accepted
+[Tue Aug 25 19:09:53 2026] 127.0.0.1:45680 [200]: GET /includes/output.inc.php?section=table-cards
+[Tue Aug 25 19:09:53 2026] 127.0.0.1:45680 Closing
+[Tue Aug 25 19:13:01 2026] 127.0.0.1:46114 Accepted
+[Tue Aug 25 19:13:01 2026] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown database 'season_sim_legacy_415552' in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php:81
+Stack trace:
+#0 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php(81): mysqli->__construct('127.0.0.1', 'root', Object(SensitiveParameterValue), 'season_sim_lega...', '3306')
+#1 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/paths.php(212): require_once('/home/faraaz/de...')
+#2 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php(13): require_once('/home/faraaz/de...')
+#3 {main}
+  thrown in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php on line 81
+[Tue Aug 25 19:13:01 2026] 127.0.0.1:46114 [500]: GET / - Uncaught mysqli_sql_exception: Unknown database 'season_sim_legacy_415552' in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php:81
+Stack trace:
+#0 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php(81): mysqli->__construct('127.0.0.1', 'root', Object(SensitiveParameterValue), 'season_sim_lega...', '3306')
+#1 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/paths.php(212): require_once('/home/faraaz/de...')
+#2 /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php(13): require_once('/home/faraaz/de...')
+#3 {main}
+  thrown in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/site/config.php on line 81
+[Tue Aug 25 19:13:01 2026] 127.0.0.1:46114 Closing

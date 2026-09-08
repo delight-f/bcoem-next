@@ -1,0 +1,15 @@
+PASS admin-login 
+PASS register-entrant — users.id=7 + brewer row on both
+PASS add-entries — ids 4 5 6 on both
+PASS pay-manual-marking — paid+confirmed all 3 on both; port ledger rows=1 (legacy has no manual-payment code path — expected divergence, see report)
+FAIL judging-location-table — loc lg=2 pt=2 styles lg=[,594,611] pt=[556,615]
+PASS checkin-received — entries [4,5,6] brewReceived=1 on both
+FAIL assign-flights — lg=[3,4,5] pt=[]
+FAIL enter-scores — lg=[4:38:1:1,5:41:2:1,6:33:5] pt=[4:38:1:1,5:41:2:1,6:33:5:0]
+PASS bos-round — rows [4:38:1:1] identical
+FAIL csv-export-bytes — sizes lg=2228 pt=2033; see /home/faraaz/dev/bcoe/bcoem-next/.scratch/bcoem-next/graduation/season-sim-20260825-190603/export.field-diff
+EXPECTED-DIVERGENCE outputs-pdfs — results PDF on both; pull sheets/table cards PDF on port vs legacy HTML print view (no legacy PDF renderer exists) — artifacts in /home/faraaz/dev/bcoe/bcoem-next/.scratch/bcoem-next/graduation/season-pdfs
+DIFF db-diff-brewing — see /home/faraaz/dev/bcoe/bcoem-next/.scratch/bcoem-next/graduation/season-sim-20260825-190603/db.brewing.diff
+DIFF db-diff-judging_scores — see /home/faraaz/dev/bcoe/bcoem-next/.scratch/bcoem-next/graduation/season-sim-20260825-190603/db.judging_scores.diff
+PASS db-diff-judging_scores_bos — 1 rows identical
+EXPECTED-DIVERGENCE payments-ledger — port rows=1 (dumped to /home/faraaz/dev/bcoe/bcoem-next/.scratch/bcoem-next/graduation/season-sim-20260825-190603/db.payments.port); legacy rows=0 — legacy cannot write this table outside PayPal IPN (ppv.php:253); brewing-flag convergence proven above

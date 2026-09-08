@@ -1,0 +1,90 @@
+@php($isEdit = $location !== null)
+<x-public-layout :ctx="$ctx" :show-hero="false">
+    <section class="container mt-6 mb-4">
+        <h1>{{ $nonJudging ? 'Non-Judging Sessions' : 'Judging Sessions' }}: {{ $isEdit ? 'Edit' : 'Add' }} a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</h1>
+
+        @if ($errors->any())
+            <div class="alert alert-error">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="post" action="{{ $isEdit
+            ? route($nonJudging ? 'admin.judging.non_judging.update' : 'admin.judging.locations.update', ['id' => $location->id])
+            : route($nonJudging ? 'admin.judging.non_judging.store' : 'admin.judging.locations.store') }}">
+            @csrf
+            @if ($isEdit)
+                @method('PUT')
+            @endif
+
+            <div class="mb-4 row">
+                <label for="judgingLocName" class="col-sm-3 col-form-label">Session Name</label>
+                <div class="col-sm-6">
+                    <input class="input input-bordered" id="judgingLocName" name="judgingLocName" type="text" maxlength="255" required value="{{ old('judgingLocName', $location->judgingLocName ?? '') }}">
+                </div>
+            </div>
+
+            @if (! $nonJudging)
+                <div class="mb-4 row">
+                    <span class="col-sm-3 col-form-label">Session Type</span>
+                    <div class="col-sm-6">
+                        <div class="form-check">
+                            <input class="radio" type="radio" name="judgingLocType" id="judgingLocType_0" value="0" required @checked((string) old('judgingLocType', $location->judgingLocType ?? '0') === '0')>
+                            <label class="form-check-label" for="judgingLocType_0">Traditional <small>(typically a single day in a central location)</small></label>
+                        </div>
+                        <div class="form-check">
+                            <input class="radio" type="radio" name="judgingLocType" id="judgingLocType_1" value="1" required @checked((string) old('judgingLocType', $location->judgingLocType ?? '0') === '1')>
+                            <label class="form-check-label" for="judgingLocType_1">Distributed <small>(multi-day and/or multi-location; requires an end date/time)</small></label>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-4 row">
+                <label for="judgingDate" class="col-sm-3 col-form-label">Session Start Date/Time</label>
+                <div class="col-sm-6">
+                    <input class="input input-bordered" id="judgingDate" name="judgingDate" type="text" placeholder="YYYY-MM-DD hh:mm AM" required value="{{ old('judgingDate', isset($location) && $location !== null ? \App\Support\Tenant\DateFmt::dateTime($location->judgingDate, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '' : '') }}">
+                    <div class="form-text">Format: YYYY-MM-DD hh:mm AM/PM, in the competition's timezone.</div>
+                </div>
+            </div>
+
+            <div class="mb-4 row">
+                <label for="judgingDateEnd" class="col-sm-3 col-form-label">Session End Date/Time</label>
+                <div class="col-sm-6">
+                    <input class="input input-bordered" id="judgingDateEnd" name="judgingDateEnd" type="text" placeholder="YYYY-MM-DD hh:mm AM" value="{{ old('judgingDateEnd', isset($location) && $location !== null ? \App\Support\Tenant\DateFmt::dateTime($location->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), 999, 1, 'system', withZone: false) ?? '' : '') }}">
+                    <div class="form-text">@if (! $nonJudging)Required for distributed sessions: the deadline for judges to submit evaluations.@else Optional.@endif</div>
+                </div>
+            </div>
+
+            <div class="mb-4 row">
+                <label for="judgingLocation" class="col-sm-3 col-form-label">{{ $nonJudging ? 'Session Address' : 'Address / Entry Distribution Info' }}</label>
+                <div class="col-sm-6">
+                    <input class="input input-bordered" id="judgingLocation" name="judgingLocation" type="text" maxlength="255" required value="{{ old('judgingLocation', $location->judgingLocation ?? '') }}">
+                </div>
+            </div>
+
+            @if (! $nonJudging)
+                <div class="mb-4 row">
+                    <label for="judgingRounds" class="col-sm-3 col-form-label">Session Rounds</label>
+                    <div class="col-sm-6">
+                        <input class="input input-bordered" id="judgingRounds" name="judgingRounds" type="number" min="1" required value="{{ old('judgingRounds', $location->judgingRounds ?? '') }}">
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-4 row">
+                <label for="judgingLocNotes" class="col-sm-3 col-form-label">Notes</label>
+                <div class="col-sm-6">
+                    <input class="input input-bordered" id="judgingLocNotes" name="judgingLocNotes" type="text" maxlength="1000" value="{{ old('judgingLocNotes', $location->judgingLocNotes ?? '') }}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Edit' : 'Add' }} {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</button>
+            <a class="btn btn-secondary" href="{{ route($nonJudging ? 'admin.judging.non_judging.index' : 'admin.judging.locations.index') }}">Back</a>
+        </form>
+    </section>
+</x-public-layout>

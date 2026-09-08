@@ -1,7 +1,173 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Http\Controllers\AjaxController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\BrewController;
+use App\Http\Controllers\BrewerController;
+use App\Http\Controllers\BrewerForm1Controller;
+use App\Http\Controllers\BrewerForm2Controller;
+use App\Http\Controllers\EntriesController;
+use App\Http\Controllers\LegacyRedirectController;
+use App\Http\Controllers\ManualPaymentController;
+use App\Http\Controllers\PayController;
+use App\Http\Controllers\PublicController;
+use App\Http\Controllers\StripeConnectController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Home (Phase 2) doubles as the legacy URL entry point: old bookmarks hit
+// index.php?section=… and LegacyRedirectController 301s them onto the
+// clean port URLs per the HANDOVER §4.3 contract; anything without a
+// recognized legacy section renders home as before.
+Route::get('/', LegacyRedirectController::class)->name('home.legacy');
+Route::get('/index.php', LegacyRedirectController::class);
+Route::get('/list', [PublicController::class, 'list'])->name('list');
+// Legacy served archives as ?section=past-winners&go={suffix}; the suffix is a
+// table-name fragment and is sanitized to alphanumerics in the repository.
+Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->name('past-winners');
+
+// Auth (Phase 3 / Slice B). Login lives at clean /login (canonical); the
+// legacy query shapes (?section=login, go=password/action=forgot/reset)
+// are accepted so old links and the login page's own reset links work.
+Route::get('/login', [LoginController::class, 'show'])->name('login');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
+
+// Registration (P3.1b). Legacy: ?section=register&go={entrant|judge|steward};
+// clean /register is the canonical URL.
+Route::get('/register', [RegisterController::class, 'show'])->name('register');
+Route::get('/register/{go}', [RegisterController::class, 'show'])->name('register.go');
+Route::post('/register/{go?}', [RegisterController::class, 'store'])->name('register.store');
+
+// Entry management (P3.2d). Delete ports the legacy
+// process.inc.php?dbTable=brewing&action=delete flow (POST + ownership +
+// window/paid gates) and lands back on /list with the legacy msg=5 code.
+Route::post('/entries/{id}', [EntriesController::class, 'destroy'])
+    ->name('entries.destroy')
+    ->middleware('auth');
+
+// Brewer profile form 0 — account & contact edit (P3.2a). Legacy:
+// ?section=brewer&action=edit&go=account behind a login gate.
+Route::get('/list/edit-account', [BrewerController::class, 'showEdit'])
+    ->name('brewer.edit')->middleware('auth');
+Route::post('/list/edit-account', [BrewerController::class, 'saveEdit'])
+    ->name('brewer.update')->middleware('auth');
+
+// Authenticated password change. Legacy: ?section=user&go=account&action=password
+// (form) + process.inc.php go=password (save).
+Route::get('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'show'])
+    ->name('user.password')->middleware('auth');
+Route::post('/user/password', [\App\Http\Controllers\Auth\ChangePasswordController::class, 'update'])
+    ->name('user.password.update')->middleware('auth');
+
+// Password reset (P3.1c). Legacy: ?section=login&go=password&action=
+// forgot|verify|reset-password; clean URLs are canonical.
+Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.forgot');
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgot'])->name('password.forgot.post');
+Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'verifyForm'])->name('password.verify');
+Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verify'])->name('password.verify.post');
+Route::get('/reset-password', [ForgotPasswordController::class, 'resetForm'])->name('password.reset');
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset.post');
+
+// Brewer profile form 2 (P3.2c). Legacy: ?section=list&go=account edit of
+// the judge/steward/staff preference fields; clean URL is canonical. Save
+// completes the registration wizard → /list (brewer_info landing, msg=2).
+Route::get('/list/edit-judging', [BrewerForm2Controller::class, 'show'])
+    ->name('brewer.judging')->middleware('auth');
+Route::post('/list/edit-judging', [BrewerForm2Controller::class, 'store'])
+    ->name('brewer.judging.store')->middleware('auth');
+
+// Brewer profile wizard step 2 (P3.2b). Legacy: ?section=brewer&go=profile;
+// clean /list/edit-clubs is canonical.
+Route::get('/list/edit-clubs', [BrewerForm1Controller::class, 'show'])->name('brewer.clubs')->middleware('auth');
+Route::post('/list/edit-clubs', [BrewerForm1Controller::class, 'store'])->name('brewer.clubs.store')->middleware('auth');
+
+// Entry creation (P3.3a). Legacy: ?section=brew&action=add behind a login
+// gate; clean /brew is canonical. Save lands on /list?msg=1 (legacy msg
+// codes; msg=8/9 are the user/subcategory cap rejections).
+Route::get('/brew', [BrewController::class, 'showCreate'])->name('brew.create')->middleware('auth');
+Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')->middleware('auth');
+
+// Entry edit (P3.3b). Legacy: ?section=brew&action=edit&id=N — the same
+// brew form in edit mode, posted back to its own URL; clean
+// /brew/{id}/edit is canonical and matches the /list edit links.
+// Save lands on /list?msg=2 (legacy msg codes; msg=1-<style> is the
+// missing-required-style-field rejection served back at the edit form).
+Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware('auth');
+Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware('auth');
+
+// Public pay page (P3.5d). Legacy served ?section=pay behind a login gate.
+// Success lands back on the page with the legacy confirmation alert
+// (msg=13); cancel renders msg=14 — legacy used section=list&msg=13/14,
+// the port keeps the post-payment state on /pay itself.
+Route::get('/pay', [PayController::class, 'show'])->name('pay')->middleware('auth');
+// Named alias for gateway cancel_url builders: renders the legacy
+// "payment cancelled" state (alerts.pub.php msg=14).
+Route::get('/pay/cancel', fn () => redirect()->to('/pay?msg=14'))->name('pay.cancel');
+Route::post('/pay/checkout', [PayController::class, 'checkout'])->name('pay.checkout')->middleware('auth');
+Route::get('/pay/callback', [PayController::class, 'callback'])->name('pay.callback')->middleware('auth');
+
+// Stripe webhook (P3.5b). No auth middleware — authenticity comes from
+// signature verification in the controller; 2xx acks verified deliveries,
+// invalid signatures get 4xx so Stripe retries.
+Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
+
+// Stripe Connect onboarding (P3.5b). Admin-only: settings page, OAuth
+// start/callback against the organizer's own Stripe account, and pasting
+// the webhook endpoint's signing secret. Stored per competition in
+// preferences.prefsStripe.
+Route::get('/admin/stripe', [StripeConnectController::class, 'show'])
+    ->name('admin.stripe')->middleware('auth');
+Route::get('/admin/stripe/connect', [StripeConnectController::class, 'connect'])
+    ->name('admin.stripe.connect')->middleware('auth');
+Route::get('/admin/stripe/callback', [StripeConnectController::class, 'callback'])
+    ->name('admin.stripe.callback')->middleware('auth');
+Route::post('/admin/stripe/webhook-secret', [StripeConnectController::class, 'saveSecret'])
+    ->name('admin.stripe.secret')->middleware('auth');
+
+// Manual payment marking (P3.5c). Admin-only (userLevel<=1, gated in the
+// controller): minimal surface listing unpaid confirmed entries; marking
+// routes through ManualGateway + PaymentService so the rows converge with
+// any gateway path. The full admin entries view is P5.5 scope.
+Route::get('/admin/payments/mark', [ManualPaymentController::class, 'show'])
+    ->name('admin.payments')->middleware('auth');
+Route::post('/admin/payments/mark', [ManualPaymentController::class, 'markPaid'])
+    ->name('admin.payments.mark')->middleware('auth');
+
+// AJAX endpoints (P3.7). Port the legacy ajax/*.ajax.php files; response
+// envelopes carry the legacy HTML fragments verbatim (see AjaxController).
+// CSRF-protected POSTs are port hardening — legacy sent these as bare
+// GET/POST with no token. Only save required a real login in legacy (the
+// other files checked the always-bootstrapped session flag), so its
+// session/userLevel gates live in the controller to keep the legacy
+// status=9 envelope instead of an auth redirect.
+Route::post('/ajax/username', [AjaxController::class, 'username'])->name('ajax.username');
+Route::post('/ajax/valid-email', [AjaxController::class, 'validEmail'])->name('ajax.valid_email');
+Route::post('/ajax/account-checks', [AjaxController::class, 'accountChecks'])->name('ajax.account_checks');
+Route::post('/ajax/save', [AjaxController::class, 'save'])->name('ajax.save');
+Route::post('/ajax/count-records', [AjaxController::class, 'countRecords'])->name('ajax.count_records');
+
+require __DIR__.'/judging.php';
+require __DIR__.'/eval.php';
+
+require __DIR__.'/judging-scores.php';
+
+require __DIR__.'/judging-ajax.php';
+
+require __DIR__.'/outputs.php';
+require __DIR__.'/admin.php';
+require __DIR__.'/backoffice.php';
+require __DIR__.'/archive.php';
+
+// Legacy URL redirect contract (HANDOVER §4.3): the bcoem query-string
+// dispatch (GET index.php?section=… / POST includes/process.inc.php)
+// maps onto the clean port URLs; see LegacyRedirectController for the map.
+// /index.php and / both reach the controller (the front controller strips
+// its own script name from the path).
+Route::post('/includes/process.inc.php', [LegacyRedirectController::class, 'process'])
+    ->name('legacy.process');
+Route::get('/includes/process.inc.php', [LegacyRedirectController::class, 'process']);

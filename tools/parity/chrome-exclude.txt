@@ -1,0 +1,29 @@
+Log In
+Reset Password
+Forgot your password?
+Email Address
+Your user name (email address) is required.
+Verify
+Clear
+Close
+Working.
+Please stand by. Press Esc to hide.
+Scroll
+Internet Explorer is not supported by BCOE&M - features and functions will not render properly and your experience will not be optimal. Please upgrade to a newer browser.
+Not all required fields have been filled out or selected.
+Required fields that are missing values are indicated with a star  and/or in red. Please scroll/swipe up as necessary to find all required fields.
+I Understand
+To reset your password, enter the email address you used when you registered.
+Required Info
+The token provided has expired. Please use the reset password function again to generate a new token.
+Your password is required.
+Reset It
+Password
+
+# Phase 3 slice B: port renders login/reset forms inline; legacy strips the
+# equivalent modal fields (chrome, not content).
+Email
+Password
+Forgot
+Submit
+Back to

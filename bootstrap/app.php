@@ -12,7 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Legacy process.inc.php posts carry no CSRF token (legacy sent
+        // bare POSTs); the redirect contract must issue its 307/302
+        // before any token check. Downstream port forms stay protected.
+        $middleware->validateCsrfTokens(except: [
+            'includes/process.inc.php',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

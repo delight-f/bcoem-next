@@ -616,6 +616,7 @@ CREATE TABLE `baseline_preferences` (
   `prefsMHPDisplay` tinyint(1) DEFAULT NULL,
   `prefsStyleLimits` text DEFAULT NULL COMMENT 'JSON array of entry limits for the selected style set',
   `prefsHeroImages` mediumtext DEFAULT NULL COMMENT 'JSON map of hero banner image filename to active flag',
+  `prefsStripe` text DEFAULT NULL COMMENT 'JSON of Stripe Connect settings (account_id, webhook_secret)',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1490,5 +1491,32 @@ CREATE TABLE `baseline_users` (
 
 INSERT INTO `baseline_users` (`id`, `user_name`, `password`, `userLevel`, `userQuestion`, `userQuestionAnswer`, `userCreated`, `userToken`, `userTokenTime`, `userFailedLogins`, `userFailedLoginTime`, `userAdminObfuscate`) VALUES
 (1, 'user.baseline@brewingcompetitions.com', '$2a$08$2qgODWiSaYfLTVhu.2qVSer30aG7cLQZX0To01CqinyFyUbwdO64C', '0', 'What is your favorite all-time beer to drink?', '$2a$08$gImDLllgw/nned4kVWDAD.394FXpXeoEip85oqEQ.fIy8s4U3lwx.', '2024-01-01 00:00:01', NULL, NULL, 0, NULL, 0);
+
+--
+-- Table structure for table `baseline_payments`
+--
+
+DROP TABLE IF EXISTS `baseline_payments`;
+CREATE TABLE `baseline_payments` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `entrant_uid` int(10) unsigned NOT NULL,
+  `entry_ids` longtext DEFAULT NULL,
+  `amount` decimal(10,2) DEFAULT NULL,
+  `currency` varchar(3) DEFAULT 'USD',
+  `method` varchar(255) DEFAULT NULL,
+  `provider_ref` varchar(255) DEFAULT NULL,
+  `event_id` varchar(255) DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `admin_uid` int(10) unsigned DEFAULT NULL,
+  `pay_method` varchar(255) DEFAULT NULL,
+  `reference` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `payments_event_id_unique` (`event_id`),
+  KEY `payments_entrant_uid_index` (`entrant_uid`),
+  KEY `payments_provider_ref_index` (`provider_ref`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 COMMIT;

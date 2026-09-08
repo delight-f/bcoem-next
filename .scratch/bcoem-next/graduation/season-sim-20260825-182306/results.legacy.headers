@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+Host: 127.0.0.1:8395
+Date: Tue, 25 Aug 2026 08:23:32 GMT
+Connection: close
+X-Powered-By: PHP/8.4.23
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: fcdecc4c6c677e85f5f0e5d98a5ca606=630098fdbdaa10ed4805d28bdaeb5274; path=/; HttpOnly; SameSite=Lax
+Content-type: text/html; charset=UTF-8
+

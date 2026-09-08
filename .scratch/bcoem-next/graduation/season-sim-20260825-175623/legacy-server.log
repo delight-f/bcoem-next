@@ -1,0 +1,18 @@
+[Tue Aug 25 17:56:35 2026] PHP 8.4.23 Development Server (http://127.0.0.1:8093) started
+[Tue Aug 25 17:56:37 2026] 127.0.0.1:59964 Accepted
+[Tue Aug 25 17:56:37 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 17:56:37 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 17:56:37 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 17:56:38 2026] PHP Warning:  session_name(): Session name cannot be changed after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 47
+[Tue Aug 25 17:56:38 2026] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 48
+[Tue Aug 25 17:56:38 2026] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated when there is no active session in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 49
+[Tue Aug 25 17:56:38 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 17
+[Tue Aug 25 17:56:38 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 18
+[Tue Aug 25 17:56:38 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 19
+[Tue Aug 25 17:56:38 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 20
+[Tue Aug 25 17:56:38 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 21
+[Tue Aug 25 17:56:38 2026] 127.0.0.1:59964 [200]: GET /index.php
+[Tue Aug 25 17:56:38 2026] 127.0.0.1:59964 Closing

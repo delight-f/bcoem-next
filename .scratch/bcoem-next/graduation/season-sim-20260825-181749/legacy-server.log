@@ -1,0 +1,239 @@
+[Tue Aug 25 18:18:01 2026] PHP 8.4.23 Development Server (http://127.0.0.1:8393) started
+[Tue Aug 25 18:18:03 2026] 127.0.0.1:33952 Accepted
+[Tue Aug 25 18:18:03 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:03 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:03 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:04 2026] PHP Warning:  session_name(): Session name cannot be changed after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 47
+[Tue Aug 25 18:18:04 2026] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 48
+[Tue Aug 25 18:18:04 2026] PHP Warning:  session_regenerate_id(): Session ID cannot be regenerated when there is no active session in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/db/common.db.php on line 49
+[Tue Aug 25 18:18:04 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 17
+[Tue Aug 25 18:18:04 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 18
+[Tue Aug 25 18:18:04 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 19
+[Tue Aug 25 18:18:04 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 20
+[Tue Aug 25 18:18:04 2026] PHP Warning:  Cannot modify header information - headers already sent in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/index.php on line 21
+[Tue Aug 25 18:18:04 2026] 127.0.0.1:33952 [200]: GET /index.php
+[Tue Aug 25 18:18:04 2026] 127.0.0.1:33952 Closing
+[Tue Aug 25 18:18:05 2026] 127.0.0.1:33956 Accepted
+[Tue Aug 25 18:18:05 2026] 127.0.0.1:33956 [200]: GET /index.php
+[Tue Aug 25 18:18:05 2026] 127.0.0.1:33956 Closing
+[Tue Aug 25 18:18:05 2026] 127.0.0.1:33960 Accepted
+[Tue Aug 25 18:18:06 2026] 127.0.0.1:33960 [302]: POST /includes/process.inc.php?section=login&action=login
+[Tue Aug 25 18:18:06 2026] 127.0.0.1:33960 Closing
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:32992 Accepted
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:32992 [200]: GET /index.php?section=admin&go=entries
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:32992 Closing
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:33002 Accepted
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:33002 [200]: GET /index.php?section=register&go=entrant
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:33002 Closing
+[Tue Aug 25 18:18:07 2026] 127.0.0.1:33010 Accepted
+[Tue Aug 25 18:18:07 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:07 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:07 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:08 2026] 127.0.0.1:33010 [302]: POST /includes/process.inc.php?action=add&dbTable=users&section=register&go=entrant&view=default
+[Tue Aug 25 18:18:08 2026] 127.0.0.1:33010 Closing
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33018 Accepted
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33018 [200]: GET /index.php?section=brew&go=entries&action=add&id=6
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33018 Closing
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33022 Accepted
+[Tue Aug 25 18:18:10 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:10 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:10 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33022 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=6
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33022 Closing
+[Tue Aug 25 18:18:10 2026] 127.0.0.1:33028 Accepted
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33028 [200]: GET /index.php?section=brew&go=entries&action=add&id=6
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33028 Closing
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33034 Accepted
+[Tue Aug 25 18:18:11 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:11 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:11 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:11 2026] PHP Warning:  Undefined array key "strengthIPA" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/process/process_brewing.inc.php on line 370
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33034 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=6
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33034 Closing
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33044 Accepted
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33044 [200]: GET /index.php?section=brew&go=entries&action=add&id=6
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33044 Closing
+[Tue Aug 25 18:18:11 2026] 127.0.0.1:33046 Accepted
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Base directory /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/standalone/HTMLPurifier/DefinitionCache/Serializer does not exist,
+                    please create or change using %Cache.SerializerPath in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/classes/htmlpurifier/HTMLPurifier.standalone.php on line 15411
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Trying to access array offset on null in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/process/process_brewing.inc.php on line 346
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Trying to access array offset on null in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/process/process_brewing.inc.php on line 480
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Trying to access array offset on null in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/process/process_brewing.inc.php on line 489
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33046 [302]: POST /includes/process.inc.php?section=list&action=add&go=entries&dbTable=brewing&filter=default&id=6
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33046 Closing
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33060 Accepted
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Undefined array key "pouring" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/admin/entries.admin.php on line 255
+[Tue Aug 25 18:18:12 2026] PHP Warning:  Undefined array key "pouring" in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/admin/entries.admin.php on line 255
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33060 [200]: GET /index.php?section=admin&go=entries
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33060 Closing
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33068 Accepted
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33068 [302]: POST /includes/process.inc.php?action=update&dbTable=brewing&filter=admin
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33068 Closing
+[Tue Aug 25 18:18:12 2026] 127.0.0.1:33082 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33082 [200]: GET /index.php?section=admin&go=judging_locations&action=add
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33082 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33092 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33092 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_locations
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33092 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33094 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33094 [302]: GET /index.php?section=admin&go=judging_tables&action=add
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33094 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33110 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33110 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_tables
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33110 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33118 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33118 [302]: GET /index.php?section=admin&go=judging_flights&action=add&id=1&filter=default
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33118 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33126 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33126 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_flights
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33126 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33140 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33140 [302]: GET /index.php?section=admin&go=judging_flights&action=add&id=1&filter=default
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33140 Closing
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33142 Accepted
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33142 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_flights
+[Tue Aug 25 18:18:13 2026] 127.0.0.1:33142 Closing
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33150 Accepted
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33150 [302]: GET /index.php?section=admin&go=judging_flights&action=add&id=1&filter=default
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33150 Closing
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33158 Accepted
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33158 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_flights
+[Tue Aug 25 18:18:14 2026] 127.0.0.1:33158 Closing
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33162 Accepted
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33162 [302]: GET /index.php?section=admin&go=judging_scores&action=add&id=1&filter=1
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33162 Closing
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33164 Accepted
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33164 [302]: POST /includes/process.inc.php?action=add&dbTable=judging_scores&id=1
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33164 Closing
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33180 Accepted
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33180 [302]: GET /index.php?section=admin&go=judging_scores_bos&action=enter&filter=1
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33180 Closing
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33184 Accepted
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33184 [302]: POST /includes/process.inc.php?action=enter&dbTable=judging_scores_bos
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33184 Closing
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33198 Accepted
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33198 [302]: GET /includes/output.inc.php?section=export-entries&go=csv&action=all&tb=all
+[Tue Aug 25 18:18:15 2026] 127.0.0.1:33198 Closing
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:33214 Accepted
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:33214 [200]: GET /includes/output.inc.php?section=export-results&go=judging_scores_bos&view=pdf
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:33214 Closing
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:50284 Accepted
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:50284 [302]: GET /includes/output.inc.php?section=pullsheets
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:50284 Closing
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:50300 Accepted
+[Tue Aug 25 18:18:16 2026] 127.0.0.1:50300 [302]: GET /includes/output.inc.php?section=table-cards
+[Tue Aug 25 18:18:17 2026] 127.0.0.1:50300 Closing
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39816 Accepted
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39816 [200]: GET /index.php
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39816 Closing
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39824 Accepted
+[Tue Aug 25 18:19:22 2026] PHP Warning:  Trying to access array offset on null in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/logincheck.inc.php on line 56
+[Tue Aug 25 18:19:22 2026] PHP Warning:  user authentication failure in /home/faraaz/dev/bcoe/brewcompetitiononlineentry/includes/logincheck.inc.php on line 108
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39824 [302]: POST /includes/process.inc.php?section=login&action=login
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39824 Closing
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39836 Accepted
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39836 [302]: GET /index.php?section=admin&go=judging_locations&action=add
+[Tue Aug 25 18:19:22 2026] 127.0.0.1:39836 Closing
+[Tue Aug 25 18:20:28 2026] 127.0.0.1:32982 Accepted
+[Tue Aug 25 18:20:28 2026] 127.0.0.1:32986 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32986 [200]: GET /127.0.0.1/css/common-3.min.css
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32986 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32992 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32982 [200]: GET /127.0.0.1/js_includes/invoke.min.js
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32982 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33008 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32992 [200]: GET /127.0.0.1/css/default-3.min.css
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:32992 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33008 [200]: GET /127.0.0.1/js_includes/app.pub.min.js
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33008 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33012 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33012 [200]: GET /127.0.0.1/css/common-3.min.css
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33012 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33016 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33016 [200]: GET /127.0.0.1/css/default-3.min.css
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33016 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33020 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33020 [200]: GET /127.0.0.1/images/misc-bottles_3000x500.webp
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33020 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33028 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33028 [200]: GET /127.0.0.1/js_includes/app.pub.min.js
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33028 Closing
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33032 Accepted
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33032 [200]: GET /127.0.0.1/js_includes/invoke.min.js
+[Tue Aug 25 18:20:29 2026] 127.0.0.1:33032 Closing
+[Tue Aug 25 18:20:33 2026] 127.0.0.1:33040 Accepted
+[Tue Aug 25 18:20:38 2026] 127.0.0.1:33040 Closed without sending a request; it was probably just an unused speculative preconnection
+[Tue Aug 25 18:20:38 2026] 127.0.0.1:33040 Closing
+[Tue Aug 25 18:20:38 2026] 127.0.0.1:38442 Accepted
+[Tue Aug 25 18:20:43 2026] 127.0.0.1:38442 Closed without sending a request; it was probably just an unused speculative preconnection
+[Tue Aug 25 18:20:43 2026] 127.0.0.1:38442 Closing
+[Tue Aug 25 18:20:49 2026] 127.0.0.1:54514 Accepted
+[Tue Aug 25 18:20:54 2026] 127.0.0.1:54514 Closed without sending a request; it was probably just an unused speculative preconnection
+[Tue Aug 25 18:20:54 2026] 127.0.0.1:54514 Closing
+[Tue Aug 25 18:21:45 2026] 127.0.0.1:53480 Accepted
+[Tue Aug 25 18:21:45 2026] 127.0.0.1:53480 [200]: GET /index.php
+[Tue Aug 25 18:21:45 2026] 127.0.0.1:53480 Closing
+[Tue Aug 25 18:21:45 2026] 127.0.0.1:53488 Accepted
+[Tue Aug 25 18:21:46 2026] 127.0.0.1:53488 [302]: POST /includes/process.inc.php?section=login&action=login
+[Tue Aug 25 18:21:46 2026] 127.0.0.1:53488 Closing
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42944 Accepted
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42958 Accepted
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42968 Accepted
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42976 Accepted
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42958 [200]: GET /127.0.0.1/css/common-3.min.css
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42958 Closing
+[Tue Aug 25 18:22:48 2026] 127.0.0.1:42980 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42944 [200]: GET /127.0.0.1/js_includes/invoke.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42944 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42968 [200]: GET /127.0.0.1/js_includes/app.pub.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42968 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42976 [200]: GET /127.0.0.1/css/default-3.min.css
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42976 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42982 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42980 [200]: GET /127.0.0.1/css/common-3.min.css
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42980 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42998 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42982 [200]: GET /127.0.0.1/css/default-3.min.css
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42982 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43002 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42998 [200]: GET /127.0.0.1/js_includes/app.pub.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:42998 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43010 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43002 [200]: GET /127.0.0.1/js_includes/invoke.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43002 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43022 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43010 [200]: GET /127.0.0.1/css/common-3.min.css
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43010 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43022 [200]: GET /127.0.0.1/images/beer-on-bar_3000x500.webp
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43022 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43030 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43030 [200]: GET /127.0.0.1/js_includes/app.pub.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43030 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43044 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43044 [200]: GET /127.0.0.1/images/misc-cropped-bottles_2000x500.webp
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43044 Closing
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43060 Accepted
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43060 [200]: GET /127.0.0.1/js_includes/invoke.min.js
+[Tue Aug 25 18:22:49 2026] 127.0.0.1:43060 Closing
+[Tue Aug 25 18:31:58 2026] 127.0.0.1:58578 Accepted
+[Tue Aug 25 18:31:58 2026] 127.0.0.1:58578 [200]: GET /
+[Tue Aug 25 18:31:58 2026] 127.0.0.1:58578 Closing
+[Tue Aug 25 18:32:23 2026] 127.0.0.1:47330 Accepted
+[Tue Aug 25 18:32:23 2026] 127.0.0.1:47330 [200]: GET /
+[Tue Aug 25 18:32:23 2026] 127.0.0.1:47330 Closing

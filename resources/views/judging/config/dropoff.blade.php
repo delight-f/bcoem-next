@@ -1,0 +1,57 @@
+<x-public-layout :ctx="$ctx" :show-hero="false">
+    <section class="container mt-6 mb-4">
+        <h1>Drop-Off Locations</h1>
+
+        <p class="print:hidden">
+            <a class="btn btn-primary" href="{{ route('admin.judging.dropoff.create') }}">Add a Drop-Off Location</a>
+            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#dropoffHelpModal">Drop-Off Locations Help</button>
+        </p>
+        <dialog class="modal" id="dropoffHelpModal">
+            <div class="modal-box">
+                <h4 class="font-bold">Drop-Off Locations Help</h4>
+                <p>Define one or more entry drop-off locations for participants to hand-deliver their entries. Drop-off locations are displayed on the Info with a link* to a map and driving directions.</p>
+                <p>A drop-off location may or may not be the same as the Shipping Location, which is defined in Competition Info. There is only one shipping location defined for the competition, whereas there can be multiple drop-off locations.</p>
+                <p>Select the &ldquo;Add a Drop-Off Location&rdquo; button to enter a drop-off location.</p>
+                <p class="small">* The mapping features will only work if an address is stored for the location.</p>
+                <div class="modal-action"><form method="dialog"><button class="btn">Close</button></form></div>
+            </div>
+        </dialog>
+
+        @if ($locations->isEmpty())
+            <p>No drop-off locations have been specified.</p>
+        @else
+            <table class="table table-zebra table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($locations as $location)
+                        <tr>
+                            <td>{{ $location->dropLocationName }}</td>
+                            <td>{{ $location->dropLocationPhone }}</td>
+                            <td>{{ $location->dropLocation }}</td>
+                            <td>{{ $location->dropLocationNotes }}</td>
+                            <td class="print:hidden">
+                                @if (! empty($location->dropLocationWebsite) && preg_match('#^https?://#i', (string) $location->dropLocationWebsite))
+                                    <a href="{{ $location->dropLocationWebsite }}" target="_blank" rel="noopener">Website</a>
+                                @endif
+                                <a href="{{ route('admin.judging.dropoff.edit', ['id' => $location->id]) }}">Edit</a>
+                                <form method="post" action="{{ route('admin.judging.dropoff.destroy', ['id' => $location->id]) }}" class="inline" onsubmit="return confirm('Delete this location? This cannot be undone.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-link btn-sm p-0">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    </section>
+</x-public-layout>

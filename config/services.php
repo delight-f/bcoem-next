@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    /*
+| Stripe Connect (P3.5b). Platform-level credentials only: the OAuth
+| client id + secret key of the Stripe account hosting the Connect
+| onboarding. Per-competition values (connected account id, webhook
+| signing secret) live in preferences.prefsStripe (JSON), written by the
+| admin Connect flow — see App\Support\Payments\StripeGateway::forTenant().
+*/
+    'stripe' => [
+        'client_id' => env('STRIPE_CLIENT_ID'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
 ];

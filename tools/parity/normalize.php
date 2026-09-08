@@ -11,18 +11,17 @@ declare(strict_types=1);
  *
  * Usage: php normalize.php < raw.html > clean.html
  */
-
 $html = stream_get_contents(STDIN);
 if ($html === false) {
     exit(1);
 }
 
 $replacements = [
-    '/name="_token"[^>]*value="[^"]*"/i'                    => 'name="_token"',
-    '/"csrfToken":"[^"]*"/i'                                => '"csrfToken":""',
+    '/name="_token"[^>]*value="[^"]*"/i' => 'name="_token"',
+    '/"csrfToken":"[^"]*"/i' => '"csrfToken":""',
     '/([?&](?:token|sid|phpsessid|nonce))=[a-zA-Z0-9_-]+/i' => '$1=STRIPPED',
-    '/value="[a-f0-9]{16,}"/i'                              => 'value="TOKEN"',
-    '/\.(js|css|png|jpg)\?v=[a-z0-9]+/i'                    => '.$1',
+    '/value="[a-f0-9]{16,}"/i' => 'value="TOKEN"',
+    '/\.(js|css|png|jpg)\?v=[a-z0-9]+/i' => '.$1',
 ];
 
 // Collapse whitespace between tags so reformatting never counts as a diff.

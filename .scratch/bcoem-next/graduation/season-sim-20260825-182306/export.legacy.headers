@@ -1,0 +1,12 @@
+HTTP/1.1 302 Found
+Host: 127.0.0.1:8395
+Date: Tue, 25 Aug 2026 08:23:32 GMT
+Connection: close
+X-Powered-By: PHP/8.4.23
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate
+Pragma: no-cache
+Set-Cookie: fcdecc4c6c677e85f5f0e5d98a5ca606=2e876323e16e6d1d15d95113e7ebd9f5; path=/; HttpOnly; SameSite=Lax
+Location: ../../403.php
+Content-type: text/html; charset=UTF-8
+
