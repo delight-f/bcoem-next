@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\StreamPdf;
+use App\Support\Results\BestBrewerStandings;
 use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +59,7 @@ final class ResultsController extends Controller
             'bos' => $repo->bos(),
             'winners' => $repo->winners(),
             'winnerMethod' => (string) $ctx->prefsStr('prefsWinnerMethod'),
-            'bestBrewers' => $repo->bestBrewers((string) $ctx->prefsStr('prefsBestBrewerPointsMethod'), 'flat'),
+            'bestBrewers' => BestBrewerStandings::forAwards($ctx)->brewerRows,
         ], 'results.pdf');
     }
 }

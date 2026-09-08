@@ -1,33 +1,28 @@
-{{-- Awards presentation (legacy awards.php). reveal.js 4.1.0 deck,
-     standalone page (no site layout), theme from ?view=. --}}
+{{-- Awards presentation (legacy awards.php). Standalone reveal.js deck,
+     no site layout. Theme from ?view= (white/black/moon). --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $contestName }} - Awards Presentation</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reset.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/theme/{{ $theme }}.min.css" id="theme">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/theme/fonts/league-gothic/league-gothic.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/theme/fonts/source-sans-pro/source-sans-pro.min.css">
+    <title>{{ $contestName }} - Awards</title>
+    <noscript><p style="text-align:center;padding:2em;">{{ $noscript }}</p></noscript>
+    <link rel="stylesheet" href="{{ asset('vendor/reveal/reset.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/reveal/reveal.css') }}">
+    @if ($theme === 'black')
+        <link rel="stylesheet" href="{{ asset('vendor/reveal/theme/black.css') }}" id="theme">
+    @elseif ($theme === 'moon')
+        <link rel="stylesheet" href="{{ asset('vendor/reveal/theme/moon.css') }}" id="theme">
+    @else
+        <link rel="stylesheet" href="{{ asset('vendor/reveal/theme/white.css') }}" id="theme">
+    @endif
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <style>
-        .reveal .footer { position: fixed; bottom: 12px; left: 0; right: 0; text-align: center; font-size: 0.55em; opacity: 0.6; }
-        .reveal .tight { margin: 0; padding: 0; }
-        .reveal .entry-count { font-size: 0.75em; opacity: 0.85; }
-        .reveal #medal-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 0.35em 1em; align-items: baseline; text-align: left; font-size: 0.85em; margin-top: 0.75em; }
-        .reveal #medal-grid .col-right { text-align: right; font-weight: bold; }
-        .reveal .pos-1-medal-color { color: #FFD700; } .reveal .pos-2-medal-color { color: #C0C0C0; }
-        .reveal .pos-3-medal-color { color: #CD7F32; } .reveal .pos-4-medal-color, .reveal .pos-5-medal-color { color: #4a7a4a; }
-        .reveal .logo-image { margin-top: 0.5em; }
-        .reveal .logo-image img { max-height: 225px; }
-    </style>
+    @vite(['resources/css/awards.css', 'resources/js/awards.js'])
 </head>
 <body>
 <div class="reveal">
     <div class="slides">
-        {{-- Title slide --}}
+        {{-- Title slide (legacy :1216-1224) --}}
         <section>
             <h1 style="margin:0;padding:0" class="r-fit-text">{{ $contestName }}</h1>
             <h1 style="margin:0;padding:0" class="tight">Awards</h1>
@@ -37,17 +32,20 @@
         </section>
 
         @if ($sponsors !== [])
-            {{-- Sponsor slide --}}
+            {{-- Sponsor slide (legacy :1226-1239) --}}
             <section>
                 <h1 style="margin:0;padding:0" class="r-fit-text">{{ $contestName }}</h1>
                 <h1 style="margin:0;padding:0" class="tight">Sponsors</h1>
-                @foreach ($sponsors as $sponsor)
-                    <img src="{{ $sponsor->url }}" height="200" alt="sponsor">
-                @endforeach
+                <ul class="sponsor-slider">
+                    @foreach ($sponsors as $sponsor)
+                        <li><img src="{{ $sponsor->url }}" alt="sponsor"></li>
+                    @endforeach
+                </ul>
             </section>
         @endif
 
         @if ($staffRolls['judges'] !== '')
+            {{-- Judge list slide (legacy :1240-1254) --}}
             <section>
                 <h1 style="margin:0;padding:0" class="tight">Judges</h1>
                 <p><small>{{ $staffRolls['judges'] }}</small></p>
@@ -59,6 +57,7 @@
         @endif
 
         @if ($staffRolls['stewards'] !== '')
+            {{-- Steward list slide (legacy :1256-1265) --}}
             <section>
                 <h1 style="margin:0;padding:0" class="tight">Stewards</h1>
                 <p><small>{{ $staffRolls['stewards'] }}</small></p>
@@ -66,6 +65,7 @@
         @endif
 
         @if ($staffRolls['staff'] !== '' || $staffRolls['organizers'] !== '')
+            {{-- Staff list slide (legacy :1267-1279) --}}
             <section>
                 <h1 style="margin:0;padding:0" class="tight">Staff</h1>
                 @if ($staffRolls['staff'] !== '')<p><small>{{ $staffRolls['staff'] }}</small></p>@endif
@@ -76,7 +76,7 @@
             </section>
         @endif
 
-        {{-- Stats slide --}}
+        {{-- Statistic slide (legacy :1281-1316) --}}
         <section>
             <h1 style="margin:0;padding:0" class="tight">By the Numbers</h1>
             @if ($stats['entries'] > 0 || $stats['entrants'] > 0)
@@ -98,51 +98,52 @@
             @endif
         </section>
 
-        {{-- Winner slides: per-table (prefsWinnerMethod=0) --}}
-        @foreach ($tableSlides as $slide)
+        {{-- Winner slides (table/category/subcategory) --}}
+        @foreach ($winnerSlides as $slide)
             <section>
                 <h1 class="r-fit-text tight">{{ $slide->title }}</h1>
-                <p class="entry-count">{{ $slide->count }} entries</p>
+                <p class="entry-count">{{ $slide->subtitle }}</p>
+                @if ($slide->judgesLine !== '')<p class="small entry-count">{{ $slide->judgesLine }}</p>@endif
                 @forelse ($slide->winners as $w)
-                    <div id="medal-grid">
-                        <div class="fragment justify-right col-right" data-fragment-index="{{ $w->fh }}"><i class="fa fa-trophy icon pos-{{ $w->fh }}-medal-color"></i>{{ $w->place }}</div>
-                        <div class="fragment justify-left" data-fragment-index="{{ $w->fh }}">{{ $w->name }}</div>
-                        @if (! $proEdition && $w->club !== '')
-                            <div></div>
-                            <div class="fragment justify-left small" data-fragment-index="{{ $w->fh }}">{{ $w->club }}</div>
-                        @endif
-                        <div></div>
-                        <div class="fragment justify-left small" data-fragment-index="{{ $w->fh }}">{{ $w->entry }} ({{ $w->style }})</div>
-                    </div>
+                    @include('awards.partials.medal-grid', ['w' => $w])
                 @empty
-                    {{-- awards.php:206 — legacy winners_text_007
-                         "There are no winning entries at this table." --}}
                     <p>There are no winning entries at this table.</p>
                 @endforelse
             </section>
         @endforeach
 
-        {{-- BOS + special-best slides --}}
+        {{-- BOS per style-type slides (legacy :448-516; Judges line :473) --}}
         @foreach ($bosSlides as $slide)
             <section>
                 <h1 class="r-fit-text tight">{{ $slide->title }}</h1>
                 @if ($slide->subtitle !== '')<h3 class="entry-count">{{ $slide->subtitle }}</h3>@endif
-                @foreach ($slide->winners as $w)
-                    <div id="medal-grid">
-                        <div class="fragment justify-right col-right" data-fragment-index="{{ $w->fh }}"><i class="fa fa-trophy icon pos-{{ $w->fh }}-medal-color"></i>{{ $w->place }}</div>
-                        <div class="fragment justify-left" data-fragment-index="{{ $w->fh }}">{{ $w->name }}</div>
-                        @if ($w->club !== '')
-                            <div></div>
-                            <div class="fragment justify-left small" data-fragment-index="{{ $w->fh }}">{{ $w->club }}</div>
-                        @endif
-                        <div></div>
-                        <div class="fragment justify-left small" data-fragment-index="{{ $w->fh }}">{{ $w->entry }}@if($w->style !== '') ({{ $w->style }})@endif</div>
-                    </div>
-                @endforeach
+                @if ($staffRolls['bos'] !== '')<p class="small entry-count">Judges: {{ $staffRolls['bos'] }}</p>@endif
+                @forelse ($slide->winners as $w)
+                    @include('awards.partials.medal-grid', ['w' => $w])
+                @empty
+                    <p>There are no winning entries at this table.</p>
+                @endforelse
             </section>
         @endforeach
 
-        {{-- Thank-you slide (awards.php:1322-1323) --}}
+        {{-- Special/custom best-of slides --}}
+        @foreach ($specialBestSlides as $slide)
+            <section>
+                <h1 class="r-fit-text tight">{{ $slide->title }}</h1>
+                @forelse ($slide->winners as $w)
+                    @include('awards.partials.medal-grid', ['w' => $w])
+                @empty
+                    <p>There are no winning entries at this table.</p>
+                @endforelse
+            </section>
+        @endforeach
+
+        {{-- Best Brewer / Best Club slides (legacy :962-1101) --}}
+        @foreach ($bestBrewerSlides as $slide)
+            @include('awards.partials.best-brewer-slide', ['slide' => $slide])
+        @endforeach
+
+        {{-- Thank-you slide (legacy :1322-1335) --}}
         <section>
             <h1 style="margin:0;padding:0" class="r-fit-text">Thank You</h1>
             <h3 style="margin:0;padding:0">Congratulations to All Medal Winners</h3>
@@ -151,35 +152,37 @@
             @endif
         </section>
     </div>
-    {{-- awards.php:1331 footer: contest - label_awards - current_date_display.
-         Current date in prefsDateFormat (fetch-time, like legacy). --}}
     <div class="footer">{{ $contestName }} - Awards - {{ $today }}</div>
 </div>
 
-{{-- Hidden scoring-methodology modal (awards.php:1102-1133 #scoring-method) --}}
-<div style="display: none; height: 75%; width: 75%;" class="fancy" id="scoring-method">
-    <h2 class="fancy-h2">Scoring Methodology</h2>
-    @if ((int) $ctx->prefsStr('prefsScoringCOA') === 1)
-        <p class="bold-text">COA scoring is used for this competition.</p>
+{{-- Scoring-methodology dialog (legacy #scoring-method :1102-1133); opened
+     by the [Scoring Methodology] links on the Best Brewer/Club slides. --}}
+@if ($bestBrewerSlides !== [])
+<dialog id="scoring-method">
+    <h2>Scoring Methodology</h2>
+    @if ($coaScoring)
+        <p class="bold-text">{{ $coaLead }}</p>
+        <p><img src="{{ $winnerMethod === 0 ? 'https://brewingcompetitions.com/00_images/CoA_Scoring_Tables.png' : 'https://brewingcompetitions.com/00_images/CoA_Scoring_Styles.png' }}" class="img-responsive" alt=""></p>
     @else
         <p class="bold-text">Each placing entry is given the following points:</p>
-        <ul class="fancy-list">
-            <li>1st Place: {{ $ctx->prefsStr('prefsFirstPlacePts') }}</li>
-            <li>2nd Place: {{ $ctx->prefsStr('prefsSecondPlacePts') }}</li>
-            <li>3rd Place: {{ $ctx->prefsStr('prefsThirdPlacePts') }}</li>
-            @if ((int) $ctx->prefsStr('prefsFourthPlacePts') > 0)
-                <li>4th Place: {{ $ctx->prefsStr('prefsFourthPlacePts') }}</li>
-            @endif
-            @if ((int) $ctx->prefsStr('prefsHMPts') > 0)
-                <li>Honorable Mention: {{ $ctx->prefsStr('prefsHMPts') }}</li>
-            @endif
+        <ul>
+            <li>1st Place: {{ $placePoints[0] }}</li>
+            <li>2nd Place: {{ $placePoints[1] }}</li>
+            <li>3rd Place: {{ $placePoints[2] }}</li>
+            @if ($placePoints[3] > 0)<li>4th Place: {{ $placePoints[3] }}</li>@endif
+            @if ($placePoints[4] > 0)<li>HM: {{ $placePoints[4] }}</li>@endif
         </ul>
     @endif
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/notes/notes.min.js"></script>
-<script>
-    Reveal.initialize({ hash: true, plugins: [ RevealNotes ] });
-</script>
+    @if ($tiebreakers !== [])
+        <p class="bold-text">The following tie-breakers have been applied, in order of priority:</p>
+        <ol>
+            @foreach ($tiebreakers as $tb)
+                <li>{{ $tb }}</li>
+            @endforeach
+        </ol>
+    @endif
+    <form method="dialog"><button type="submit" class="btn btn-primary btn-sm">Close</button></form>
+</dialog>
+@endif
 </body>
 </html>

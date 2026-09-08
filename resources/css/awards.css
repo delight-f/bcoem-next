@@ -1,0 +1,81 @@
+/* Awards presentation deck styles (legacy css/awards.css + reveal overrides). */
+
+/* Medal grid — legacy #medal-grid: three columns (place | name/club | style),
+   rows run 1st (pos-5, gold) down to HM (pos-1, teal). */
+#medal-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    margin: 0 auto;
+    width: 100%;
+    align-items: center;
+    gap: 0.35em 1em;
+    text-align: left;
+    font-size: 0.85em;
+    margin-top: 0.75em;
+}
+
+.reveal #medal-grid .col-right { text-align: right; font-weight: bold; }
+.reveal #medal-grid .entry-name { word-break: break-word; }
+
+.reveal .pos-5-medal-color, .text-gold { color: #FFD700; }
+.reveal .pos-4-medal-color, .text-silver { color: #C0C0C0; }
+.reveal .pos-3-medal-color, .text-bronze { color: #CD7F32; }
+.reveal .pos-2-medal-color, .text-purple { color: #800080; }
+.reveal .pos-1-medal-color, .text-teal { color: #008080; }
+
+.reveal .footer {
+    position: fixed;
+    bottom: 12px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.55em;
+    opacity: 0.6;
+}
+
+.reveal .tight { margin: 0; padding: 0; }
+.reveal .entry-count { font-size: 0.75em; opacity: 0.85; }
+.reveal .logo-image { margin-top: 0.5em; }
+.reveal .logo-image img { max-height: 225px; }
+
+/* Best Brewer / Best Club ranked tables (legacy inline .55em table). */
+.reveal table.bestbrewer {
+    width: 100%;
+    font-size: 0.55em;
+    margin: 0;
+}
+.reveal table.bestbrewer th,
+.reveal table.bestbrewer td {
+    border: 0;
+    padding: 0.2em 0.4em;
+}
+
+/* Sponsor slide — CSS scroll-snap row (replaces lightslider). */
+.sponsor-slider {
+    display: flex;
+    gap: 1em;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+}
+.sponsor-slider li { scroll-snap-align: center; flex: 0 0 auto; }
+.sponsor-slider img { height: 200px; }
+
+/* Scoring-methodology dialog (native <dialog>, no fancybox). */
+dialog#scoring-method {
+    width: 75%;
+    max-width: 60em;
+    max-height: 75%;
+    border: 0;
+    border-radius: 6px;
+    padding: 1.5em 2em;
+    background: #fff;
+    color: #222;
+}
+dialog#scoring-method::backdrop { background: rgba(0, 0, 0, 0.5); }
+dialog#scoring-method h2 { margin-top: 0; }
+dialog#scoring-method .bold-text { font-weight: bold; }
+dialog#scoring-method ul, dialog#scoring-method ol { padding-left: 1.5em; }

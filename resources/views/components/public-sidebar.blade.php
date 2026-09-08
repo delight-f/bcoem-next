@@ -12,6 +12,19 @@
     $sbArchives = \App\Support\Results\ResultsRepository::archives();
     $sbWinnerLink = (string) ($sbCtx->contestStr('contestWinnerLink') ?? '');
 
+    // Legacy sidebar.sec.php:319-321 — Launch Awards Presentation button in
+    // the Past Winners panel: $show_presentation (constants.inc.php:528-534
+    // = judging past AND prefsDisplayWinners=Y AND winner delay passed) AND
+    // at least one live scored row (get_archive_count checks the LIVE
+    // judging_scores/judging_scores_bos tables despite its name).
+    $sbNow = time();
+    $sbJudgingPast = $sbWindows->futureJudgingSessions === 0;
+    $sbShowPresentation = $sbJudgingPast
+        && ($sbCtx->prefsStr('prefsDisplayWinners') ?? 'N') === 'Y'
+        && $sbNow > (int) ($sbCtx->prefsStr('prefsWinnerDelay') ?: 0)
+        && (\Illuminate\Support\Facades\DB::table('judging_scores')->exists()
+            || \Illuminate\Support\Facades\DB::table('judging_scores_bos')->exists());
+
     // 400/700: judging + non-judging locations.
     $sbJudging = [];
     $sbNonJudging = [];
@@ -53,6 +66,15 @@
                     @endif
                 </ul>
             </div>
+        </div>
+    @endif
+
+    {{-- Legacy sidebar.sec.php:320 Launch Awards Presentation button — echoed
+         standalone (outside the Past Winners panel) whenever the gate holds,
+         even with no archive/sidebar content. --}}
+    @if ($sbShowPresentation)
+        <div class="bcoem-admin-element d-print-none mb-3">
+            <a class="btn btn-primary btn-sm w-100" href="{{ url('/awards') }}" target="_blank" rel="noopener">{{ __('site.launch_presentation') }} <span class="fa fa-award"></span></a>
         </div>
     @endif
 

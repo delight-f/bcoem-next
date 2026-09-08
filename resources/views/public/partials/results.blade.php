@@ -3,7 +3,7 @@
 @php($winners = $repo->winners())
 @php($winnerMethod = (string) $ctx->prefsStr('prefsWinnerMethod'))
 @php($bestBrewers = ((int) ($ctx->prefs['prefsShowBestBrewer'] ?? 0) !== 0 && $winners !== [])
-    ? $repo->bestBrewers((string) $ctx->prefsStr('prefsBestBrewerPointsMethod'), 'flat')
+    ? \App\Support\Results\BestBrewerStandings::forAwards($ctx)->brewerRows
     : [])
 
 <section id="results" class="landing-page-section pb-4">

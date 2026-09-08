@@ -358,4 +358,5 @@ return [
     'entry_shipping' => 'Entry Shipping',
     'shipping_window' => 'Entry bottles accepted at',
     'view' => 'View',
+    'launch_presentation' => 'Launch Awards Presentation',
 ];
