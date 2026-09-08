@@ -256,10 +256,4 @@ final class FakeStripe implements GatewayAdapter
     {
         return new PaymentResult(PaymentEvent::Refunded, 'evt_refund_'.$paymentRef, $paymentRef);
     }
-
-    #[\Override]
-    public function cancel(string $checkoutId): PaymentResult
-    {
-        return new PaymentResult(PaymentEvent::Cancelled, 'evt_cancel_'.$checkoutId);
-    }
 }

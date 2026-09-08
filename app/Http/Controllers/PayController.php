@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\GatewayAdapter;
-use App\Support\Payments\PaymentService;
+use App\Support\Payments\SessionCheckout;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use Illuminate\Contracts\View\View;
@@ -102,7 +102,13 @@ final class PayController extends Controller
         // Fee snapshot honors the legacy tiers/cap/special-rate model (W4).
         $feeTotal = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($ids));
 
-        $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
+        try {
+            $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
+        } catch (\Throwable) {
+            // Gateway unavailable (misconfiguration/connectivity): fail safe —
+            // nothing charged, entrant stays on the pay page.
+            return redirect('/pay?msg=14');
+        }
 
         if ($checkout->redirectUrl === null) {
             // No hosted flow (manual marking happens admin-side); nothing to
@@ -115,10 +121,9 @@ final class PayController extends Controller
 
     /**
      * Gateway success landing (legacy `return` URL carried section=list&
-     * msg=13). The payload mirrors the legacy PayPal custom field shape —
-     * entrant uid plus the dashed entry-id list — plus whatever query
-     * params the gateway appends. Verified Paid results flip flags through
-     * PaymentService; anything else lands on the cancelled state.
+     * msg=13). Confirms the checkout session server-side and renders the
+     * legacy paid/cancelled msg codes; flags flip via the signed webhook
+     * only. Gateways without hosted sessions have nothing to confirm.
      */
     public function callback(Request $request): RedirectResponse
     {
@@ -130,12 +135,12 @@ final class PayController extends Controller
 
         $adapter = app(GatewayAdapter::class);
 
-        // Success return (payments plan W2): the gateway's redirect is only
-        // a UX hint. Confirm server-side — for Stripe, the {CHECKOUT_SESSION_ID}
-        // template in success_url resolves to a real session id we retrieve
-        // from the connected account. Flags are NOT flipped here: the signed
-        // webhook is the single writer (dedup makes overlap harmless).
-        if ((string) $request->query('session_id') !== '' && method_exists($adapter, 'retrieveCheckoutSession')) {
+        // Success return (payments plan W2, review 2c): the gateway's
+        // redirect is only a UX hint — the session is confirmed server-side
+        // and flags are NOT flipped here; the signed webhook is the single
+        // writer (dedup makes overlap harmless). Gateways without hosted
+        // sessions have no return state to confirm.
+        if ($adapter instanceof SessionCheckout && (string) $request->query('session_id') !== '') {
             $session = $adapter->retrieveCheckoutSession((string) $request->query('session_id'));
 
             $paid = $session !== null && ($session->payment_status ?? null) === 'paid';
@@ -143,36 +148,7 @@ final class PayController extends Controller
             return redirect('/pay?msg='.($paid ? '13' : '14'));
         }
 
-        // Other transports (none today): the legacy-shaped callback payload.
-        $result = $adapter->handleCallback($request->query->all());
-
-        if (! $result->isPaid()) {
-            return redirect('/pay?msg=14');
-        }
-
-        // Only this entrant's own currently-unpaid entries, intersected with
-        // what the callback claims — a tampered entry list cannot pay
-        // someone else's batch or already-settled entries.
-        $claimed = array_values(array_filter(
-            explode('-', $request->query->getString('entries', '')),
-            fn (string $v): bool => ctype_digit($v),
-        ));
-        $batch = array_values(array_intersect(
-            array_map(intval(...), $claimed),
-            array_values(array_map(intval(...), $this->unpaidEntries()->pluck('id')->all())),
-        ));
-
-        if ($batch !== []) {
-            app(PaymentService::class)->apply(
-                $result,
-                $batch,
-                (int) Auth::id(),
-                $adapter->method(),
-                $result->amount ?? FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($batch)),
-            );
-        }
-
-        return redirect('/pay?msg=13');
+        return redirect('/pay');
     }
 
     /**

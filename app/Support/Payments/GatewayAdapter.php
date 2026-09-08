@@ -38,7 +38,4 @@ interface GatewayAdapter
 
     /** Issue a refund for a settled payment; returns the refund event. */
     public function refund(string $paymentRef): PaymentResult;
-
-    /** Abandon an unfinished checkout. Nothing has been paid yet. */
-    public function cancel(string $checkoutId): PaymentResult;
 }

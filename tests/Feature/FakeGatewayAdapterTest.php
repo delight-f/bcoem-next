@@ -74,12 +74,6 @@ final class FakeGateway implements GatewayAdapter
     }
 
     #[\Override]
-    public function cancel(string $checkoutId): PaymentResult
-    {
-        return new PaymentResult(PaymentEvent::Cancelled, 'fake_cancel_'.$checkoutId);
-    }
-
-    #[\Override]
     public function method(): string
     {
         return 'fake';

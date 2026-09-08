@@ -84,13 +84,4 @@ abstract class PaymentGatewayContractTestCase extends TestCase
         self::assertSame('pay_c_1', $result->providerRef);
         self::assertSame('evt_c_r', $result->eventId);
     }
-
-    public function test_cancel_hook_reports_cancelled_without_marking_paid(): void
-    {
-        $checkout = $this->adapter()->createCheckout(self::ENTRIES, self::ENTRANT_UID, self::FEE_TOTAL);
-
-        $result = $this->adapter()->cancel($checkout->checkoutId);
-
-        self::assertSame(PaymentEvent::Cancelled, $result->event);
-    }
 }

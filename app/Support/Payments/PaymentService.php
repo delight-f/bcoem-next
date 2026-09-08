@@ -24,8 +24,8 @@ use Illuminate\Support\Facades\Mail;
  *       an exists check; re-delivery neither double-inserts nor re-flips.
  *   #8  refunds are NEW behavior (legacy had none): status=refunded +
  *       flag reversal, only on verified refund events.
- *   #9  reconcileAmount() compares posted vs owed fees (legacy IPN never
- *       validated mc_gross).
+ *   #9  owed fees come from FeeCalculator (legacy IPN never validated
+ *       mc_gross).
  */
 final class PaymentService
 {
@@ -166,33 +166,6 @@ final class PaymentService
         });
 
         return true;
-    }
-
-    /**
-     * Fee reconciliation (#9): does the posted amount equal owed fees?
-     * Owed = flat contestEntryFee x entry count (the entry-creation fee
-     * model); cents-exact compare, no float math. Pure — callers supply
-     * the fee so this stays unit-testable and context-free.
-     *
-     * @param  list<int>  $entries
-     */
-    public static function reconcileAmount(array $entries, string $postedAmount, string $feePerEntry): bool
-    {
-        return self::cents($postedAmount) === count($entries) * self::cents($feePerEntry);
-    }
-
-    /**
-     * Decimal string ('25', '25.5', '25.00') → integer cents. String math,
-     * no float rounding surprises.
-     */
-    private static function cents(string $decimal): int
-    {
-        $negative = str_starts_with($decimal, '-');
-        [$whole, $fraction] = array_pad(explode('.', ltrim($decimal, '-'), 2), 2, '');
-
-        $cents = (int) $whole * 100 + (int) str_pad(substr($fraction.'00', 0, 2), 2, '0');
-
-        return $negative ? -$cents : $cents;
     }
 
     /**

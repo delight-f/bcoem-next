@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <p class="lead">{{ $ctx->contestStr('contestName') }}: PayPal Payments</p>
+    <p class="lead">{{ $ctx->contestStr('contestName') }}: Payments</p>
 
     @if (request('msg') === 'deleted')
         <div class="alert alert-success">Payment record deleted.</div>
