@@ -44,8 +44,9 @@
         </p>
 
         {{-- Legacy assign-pool screen cross-nav (judging_locations.admin.php
-             515-561): the ?action=assign URLs redirect here, so this page
-             carries the pool screen's participants/assign-family nav. --}}
+             515-561): pool-level ?action=assign&filter=X URLs now redirect
+             to /admin/judging/pool-assign?filter=X; per-table links use the
+             admin.judging.assign.show route directly. --}}
         <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -55,10 +56,10 @@
                     <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants') }}">All Participants</a></li>
                     <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=judges') }}">Available Judges</a></li>
                     <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards') }}">Available Stewards</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=judges') }}">Judges</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=bos') }}">BOS Judges</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=stewards') }}">Stewards</a></li>
-                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign&filter=staff') }}">Staff</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=judges') }}">Judges</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=bos') }}">BOS Judges</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=stewards') }}">Stewards</a></li>
+                    <li class="small"><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=staff') }}">Staff</a></li>
                     <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards&view=sessions') }}">Judging Session List</a></li>
                 </ul>
             </div>
@@ -271,8 +272,8 @@
                                 @endif
                                 <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}" data-bs-toggle="tooltip" data-placement="top" title="Edit Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-pencil"></span></a>
                                 <a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-bs-toggle="tooltip" data-placement="top" title="Add/edit flights for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-send"></span></a>
-                                <a href="{{ url('/admin/judging/tables?action=assign&filter=judges&id='.$table->id) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-lock"></span></a>
-                                <a href="{{ url('/admin/judging/tables?action=assign&filter=stewards&id='.$table->id) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
+                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'judges']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-lock"></span></a>
+                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
                                 <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="d-inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')

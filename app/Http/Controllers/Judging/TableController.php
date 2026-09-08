@@ -45,6 +45,35 @@ final class TableController extends Controller
             return redirect('/?msg=99');
         }
 
+        // Legacy ?action=assign&filter={judges|stewards|staff|bos} URLs (from
+        // the participants dropdown, dashboard stats, sidebar, and nav) land
+        // here. In legacy, go=judging&action=assign rendered the pool-assignment
+        // screen (judging_locations.admin.php action=assign block) — a
+        // participant-role pool manager. In the port, pool assignment lives at
+        // /admin/judging/pool-assign?filter={filter}. With an id= param the
+        // link targets the per-table AssignController route directly.
+        // Redirect both shapes so all callers work.
+        if ($request->query('action') === 'assign') {
+            $filter = (string) $request->query('filter', '');
+            $id = $request->query('id');
+            if (is_numeric($id)) {
+                $role = in_array($filter, ['judges', 'stewards'], true) ? $filter : 'judges';
+                return redirect()->route('admin.judging.assign.show', [
+                    'id' => (int) $id,
+                    'role' => $role,
+                ]);
+            }
+            // Pool-level: judges/stewards/staff/bos or default.
+            $target = in_array($filter, ['judges', 'stewards', 'staff', 'bos'], true)
+                ? '/admin/judging/pool-assign?filter='.$filter
+                : '/admin/judging/pool-assign';
+            // Preserve view=yes (staff availability filter) if present.
+            if ($filter === 'staff' && $request->query('view') === 'yes') {
+                $target .= '&view=yes';
+            }
+            return redirect($target);
+        }
+
         // jPrefsTablePlanning drives the mode alert + switch buttons
         // (judging_tables.admin.php:594-651).
                $planning = (string) TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';

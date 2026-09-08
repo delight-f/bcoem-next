@@ -85,7 +85,7 @@ Residuals:
 | `archive&action=add` | `/admin/archive?action=add` | PASS | |
 | `preferences&action={entries,email,payment,best}` | `/admin/site-preferences/{go}` | PASS | |
 | **(dashboard) results publish** | `/admin/results?action=publish` | **MISSING** | legacy `process.inc.php?action=publish`; harness MISSING link |
-| `judging&action=assign&filter=judges` | `/admin/judging/tables?action=assign&filter=judges` | PARTIAL | page exists; internal filter links wrong — see NAVIGATION-PARITY |
+| `judging&action=assign&filter={judges,stewards,staff,bos}` | `/admin/judging/pool-assign?filter=…` | PASS | pool role assignment screen (legacy judging_locations.admin.php action=assign); per-table links use `admin.judging.assign.show` route |
 
 ## Output documents (includes/output.inc.php)
 

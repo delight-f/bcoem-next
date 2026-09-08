@@ -499,20 +499,20 @@
                     </div>
                     <div class="bcoem-stat-row">
                         <strong class="text-info">Assigned Stewards</strong>
-                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards" data-bs-toggle="tooltip" title="View assigned stewards">{{ $status['stewardsAssigned'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/pool-assign?filter=stewards') }}" data-bs-toggle="tooltip" title="View assigned stewards">{{ $status['stewardsAssigned'] }}</a></span>
                     </div>
                     <div class="bcoem-stat-row">
                         <strong class="text-info">Available Staff</strong>
-                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff&view=yes" data-bs-toggle="tooltip" title="View available staff">{{ $status['staff'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/backoffice/participants?filter=staff&view=yes') }}" data-bs-toggle="tooltip" title="View available staff">{{ $status['staff'] }}</a></span>
                     </div>
                     <div class="bcoem-stat-row">
                         <strong class="text-info">Assigned Staff</strong>
-                        <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-bs-toggle="tooltip" title="View assigned staff">{{ $status['staffAssigned'] }}</a></span>
+                        <span class="float-end"><a href="{{ url('/admin/judging/pool-assign?filter=staff') }}" data-bs-toggle="tooltip" title="View assigned staff">{{ $status['staffAssigned'] }}</a></span>
                     </div>
                     @if ($status['organizer'] !== null)
                         <div class="bcoem-stat-row">
                             <strong class="text-info">Organizer</strong>
-                            <span class="float-end"><a href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff" data-bs-toggle="tooltip" title="View assigned staff and organizer">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
+                            <span class="float-end"><a href="{{ url('/admin/judging/pool-assign?filter=staff') }}" data-bs-toggle="tooltip" title="View assigned staff and organizer">{{ $status['organizer']->brewerFirstName }} {{ $status['organizer']->brewerLastName }}</a></span>
                         </div>
                     @endif
                     @foreach ([

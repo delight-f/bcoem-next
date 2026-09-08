@@ -306,13 +306,11 @@ final class LegacyRedirectController extends Controller
         }
 
         if ($id === '' || ! ctype_digit($id)) {
-            // Parameterized without a row id: judging assign — the port
-            // folds the legacy pool screen (judging_locations.admin.php
-            // Assign or Unassign Participants as X) into the
-            // participants page's per-row assignment modals; filter
-            // rides along.
+            // Parameterized without a row id: judging assign — redirects
+            // to the pool-assignment screen /admin/judging/pool-assign
+            // with the role filter (and view param) riding along.
             if ($section === 'admin' && $go === 'judging' && $action === 'assign') {
-                return ['/backoffice/participants', ['filter', 'view'], 301];
+                return ['/admin/judging/pool-assign', ['filter', 'view'], 301];
             }
             // judging_flights assign rounds -> the rounds page.
             $f = (string) $request->query('filter', '');

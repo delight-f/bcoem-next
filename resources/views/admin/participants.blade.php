@@ -81,11 +81,11 @@
                         <span class="fa fa-check-circle"></span> Assign/Unassign...
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges">Judges</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=bos">BOS Judges</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards">Stewards</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign&filter=staff">Staff</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables') }}?action=assign">Judges/Stewards to Tables</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=judges') }}">Judges</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=bos') }}">BOS Judges</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=stewards') }}">Stewards</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/pool-assign?filter=staff') }}">Staff</a></li>
+                        <li><a class="dropdown-item" href="{{ url('/admin/judging/tables?action=assign') }}">Judges/Stewards to Tables</a></li>
                     </ul>
                 </div>
 
@@ -364,9 +364,9 @@
                                     @foreach ($tableAssignments[$p->uid.'|'.($filter === 'judges' ? 'J' : 'S')] ?? [] as $i => $t)
                                         @if ($i !== 0),&nbsp;@endif
                                         @if ($filter === 'judges')
-                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=judges&id={{ $t['id'] }}" data-bs-toggle="tooltip" title="Assign/Unassign Judges to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                            <a href="{{ route('admin.judging.assign.show', ['id' => $t['id'], 'role' => 'judges']) }}" data-bs-toggle="tooltip" title="Assign/Unassign Judges to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
                                         @else
-                                            <a href="{{ url('/admin/judging/tables') }}?action=assign&filter=stewards&id={{ $t['id'] }}" data-bs-toggle="tooltip" title="Assign/Unassign Stewards to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
+                                            <a href="{{ route('admin.judging.assign.show', ['id' => $t['id'], 'role' => 'stewards']) }}" data-bs-toggle="tooltip" title="Assign/Unassign Stewards to Table {{ $t['label'] }}">{{ $t['label'] }}</a>
                                         @endif
                                     @endforeach
                                 </td>
