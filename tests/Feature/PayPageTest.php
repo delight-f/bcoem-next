@@ -264,6 +264,76 @@ final class PayPageTest extends PublicSurfaceTestCase
         self::assertStringNotContainsString((string) route('pay.checkout'), $html);
     }
 
+    public function test_stripe_success_return_shows_paid_state_from_session_retrieve(): void
+    {
+        // Payments plan W2: the browser return carries ?session_id=cs_…;
+        // the controller retrieves the session server-side and renders the
+        // legacy msg code — the webhook stays the only flag writer.
+        $this->setFee('8');
+        $this->login();
+        $entryId = $this->makeEntry(['brewName' => 'Return Check']);
+
+        $gateway = new class implements GatewayAdapter
+        {
+            public ?object $session = null;
+
+            #[\Override]
+            public function method(): string
+            {
+                return 'stripe';
+            }
+
+            #[\Override]
+            public function createCheckout(array $entries, int $entrantUid, string $feeTotal): Checkout
+            {
+                return new Checkout('cs_test', 'https://checkout.stripe.test');
+            }
+
+            /** Mirrors StripeGateway::retrieveCheckoutSession()'s contract. */
+            public function retrieveCheckoutSession(string $sessionId): ?object
+            {
+                return $this->session;
+            }
+
+            #[\Override]
+            public function handleCallback(array $payload): PaymentResult
+            {
+                return new PaymentResult(PaymentEvent::Failed, 'evt_unused');
+            }
+
+            #[\Override]
+            public function refund(string $paymentRef): PaymentResult
+            {
+                return new PaymentResult(PaymentEvent::Refunded, 'evt_ref_'.$paymentRef);
+            }
+
+            #[\Override]
+            public function cancel(string $checkoutId): PaymentResult
+            {
+                return new PaymentResult(PaymentEvent::Cancelled, 'evt_cancel');
+            }
+        };
+        $this->app->bind(GatewayAdapter::class, fn (): GatewayAdapter => $gateway);
+
+        // Paid session → msg=13.
+        $gateway->session = (object) ['payment_status' => 'paid'];
+        $this->get('/pay/callback?session_id=cs_paid')->assertRedirect('/pay?msg=13');
+
+        // Unpaid session → msg=14.
+        $gateway->session = (object) ['payment_status' => 'unpaid'];
+        $this->get('/pay/callback?session_id=cs_unpaid')->assertRedirect('/pay?msg=14');
+
+        // Unretrievable session (API error) → msg=14, not a crash.
+        $gateway->session = null;
+        $this->get('/pay/callback?session_id=cs_gone')->assertRedirect('/pay?msg=14');
+
+        // The return itself never flips flags — the webhook is the writer.
+        $this->assertSame(
+            '0',
+            (string) DB::table('brewing')->where('id', $entryId)->value('brewPaid'),
+        );
+    }
+
     public function test_no_gateway_configured_renders_unavailable_state(): void
     {
         $this->setFee('8');

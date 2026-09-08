@@ -484,9 +484,6 @@ final class SitePreferencesController extends Controller
             'prefsCash' => ['required', 'in:0,1'],
             'prefsCheck' => ['required', 'in:0,1'],
             'prefsCheckPayee' => ['nullable', 'string', 'max:255'],
-            'prefsPaypal' => ['required', 'in:0,1'],
-            'prefsPaypalAccount' => ['nullable', 'string', 'max:255'],
-            'prefsPaypalIPN' => ['required', 'in:0,1'],
             'prefsTransFee' => ['required', 'in:Y,N'],
         ]);
 
@@ -496,9 +493,6 @@ final class SitePreferencesController extends Controller
             'prefsCash' => (string) $data['prefsCash'],
             'prefsCheck' => (string) $data['prefsCheck'],
             'prefsCheckPayee' => self::blankToNull((string) ($data['prefsCheckPayee'] ?? '')),
-            'prefsPaypal' => (string) $data['prefsPaypal'],
-            'prefsPaypalAccount' => self::blankToNull((string) ($data['prefsPaypalAccount'] ?? '')),
-            'prefsPaypalIPN' => (string) $data['prefsPaypalIPN'],
             'prefsTransFee' => (string) $data['prefsTransFee'],
         ];
     }

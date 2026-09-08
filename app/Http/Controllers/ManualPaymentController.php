@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\ManualGateway;
 use App\Support\Payments\PaymentService;
 use App\Support\Tenant\TenantContext;
@@ -72,8 +73,7 @@ final class ManualPaymentController extends Controller
 
         $gateway = new ManualGateway;
         $service = app(PaymentService::class);
-        $fee = TenantContext::load()->contestStr('contestEntryFee') ?? '0';
-        $fee = is_numeric($fee) ? $fee : '0';
+        $ctx = TenantContext::load();
         $adminUid = (int) Auth::id();
 
         // A batch may span entrants; each entrant gets one payments row.
@@ -81,9 +81,10 @@ final class ManualPaymentController extends Controller
         foreach ($rows->groupBy('brewBrewerID') as $uid => $entries) {
             $ids = array_values(array_map(intval(...), $entries->pluck('id')->all()));
 
-            // Amount is computed server-side from the fee snapshot × count
-            // (payments ledger #9): the admin form never posts money values.
-            $amount = bcmul((string) count($ids), $fee);
+            // Amount is computed server-side from the legacy fee model
+            // (tiers/cap/special rate — payments plan W4, ledger #9): the
+            // admin form never posts money values.
+            $amount = FeeCalculator::forEntrant($ctx, (int) $uid, count($ids));
 
             $result = $gateway->handleCallback([
                 'outcome' => 'paid',

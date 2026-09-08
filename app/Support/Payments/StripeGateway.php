@@ -134,6 +134,16 @@ final class StripeGateway implements GatewayAdapter
                 providerRef: isset($object->payment_intent) ? (string) $object->payment_intent : null,
                 note: 'charge.refunded',
             ),
+            // Async settlement methods (ACH etc.) confirm days later —
+            // Stripe docs list these as must-handle alongside completed.
+            'checkout.session.async_payment_succeeded' => new PaymentResult(
+                PaymentEvent::Paid,
+                $eventId,
+                providerRef: isset($object->payment_intent) ? (string) $object->payment_intent : null,
+                amount: self::fromCents($object->amount_total ?? null),
+                note: 'checkout.session.async_payment_succeeded',
+            ),
+            'checkout.session.async_payment_failed' => new PaymentResult(PaymentEvent::Failed, $eventId, note: 'checkout.session.async_payment_failed'),
             'checkout.session.expired' => new PaymentResult(PaymentEvent::Cancelled, $eventId, note: 'checkout.session.expired'),
             default => new PaymentResult(PaymentEvent::Failed, $eventId, note: 'unhandled '.$event->type),
         };
@@ -167,6 +177,24 @@ final class StripeGateway implements GatewayAdapter
         }
 
         return new PaymentResult(PaymentEvent::Cancelled, 'cs_expired_'.$checkoutId);
+    }
+
+    /**
+     * Retrieve one Checkout Session on the connected account (payments
+     * plan W2): the success-return handler confirms payment state
+     * server-side — the browser return is never trusted on its own.
+     */
+    public function retrieveCheckoutSession(string $sessionId): ?object
+    {
+        try {
+            return $this->client()->checkout->sessions->retrieve(
+                $sessionId,
+                [],
+                $this->accountOpts(),
+            );
+        } catch (ApiErrorException) {
+            return null;
+        }
     }
 
     /**

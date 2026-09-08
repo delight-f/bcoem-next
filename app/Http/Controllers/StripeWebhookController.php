@@ -38,7 +38,13 @@ final class StripeWebhookController extends Controller
 
         // Attribution lives in the Checkout Session metadata written by
         // createCheckout(); refund events key off provider_ref and need none.
+        // A verified Paid event WITHOUT our metadata (a foreign session on
+        // this connected account) must not mark anything — fail closed.
         $meta = self::metadata($raw);
+
+        if ($result->isPaid() && (string) ($meta['entry_ids'] ?? '') === '') {
+            return response('unattributed paid event', Response::HTTP_BAD_REQUEST);
+        }
 
         $applied = $this->payments->apply(
             $result,

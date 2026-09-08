@@ -119,6 +119,9 @@
     // prefsEntryForm in barcode_qrcode_array (constants.inc.php:560 = every form id).
     $adminNavBarcode = $adminNavObfuscate === 0
         && in_array((string) $ctx->prefsStr('prefsEntryForm'), ['0', '2', 'N', 'C', '3', '4', '5', '6', '1'], true);
+    // Payments plan W3: "Payments" nav presence keys off the tenant's Stripe
+    // connection, not the retired prefsPaypalIPN.
+    $stripeConnected = str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id');
 @endphp
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-bs-theme="bcoem-brux" @endif>
 <head>
@@ -243,13 +246,13 @@
                     </div>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g2" aria-expanded="false" role="button">Entries{{ (int) $ctx->prefsStr('prefsPaypalIPN') === 1 ? ', Payments,' : '' }} and Participants</a>
+                    <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g2" aria-expanded="false" role="button">Entries{{ $stripeConnected ? ', Payments,' : '' }} and Participants</a>
                     <div class="collapse" id="oc-g2">
                         <ul class="nav flex-column admin-oc-subnav">
                             <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/entries') }}">Manage Entries</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/count-by-style') }}">Entry Count By Style</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/count-by-substyle') }}">Entry Count By Sub-Style</a></li>
-                            @if ((int) $ctx->prefsStr('prefsPaypalIPN') === 1)
+                            @if ($stripeConnected)
                                 <li class="nav-item"><a class="nav-link" href="{{ url('/admin/payments') }}">Manage Payments</a></li>
                             @endif
                             <li class="nav-item"><a class="nav-link" href="{{ url('/backoffice/participants') }}">Manage Participants</a></li>
