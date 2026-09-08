@@ -50,12 +50,20 @@ final class CompetitionInfoController extends Controller
 
         $ctx = TenantContext::load();
 
+        // Legacy directory_contents_dropdown(USER_IMAGES, ...): image files
+        // available for the logo select on the edit form.
+        $images = collect(glob(public_path('user_images/*.*')) ?: [])
+            ->map(fn (string $p): string => basename($p))
+            ->filter(static fn (string $f): bool => preg_match('/\.(png|jpe?g|gif|webp)$/i', $f) === 1)
+            ->sort()->values();
+
         return view('admin.competition-info', [
             'ctx' => $ctx,
             'contest' => (array) DB::table('contest_info')->where('id', 1)->first(),
             'clubs' => DB::table('brewer')
                 ->whereNotNull('brewerClubs')->where('brewerClubs', '!=', '')
                 ->distinct()->pluck('brewerClubs')->all(),
+            'images' => $images,
         ]);
     }
 
@@ -114,6 +122,32 @@ final class CompetitionInfoController extends Controller
         $data = array_map(static fn ($v): string => (string) ($v ?? ''), $data);
 
         DB::table('contest_info')->where('id', 1)->update($this->storageRow($data));
+
+        return redirect('/admin/competition-info?msg=2');
+    }
+
+    /**
+     * QR Code log-on password only (legacy go=qr branch of
+     * process_comp_info.inc.php: the dedicated modal posts just this field).
+     * Non-empty → bcrypt and store; blank → NULL (check-in password cleared),
+     * consistent with the main update's documented divergence.
+     */
+    public function updateQrPassword(Request $request): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        $data = $request->validate([
+            'contestCheckInPassword' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $value = (string) ($data['contestCheckInPassword'] ?? '');
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestCheckInPassword' => $value !== ''
+                ? password_hash($value, PASSWORD_BCRYPT)
+                : null,
+        ]);
 
         return redirect('/admin/competition-info?msg=2');
     }

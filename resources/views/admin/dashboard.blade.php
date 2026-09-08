@@ -423,7 +423,7 @@
          {{-- sidebar.admin.php: Donate + Competition Status panel --}}
          <div class="sidebar col-lg-3">
              <div class="bcoem-admin-element mb-3">
-                <button type="button" class="btn btn-dark btn-sm d-block w-100 mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
+                <button id="dashboard-tour-button" type="button" class="btn btn-dark btn-sm d-block w-100 mb-2">Take a Tour of the Admin Dashboard <i class="fa fa-directions fa-lg"></i></button>
                  <a class="btn btn-dark btn-sm d-block w-100" href="https://www.brewingcompetitions.com/donation" target="_blank" rel="noopener" title="Like the software? Buy the author a beer via PayPal!">Donate <span class="fa-brands fa-lg fa-paypal"></span></a>
              </div>
 
@@ -712,5 +712,138 @@
         </div>
     </div>
     @endforeach
+
+    {{-- Driver.js guided dashboard tour (legacy default.admin.php:212-213 +
+         sidebar.admin.php:39 wires this same library). --}}
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.8.0/dist/driver.js.iife.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.8.0/dist/driver.css"/>
+    <style>
+        .driver-popover * { font-family: "Droid Sans", Arial, sans-serif; }
+        .driver-popover.driverjs-theme .driver-popover-title {
+            font-family: "Merriweather", Georgia, serif;
+            font-weight: 800;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tourButton = document.getElementById('dashboard-tour-button');
+            if (!tourButton || !window.driver?.js?.driver) { return; }
+            const driver = window.driver.js.driver;
+            const steps = [
+                {
+                    popover: {
+                        title: 'Admin Dashboard Tour',
+                        description: 'The Admin Dashboard is organized into buckets of tasks and functions that are associated with the particular stages of a competition &ndash; pre-competition functions, pre-sort tasks, post-sort events, competition day functions, reporting, exporting, and data management.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-competition-preparation',
+                    popover: {
+                        title: 'Competition Preparation',
+                        description: 'Your competition\'s vital information is managed and maintained here. Manage all dates, contacts, custom categories, drop-off locations, judging and non-judging sessions, sponsors, and accepted styles and style types.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-entries-payments-and-participants',
+                    popover: {
+                        title: 'Entries and Participants',
+                        description: 'Everything to manage your competition entries and associated participants. Add, edit, or delete user accounts, register, designate, and assign judges, stewards, and staff.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-entry-sorting',
+                    popover: {
+                        title: 'Entry Sorting',
+                        description: 'Everything you need to help you with sorting received entries from participants. Regenerate judging numbers and check-in entries. Print sorting sheets, box labels, and bottle labels in various sizes.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-organizing',
+                    popover: {
+                        title: 'Organizing',
+                        description: 'Post-sort vital functions like assigning personnel as judges, stewards, and/or staff, defining table/medal group configurations, assigning judges and stewards to tables/medal groups, and designating best of show judges.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-scoring',
+                    popover: {
+                        title: 'Scoring',
+                        description: 'Manage all functions related to evaluating and scoring participant entries for all stages of judging. Add, edit, or manage scores from paper-based scoresheet judging or import scores from the Electronic Scoresheet functions. Add, edit, or manage custom categories (useful if your competition features unique \u201cbest of show\u201d categories, such as Pro-Am opportunities, Stewards\u2019 Choice, Best Name, etc.).',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-reports',
+                    popover: {
+                        title: 'Reports',
+                        description: 'A wide range of reports is available for all stages of your competition \u2013 before, during, and after your designated judging sessions. Print or download pullsheets, judge/steward/staff assignments, table cards, cup mats, and results (among many others).',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-data-exports',
+                    popover: {
+                        title: 'Data Exports',
+                        description: 'Export participant and entry data collected by your installation to CSV files, including contact info of participants in addition to entry data in various configurations.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-data-management',
+                    popover: {
+                        title: 'Data Management',
+                        description: 'Actions to help maintain the data collected by your installation including various archive and purge functions.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-preferences',
+                    popover: {
+                        title: 'Preferences',
+                        description: 'Define site-wide preferences for entries, email sending, currency and payment, best brewer, and judging/competition organization.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+                {
+                    element: '#dashboard-more-help',
+                    popover: {
+                        title: 'Help',
+                        description: 'Get help with navigating the Administration functions at every stage of your competition. There are links to various guides housed on brewingcompetitions.com, strategies on how to customize your installation, and various \u201chow do I do that\u201d information.',
+                        side: 'right',
+                        align: 'start',
+                    },
+                },
+            ];
+            const driverObj = driver({
+                popoverClass: 'driverjs-theme',
+                showProgress: false,
+                showButtons: ['next', 'previous', 'close'],
+                nextBtnText: 'Next \u2014\u203a',
+                prevBtnText: '\u2039\u2014 Previous',
+                doneBtnText: 'Close \u2715',
+                // Level-1 admins lack the level-0-only sections; skip steps whose
+                // target card is absent instead of hand-filtering each one.
+                skipMissingElement: true,
+                steps,
+            });
+            tourButton.addEventListener('click', function () { driverObj.drive(); });
+        });
+    </script>
+
     @include('admin.partials.dashboard-help-modals')
 </x-public-layout>

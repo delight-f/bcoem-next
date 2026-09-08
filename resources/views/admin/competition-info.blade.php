@@ -9,11 +9,23 @@
     $dt = fn (?string $key) => \App\Support\Tenant\DateFmt::dateTimeInput(
         $contest[$key] ?? null, $tz, $tf24,
     ) ?? '';
+    $et = fn (?string $key) => \App\Support\Tenant\ContestRules::editText($contest[$key] ?? null);
+    $rules = json_decode((string) ($contest['contestRules'] ?? ''), true) ?: [];
+    $rulesText = fn (string $key) => \App\Support\Tenant\ContestRules::editText($rules[$key] ?? null);
+    $required = 'This field is required.';
+    // Legacy keeps the check-in password in a separate modal (go=qr); the
+    // main form never carries it. A blank submit clears the stored hash.
+    $hasQrPassword = ! empty($contest['contestCheckInPassword']);
+    // Legacy additional_clubs: the saved club list, joined with "; " plus a
+    // trailing "; " (the disabled field mirrors legacy exactly).
+    $savedClubs = collect((array) json_decode((string) ($contest['contestClubs'] ?? ''), true) ?: [])
+        ->filter(static fn ($c): bool => $c !== '')->values();
+    $clubsValue = $savedClubs->implode('; ').($savedClubs->isNotEmpty() ? '; ' : '');
 @endphp
 
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="landing-page-section mt-6 mb-4">
-        <h1>{{ $ctx->contestStr('contestName') }}: Competition Info</h1>
+        <p class="lead">{{ $ctx->contestStr('contestName') }}: Update Competition Information</p>
 
         @if ((int) request('msg') === 2)
             <div class="alert alert-success">Competition info updated.</div>
@@ -23,160 +35,416 @@
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
-        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/competition-info') }}">
+        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/competition-info') }}" name="form1">
             @csrf
             @method('put')
-            <div class="alert alert-info">
-                Entry-related information has moved to <a href="{{ url('/admin/site-preferences/entries') }}">Entry Preferences</a>.
-            </div>
 
+            {{-- ============================ General ============================ --}}
             <h3>General</h3>
-            <div class="mb-4 row">
-                <label for="contestName" class="col-md-4 col-form-label">Competition Name</label>
-                <div class="col-md-9"><input class="form-control" id="contestName" name="contestName" type="text" value="{{ $contest['contestName'] ?? '' }}" required></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestHost" class="col-md-4 col-form-label">Host Organization</label>
-                <div class="col-md-9"><input class="form-control" id="contestHost" name="contestHost" type="text" value="{{ $contest['contestHost'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestHostWebsite" class="col-md-4 col-form-label">Host Website</label>
-                <div class="col-md-9"><input class="form-control" id="contestHostWebsite" name="contestHostWebsite" type="text" value="{{ $contest['contestHostWebsite'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestHostLocation" class="col-md-4 col-form-label">Host Location</label>
-                <div class="col-md-9"><input class="form-control" id="contestHostLocation" name="contestHostLocation" type="text" value="{{ $contest['contestHostLocation'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestID" class="col-md-4 col-form-label">Competition ID</label>
-                <div class="col-md-9"><input class="form-control" id="contestID" name="contestID" type="text" value="{{ $contest['contestID'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestLogo" class="col-md-4 col-form-label">Competition Logo File Name</label>
-                <div class="col-md-9"><input class="form-control" id="contestLogo" name="contestLogo" type="text" value="{{ $contest['contestLogo'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestCheckInPassword" class="col-md-4 col-form-label">QR Code Log On Password</label>
-                <div class="col-md-9">
-                    <input class="form-control" id="contestCheckInPassword" name="contestCheckInPassword" type="password">
-                    <span class="form-text">Leave blank to clear (stored hashed). For use with the <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function.</span>
+            <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->
+                <label for="contestName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Name</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control" id="contestName" name="contestName" type="text" maxlength="255" value="{{ $contest['contestName'] ?? '' }}" placeholder="" autofocus required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
                 </div>
             </div>
 
-            <h3>Rules</h3>
-            @php $rules = json_decode((string) ($contest['contestRules'] ?? ''), true) ?: []; @endphp
-            <div class="mb-4 row">
-                <label for="competition_rules" class="col-md-4 col-form-label">Competition Rules</label>
-                <div class="col-md-9"><textarea class="form-control" id="competition_rules" name="competition_rules" rows="8">{{ $rules['competition_rules'] ?? '' }}</textarea></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="competition_packing_shipping" class="col-md-4 col-form-label">Packing &amp; Shipping Instructions</label>
-                <div class="col-md-9"><textarea class="form-control" id="competition_packing_shipping" name="competition_packing_shipping" rows="8">{{ $rules['competition_packing_shipping'] ?? '' }}</textarea></div>
-            </div>
-
-            <h3>Dates</h3>
-            @foreach ([
-                'contestRegistrationOpen' => 'Registration Open',
-                'contestRegistrationDeadline' => 'Registration Deadline',
-                'contestEntryOpen' => 'Entry Window Open',
-                'contestEntryDeadline' => 'Entry Window Close',
-                'contestEntryEditDeadline' => 'Entry Edit Close',
-                'contestJudgeOpen' => 'Judge/Steward Open',
-                'contestJudgeDeadline' => 'Judge/Steward Close',
-                'contestDropoffOpen' => 'Drop-Off Window Open',
-                'contestDropoffDeadline' => 'Drop-Off Window Close',
-                'contestShippingOpen' => 'Shipping Window Open',
-                'contestShippingDeadline' => 'Shipping Window Close',
-                'contestAwardsLocDate' => 'Awards Date',
-            ] as $field => $label)
-                <div class="mb-4 row">
-                    <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
-                    <div class="col-md-9"><input class="form-control date-time-picker-system" id="{{ $field }}" name="{{ $field }}" type="text" value="{{ $dt($field) }}"></div>
-                </div>
-            @endforeach
-
-            <h3>Awards</h3>
-            <div class="mb-4 row">
-                <label for="contestAwardsLocation" class="col-md-4 col-form-label">Awards Location</label>
-                <div class="col-md-9"><input class="form-control" id="contestAwardsLocation" name="contestAwardsLocation" type="text" value="{{ $contest['contestAwardsLocation'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestAwardsLocName" class="col-md-4 col-form-label">Awards Venue Name</label>
-                <div class="col-md-9"><input class="form-control" id="contestAwardsLocName" name="contestAwardsLocName" type="text" value="{{ $contest['contestAwardsLocName'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestAwards" class="col-md-4 col-form-label">Awards Info</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestAwards" name="contestAwards" rows="4">{{ $contest['contestAwards'] ?? '' }}</textarea></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestBOSAward" class="col-md-4 col-form-label">Best of Show Awards</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestBOSAward" name="contestBOSAward" rows="4">{{ $contest['contestBOSAward'] ?? '' }}</textarea></div>
-            </div>
-
-            <h3>Shipping &amp; Drop-Off</h3>
-            <div class="mb-4 row">
-                <label for="contestShippingName" class="col-md-4 col-form-label">Shipping Contact</label>
-                <div class="col-md-9"><input class="form-control" id="contestShippingName" name="contestShippingName" type="text" value="{{ $contest['contestShippingName'] ?? '' }}"></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestShippingAddress" class="col-md-4 col-form-label">Shipping Address</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestShippingAddress" name="contestShippingAddress" rows="3">{{ $contest['contestShippingAddress'] ?? '' }}</textarea></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestBottles" class="col-md-4 col-form-label">Bottle Requirements</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestBottles" name="contestBottles" rows="4">{{ $contest['contestBottles'] ?? '' }}</textarea></div>
-            </div>
-
-            <h3>Other</h3>
-            <div class="mb-4 row">
-                <label for="contestCircuit" class="col-md-4 col-form-label">Circuits</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestCircuit" name="contestCircuit" rows="3">{{ $contest['contestCircuit'] ?? '' }}</textarea></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestVolunteers" class="col-md-4 col-form-label">Volunteer Info</label>
-                <div class="col-md-9"><textarea class="form-control" id="contestVolunteers" name="contestVolunteers" rows="3">{{ $contest['contestVolunteers'] ?? '' }}</textarea></div>
-            </div>
-            <div class="mb-4 row">
-                <label for="contestClubs" class="col-md-4 col-form-label">Homebrew Clubs</label>
-                <div class="col-md-9">
-                    <input class="form-control" id="contestClubs" name="contestClubs" type="text" value="{{ implode(';', (array) json_decode((string) ($contest['contestClubs'] ?? ''), true) ?: []) }}">
-                    <span class="form-text">Semicolon-separated list.</span>
+            <div class="row mb-3"><!-- Form Group -->
+                <label for="contestID" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">BJCP Competition ID</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestID" name="contestID" type="text" value="{{ $contest['contestID'] ?? '' }}" placeholder="Current competition iteration BJCP ID.">
+                    <span id="helpBlock" class="form-text">
+                        <p>Be sure to enter the BJCP ID for the <strong>CURRENT</strong> competition iteration. Please note that the BJCP will reject any XML report with a missing or incorrect ID number.</p>
+                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#BJCPCompIDModal">BJCP Competition ID Info</button>
+                    </span>
                 </div>
             </div>
-            <div class="mb-4 row">
-                <label for="search-club-list-input" class="col-md-4 col-form-label">Additional Club Names</label>
-                <div class="col-md-9">
+
+            <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->
+                <label for="contestHost" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Host</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control" id="contestHost" name="contestHost" type="text" maxlength="255" value="{{ $contest['contestHost'] ?? '' }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="contestHostLocation" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Host Location</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestHostLocation" name="contestHostLocation" type="text" maxlength="255" value="{{ $contest['contestHostLocation'] ?? '' }}" placeholder="">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="contestHostWebsite" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Host Website Address</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestHostWebsite" name="contestHostWebsite" type="text" maxlength="255" value="{{ $contest['contestHostWebsite'] ?? '' }}" placeholder="http://www.yoursite.com">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="contestWinnerLink" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Link to Past Winners</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestWinnerLink" name="contestWinnerLink" type="text" maxlength="255" value="{{ $contest['contestWinnerLink'] ?? '' }}" placeholder="http://www.yoursite.com">
+                    <span id="helpBlock" class="form-text">Website or URL of a previous winner list for this competition.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="contestLogo" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Logo File Name</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <select class="form-select" name="contestLogo" id="contestLogo" data-live-search="true" data-size="10">
+                        <option value=""></option>
+                        @foreach ($images as $image)
+                            <option value="{{ $image }}" @if (($contest['contestLogo'] ?? '') === $image) selected @endif>{{ $image }}</option>
+                        @endforeach
+                    </select>
+                    <span id="helpBlock" class="form-text">Choose the image file. If the file is not on the list, use the &ldquo;Upload Logo Image&rdquo; button below.</span>
+                    <a class="btn btn-sm btn-primary" href="{{ url('/admin/upload?action=html') }}"><span class="fa fa-upload"></span> Upload Logo Image</a>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <label for="QRModal" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">QR Code Log On Password</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#QRModal">Add, Update, or Change QR Code Log On Password</button>
+                    @if ($hasQrPassword)
+                        <span class="form-text d-block">A check-in password is set. Leave the modal field blank to clear it.</span>
+                    @else
+                        <span id="helpBlock" class="form-text">For use with the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function.</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group Additional Club Names -->
+                <label class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Additional Club Names</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <input id="search-club-list-input" class="form-control" placeholder="Search the clubs database">
-                    <span class="form-text">Search to check if a club is already in the database. <button type="button" id="clear-search-btn" class="btn btn-sm btn-secondary" disabled>Clear the Search Field</button></span>
-                    <button type="button" id="search-club-list-btn" class="btn btn-sm btn-primary">Search Clubs</button>
-                    <button type="button" id="copy-to-club-list-btn" class="btn btn-sm btn-success" disabled><span class="fa fa-plus"></span> Add</button>
-                    <div id="search-club-list-results-div"></div>
+                    <span class="form-text">Search to check if a club is already in the database.</span>
+                    <div class="mt-2">
+                        <button type="button" id="clear-search-btn" class="btn btn-sm btn-secondary" disabled>Clear the Search Field</button>
+                        <button type="button" id="search-club-list-btn" class="btn btn-sm btn-primary">Search Clubs</button>
+                        <button type="button" id="copy-to-club-list-btn" class="btn btn-sm btn-success" disabled><span class="fa fa-plus"></span> Add</button>
+                    </div>
+                    <div id="search-club-list-results-div" class="small mt-2"></div>
                 </div>
             </div>
-            <div class="mb-4 row">
-                <label for="contestInfoExtra" class="col-md-4 col-form-label">Other Info</label>
-                <div class="col-md-9">
-                    <textarea class="form-control" id="contestInfoExtra" name="contestInfoExtra" rows="4">{{ $contest['contestInfoExtra'] ?? '' }}</textarea>
-                    <div class="form-text">Optional extra competition-info block (PARITY-028: the legacy <code>custom_competition_info.pub.php</code> drop-in, DB-stored). When set, it renders on the landing page's competition-info surface and adds an "Other Info" nav link. HTML is allowed.</div>
+            <div class="row mb-3">
+                <label for="contestClubs" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label"></label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    {{-- Legacy renders the accumulated list with each club
+                         followed by "; " and keeps the field disabled — the
+                         search/add UI is the only editor. Re-enabled at
+                         submit so its value posts. --}}
+                    <input class="form-control" id="contestClubs" name="contestClubs" type="text" value="{{ $clubsValue }}" placeholder="" disabled>
+                    <span class="form-text">
+                        <p class="mb-1">Use the search/add function above to add any club names that cannot be found in the clubs database.</p>
+                        <p class="mb-2">
+                            <button type="button" id="clear-additional-clubs" class="btn btn-sm btn-secondary">Clear Entire List</button>
+                            <button type="button" id="restore-additional-clubs" class="btn btn-sm btn-secondary" disabled>Restore List</button>
+                            <button type="button" id="clear-last-added" class="btn btn-sm btn-secondary" disabled>Clear Last Added</button>
+                        </p>
+                        <p class="mb-1" id="club-separated">Note: each club is separated by a semi-colon (;) for system use.</p>
+                    </span>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Save Competition Info</button>
+            {{-- ============================ Entry Window ============================ --}}
+            <h3>Entry Window</h3>
+            <div class="row mb-3">
+                <label for="contestEntryOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestEntryOpen" name="contestEntryOpen" type="text" value="{{ $dt('contestEntryOpen') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestEntryDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestEntryDeadline" name="contestEntryDeadline" type="text" size="20" value="{{ $dt('contestEntryDeadline') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                    <span id="helpBlock" class="form-text">This date is only for restriction of adding <strong>new</strong> entries. Existing entries will be able to be edited beyond this date &ndash; until the drop-off/shipping deadlines &ndash; unless a specific entry editing close date is provided below.</span>
+                </div>
+            </div>
+
+            {{-- ============================ Entry Editing ============================ --}}
+            <h3>Entry Editing</h3>
+            <div class="row mb-3">
+                <label for="contestEntryEditDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestEntryEditDeadline" name="contestEntryEditDeadline" type="text" size="20" value="{{ $dt('contestEntryEditDeadline') }}" placeholder="">
+                        <span id="helpBlock" class="form-text">If you wish to restrict editing of any exisiting entry's information by non-admin participants, provide a close date here. For example, this could allow competition staff to prepare for sorting prior to the entry drop-off/shipment closure dates.</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ============================ Drop-Off Window ============================ --}}
+            <h3>Drop-Off Window</h3>
+            <div class="row mb-3">
+                <label for="contestDropoffOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control date-time-picker-system" id="contestDropoffOpen" name="contestDropoffOpen" type="text" value="{{ $dt('contestDropoffOpen') }}" placeholder="">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestDropoffDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control date-time-picker-system" id="contestDropoffDeadline" name="contestDropoffDeadline" type="text" value="{{ $dt('contestDropoffDeadline') }}" placeholder="">
+                </div>
+            </div>
+
+            {{-- ============================ Shipping Location ============================ --}}
+            <h3>Shipping Location</h3>
+            <div class="row mb-3">
+                <label for="contestShippingName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Name</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestShippingName" name="contestShippingName" type="text" value="{{ $contest['contestShippingName'] ?? '' }}" placeholder="">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestShippingAddress" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Address</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestShippingAddress" name="contestShippingAddress" type="text" value="{{ $contest['contestShippingAddress'] ?? '' }}" placeholder="">
+                </div>
+            </div>
+
+            {{-- ============================ Shipping Window ============================ --}}
+            <h3>Shipping Window</h3>
+            <div class="row mb-3">
+                <label for="contestShippingOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control date-time-picker-system" id="contestShippingOpen" name="contestShippingOpen" type="text" value="{{ $dt('contestShippingOpen') }}" placeholder="">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestShippingDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control date-time-picker-system" id="contestShippingDeadline" name="contestShippingDeadline" type="text" value="{{ $dt('contestShippingDeadline') }}" placeholder="">
+                    <span id="helpBlock" class="form-text">This window only applies to the Shipping Location above.</span>
+                </div>
+            </div>
+
+            {{-- ============================ Account Registration ============================ --}}
+            <h3>Account Registration</h3>
+            <div class="row mb-3">
+                <label for="contestRegistrationOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestRegistrationOpen" name="contestRegistrationOpen" type="text" value="{{ $dt('contestRegistrationOpen') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestRegistrationDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestRegistrationDeadline" name="contestRegistrationDeadline" type="text" size="20" value="{{ $dt('contestRegistrationDeadline') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ============================ Judge or Steward Account Registration ============================ --}}
+            <h3>Judge or Steward Account Registration</h3>
+            <div class="row mb-3">
+                <label for="contestJudgeOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestJudgeOpen" name="contestJudgeOpen" type="text" value="{{ $dt('contestJudgeOpen') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestJudgeDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <div class="input-group">
+                        <input class="form-control date-time-picker-system" id="contestJudgeDeadline" name="contestJudgeDeadline" type="text" size="20" value="{{ $dt('contestJudgeDeadline') }}" placeholder="" required>
+                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ============================ Rules and Other Information ============================ --}}
+            <h3>Rules and Other Information</h3>
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="competition_rules" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Rules</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestRules" class="form-control" name="competition_rules" rows="15" aria-describedby="helpBlock">{{ $rulesText('competition_rules') }}</textarea>
+                    <span id="helpBlock" class="form-text">Edit the provided general rules text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="contestBottles" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Entry Acceptance Rules</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestBottles" class="form-control" name="contestBottles" rows="15" aria-describedby="helpBlock">{{ $et('contestBottles') }}</textarea>
+                    <span id="helpBlock" class="form-text">Indicate the number of bottles, size, color, etc. Edit default text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="competition_packing_shipping" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Packaging and Shipping Rules</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="competitionPackingShipping" class="form-control" name="competition_packing_shipping" rows="15" aria-describedby="helpBlock">{{ $rulesText('competition_packing_shipping') }}</textarea>
+                    <span id="helpBlock" class="form-text">Edit the provided general rules text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="contestVolunteers" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Volunteer Information</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestVolunteers" class="form-control" name="contestVolunteers" rows="15">{{ $et('contestVolunteers') }}</textarea>
+                    <span id="helpBlock" class="form-text">Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <h3>Entry Information</h3>
+            <p>Entry-related information has moved to <a href="{{ url('/admin/site-preferences/entries') }}">Entry Preferences</a>.</p>
+
+            {{-- ============================ Awards Ceremony ============================ --}}
+            <h3>Awards Ceremony</h3>
+            <div class="row mb-3">
+                <label for="contestAwardsLocDate" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Date</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control date-time-picker-system" id="contestAwardsLocDate" name="contestAwardsLocDate" type="text" value="{{ $dt('contestAwardsLocDate') }}" placeholder="">
+                    <span id="helpBlock" class="form-text">Provide even if the date of judging is the same.</span>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestAwardsLocName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Location Name</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestAwardsLocName" name="contestAwardsLocName" type="text" value="{{ $contest['contestAwardsLocName'] ?? '' }}" placeholder="">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <label for="contestAwardsLocation" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Location Address</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <input class="form-control" id="contestAwardsLocation" name="contestAwardsLocation" type="text" value="{{ $contest['contestAwardsLocation'] ?? '' }}" placeholder="">
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="contestAwards" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Awards Structure</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestAwards" class="form-control" name="contestAwards" rows="15" aria-describedby="helpBlock">{{ $et('contestAwards') }}</textarea>
+                    <span id="helpBlock" class="form-text">Indicate places for each category, BOS procedure, qualifying criteria, etc. Edit default text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="contestBOSAward" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Best of Show</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestBOSAward" class="form-control" name="contestBOSAward" rows="15" aria-describedby="helpBlock">{{ $et('contestBOSAward') }}</textarea>
+                    <span id="helpBlock" class="form-text">Indicate whether the Best of Show winner will receive a special award (e.g., a pro-am brew with a sponsoring brewery, etc.). Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
+                <label for="contestCircuit" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Circuit Qualifying Events</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea id="contestCircuit" class="form-control" name="contestCircuit" rows="15" aria-describedby="helpBlock">{{ $et('contestCircuit') }}</textarea>
+                    <span id="helpBlock" class="form-text">Indicate whether your competition is a qualifier for any national or regional competitions. Content is stored as plain text; blank lines separate paragraphs.</span>
+                </div>
+            </div>
+
+            {{-- contestInfoExtra (PARITY-028): the port's DB-stored equivalent of
+                 the legacy custom_competition_info.pub.php drop-in. Kept at the
+                 end of the form, outside the legacy layout, as a port addition. --}}
+            <div class="row mb-3">
+                <label for="contestInfoExtra" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Other Info</label>
+                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                    <textarea class="form-control" id="contestInfoExtra" name="contestInfoExtra" rows="4">{{ $et('contestInfoExtra') }}</textarea>
+                    <div class="form-text">Optional extra competition-info block shown on the landing page's competition-info surface (adds an "Other Info" nav link). Content is stored as plain text; blank lines separate paragraphs.</div>
+                </div>
+            </div>
+
+            <div class="bcoem-admin-element d-print-none">
+                <div class="row mb-3">
+                    <div class="col-auto offset-md-4 offset-lg-3 offset-xl-2">
+                        <input id="update-comp-info-btn" name="submit" type="submit" class="btn btn-primary" value="Update Competition Info">
+                    </div>
+                </div>
+            </div>
         </form>
+
+        {{-- BJCP Competition ID modal --}}
+        <div class="modal fade" id="BJCPCompIDModal" tabindex="-1" role="dialog" aria-labelledby="BJCPCompIDModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="BJCPCompIDModalLabel">BJCP Competition ID Info</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Enter the Competition ID you received from the BJCP if you <a href="http://bjcp.org/apps/comp_reg/comp_reg.php" target="_blank" rel="noopener">registered your competition</a>. The BJCP will <em>not</em> accept an XML competition report without a Competition ID.</p>
+                        <p><strong>Be sure to enter the BJCP ID for the CURRENT competition iteration.</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- QR Code log-on password modal (legacy go=qr) --}}
+        <div class="modal fade" id="QRModal" tabindex="-1" role="dialog" aria-labelledby="QRModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="QRModalLabel">Add, Update, or Change QR Code Log On Password</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="{{ url('/admin/competition-info/qr-password') }}" name="form2">
+                            @csrf
+                            @method('put')
+                            <div class="mb-3">
+                                <label for="contestCheckInPassword" class="form-label">QR Code Log On Password</label>
+                                <input class="form-control" id="contestCheckInPassword" name="contestCheckInPassword" type="password" value="" placeholder="">
+                                @if ($hasQrPassword)
+                                    <div class="form-text">Leave blank and save to clear the current password.</div>
+                                @else
+                                    <div class="form-text">Provide a password for QR Code entry check-in.</div>
+                                @endif
+                            </div>
+                            <button name="submit" type="submit" class="btn btn-primary">Update Password</button>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
         <script>
             var bcoem_clubs = @json($clubs);
             document.addEventListener('DOMContentLoaded', function () {
                 var input = document.getElementById('search-club-list-input');
                 var resultsDiv = document.getElementById('search-club-list-results-div');
                 var addBtn = document.getElementById('copy-to-club-list-btn');
-                var clearBtn = document.getElementById('clear-search-btn');
+                var clearSearchBtn = document.getElementById('clear-search-btn');
                 var clubField = document.getElementById('contestClubs');
                 var searchBtn = document.getElementById('search-club-list-btn');
+                var clearListBtn = document.getElementById('clear-additional-clubs');
+                var restoreListBtn = document.getElementById('restore-additional-clubs');
+                var clearLastBtn = document.getElementById('clear-last-added');
+                var mainForm = clubField.closest('form');
                 var lastAdded = '';
+                var savedValue = clubField.value;
                 function refreshMatchState() {
                     var term = (input.value || '').trim();
                     addBtn.disabled = term === '';
-                    clearBtn.disabled = term === '';
+                    clearSearchBtn.disabled = term === '';
                 }
                 searchBtn.addEventListener('click', function () {
                     var term = (input.value || '').trim();
@@ -207,12 +475,39 @@
                     resultsDiv.style.display = 'none';
                     input.value = '';
                     refreshMatchState();
+                    clearListBtn.disabled = clubField.value === '';
+                    restoreListBtn.disabled = false;
+                    clearLastBtn.disabled = false;
                 });
-                clearBtn.addEventListener('click', function () {
+                clearSearchBtn.addEventListener('click', function () {
                     input.value = '';
                     resultsDiv.style.display = 'none';
                     refreshMatchState();
                 });
+                clearListBtn.addEventListener('click', function () {
+                    clubField.value = '';
+                    clearListBtn.disabled = true;
+                    restoreListBtn.disabled = false;
+                    clearLastBtn.disabled = true;
+                });
+                restoreListBtn.addEventListener('click', function () {
+                    clubField.value = savedValue;
+                    clearListBtn.disabled = clubField.value === '';
+                    restoreListBtn.disabled = true;
+                    clearLastBtn.disabled = true;
+                });
+                clearLastBtn.addEventListener('click', function () {
+                    var current = clubField.value;
+                    if (lastAdded && current.indexOf(lastAdded) !== -1) {
+                        clubField.value = current.replace(lastAdded, '');
+                    }
+                    clubField.value = (clubField.value || '').trim() + ' ';
+                    if (!clubField.value.trim()) { clearListBtn.disabled = true; }
+                    clearLastBtn.disabled = true;
+                });
+                if (mainForm) {
+                    mainForm.addEventListener('submit', function () { clubField.disabled = false; });
+                }
             });
         </script>
     </section>

@@ -490,11 +490,20 @@ html {
     box-shadow: 0 3px 3px 0 rgba(230, 230, 230, 0.75);
 }
 [data-bs-theme="bcoem-brux"] .site-footer {
-    background: linear-gradient(to bottom, #bec8d8 0%, #DFE4EC 100%);
+    /* Admin footer is navbar-inverse (index.legacy.php:251): dark grey-blue
+       gradient, NOT the public navbar-default.bcoem-footer light look. */
+    background: #303E4B;
+    background: linear-gradient(to bottom, #303E4B 0%, #394a59 100%);
 }
-[data-bs-theme="bcoem-brux"] .site-footer,
-[data-bs-theme="bcoem-brux"] .site-footer a {
-    color: #303E4B;
+/* The <footer> carries .text-white (BS5 utility, !important). Important
+   declarations reverse layer precedence — layered beats unlayered — so the
+   admin footer text must be redeclared INSIDE the bs5 layer (after
+   Bootstrap's import) to win the tie. */
+@layer bs5 {
+    [data-bs-theme="bcoem-brux"] .site-footer,
+    [data-bs-theme="bcoem-brux"] .site-footer a {
+        color: #bec8d8 !important;
+    }
 }
 
 .bcoem-stat-row {
