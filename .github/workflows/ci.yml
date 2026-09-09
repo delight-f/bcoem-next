@@ -1,14 +1,13 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
-
 jobs:
   php:
-    name: PHP ${{ matrix.php }} — lint, phpstan, phpunit
+    name: PHP ${{ matrix.php }} — phpstan, pint, phpunit
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -33,7 +32,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mysqli, mbstring, intl, gd, sqlite3
+          extensions: mysqli, mbstring, intl, gd
           coverage: none
 
       - name: Cache Composer dependencies
@@ -44,8 +43,14 @@ jobs:
           restore-keys: |
             composer-${{ runner.os }}-${{ matrix.php }}-
 
-      - name: Install dependencies
+      - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Validate composer.json/composer.lock
+        run: composer validate --strict
+
+      - name: Audit PHP dependencies for known vulnerabilities
+        run: composer audit
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -53,24 +58,26 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Build frontend assets
-        run: npm ci && npm run build
-
-      - name: Load baseline schema into MySQL
-        run: |
-          mysql -h 127.0.0.1 -uroot -proot bcoem_test < sql/bcoem_baseline_3.0.X.sql
+      - name: Install Node dependencies
+        run: npm ci
 
       - name: Prepare Laravel environment
         run: |
           cp .env.example .env
           php artisan key:generate
 
-      - name: PHP syntax check (all tracked files)
-        run: |
-          set -e
-          while IFS= read -r file; do
-            php -l "$file" > /dev/null
-          done < <(git ls-files '*.php')
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run migrations against MySQL
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: bcoem_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: php artisan migrate --force
 
       - name: PHPStan (level 8, empty baseline policy)
         run: vendor/bin/phpstan analyse --no-progress
@@ -78,8 +85,14 @@ jobs:
       - name: Pint (code style)
         run: vendor/bin/pint --test
 
-      - name: PHPUnit (integration tests run against the loaded schema)
+      - name: PHPUnit
         env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: bcoem_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
           BCOEM_TEST_DB_HOST: 127.0.0.1
           BCOEM_TEST_DB_USER: root
           BCOEM_TEST_DB_PASS: root
