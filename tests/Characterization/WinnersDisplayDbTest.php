@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: winners selection semantics against the baseline schema
@@ -27,10 +28,10 @@ final class WinnersDisplayDbTest extends MySqlTestCase
     protected function tearDown(): void
     {
         foreach ($this->scores as $id) {
-            self::db()->where('id', $id)->delete('judging_scores');
+            DB::table('judging_scores')->where('id', $id)->delete();
         }
         foreach ($this->entries as $id) {
-            self::db()->where('id', $id)->delete('brewing');
+            DB::table('brewing')->where('id', $id)->delete();
         }
     }
 
@@ -47,8 +48,7 @@ final class WinnersDisplayDbTest extends MySqlTestCase
             'brewBrewerID' => '9004',
             'brewConfirmed' => '1',
         ];
-        self::db()->insert('brewing', [...$base, ...$overrides]);
-        $id = self::db()->getInsertId();
+        $id = DB::table('brewing')->insertGetId([...$base, ...$overrides]);
         if (! is_int($id)) {
             self::fail('insert failed');
         }
@@ -59,14 +59,13 @@ final class WinnersDisplayDbTest extends MySqlTestCase
 
     private function makeScore(int $entryId, ?string $place): int
     {
-        self::db()->insert('judging_scores', [
+        $id = DB::table('judging_scores')->insertGetId([
             'eid' => $entryId,
             'bid' => 9004,
             'scoreEntry' => 30,
             'scorePlace' => $place,
             'scoreTable' => 1,
         ]);
-        $id = self::db()->getInsertId();
         if (! is_int($id)) {
             self::fail('insert failed');
         }
@@ -89,10 +88,10 @@ final class WinnersDisplayDbTest extends MySqlTestCase
             $this->makeScore($eid, $p);
         }
 
-        $rows = self::db()->rawQuery(
+        $rows = DB::select(
             "SELECT scorePlace FROM judging_scores WHERE {$filter}",
         );
-        $got = array_map(floatval(...), array_column($rows, 'scorePlace'));
+        $got = array_map(floatval(...), array_column(array_map(fn ($r): array => (array) $r, $rows), 'scorePlace'));
         sort($got);
 
         self::assertSame([1.0, 2.0, 3.0, 4.0, 5.0], $got);

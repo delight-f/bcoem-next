@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: style-set lookup semantics executed VERBATIM against the
  * baseline schema (P1.8). The WHERE clauses below are copied from legacy
  * lib/common.lib.php (style_convert :1457-1467, style-info lookups
- * :1870-1879) and run via rawQuery so the test pins actual predicate
+ * :1870-1879) and run via raw SQL so the test pins actual predicate
  * behavior rather than a reimplementation.
  *
  * Rules pinned:
@@ -29,7 +30,7 @@ final class StylesLookupDbTest extends MySqlTestCase
     protected function tearDown(): void
     {
         foreach ($this->created as $id) {
-            self::db()->where('id', $id)->delete('styles');
+            DB::table('styles')->where('id', $id)->delete();
         }
     }
 
@@ -46,8 +47,7 @@ final class StylesLookupDbTest extends MySqlTestCase
             'brewStyleType' => '1',
             'brewStyleOwn' => 'stock',
         ];
-        self::db()->insert('styles', [...$base, ...$overrides]);
-        $id = self::db()->getInsertId();
+        $id = DB::table('styles')->insertGetId([...$base, ...$overrides]);
         if (! is_int($id)) {
             self::fail('styles insert failed');
         }
@@ -62,7 +62,7 @@ final class StylesLookupDbTest extends MySqlTestCase
      */
     private function query(string $sql, array $params = []): array
     {
-        $rows = self::db()->rawQuery($sql, $params);
+        $rows = DB::select($sql, $params);
         self::assertIsArray($rows);
 
         return array_values(array_map(

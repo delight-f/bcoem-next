@@ -39,15 +39,6 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// MysqliDb emits a PHP 8.4 deprecation notice at definition time
-// (insertMulti() implicit nullable) — silenced only for this require.
-set_error_handler(static fn (int $severity, string $message, string $file): bool => str_contains($message, 'Implicitly marking parameter $dataKeys as nullable'));
-try {
-    require_once ROOT.'MysqliDb.php';
-} finally {
-    restore_error_handler();
-}
-
 require_once ROOT.'sanitize.lib.php';
 
 require __DIR__.'/../vendor/autoload.php';

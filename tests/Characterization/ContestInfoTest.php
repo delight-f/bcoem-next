@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Phase-1 behavior capture for contest_info / preferences semantics (P1.1).
@@ -353,10 +354,10 @@ final class ContestInfoTest extends MySqlTestCase
      */
     private function seedBrewer(int $uid, string $discount, array $entries): void
     {
-        self::db()->insert('users', ['id' => $uid, 'user_name' => 'fee-fixture-'.$uid]);
-        self::db()->insert('brewer', ['uid' => $uid, 'brewerDiscount' => $discount]);
+        DB::table('users')->insert(['id' => $uid, 'user_name' => 'fee-fixture-'.$uid]);
+        DB::table('brewer')->insert(['uid' => $uid, 'brewerDiscount' => $discount]);
         foreach ($entries as $entry) {
-            self::db()->insert('brewing', [
+            DB::table('brewing')->insert([
                 'brewBrewerID' => (string) $uid,
                 'brewConfirmed' => $entry['confirmed'],
                 'brewPaid' => $entry['paid'] ?? '0',
@@ -367,9 +368,9 @@ final class ContestInfoTest extends MySqlTestCase
     private static function deleteFixtureRows(int ...$uids): void
     {
         $in = implode(',', $uids);
-        self::db()->rawQuery('DELETE FROM brewing WHERE brewBrewerID IN ('.$in.')');
-        self::db()->rawQuery('DELETE FROM brewer WHERE uid IN ('.$in.')');
-        self::db()->rawQuery('DELETE FROM users WHERE id IN ('.$in.')');
+        DB::statement('DELETE FROM brewing WHERE brewBrewerID IN ('.$in.')');
+        DB::statement('DELETE FROM brewer WHERE uid IN ('.$in.')');
+        DB::statement('DELETE FROM users WHERE id IN ('.$in.')');
     }
 
     private function beginFeeTest(): void

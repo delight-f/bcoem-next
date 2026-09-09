@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Integration;
 
-use MysqliDb;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,12 +20,14 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class MySqlTestCase extends TestCase
 {
-    private static ?MysqliDb $db = null;
+    private static bool $configured = false;
 
     private static bool $migrated = false;
 
     protected function setUp(): void
     {
+        parent::setUp();
+
         if (! self::databaseAvailable()) {
             self::markTestSkipped('MySQL not available: '.self::$connectError);
         }
@@ -33,18 +35,33 @@ abstract class MySqlTestCase extends TestCase
 
     private static ?string $connectError = null;
 
-    protected static function db(): MysqliDb
+    protected static function db()
     {
-        if (! self::$db instanceof MysqliDb) {
+        if (! self::$configured) {
             $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
+            $port = getenv('BCOEM_TEST_DB_PORT') ?: '3306';
+            $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
             $user = getenv('BCOEM_TEST_DB_USER') ?: 'root';
             $pass = getenv('BCOEM_TEST_DB_PASS') ?: 'root';
-            $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
-            self::$db = new MysqliDb($host, $user, $pass, $name);
-            self::$db->setPrefix('baseline_');
+
+            config()->set('database.connections.mysql', array_merge(
+                config('database.connections.mysql'),
+                [
+                    'host' => $host,
+                    'port' => $port,
+                    'database' => $name,
+                    'username' => $user,
+                    'password' => $pass,
+                    'prefix' => 'baseline_',
+                ],
+            ));
+            config()->set('database.default', 'mysql');
+            DB::purge('mysql');
+
+            self::$configured = true;
         }
 
-        return self::$db;
+        return DB::connection('mysql');
     }
 
     protected static function databaseAvailable(): bool
@@ -56,8 +73,9 @@ abstract class MySqlTestCase extends TestCase
         if (! $ci && ! $requested) {
             return false;
         }
+
         try {
-            self::db()->connect();
+            self::db()->getPdo();
 
             return true;
         } catch (\Throwable $e) {
@@ -69,7 +87,7 @@ abstract class MySqlTestCase extends TestCase
 
     protected static function truncate(string $table): void
     {
-        self::db()->rawQuery('TRUNCATE TABLE `baseline_'.$table.'`');
+        DB::statement('TRUNCATE TABLE `baseline_'.$table.'`');
     }
 
     /**
@@ -83,6 +101,7 @@ abstract class MySqlTestCase extends TestCase
         if (self::$migrated) {
             return;
         }
+
         $env = [
             'DB_CONNECTION=mysql',
             'DB_HOST='.(getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1'),
@@ -96,7 +115,6 @@ abstract class MySqlTestCase extends TestCase
         // so plain `migrate` cannot run on this DB: migrate every
         // port-added migration by explicit --path instead (the migrator
         // still records them, so repeats are no-ops).
-        $output = '';
         $output = '';
         $root = dirname(__DIR__, 2);
         foreach (glob($root.'/database/migrations/*.php') ?: [] as $file) {
@@ -113,6 +131,7 @@ abstract class MySqlTestCase extends TestCase
         if (! str_contains($output, 'DONE') && ! str_contains($output, 'Nothing to migrate')) {
             self::fail("migrate failed against test DB:\n".$output);
         }
+
         self::$migrated = true;
     }
 }

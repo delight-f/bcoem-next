@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: registration cap COUNT semantics against the baseline
@@ -24,7 +25,7 @@ final class RegistrationRulesDbTest extends MySqlTestCase
     protected function tearDown(): void
     {
         foreach ($this->created as $id) {
-            self::db()->where('id', $id)->delete('brewing');
+            DB::table('brewing')->where('id', $id)->delete();
         }
     }
 
@@ -43,8 +44,7 @@ final class RegistrationRulesDbTest extends MySqlTestCase
             'brewPaid' => 0,
             'brewReceived' => 0,
         ];
-        self::db()->insert('brewing', [...$base, ...$overrides]);
-        $id = self::db()->getInsertId();
+        $id = DB::table('brewing')->insertGetId([...$base, ...$overrides]);
         if (! is_int($id)) {
             self::fail('insert failed');
         }
@@ -58,7 +58,7 @@ final class RegistrationRulesDbTest extends MySqlTestCase
      */
     private function countFor(string $sql, array $params): int
     {
-        $row = self::db()->rawQueryOne($sql, $params);
+        $row = DB::selectOne($sql, $params);
         self::assertIsArray($row);
 
         return (int) $row['count'];

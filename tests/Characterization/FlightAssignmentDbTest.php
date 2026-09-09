@@ -6,6 +6,7 @@ namespace BCOEM\Tests\Characterization;
 
 use App\Support\Judging\FlightAssignment;
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: flight reorder ordering + assignment row shape (P1.5),
@@ -25,25 +26,18 @@ use BCOEM\Tests\Integration\MySqlTestCase;
 final class FlightAssignmentDbTest extends MySqlTestCase
 {
     /**
-     * rawQuery auto-prefixes only the FIRST table token (vendored
-     * MysqliDb::rawAddPrefix uses $table[0], a scalar). For multi-table or
-     * DDL statements we clear the prefix and write full names explicitly.
+     * Run a raw query against fully-qualified (baseline_-prefixed) table
+     * names.
      *
      * @param  list<mixed>  $params
      * @return list<array<string, mixed>>
      */
-    private static function unprefixedQuery(string $sql, array $params = []): array
+    private static function rawQuery(string $sql, array $params = []): array
     {
-        $db = self::db();
-        $db->setPrefix('');
-        try {
-            $rows = $db->rawQuery($sql, $params);
-            self::assertIsArray($rows);
+        $rows = DB::select($sql, $params);
+        self::assertIsArray($rows);
 
-            return array_values(array_map(fn ($row): array => (array) $row, $rows));
-        } finally {
-            $db->setPrefix('baseline_');
-        }
+        return array_values(array_map(fn ($row): array => (array) $row, $rows));
     }
 
     /** @var list<int> */
@@ -55,10 +49,10 @@ final class FlightAssignmentDbTest extends MySqlTestCase
     protected function tearDown(): void
     {
         foreach ($this->flights as $id) {
-            self::db()->where('id', $id)->delete('judging_flights');
+            DB::table('judging_flights')->where('id', $id)->delete();
         }
         foreach ($this->entries as $id) {
-            self::db()->where('id', $id)->delete('brewing');
+            DB::table('brewing')->where('id', $id)->delete();
         }
     }
 
@@ -78,8 +72,7 @@ final class FlightAssignmentDbTest extends MySqlTestCase
             'brewReceived' => 1,
             'brewPaid' => 0,
         ];
-        self::db()->insert('brewing', [...$base, ...$overrides]);
-        $id = self::db()->getInsertId();
+        $id = DB::table('brewing')->insertGetId([...$base, ...$overrides]);
         if (! is_int($id)) {
             self::fail('insert failed');
         }
@@ -90,8 +83,7 @@ final class FlightAssignmentDbTest extends MySqlTestCase
 
     private function makeFlight(int $tableId, int $number, int $entryId): int
     {
-        self::db()->insert('judging_flights', FlightAssignment::flightRow($tableId, $number, $entryId));
-        $id = self::db()->getInsertId();
+        $id = DB::table('judging_flights')->insertGetId(FlightAssignment::flightRow($tableId, $number, $entryId));
         if (! is_int($id)) {
             self::fail('insert failed');
         }
@@ -113,10 +105,10 @@ final class FlightAssignmentDbTest extends MySqlTestCase
         $this->makeFlight(7, 1, $e2);
         $this->makeFlight(7, 1, $e3);
 
-        self::db()->where('flightEntryID', $e1)->update('judging_flights', ['flightEntryOrder' => 2]);
-        self::db()->where('flightEntryID', $e2)->update('judging_flights', ['flightEntryOrder' => 1]);
+        DB::table('judging_flights')->where('flightEntryID', $e1)->update(['flightEntryOrder' => 2]);
+        DB::table('judging_flights')->where('flightEntryID', $e2)->update(['flightEntryOrder' => 1]);
 
-        $rows = self::unprefixedQuery(
+        $rows = self::rawQuery(
             'SELECT b.id FROM baseline_judging_flights f JOIN baseline_brewing b '
             .'ON f.flightEntryID = b.id WHERE f.flightTable = ? AND f.flightNumber = ? '
             .'ORDER BY '.FlightAssignment::reorderOrderBy(),
@@ -134,7 +126,7 @@ final class FlightAssignmentDbTest extends MySqlTestCase
         $e = $this->makeEntry();
         $fid = $this->makeFlight(9, 1, $e);
 
-        $row = self::db()->where('id', $fid)->getOne('judging_flights');
+        $row = (array) DB::table('judging_flights')->where('id', $fid)->first();
         self::assertIsArray($row);
         self::assertSame(9, (int) $row['flightTable']);
         self::assertSame(1, (int) $row['flightNumber']);

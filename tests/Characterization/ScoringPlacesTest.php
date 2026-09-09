@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Characterization;
 
+use App\Support\Outputs\OutputFormat;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -24,24 +25,16 @@ use PHPUnit\Framework\TestCase;
  */
 final class ScoringPlacesTest extends TestCase
 {
-    public static function setUpBeforeClass(): void
-    {
-        if (! defined('LIB')) {
-            define('LIB', dirname(__DIR__, 2).DIRECTORY_SEPARATOR.'legacy'.DIRECTORY_SEPARATOR);
-        }
-        require_once LIB.'common.lib.php';
-    }
-
     #[DataProvider('provideDisplayPlaces')]
     public function test_display_place_method_one_mapping(string $place, string $expected): void
     {
         // Vendored common.lib.php display_place($place,'1') branch — pinned
         // verbatim here because the real function require()s a site config
         // stub we refuse to fabricate inside legacy/. The ordinal suffix
-        // itself IS exercised against the vendored code below.
+        // itself IS exercised against the ported code below.
         $displayPlaceMethod1 = function (string $place): string {
             return match ($place) {
-                '1', '2', '3', '4' => addOrdinalNumberSuffix($place),
+                '1', '2', '3', '4' => OutputFormat::ordinal($place),
                 '5', 'HM' => 'HM',
                 default => 'N/A',
             };
@@ -66,9 +59,9 @@ final class ScoringPlacesTest extends TestCase
     #[DataProvider('provideOrdinals')]
     public function test_ordinal_suffix_special_cases(int $num, string $expected): void
     {
-        // Vendored common.lib.php:379 — 11/12/13 take "th" despite ending in
-        // 1/2/3. Non-numeric input returned unchanged.
-        self::assertSame($expected, addOrdinalNumberSuffix($num));
+        // Port of common.lib.php:379 addOrdinalNumberSuffix() — 11/12/13 take
+        // "th" despite ending in 1/2/3. Non-numeric input returned unchanged.
+        self::assertSame($expected, OutputFormat::ordinal($num));
     }
 
     /** @return iterable<string, array{int, string}> */

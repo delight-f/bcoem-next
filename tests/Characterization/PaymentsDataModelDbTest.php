@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: payments data model against the baseline schema (P1.4).
@@ -32,7 +33,7 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
     protected function tearDown(): void
     {
         foreach ($this->created as $id) {
-            self::db()->where('id', $id)->delete('brewing');
+            DB::table('brewing')->where('id', $id)->delete();
         }
     }
 
@@ -40,15 +41,13 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
     {
         self::ensureMigrated();
 
-        // MysqliDb returns assoc rows (Tables_in_...), not indexed.
         $tables = array_map(
-            static fn ($row): string => (string) reset($row),
-            self::db()->rawQuery("SHOW TABLES LIKE '%payments'"),
+            static fn ($row): string => (string) reset((array) $row),
+            DB::select("SHOW TABLES LIKE '%payments'"),
         );
         self::assertNotEmpty($tables, 'payments table missing after migrate');
-        // MysqliDb prefixes table names even in raw queries.
         $columns = array_column(
-            self::db()->rawQuery('SHOW COLUMNS FROM `payments`'),
+            array_map(fn ($row): array => (array) $row, DB::select('SHOW COLUMNS FROM `payments`')),
             'Field',
         );
         foreach ([
@@ -63,7 +62,7 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
     public function test_ipn_entry_update_is_idempotent_on_brewing(): void
     {
         // ppv.php:153-160 write shape: brewPaid=1 + brewUpdated=NOW per id.
-        self::db()->insert('brewing', [
+        $id = DB::table('brewing')->insertGetId([
             'brewName' => 'IPN Fixture',
             'brewCategorySort' => '15',
             'brewCategory' => '15',
@@ -73,24 +72,23 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
             'brewPaid' => 0,
             'brewReceived' => 0,
         ]);
-        $id = self::db()->getInsertId();
         if (! is_int($id)) {
             self::fail('insert failed');
         }
         $this->created[] = $id;
 
         // First notification...
-        self::db()->where('id', $id)->update('brewing', [
+        DB::table('brewing')->where('id', $id)->update([
             'brewPaid' => 1,
             'brewUpdated' => date('Y-m-d H:i:s', time()),
         ]);
         // ...duplicate notification (PayPal retries; no dedup exists).
-        self::db()->where('id', $id)->update('brewing', [
+        DB::table('brewing')->where('id', $id)->update([
             'brewPaid' => 1,
             'brewUpdated' => date('Y-m-d H:i:s', time()),
         ]);
 
-        $row = self::db()->where('id', $id)->getOne('brewing');
+        $row = (array) DB::table('brewing')->where('id', $id)->first();
         self::assertIsArray($row);
         self::assertSame(1, (int) $row['brewPaid']);
     }

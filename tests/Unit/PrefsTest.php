@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Unit;
 
-use BCOEM\Session\Prefs;
+use App\Session\Prefs;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Characterization;
 
-use BCOEM\Domain\BrewingRow;
-use BCOEM\Repository\BrewingRepository;
+use App\Domain\BrewingRow;
 use BCOEM\Tests\Integration\MySqlTestCase;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Characterization: entry lifecycle column states (P1.3).
@@ -27,21 +27,18 @@ use BCOEM\Tests\Integration\MySqlTestCase;
  */
 final class EntryLifecycleDbTest extends MySqlTestCase
 {
-    private BrewingRepository $repo;
-
     /** @var list<int> */
     private array $created = [];
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->repo = new BrewingRepository(self::db());
     }
 
     protected function tearDown(): void
     {
         foreach ($this->created as $id) {
-            self::db()->where('id', $id)->delete('brewing');
+            DB::table('brewing')->where('id', $id)->delete();
         }
     }
 
@@ -62,7 +59,7 @@ final class EntryLifecycleDbTest extends MySqlTestCase
             'brewReceived' => 0,
         ];
 
-        $id = $this->repo->insert([...$base, ...$overrides]);
+        $id = DB::table('brewing')->insertGetId([...$base, ...$overrides]);
         if (! is_int($id)) {
             self::fail('brewing insert failed');
         }
@@ -73,7 +70,7 @@ final class EntryLifecycleDbTest extends MySqlTestCase
 
     private function entry(int $id): BrewingRow
     {
-        $row = $this->repo->get($id);
+        $row = BrewingRow::fromArray((array) DB::table('brewing')->where('id', $id)->first());
         self::assertInstanceOf(BrewingRow::class, $row);
 
         return $row;
@@ -105,10 +102,12 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         self::assertSame('0', (string) $this->entry($zeroId)->brewConfirmed);
         self::assertSame('2', (string) $this->entry($twoId)->brewConfirmed);
 
-        foreach ($this->repo->where('brewConfirmed', '0') as $row) {
+        foreach (DB::table('brewing')->where('brewConfirmed', '0')->get() as $raw) {
+            $row = BrewingRow::fromArray((array) $raw);
             self::assertSame('Unconfirmed Check Zero', $row->brewName);
         }
-        foreach ($this->repo->where('brewConfirmed', '2') as $row) {
+        foreach (DB::table('brewing')->where('brewConfirmed', '2')->get() as $raw) {
+            $row = BrewingRow::fromArray((array) $raw);
             self::assertSame('Unconfirmed Check Two', $row->brewName);
         }
     }
@@ -122,7 +121,7 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         $b = $this->makeEntry(['brewJudgingNumber' => '555555']);
 
         self::assertNotSame($a, $b);
-        self::assertCount(2, $this->repo->where('brewJudgingNumber', '555555'));
+        self::assertCount(2, DB::table('brewing')->where('brewJudgingNumber', '555555')->get());
     }
 
     public function test_paid_and_received_transitions(): void
@@ -132,10 +131,10 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         // DB for non-admin edits. Only admins flip them (check-in/payment).
         $id = $this->makeEntry();
 
-        self::db()->where('id', $id)->update('brewing', ['brewPaid' => 1]);
+        DB::table('brewing')->where('id', $id)->update(['brewPaid' => 1]);
         self::assertSame(1, (int) $this->entry($id)->brewPaid);
 
-        self::db()->where('id', $id)->update('brewing', ['brewReceived' => 1]);
+        DB::table('brewing')->where('id', $id)->update(['brewReceived' => 1]);
         $row = $this->entry($id);
         self::assertSame(1, (int) $row->brewReceived);
         self::assertSame(1, (int) $row->brewPaid); // independent flags
