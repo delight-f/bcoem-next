@@ -9,7 +9,6 @@ use App\Domain\BrewingRow;
 use App\Domain\JudgingScoresRow;
 use App\Domain\PreferencesRow;
 use App\Domain\StylesRow;
-use BCOEM\Tests\Integration\MySqlTestCase;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -43,7 +42,6 @@ final class RepositoryRoundTripTest extends MySqlTestCase
 
         $this->assertSame(1, DB::table('brewer')->where('id', $id)->update(['brewerFirstName' => 'Augusta']));
         $updated = BrewerRow::fromArray((array) DB::table('brewer')->where('id', $id)->first());
-        self::assertNotNull($updated);
         $this->assertSame('Augusta', $updated->brewerFirstName);
 
         DB::table('brewer')->where('id', $id)->delete();
@@ -67,7 +65,6 @@ final class RepositoryRoundTripTest extends MySqlTestCase
 
         $this->assertSame(1, DB::table('brewing')->where('id', $id)->update(['brewStyle' => 'International Pale Lager']));
         $row = BrewingRow::fromArray((array) DB::table('brewing')->where('id', $id)->first());
-        self::assertNotNull($row);
         $this->assertSame('International Pale Lager', $row->brewStyle);
 
         DB::table('brewing')->where('id', $id)->delete();
@@ -90,7 +87,6 @@ final class RepositoryRoundTripTest extends MySqlTestCase
 
         $this->assertSame(1, DB::table('styles')->where('id', $id)->update(['brewStyleNum' => 'B']));
         $row = StylesRow::fromArray((array) DB::table('styles')->where('id', $id)->first());
-        self::assertNotNull($row);
         $this->assertSame('B', $row->brewStyleNum);
 
         DB::table('styles')->where('id', $id)->delete();
@@ -113,7 +109,6 @@ final class RepositoryRoundTripTest extends MySqlTestCase
 
         $this->assertSame(1, DB::table('judging_scores')->where('id', $id)->update(['scorePlace' => 2]));
         $row = JudgingScoresRow::fromArray((array) DB::table('judging_scores')->where('id', $id)->first());
-        self::assertNotNull($row);
         $this->assertSame(2.0, $row->scorePlace);
 
         DB::table('judging_scores')->where('id', $id)->delete();

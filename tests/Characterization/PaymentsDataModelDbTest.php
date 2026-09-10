@@ -6,6 +6,7 @@ namespace BCOEM\Tests\Characterization;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Characterization: payments data model against the baseline schema (P1.4).
@@ -42,14 +43,15 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
         self::ensureMigrated();
 
         $tables = array_map(
-            static fn ($row): string => (string) reset((array) $row),
+            static function ($row): string {
+                $arr = (array) $row;
+
+                return (string) reset($arr);
+            },
             DB::select("SHOW TABLES LIKE '%payments'"),
         );
         self::assertNotEmpty($tables, 'payments table missing after migrate');
-        $columns = array_column(
-            array_map(fn ($row): array => (array) $row, DB::select('SHOW COLUMNS FROM `payments`')),
-            'Field',
-        );
+        $columns = Schema::getColumnListing('payments');
         foreach ([
             'id', 'entrant_uid', 'entry_ids', 'amount', 'currency', 'method',
             'provider_ref', 'event_id', 'status', 'note', 'admin_uid',
@@ -89,7 +91,6 @@ final class PaymentsDataModelDbTest extends MySqlTestCase
         ]);
 
         $row = (array) DB::table('brewing')->where('id', $id)->first();
-        self::assertIsArray($row);
         self::assertSame(1, (int) $row['brewPaid']);
     }
 }

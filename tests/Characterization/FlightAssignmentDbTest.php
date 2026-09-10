@@ -127,7 +127,6 @@ final class FlightAssignmentDbTest extends MySqlTestCase
         $fid = $this->makeFlight(9, 1, $e);
 
         $row = (array) DB::table('judging_flights')->where('id', $fid)->first();
-        self::assertIsArray($row);
         self::assertSame(9, (int) $row['flightTable']);
         self::assertSame(1, (int) $row['flightNumber']);
         self::assertSame($e, (int) $row['flightEntryID']);

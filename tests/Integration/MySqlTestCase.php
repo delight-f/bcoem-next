@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Integration;
 
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +36,7 @@ abstract class MySqlTestCase extends TestCase
 
     private static ?string $connectError = null;
 
-    protected static function db()
+    protected static function db(): ConnectionInterface
     {
         if (! self::$configured) {
             $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
@@ -75,7 +76,7 @@ abstract class MySqlTestCase extends TestCase
         }
 
         try {
-            self::db()->getPdo();
+            self::db()->select('SELECT 1');
 
             return true;
         } catch (\Throwable $e) {
