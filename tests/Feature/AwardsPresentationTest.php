@@ -95,6 +95,13 @@ final class AwardsPresentationTest extends AdminScreensTestCase
 
     public function test_anon_bounced_when_unpublished(): void
     {
+        // The baseline fixture ships as a finished competition with results
+        // already published (prefsDisplayWinners='Y', winner delay passed, all
+        // windows closed, no future judging sessions), so the public deck is
+        // live by design. Pin the unpublished branch explicitly instead of
+        // depending on whatever ambient state earlier tests left behind.
+        DB::table('preferences')->where('id', 1)->update(['prefsDisplayWinners' => 'N']);
+
         auth()->logout();
         $this->get('/awards')->assertRedirect('/?msg=7');
     }

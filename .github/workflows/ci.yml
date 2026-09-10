@@ -92,6 +92,12 @@ jobs:
             php artisan migrate --force --path="$path"
           done
 
+      # The output/PDF tests extract rendered PDF text with `pdftotext`
+      # (poppler-utils) and assert on the copy. Without it shell_exec returns
+      # null and the assertions compare against an empty string.
+      - name: Install pdftotext
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+
       - name: PHPStan (level 8, empty baseline policy)
         run: vendor/bin/phpstan analyse --no-progress
 

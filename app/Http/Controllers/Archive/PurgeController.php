@@ -10,6 +10,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Purge/reset flows (spec §7 P5.6; ledger/archive-purge.md pin 7).
@@ -361,9 +362,6 @@ final class PurgeController extends Controller
 
     private static function tableExists(string $table): bool
     {
-        return DB::selectOne(
-            'SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?',
-            [$table],
-        )->c > 0;
+        return Schema::hasTable($table);
     }
 }

@@ -140,9 +140,12 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
 
     public function test_style_labels_match_legacy_format(): void
     {
-        // Legacy renders style options as ltrim(brewStyleGroup,'0').
-        // brewStyleNum — "1A", no dot/colon (lib/common.lib.php:1803-1805).
-        // Regression: the port rendered "1.A: " until P4 Slice 2.
+        // Legacy brew-select option text is style_number_const(group, sub,
+        // style_set_display_separator, 0).' '.brewStyle (brew.sec.php:187).
+        // Under BJCP2021 the display separator is '' (styles.inc.php; mirrored
+        // by LabelsController/PullsheetsController::styleSeparator), so group
+        // '01' + sub 'A' renders "1A American Light Lager" — no dot, no colon.
+        // Regression: the port rendered "1.A: " before P4 Slice 2.
         $this->login();
         // Ensure uid 1 has a brewer row (baseline fixture may have been
         // deleted by a prior test in the full suite).
@@ -160,8 +163,9 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
         ]);
 
         $html = (string) $this->get('/brew')->assertOk()->getContent();
-        $this->assertStringContainsString('1A:', $html);
-        $this->assertStringNotContainsString('1.A:', $html);
+        $this->assertStringContainsString('1A American Light Lager', $html);
+        $this->assertStringNotContainsString('1.A', $html);
+        $this->assertStringNotContainsString('1A:', $html);
     }
 
     public function test_corpus_club_round_trips_byte_for_byte(): void

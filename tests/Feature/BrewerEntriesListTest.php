@@ -308,7 +308,7 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
         ]);
 
         $this->get('/list')->assertOk();
-        $this->get('/account')->assertOk();
+        $this->get('/list/edit-account')->assertOk();
 
         DB::table('users')->where('id', $uid)->delete();
     }

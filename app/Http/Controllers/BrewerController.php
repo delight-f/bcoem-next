@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Brewer profile form 0 — account & contact edit (P3.2a, ticket 05).
@@ -32,7 +33,10 @@ final class BrewerController extends Controller
         $brewer = DB::table('brewer')->where('uid', Auth::id())->first();
 
         if ($brewer === null) {
-            abort(404);
+            // Seed/org accounts can exist without a brewer row; legacy renders
+            // the blank profile form and creates the row on first save, so a
+            // missing row must not 404 (Backlog P1).
+            $brewer = (object) array_fill_keys(Schema::getColumnListing('brewer'), null);
         }
 
         // Legacy brewer.sec.php:86 — the profile form renders only when the

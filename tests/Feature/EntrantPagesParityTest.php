@@ -160,16 +160,17 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
             ->assertSee('Entry Edit Deadline:');
     }
 
-    public function test_pay_renders_account_surface_with_paypal_modal(): void
+    public function test_pay_renders_account_surface(): void
     {
+        // The legacy PayPal $pay_modal ("Return to Merchant" / confirm-submit)
+        // was retired with PayPal itself in favour of Stripe Checkout
+        // (docs/plans/payments-stripe-2026.md W3 — a hosted redirect needs no
+        // leave-site coaching), so /pay carries the shared account block only.
         $this->get('/pay')
             ->assertOk()
             // Same account block as /list (index.pub.php shares list.pub.php).
             ->assertSee('My Account')
-            ->assertSee('id="entries"', false)
-            // PayPal confirmation modal ($pay_modal).
-            ->assertSee('confirm-submit')
-            ->assertSee('Return To Merchant');
+            ->assertSee('id="entries"', false);
     }
 
     public function test_change_password_flow(): void

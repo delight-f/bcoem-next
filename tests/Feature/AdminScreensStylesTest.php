@@ -163,8 +163,10 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
         $this->styleIds[] = (int) $row['id'];
         self::assertSame('0', (string) $row['brewStyleStrength']); // type=2 quirk: strength forced off
 
-        // Inactive styles do NOT join prefsSelectedStyles.
-        $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
+        // Inactive styles do NOT join prefsSelectedStyles. The dump ships the
+        // column NULL until styles are picked, and null means nothing selected.
+        $raw = DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles');
+        $selected = $raw === null ? [] : (array) json_decode((string) $raw, true);
         self::assertArrayNotHasKey($row['id'], $selected);
     }
 
