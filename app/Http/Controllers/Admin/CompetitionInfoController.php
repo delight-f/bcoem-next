@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Brewer\Clubs;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -60,9 +61,11 @@ final class CompetitionInfoController extends Controller
         return view('admin.competition-info', [
             'ctx' => $ctx,
             'contest' => (array) DB::table('contest_info')->where('id', 1)->first(),
-            'clubs' => DB::table('brewer')
-                ->whereNotNull('brewerClubs')->where('brewerClubs', '!=', '')
-                ->distinct()->pluck('brewerClubs')->all(),
+            // Search source for the additional-club picker: both the
+            // contestClubs list this page maintains and the clubs already
+            // stored on brewer rows. Reading only brewer rows (as this once
+            // did) meant clubs the organizer just added were not searchable.
+            'clubs' => Clubs::all($ctx),
             'images' => $images,
         ]);
     }

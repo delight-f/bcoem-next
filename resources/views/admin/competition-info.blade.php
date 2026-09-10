@@ -24,7 +24,17 @@
 @endphp
 
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4 bcoem-comp-info">
+        <style>
+            /* This form is long. Give each section heading a visible break so
+               it reads as a series of groups instead of one wall of fields. */
+            .bcoem-comp-info h3 {
+                margin-top: 1.75rem;
+                padding-bottom: .5rem;
+                border-bottom: 1px solid var(--bs-border-color);
+            }
+            .bcoem-comp-info h3:first-of-type { margin-top: .5rem; }
+        </style>
         <p class="lead">{{ $ctx->contestStr('contestName') }}: Update Competition Information</p>
 
         @if ((int) request('msg') === 2)
@@ -55,10 +65,10 @@
                 <label for="contestID" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">BJCP Competition ID</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <input class="form-control" id="contestID" name="contestID" type="text" value="{{ $contest['contestID'] ?? '' }}" placeholder="Current competition iteration BJCP ID.">
-                    <span id="helpBlock" class="form-text">
+                    <div class="form-text">
                         <p>Be sure to enter the BJCP ID for the <strong>CURRENT</strong> competition iteration. Please note that the BJCP will reject any XML report with a missing or incorrect ID number.</p>
                         <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#BJCPCompIDModal">BJCP Competition ID Info</button>
-                    </span>
+                    </div>
                 </div>
             </div>
 
@@ -103,8 +113,10 @@
                             <option value="{{ $image }}" @if (($contest['contestLogo'] ?? '') === $image) selected @endif>{{ $image }}</option>
                         @endforeach
                     </select>
-                    <span id="helpBlock" class="form-text">Choose the image file. If the file is not on the list, use the &ldquo;Upload Logo Image&rdquo; button below.</span>
-                    <a class="btn btn-sm btn-primary" href="{{ url('/admin/upload?action=html') }}"><span class="fa fa-upload"></span> Upload Logo Image</a>
+                    <span class="form-text">Choose the image file. If the file is not on the list, upload it first.</span>
+                    <div class="mt-2">
+                        <a class="btn btn-sm btn-primary" href="{{ url('/admin/upload?action=html') }}"><span class="fa fa-upload"></span> Upload Logo Image</a>
+                    </div>
                 </div>
             </div>
 
@@ -121,35 +133,31 @@
             </div>
 
             <div class="row mb-3"><!-- Form Group Additional Club Names -->
-                <label class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Additional Club Names</label>
+                <label for="search-club-list-input" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Additional Club Names</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input id="search-club-list-input" class="form-control" placeholder="Search the clubs database">
-                    <span class="form-text">Search to check if a club is already in the database.</span>
-                    <div class="mt-2">
-                        <button type="button" id="clear-search-btn" class="btn btn-sm btn-secondary" disabled>Clear the Search Field</button>
-                        <button type="button" id="search-club-list-btn" class="btn btn-sm btn-primary">Search Clubs</button>
-                        <button type="button" id="copy-to-club-list-btn" class="btn btn-sm btn-success" disabled><span class="fa fa-plus"></span> Add</button>
+                    <p class="small text-body-secondary mb-1">
+                        Clubs offered to entrants when they register, listed alongside the ones already
+                        stored on participant profiles. Search first &mdash; add a name only if it is missing.
+                    </p>
+                    <div class="input-group">
+                        <input id="search-club-list-input" class="form-control" placeholder="Search the clubs database">
+                        <button type="button" id="clear-search-btn" class="btn btn-outline-secondary" disabled>Clear</button>
+                        <button type="button" id="search-club-list-btn" class="btn btn-primary">Search Clubs</button>
+                        <button type="button" id="copy-to-club-list-btn" class="btn btn-success" disabled><span class="fa fa-plus"></span> Add</button>
                     </div>
                     <div id="search-club-list-results-div" class="small mt-2"></div>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestClubs" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label"></label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    {{-- Legacy renders the accumulated list with each club
-                         followed by "; " and keeps the field disabled — the
-                         search/add UI is the only editor. Re-enabled at
-                         submit so its value posts. --}}
-                    <input class="form-control" id="contestClubs" name="contestClubs" type="text" value="{{ $clubsValue }}" placeholder="" disabled>
-                    <span class="form-text">
-                        <p class="mb-1">Use the search/add function above to add any club names that cannot be found in the clubs database.</p>
-                        <p class="mb-2">
-                            <button type="button" id="clear-additional-clubs" class="btn btn-sm btn-secondary">Clear Entire List</button>
-                            <button type="button" id="restore-additional-clubs" class="btn btn-sm btn-secondary" disabled>Restore List</button>
-                            <button type="button" id="clear-last-added" class="btn btn-sm btn-secondary" disabled>Clear Last Added</button>
-                        </p>
-                        <p class="mb-1" id="club-separated">Note: each club is separated by a semi-colon (;) for system use.</p>
-                    </span>
+
+                    {{-- Legacy renders the accumulated list with each club followed by
+                         "; " and keeps the field disabled — the search/add UI is the
+                         only editor. Re-enabled at submit so its value posts. --}}
+                    <label for="contestClubs" class="form-label small mt-3 mb-1">Clubs saved for this competition</label>
+                    <input class="form-control" id="contestClubs" name="contestClubs" type="text" value="{{ $clubsValue }}" disabled>
+                    <div class="form-text mb-2">Each club is separated by a semi-colon (;) for system use.</div>
+                    <div>
+                        <button type="button" id="clear-additional-clubs" class="btn btn-sm btn-outline-secondary">Clear Entire List</button>
+                        <button type="button" id="restore-additional-clubs" class="btn btn-sm btn-outline-secondary" disabled>Restore List</button>
+                        <button type="button" id="clear-last-added" class="btn btn-sm btn-outline-secondary" disabled>Clear Last Added</button>
+                    </div>
                 </div>
             </div>
 
@@ -280,32 +288,32 @@
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="competition_rules" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestRules" class="form-control" name="competition_rules" rows="15" aria-describedby="helpBlock">{{ $rulesText('competition_rules') }}</textarea>
-                    <span id="helpBlock" class="form-text">Edit the provided general rules text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="competition_rules" id="contestRules" :value="$rulesText('competition_rules')" :rows="15"
+                        help="Edit the provided general rules text as needed. Use the toolbar for headings, lists and emphasis." />
                 </div>
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="contestBottles" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Entry Acceptance Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestBottles" class="form-control" name="contestBottles" rows="15" aria-describedby="helpBlock">{{ $et('contestBottles') }}</textarea>
-                    <span id="helpBlock" class="form-text">Indicate the number of bottles, size, color, etc. Edit default text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="contestBottles" id="contestBottles" :value="$et('contestBottles')" :rows="15"
+                        help="Indicate the number of bottles, size, color, etc. Edit default text as needed." />
                 </div>
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="competition_packing_shipping" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Packaging and Shipping Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="competitionPackingShipping" class="form-control" name="competition_packing_shipping" rows="15" aria-describedby="helpBlock">{{ $rulesText('competition_packing_shipping') }}</textarea>
-                    <span id="helpBlock" class="form-text">Edit the provided general rules text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="competition_packing_shipping" id="competitionPackingShipping" :value="$rulesText('competition_packing_shipping')" :rows="15"
+                        help="Edit the provided general rules text as needed." />
                 </div>
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="contestVolunteers" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Volunteer Information</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestVolunteers" class="form-control" name="contestVolunteers" rows="15">{{ $et('contestVolunteers') }}</textarea>
-                    <span id="helpBlock" class="form-text">Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="contestVolunteers" id="contestVolunteers" :value="$et('contestVolunteers')" :rows="15"
+                        help="Shown on the public Volunteers page." />
                 </div>
             </div>
 
@@ -337,24 +345,24 @@
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="contestAwards" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Awards Structure</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestAwards" class="form-control" name="contestAwards" rows="15" aria-describedby="helpBlock">{{ $et('contestAwards') }}</textarea>
-                    <span id="helpBlock" class="form-text">Indicate places for each category, BOS procedure, qualifying criteria, etc. Edit default text as needed. Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="contestAwards" id="contestAwards" :value="$et('contestAwards')" :rows="15"
+                        help="Indicate places for each category, BOS procedure, qualifying criteria, etc." />
                 </div>
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="contestBOSAward" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Best of Show</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestBOSAward" class="form-control" name="contestBOSAward" rows="15" aria-describedby="helpBlock">{{ $et('contestBOSAward') }}</textarea>
-                    <span id="helpBlock" class="form-text">Indicate whether the Best of Show winner will receive a special award (e.g., a pro-am brew with a sponsoring brewery, etc.). Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="contestBOSAward" id="contestBOSAward" :value="$et('contestBOSAward')" :rows="15"
+                        help="Indicate whether the Best of Show winner will receive a special award (e.g., a pro-am brew with a sponsoring brewery, etc.)." />
                 </div>
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="contestCircuit" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Circuit Qualifying Events</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea id="contestCircuit" class="form-control" name="contestCircuit" rows="15" aria-describedby="helpBlock">{{ $et('contestCircuit') }}</textarea>
-                    <span id="helpBlock" class="form-text">Indicate whether your competition is a qualifier for any national or regional competitions. Content is stored as plain text; blank lines separate paragraphs.</span>
+                    <x-markdown-textarea name="contestCircuit" id="contestCircuit" :value="$et('contestCircuit')" :rows="15"
+                        help="Indicate whether your competition is a qualifier for any national or regional competitions." />
                 </div>
             </div>
 
@@ -364,8 +372,8 @@
             <div class="row mb-3">
                 <label for="contestInfoExtra" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Other Info</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <textarea class="form-control" id="contestInfoExtra" name="contestInfoExtra" rows="4">{{ $et('contestInfoExtra') }}</textarea>
-                    <div class="form-text">Optional extra competition-info block shown on the landing page's competition-info surface (adds an "Other Info" nav link). Content is stored as plain text; blank lines separate paragraphs.</div>
+                    <x-markdown-textarea name="contestInfoExtra" id="contestInfoExtra" :value="$et('contestInfoExtra')" :rows="6"
+                        help="Optional extra competition-info block shown on the landing page (adds an &ldquo;Other Info&rdquo; nav link)." />
                 </div>
             </div>
 
@@ -446,14 +454,22 @@
                     addBtn.disabled = term === '';
                     clearSearchBtn.disabled = term === '';
                 }
+                function escapeHtml(s) {
+                    return String(s).replace(/[&<>"]/g, function (c) {
+                        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+                    });
+                }
                 searchBtn.addEventListener('click', function () {
                     var term = (input.value || '').trim();
                     if (!term) { return; }
-                    var re = new RegExp(term, 'i');
+                    // Escape regex metacharacters: a club named e.g.
+                    // "Brewers (County)" must search for that text rather
+                    // than throw on an invalid pattern.
+                    var re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
                     var out = '';
                     for (var i = 0; i < bcoem_clubs.length; i++) {
                         if (bcoem_clubs[i].search(re) !== -1) {
-                            out += '<li>' + bcoem_clubs[i] + ';</li>';
+                            out += '<li>' + escapeHtml(bcoem_clubs[i]) + ';</li>';
                         }
                     }
                     if (out) {

@@ -47,11 +47,50 @@ final class Clubs
     }
 
     /**
+     * Every known club name with its original casing, de-duplicated
+     * case-insensitively. This is the list a picker or search box shows;
+     * known() is the same set folded for comparison.
+     *
+     * Both sources matter: contestClubs is the list the admin page itself
+     * maintains, and brewer rows carry what entrants have already typed.
+     * Reading only one of them makes the admin search miss clubs the
+     * organizer just added.
+     *
+     * @return list<string>
+     */
+    public static function all(TenantContext $ctx): array
+    {
+        $names = [];
+
+        foreach (self::sources($ctx) as $club) {
+            // Key by the folded name so "Foo Club" and "foo club" collapse
+            // to whichever spelling was seen first.
+            $key = strtolower($club);
+
+            if (! array_key_exists($key, $names)) {
+                $names[$key] = $club;
+            }
+        }
+
+        return array_values($names);
+    }
+
+    /**
      * @return list<string>
      */
     public static function known(TenantContext $ctx): array
     {
-        $known = [];
+        return array_map('strtolower', self::all($ctx));
+    }
+
+    /**
+     * Club names from both storage locations, unsorted and not de-duplicated.
+     *
+     * @return list<string>
+     */
+    private static function sources(TenantContext $ctx): array
+    {
+        $found = [];
 
         $json = $ctx->contestStr('contestClubs');
         if ($json !== null && $json !== '') {
@@ -59,7 +98,7 @@ final class Clubs
             if (is_array($decoded)) {
                 foreach ($decoded as $club) {
                     if (is_string($club) && $club !== '') {
-                        $known[] = $club;
+                        $found[] = $club;
                     }
                 }
             }
@@ -73,10 +112,10 @@ final class Clubs
 
         foreach ($stored as $club) {
             if (is_string($club) && $club !== '') {
-                $known[] = $club;
+                $found[] = $club;
             }
         }
 
-        return array_values(array_unique(array_map('strtolower', $known)));
+        return $found;
     }
 }

@@ -152,7 +152,7 @@ final class TableController extends Controller
             'table' => null,
             'usedNumbers' => $this->usedNumbers(),
             'locations' => $this->sessionLocations(),
-            'styles' => $this->activeStyles(),
+            'stylesByGroup' => $this->stylesByGroup(),
             'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => $this->nextTableNumber(),
         ]);
@@ -205,7 +205,7 @@ final class TableController extends Controller
             'table' => $table,
             'usedNumbers' => array_diff($this->usedNumbers(), [(int) $table->tableNumber]),
             'locations' => $this->sessionLocations(),
-            'styles' => $this->activeStyles(),
+            'stylesByGroup' => $this->stylesByGroup(),
             'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => null,
         ]);
@@ -371,5 +371,25 @@ final class TableController extends Controller
     private function activeStyles(): Collection
     {
         return BrewController::activeStyles(TenantContext::load());
+    }
+
+    /**
+     * Active styles bucketed by category name for the table form's picker.
+     *
+     * A style set holds well over a hundred entries, so a flat checkbox
+     * column is unnavigable; the category name is the grouping the BJCP
+     * guidelines themselves use. Bucketing here rather than in the template
+     * keeps the view a plain loop, and preserves the query's ordering so the
+     * groups appear in style-number order.
+     *
+     * @return Collection<string, Collection<int, \stdClass>>
+     */
+    private function stylesByGroup(): Collection
+    {
+        return $this->activeStyles()->groupBy(function (\stdClass $style): string {
+            $category = trim((string) ($style->brewStyleCategory ?? ''));
+
+            return $category === '' ? 'Other Styles' : $category;
+        });
     }
 }
