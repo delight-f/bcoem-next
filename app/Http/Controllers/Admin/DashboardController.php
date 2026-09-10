@@ -537,24 +537,34 @@ final class DashboardController extends Controller
                 $l('/admin/output/dropoff?go=check', 'List of Entries')]),
         ]]];
         if (($tables > 0) && ($obfuscate === 0)) {
-            $rows[] = ['Additional Info', ['blocks' => [
-                $block([$l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers')]),
-                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-                $block([$l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers')]),
-                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-            ]]];
-            $rows[] = ['Pullsheets', ['blocks' => [
-                $block([$l('/admin/output/pullsheets?go=judging_tables&view=entry&id=default', 'All By Table - Entry Numbers')]),
-                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables&view=entry')),
-                $block([$l('/admin/output/pullsheets?go=judging_tables&id=default', 'All By Table - Judging Numbers')]),
-                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables')),
-            ]]];
-            $rows[] = ['Judge Inventories', ['blocks' => [
-                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J')),
-                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry')),
-            ]]];
+            // Pull sheets are withheld in Tables Planning Mode (the mode's
+            // counts include unreceived entries), matching both this
+            // dashboard's tooltip and the judging-tables page lead text. Say
+            // so rather than silently dropping the section.
+            if ($planning) {
+                $rows[] = ['Pullsheets', ['blocks' => [
+                    $inline([$text('Pullsheets are not available while the competition is in Tables Planning Mode. Switch to Tables Competition Mode to generate them.')]),
+                ]]];
+            } else {
+                $rows[] = ['Additional Info', ['blocks' => [
+                    $block([$l('/admin/output/pullsheets?go=all_entry_info&view=entry&id=default', 'All By Table - Entry Numbers')]),
+                    $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                    $block([$l('/admin/output/pullsheets?go=all_entry_info&id=default', 'All By Table - Judging Numbers')]),
+                    $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=all_entry_info&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                ]]];
+                $rows[] = ['Pullsheets', ['blocks' => [
+                    $block([$l('/admin/output/pullsheets?go=judging_tables&view=entry&id=default', 'All By Table - Entry Numbers')]),
+                    $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                    $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables&view=entry')),
+                    $block([$l('/admin/output/pullsheets?go=judging_tables&id=default', 'All By Table - Judging Numbers')]),
+                    $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                    $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=judging_tables')),
+                ]]];
+                $rows[] = ['Judge Inventories', ['blocks' => [
+                    $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J')),
+                    $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=all_entry_info&view=judge_inventory&filter=J&sort=entry')),
+                ]]];
+            }
         }
         $rows[] = ['Table Cards', ['blocks' => [
             $block([$l('/admin/output/table_cards', 'All Tables')]),
@@ -613,16 +623,20 @@ final class DashboardController extends Controller
         // gated tables>0 && obfuscate 0 (default.admin.php:1777).
         if (($tables > 0) && ($obfuscate === 0)) {
             $rows[] = ['_section', 'During Judging'];
-            $rows[] = ['Mini-BOS Pullsheets', ['blocks' => [
-                $block([$l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
-                    $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers')]),
-                $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-                $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos&view=entry')),
-                $block([$l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
-                    $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers')]),
-                $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-                $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos')),
-            ]]];
+            // Pull sheet rows obey the same planning-mode rule as the Before
+            // Judging ones; cup mats are not pull sheets and stay listed.
+            if (! $planning) {
+                $rows[] = ['Mini-BOS Pullsheets', ['blocks' => [
+                    $block([$l('/admin/output/pullsheets?go=mini_bos&view=entry', 'All - Entry Numbers'),
+                        $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id=default', 'All By Table - Entry Numbers')]),
+                    $dd('Entry Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&view=entry&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                    $dd('Entry Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos&view=entry')),
+                    $block([$l('/admin/output/pullsheets?go=mini_bos', 'All - Judging Numbers'),
+                        $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id=default', 'All By Table - Judging Numbers')]),
+                    $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_tables&filter=mini_bos&id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
+                    $dd('Judging Numbers for Session...', $perSession('/admin/output/pullsheets?go=mini_bos')),
+                ]]];
+            }
             $rows[] = ['Mini-BOS Cup Mats', ['blocks' => [
                 $block([$l('/admin/output/bos_mat?action=blank&view=mini-bos', 'Blank')]),
                 $block([$l('/admin/output/bos_mat?action=mini-bos&filter=entry', 'All Tables - Entry Numbers')]),
@@ -630,12 +644,14 @@ final class DashboardController extends Controller
                 $block([$l('/admin/output/bos_mat?action=mini-bos', 'All Tables - Judging Numbers')]),
                 $dd('Judging Numbers for Table...', $tbls->map(fn ($t) => $l('/admin/output/bos_mat?action=mini-bos&view='.$t->id, (string) $t->tableNumber.': '.$t->tableName))->all()),
             ]]];
-            $rows[] = ['BOS Pullsheets', ['blocks' => [
-                $block([$l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers')]),
-                $dd('Entry Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all()),
-                $block([$l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers')]),
-                $dd('Judging Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all()),
-            ]]];
+            if (! $planning) {
+                $rows[] = ['BOS Pullsheets', ['blocks' => [
+                    $block([$l('/admin/output/pullsheets?go=judging_scores_bos&view=entry', 'All Style Types - Entry Numbers')]),
+                    $dd('Entry Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&view=entry&id='.$t->id, $t->styleTypeName))->all()),
+                    $block([$l('/admin/output/pullsheets?go=judging_scores_bos', 'All Style Types - Judging Numbers')]),
+                    $dd('Judging Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/pullsheets?go=judging_scores_bos&id='.$t->id, $t->styleTypeName))->all()),
+                ]]];
+            }
             $rows[] = ['BOS Cup Mats', ['blocks' => [
                 $block([$l('/admin/output/bos_mat?action=blank', 'Blank')]),
                 $block([$l('/admin/output/bos_mat?filter=entry', 'All Style Types - Entry Numbers')]),
@@ -643,10 +659,12 @@ final class DashboardController extends Controller
                 $block([$l('/admin/output/bos_mat', 'All Style Types - Judging Numbers')]),
                 $dd('Judging Numbers for Style Type...', $bosStyleTypes->map(fn ($t) => $l('/admin/output/bos_mat?view='.$t->id, $t->styleTypeName))->all()),
             ]]];
-            $rows[] = ['Pro-Am/Scale-Up Pullsheets', ['blocks' => [
-                $dd('Entry Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&view=entry&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
-                $dd('Judging Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
-            ]]];
+            if (! $planning) {
+                $rows[] = ['Pro-Am/Scale-Up Pullsheets', ['blocks' => [
+                    $dd('Entry Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&view=entry&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+                    $dd('Judging Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/pullsheets?go=judging_scores_bos&action=pro-am&filter='.$s.'&id='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),
+                ]]];
+            }
             $rows[] = ['Pro-Am/Scale-Up Cup Mats', ['blocks' => [
                 $block([$l('/admin/output/bos_mat?action=blank&view=pro-am', 'Blank')]),
                 $dd('Entry Numbers for Style Type...', $bosStyleTypes->flatMap(fn ($t) => collect(range(1, 3))->map(fn ($s) => $l('/admin/output/bos_mat?action=pro-am&sort='.$s.'&filter=entry&view='.$t->id, $t->styleTypeName.' - '.$proAmCaption($s))))->all()),

@@ -201,15 +201,17 @@
                                                                 $modePlanning = (bool) ($rowLinks['planning'] ?? false);
                                                                 $modeId = 'tables-mode-'.$side.'-'.$loop->parent->index;
                                                             @endphp
-                                                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                                            {{-- Mode sentence first, its switch button on the next
+                                                                 line: inline they read as one run-on control. --}}
+                                                            <div>
                                                                 <strong><span id="tables-mode-indicator-{{ $loop->index }}" class="{{ $modePlanning ? 'text-success' : 'text-primary' }}">{{ $modePlanning ? '*** Tables Planning Mode ***' : '*** Tables Competition Mode ***' }}</span></strong>
                                                                 @if ($modePlanning)
-                                                                    <button type="button" id="tables-competition-button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
+                                                                    <button type="button" id="tables-competition-button" class="btn btn-success btn-sm d-block mt-2" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
                                                                         Switch to Tables <strong>Competition</strong> Mode
                                                                     </button>
                                                                     <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
                                                                 @else
-                                                                    <button type="button" id="table-planning-button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#tables-planning-mode-modal">
+                                                                    <button type="button" id="table-planning-button" class="btn btn-primary btn-sm d-block mt-2" data-bs-toggle="modal" data-bs-target="#tables-planning-mode-modal">
                                                                         Switch to Tables <strong>Planning</strong> Mode
                                                                     </button>
                                                                     <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received in the system. Pullsheets will not be available."></span>

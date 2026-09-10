@@ -115,6 +115,9 @@
     // the eval row additionally needs prefsEval==1.
     $adminNavScoring = $adminNavLevel0 || $adminNavObfuscate === 0;
     $adminNavEval = (int) $ctx->prefsStr('prefsEval') === 1;
+    // Tables Planning Mode withholds pull sheets (see PullsheetsController and
+    // the judging-tables page lead text), so the nav must not offer them.
+    $adminNavPlanning = (string) $ctx->judgingStr('jPrefsTablePlanning') === '1';
     // nav.sec.php:201-207 — barcode/QR checkin rows need userAdminObfuscate==0 AND
     // prefsEntryForm in barcode_qrcode_array (constants.inc.php:560 = every form id).
     $adminNavBarcode = $adminNavObfuscate === 0
@@ -305,7 +308,7 @@
                     <div class="collapse" id="oc-g6">
                         <ul class="nav flex-column admin-oc-subnav">
                             <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/table_cards') }}?id=default">Table Cards</a></li>
-                            @if ($adminNavObfuscate === 0)
+                            @if ($adminNavObfuscate === 0 && ! $adminNavPlanning)
                                 <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default&view=entry">Pullsheets - Entry Numbers</a></li>
                                 <li class="nav-item"><a class="nav-link" href="{{ url('/admin/output/pullsheets') }}?go=judging_tables&id=default">Pullsheets - Judging Numbers</a></li>
                                 @if ($adminNavJudgingStarted)

@@ -314,4 +314,20 @@ final class OutputPullSheetsTest extends PublicSurfaceTestCase
         $this->assertStringStartsWith('%PDF', $pdf);
         $this->assertGreaterThan(1000, strlen($pdf));
     }
+
+    public function test_pullsheets_withheld_in_tables_planning_mode(): void
+    {
+        // Planning-mode counts deliberately include unreceived entries, so a
+        // pull sheet produced then is not the official document. Both the
+        // dashboard tooltip and the judging-tables page tell the admin pull
+        // sheets are unavailable in this mode — this is that promise.
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 1]);
+
+        $this->login(self::ADMIN_EMAIL);
+
+        $this->get('/admin/output/pullsheets')->assertForbidden();
+
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 0]);
+        $this->get('/admin/output/pullsheets')->assertOk();
+    }
 }

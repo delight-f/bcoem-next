@@ -39,6 +39,17 @@ final class PullsheetsController extends Controller
         }
 
         $ctx = TenantContext::load();
+
+        // Tables Planning Mode exists to assemble tables/flights before
+        // entries are marked paid and received, and its counts deliberately
+        // include unreceived entries — so a pull sheet produced now is not
+        // the official document. The dashboard and the judging-tables page
+        // both tell the admin pullsheets are unavailable in this mode; this
+        // is that promise, enforced for direct URLs too.
+        if ($ctx->judgingStr('jPrefsTablePlanning') === '1') {
+            abort(403, 'Pullsheets are not available while the competition is in Tables Planning Mode. Switch to Tables Competition Mode to generate them.');
+        }
+
         $p = [
             'go' => (string) $request->query('go', 'judging_tables'),
             'view' => (string) $request->query('view', 'default'),
