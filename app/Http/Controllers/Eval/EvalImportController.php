@@ -43,6 +43,16 @@ final class EvalImportController extends Controller
 
         $report = $this->consensus->import();
 
+        // The legacy endpoint was called over XHR and echoed a JSON envelope.
+        // The port's confirm/dashboard forms are plain POSTs, so a browser
+        // would render that raw JSON as the document. Keep the envelope for
+        // programmatic callers and redirect with a summary otherwise.
+        if (! $request->expectsJson()) {
+            return redirect()
+                ->route('eval.dashboard')
+                ->with('status', self::summary($report));
+        }
+
         // Same keys the legacy ajax endpoint echoed (minus the dropped
         // flagged bucket, superseded by the ledger's MAX-wins pin).
         return response()->json([
@@ -53,5 +63,32 @@ final class EvalImportController extends Controller
             'scored_places_discrepency' => implode(',', $report['discrepancies']),
             'scored_places_discrepency_count' => count($report['discrepancies']),
         ]);
+    }
+
+    /**
+     * Human summary of an import report for the redirect/flash path.
+     *
+     * @param  array<string, mixed>  $report
+     */
+    private static function summary(array $report): string
+    {
+        $singles = (array) $report['singles'];
+        $discrepancies = (array) $report['discrepancies'];
+
+        $message = sprintf(
+            'Import complete: %d score(s) imported, %d updated.',
+            (int) $report['imported'],
+            (int) $report['updated'],
+        );
+
+        if ($singles !== []) {
+            $message .= ' Skipped '.count($singles).' entry(s) with a single evaluation: '.implode(', ', $singles).'.';
+        }
+
+        if ($discrepancies !== []) {
+            $message .= ' Scored-place discrepancies: '.implode(',', $discrepancies).'.';
+        }
+
+        return $message;
     }
 }

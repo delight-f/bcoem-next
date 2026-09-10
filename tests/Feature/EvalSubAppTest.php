@@ -161,11 +161,15 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
     }
 
     /**
+     * The legacy endpoint was an XHR call that echoed JSON; assert that
+     * contract explicitly (a plain form POST redirects instead — covered by
+     * test_import_from_browser_form_redirects_with_summary).
+     *
      * @return TestResponse<Response>
      */
     private function import(): TestResponse
     {
-        return $this->post('/eval/import-scores');
+        return $this->postJson('/eval/import-scores');
     }
 
     public function test_guest_is_redirected_to_login(): void
@@ -315,6 +319,20 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
 
         $this->login(self::JUDGE);
         $this->import()->assertRedirect('/?msg=99');
+    }
+
+    public function test_import_from_browser_form_redirects_with_summary(): void
+    {
+        // Regression: the confirm/dashboard forms are plain POSTs, so the
+        // browser must land on a page, not the raw JSON envelope.
+        $this->login(self::ADMIN);
+
+        $this->post('/eval/import-scores')
+            ->assertRedirect('/eval')
+            ->assertSessionHas('status', fn (mixed $status): bool => is_string($status)
+                && str_starts_with($status, 'Import complete:'));
+
+        $this->get('/eval')->assertSee('Import complete:', false);
     }
 
     public function test_my_account_gates_judging_dashboard_on_window_and_assignment(): void

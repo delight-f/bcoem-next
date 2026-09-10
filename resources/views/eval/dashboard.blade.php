@@ -12,6 +12,10 @@
             <div class="alert alert-warning">Judging is closed for this session.</div>
         @endif
 
+        @if (session('status'))
+            <div class="alert alert-success">{{ session('status') }}</div>
+        @endif
+
         {{-- warnings.eval.php port: countdown timers to judging close --}}
         @include('eval.partials.warnings')
 
