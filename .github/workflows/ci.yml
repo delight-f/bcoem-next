@@ -69,6 +69,9 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
+      - name: Load baseline schema into MySQL
+        run: mysql -h 127.0.0.1 -uroot -proot bcoem_test < sql/bcoem_baseline_3.0.X.sql
+
       - name: Run migrations against MySQL
         env:
           DB_CONNECTION: mysql
