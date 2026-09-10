@@ -77,7 +77,17 @@ jobs:
           DB_DATABASE: bcoem_test
           DB_USERNAME: root
           DB_PASSWORD: root
-        run: php artisan migrate --force
+          DB_TABLE_PREFIX: baseline_
+        run: |
+          # The baseline_*-prefixed schema is loaded separately above, so the
+          # Laravel framework migrations (0001_01_01_*) would collide with it
+          # (e.g. baseline_users). Run only the port-added migrations, each by
+          # explicit --path (the migrator records them, so repeats are no-ops).
+          for path in database/migrations/2026_08_24_000000_create_payments_table.php \
+                      database/migrations/2026_08_24_100000_add_prefsstripe_to_preferences_table.php \
+                      database/migrations/2026_08_31_000000_add_contest_info_extra_to_contest_info_table.php; do
+            php artisan migrate --force --path="$path"
+          done
 
       - name: PHPStan (level 8, empty baseline policy)
         run: vendor/bin/phpstan analyse --no-progress
