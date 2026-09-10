@@ -3,7 +3,7 @@
     "name": "bcoem/bcoem-next",
     "type": "project",
     "description": "Laravel port of Brew Competition Online Entry Management",
-    "license": "GPL-2.0-or-later",
+    "license": "GPL-3.0-or-later",
     "keywords": ["laravel", "framework"],
     "require": {
         "php": "^8.4",
