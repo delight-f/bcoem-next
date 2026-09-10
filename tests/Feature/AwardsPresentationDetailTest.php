@@ -154,7 +154,8 @@ final class AwardsPresentationDetailTest extends AdminScreensTestCase
     {
         for ($i = 0; $i < $n; $i++) {
             $uid = 999110 + $i;
-            $club = $clubs[$i] ?? ('Test Club '.chr(65 + $i));
+            // Suffix walks A-Z (chr requires a 0-255 codepoint).
+            $club = $clubs[$i] ?? ('Test Club '.chr(65 + $i % 26));
             DB::table('users')->insert([
                 'id' => $uid,
                 'user_name' => 'awrddetail'.(string) $i.'@x.com',
