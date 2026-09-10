@@ -145,10 +145,12 @@
                                                         <div class="col-12 col-md-8 small">
                                                             @foreach ($rowLinks['blocks'] as $block)
                                                                 @if (isset($block['dd']))
+                                                                    {{-- The prefix is a label, not a button: keep it out of the
+                                                                         btn-group so the picker sits beneath its sentence. --}}
+                                                                    @if (! empty($block['dd']['prefix']))
+                                                                        <span class="text-muted d-block">{{ $block['dd']['prefix'] }}</span>
+                                                                    @endif
                                                                     <div class="btn-group bcoem-admin-dashboard-select mb-1 me-2">
-                                                                        @if (! empty($block['dd']['prefix']))
-                                                                            <span class="text-muted me-1 align-middle">{{ $block['dd']['prefix'] }}</span>
-                                                                        @endif
                                                                         <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ $block['dd']['button'] }}</button>
                                                                         <ul class="dropdown-menu small">
                                                                             @forelse ($block['dd']['items'] as $bitem)
@@ -251,11 +253,12 @@
                                                         </div>
                                                     </div>
                                                     @foreach ($rowLinks['matrix'] as $paper)
-                                                        <div class="row">
+                                                        <div class="row mb-3">
                                                             <div class="col-12 col-md-4 small">
                                                                 @php
-                                                                    // Legacy left-cell tooltip names the product (e.g. "Avery 5160",
-                                                                    // "Online Lables OL32"); it disambiguates the two "Letter" papers.
+                                                                    // The product code (e.g. "Avery 5160", "Online
+                                                                    // Lables OL32") disambiguates two papers that share
+                                                                    // a size name ("Letter").
                                                                     $base = (string) $paper['href'];
                                                                     $stem = preg_replace('~[?#].*$~', '', $base);
                                                                     $stem = preg_replace('~\.[A-Za-z0-9]+$~', '', $stem);
@@ -268,16 +271,30 @@
                                                                         ? 'Online Lables '.$pcode
                                                                         : 'Avery '.$pcode;
                                                                 @endphp
+                                                                <strong>{{ $paper['paper'] }}</strong>
                                                                 <a href="{{ $paper['href'] }}" target="_blank" rel="noopener"
-                                                                   data-bs-toggle="tooltip" data-bs-placement="right"
-                                                                   title="{{ $ptitle }}">{{ $paper['paper'] }} <span class="fa fa-sm fa-external-link"></span></a>
+                                                                   class="text-muted d-block">{{ $ptitle }} <span class="fa fa-sm fa-external-link"></span></a>
                                                             </div>
                                                             <div class="col-12 col-md-8 small">
-                                                                <ul class="d-flex flex-wrap list-unstyled gap-2 mb-0">
-                                                                    @foreach ($paper['options'] as $opt)
-                                                                        <li class="d-inline-flex align-items-center gap-2">
-                                                                            @if (isset($opt['children']))
-                                                                                <span class="text-muted">{{ $opt['label'] }}</span>
+                                                                @php
+                                                                    // Plain links download immediately; options with
+                                                                    // children need a count chosen first. Grouping them
+                                                                    // keeps the two kinds from interleaving.
+                                                                    [$countOptions, $plainOptions] = collect($paper['options'])
+                                                                        ->partition(fn (array $opt): bool => isset($opt['children']));
+                                                                @endphp
+                                                                @if ($plainOptions->isNotEmpty())
+                                                                    <ul class="d-inline list-inline mb-1">
+                                                                        @foreach ($plainOptions as $opt)
+                                                                            <li class="me-2"><a href="{{ url($opt['href']) }}" target="_blank" rel="noopener">{{ $opt['label'] }}</a></li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
+                                                                @if ($countOptions->isNotEmpty())
+                                                                    <ul class="list-unstyled mb-0">
+                                                                        @foreach ($countOptions as $opt)
+                                                                            <li class="mb-1">
+                                                                                <span class="text-muted d-block">{{ $opt['label'] }}</span>
                                                                                 <div class="btn-group">
                                                                                     <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
                                                                                             aria-haspopup="true" aria-expanded="false">{{ $opt['button'] }}</button>
@@ -287,12 +304,10 @@
                                                                                         @endforeach
                                                                                     </ul>
                                                                                 </div>
-                                                                            @else
-                                                                                <a href="{{ url($opt['href']) }}" target="_blank" rel="noopener">{{ $opt['label'] }}</a>
-                                                                            @endif
-                                                                        </li>
-                                                                    @endforeach
-                                                                </ul>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     @endforeach
