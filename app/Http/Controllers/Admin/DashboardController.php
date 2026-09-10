@@ -887,7 +887,6 @@ final class DashboardController extends Controller
 
         $guideItems = [$helpGuide('comp-org', "Competition Organizer's Guide"),
             $helpGuide('reset-comp', 'Reset Competition Information Guide'),
-            $helpGuide('paypal-ipn', 'Implement PayPal Instant Payment Notifications Guide'),
             $helpGuide('upload-scoresheets', "Upload Scanned Judges' Scoresheets Guide"),
             $helpGuide('barcode-check-in', 'Barcode or QR Code Entry Check-In Guide'),
         ];
