@@ -491,7 +491,12 @@ final class DashboardController extends Controller
         // (Address Labels "Winners" etc.), or {todo-label:...} disabled.
         $inline = static fn (array $items): array => ['inline' => $items];
         $block = static fn (array $items): array => ['block' => $items];
-        $dd = static fn (string $button, array $items, string $prefix = ''): array => ['dd' => ['button' => $button, 'items' => $items, 'prefix' => $prefix]];
+        // $empty mirrors the 'dropdown' variant's empty-state text: a picker
+        // with nothing to pick must say so rather than open a blank menu
+        // (reachable whenever tables/sessions/style-types are undefined).
+        $dd = static fn (string $button, array $items, string $prefix = '', string $empty = 'No options are available yet.'): array => [
+            'dd' => ['button' => $button, 'items' => $items, 'prefix' => $prefix, 'empty' => $empty],
+        ];
         $text = static fn (string $t): array => ['text' => $t];
         $rows = &$reportsItems;
 
@@ -553,8 +558,8 @@ final class DashboardController extends Controller
         }
         $rows[] = ['Table Cards', ['blocks' => [
             $block([$l('/admin/output/table_cards', 'All Tables')]),
-            $dd('For Table...', $tbls->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all()),
-            $dd('For Session...', $perSession('/admin/output/table_cards?go=judging_locations')),
+            $dd('For Table...', $tbls->map(fn ($t) => $l('/admin/output/table_cards?id='.$t->id, 'Table '.$t->tableNumber.': '.$t->tableName))->all(), '', 'No tables have been defined'),
+            $dd('For Session...', $perSession('/admin/output/table_cards?go=judging_locations'), '', 'No judging sessions have been defined'),
         ]]];
         $rows[] = ['Sign In Sheets', ['blocks' => [
             $inline([$l('/admin/output/assignments?filter=judges&view=sign-in', 'Judges'),
