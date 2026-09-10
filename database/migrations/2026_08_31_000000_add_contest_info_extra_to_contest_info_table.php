@@ -22,6 +22,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent: a re-imported baseline SQL dump already contains
+        // `contestInfoExtra` but wipes the migrations bookkeeping table, so the
+        // migrator replays this file. Tolerate the existing column.
+        if (Schema::hasColumn('contest_info', 'contestInfoExtra')) {
+            return;
+        }
         Schema::table('contest_info', function (Blueprint $table): void {
             $table->mediumText('contestInfoExtra')->nullable();
         });

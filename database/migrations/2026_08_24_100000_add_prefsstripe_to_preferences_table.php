@@ -23,6 +23,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent: a re-imported baseline SQL dump already contains
+        // `prefsStripe` but wipes the migrations bookkeeping table, so the
+        // migrator replays this file. Tolerate the existing column.
+        if (Schema::hasColumn('preferences', 'prefsStripe')) {
+            return;
+        }
         Schema::table('preferences', function (Blueprint $table): void {
             $table->text('prefsStripe')->nullable();
         });
