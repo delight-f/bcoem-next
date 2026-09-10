@@ -129,9 +129,11 @@ final class EntriesController extends Controller
                 $q->where('b.brewPaid', '!=', 1);
             }
 
-            return $q->distinct()
+            return $q->select('br.brewerEmail', 'br.brewerLastName')
+                ->distinct()
                 ->orderBy('br.brewerLastName')
-                ->pluck('br.brewerEmail')
+                ->get()
+                ->map(static fn ($row): string => (string) $row->brewerEmail)
                 ->filter()->unique()->values()
                 ->implode(', ');
         };

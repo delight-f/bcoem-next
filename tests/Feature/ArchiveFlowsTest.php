@@ -40,13 +40,13 @@ final class ArchiveFlowsTest extends PublicSurfaceTestCase
         $base->statement('CREATE DATABASE '.self::TEST_DB);
 
         $tables = array_map(
-            fn ($row) => substr((string) $row->table_name, strlen('baseline_')),
+            fn ($row) => substr((string) $row->tbl, strlen('baseline_')),
             array_filter(
                 $base->select(
-                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'bcoem_test'",
+                    "SELECT table_name AS tbl FROM information_schema.tables WHERE table_schema = 'bcoem_test'",
                 ),
-                fn ($row) => str_starts_with((string) $row->table_name, 'baseline_')
-                    && ! str_starts_with((string) $row->table_name, 'baseline_migrations'),
+                fn ($row) => str_starts_with((string) $row->tbl, 'baseline_')
+                    && ! str_starts_with((string) $row->tbl, 'baseline_migrations'),
             ),
         );
 
