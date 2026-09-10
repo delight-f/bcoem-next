@@ -5,18 +5,21 @@
 **A ground-up Laravel rewrite of [BCOE&M](https://www.brewingcompetitions.com/) —
 Brew Competition Online Entry & Management**
 
-[![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white)](https://www.php.net/)
-[![Laravel](https://img.shields.io/badge/Laravel-latest-FF2D20?logo=laravel&logoColor=white)](https://laravel.com/)
-[![Tests](https://img.shields.io/badge/tests-563%2B%20passing-brightgreen)](.github/workflows/)
-[![PHPStan](https://img.shields.io/badge/PHPStan-max%2C%20empty%20baseline-brightgreen)](https://phpstan.org/)
+Behavior-matched to the original: same database schema, same URLs, same
+outputs. Re-hosted on PHP 8.4+, Laravel 13, Bootstrap 5, Vite and Stripe.
+
+[![PHP](https://img.shields.io/badge/PHP-8.4%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com/)
+[![Tests](https://img.shields.io/badge/tests-925%20passing-brightgreen)](.github/workflows/ci.yml)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%208%2C%20empty%20baseline-brightgreen)](https://phpstan.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-Pint-F2C55C)](https://github.com/laravel/pint)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 </div>
 
-A behavior-matched modernization of the classic BCOE&M homebrew competition
-platform: same database schema, same URLs, same outputs — on a fully
-supported stack (PHP 8.4, Laravel, Bootstrap 5, Vite, Stripe). The port is generally complete, but is in **alpha** stage at present - bugs are likely to be present.
+> **Status: alpha.** Feature-complete and parity-verified against the legacy
+> application, but not yet proven across a full production season. Treat it as
+> production-capable with caution, and keep backups.
 
 ## What has been ported
 
@@ -42,23 +45,38 @@ supported stack (PHP 8.4, Laravel, Bootstrap 5, Vite, Stripe). The port is gener
 
 ## Why a rewrite, and what improved
 
-The legacy app works but carries structural risks that patching cannot fix:
-SQL assembled by string interpolation, a payment transport (PayPal IPN)
-reaching end-of-life with no migration path, unmaintained vendored libraries,
-and no static analysis or test suite. The port re-hosts the exact behavior
-where each risk class has a structural fix:
+The legacy application works, but carries structural risks that patching cannot
+remove: SQL assembled by string interpolation, a payment transport (PayPal IPN)
+at end-of-life with no migration path, unmaintained vendored libraries, and no
+static analysis or automated tests. Each is a *class* of defect rather than a
+bug, so the port re-hosts the exact behavior with a structural fix for every
+class.
 
-| | Legacy | bcoem-next |
+**At a glance**
+
+- **Parity is proven, not asserted** — the legacy app runs side-by-side as an
+  executable oracle over the same tenant dump, and every fetched page is diffed.
+- **925 automated tests** (characterization, feature, integration, browser) run
+  in CI against MySQL 8 with the real baseline schema.
+- **PHPStan level 8 with a permanently empty baseline** — zero suppressions, so
+  a regression cannot be hidden.
+- **Zero-migration cutover** — an existing BCOE&M tenant dump loads as-is. No
+  upgrade scripts, no data transformation.
+- **Security is structural** — bound parameters everywhere, validated uploads,
+  scoresheets behind authorized streams.
+- **Payments are auditable** — Stripe Connect with idempotent webhooks and a
+  ledger you can reconcile, replacing a transport with no working ledger.
+
+| Dimension | Legacy | bcoem-next |
 |---|---|---|
-| Payments | PayPal/IPN (EOL Jan 2027), no working ledger | Stripe Connect + manual marking, idempotent webhooks, auditable `payments` rows |
-| Security | sprintf-SQL throughout, public scoresheet files | bound parameters everywhere, validated uploads, authorized file streams |
-| PDFs | vendored FPDF | dompdf behind one stream helper, deterministic Blade templates |
-| Frontend | Bootstrap 3, jQuery-era chrome | single Bootstrap 5 dialect, Vite build |
-| Types / analysis | none | `declare(strict_types=1)` everywhere; PHPStan max level, permanently empty baseline |
-| Testing | manual | 563+ automated tests (characterization, feature, integration, Dusk) run in CI |
-| Upgrades | long in-place migration history | legacy schema loaded as-is; real tenant dumps load directly; zero-migration cutover |
-
-The general appearance of the app has been maintained with Bootstrap 5.
+| Payments | PayPal/IPN (EOL Jan 2027), no working ledger | Stripe Connect (tenant-owned funds) + manual marking, idempotent webhooks, auditable `payments` ledger |
+| Security | `sprintf`-interpolated SQL throughout, publicly reachable scoresheet files | Bound parameters everywhere, validated uploads, authorized file streams |
+| PDFs | Vendored FPDF | dompdf behind a single stream helper, deterministic Blade templates |
+| Frontend | Bootstrap 3, jQuery-era chrome | Single Bootstrap 5 dialect, Vite build; appearance preserved |
+| Types & analysis | None | `declare(strict_types=1)` throughout; PHPStan level 8, empty baseline |
+| Testing | Manual | 925 automated tests in CI (characterization, feature, integration, Dusk) |
+| Upgrades | Long in-place migration history | Legacy schema loaded as-is; zero-migration cutover from any tenant dump |
+| Supported runtime | Unsupported PHP and extensions | PHP 8.4 and 8.5, MySQL 8 — both enforced in CI |
 
 ## How parity is proven
 
@@ -95,12 +113,33 @@ legacy/                 Frozen legacy checkout — read-only verification oracle
 
 ## Development
 
+Requires PHP 8.4+, Composer, Node 22+, and MySQL 8.
+
 ```bash
 composer install && npm ci && npm run build
 cp .env.example .env && php artisan key:generate
-php artisan test                 # MySQL with the baseline_-prefixed legacy schema required
-vendor/bin/phpstan analyse --memory-limit=1G
-vendor/bin/pint --dirty
+```
+
+The suite runs against MySQL with the `baseline_`-prefixed legacy schema, built
+from the parity oracle in `sql/`:
+
+```bash
+mysql -h 127.0.0.1 -uroot -proot -e "CREATE DATABASE IF NOT EXISTS bcoem_test"
+mysql -h 127.0.0.1 -uroot -proot bcoem_test < sql/bcoem_baseline_3.0.X.sql
+
+export DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=bcoem_test \
+  DB_USERNAME=root DB_PASSWORD=root DB_TABLE_PREFIX=baseline_ \
+  BCOEM_TEST_DB_HOST=127.0.0.1 BCOEM_TEST_DB_USER=root BCOEM_TEST_DB_PASS=root \
+  BCOEM_TEST_DB_NAME=bcoem_test
+
+# Port-added migrations only — the framework defaults collide with baseline_ tables.
+for f in $(ls database/migrations/*.php | grep -v '0001_'); do
+  php artisan migrate --force --path="$f"
+done
+
+vendor/bin/phpunit
+vendor/bin/phpstan analyse --no-progress
+vendor/bin/pint --test
 ```
 
 The dual-app verification tools take `LEGACY_DIR` (a legacy oracle checkout)
