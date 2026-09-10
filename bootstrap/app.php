@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ApplyMailSettings;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,6 +23,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // PARITY-026: locale resolution per legacy language.lang.php:42-78.
         $middleware->appendToGroup('web', SetLocale::class);
+
+        // Point the mailer at the transport chosen in site preferences
+        // (SMTP / host mail program / HTTPS provider) for every request.
+        $middleware->appendToGroup('web', ApplyMailSettings::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

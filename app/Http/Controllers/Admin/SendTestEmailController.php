@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\TestEmailMail;
+use App\Support\Mail\MailSettings;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,13 @@ final class SendTestEmailController extends Controller
         $ctx = TenantContext::load();
         $user = $request->user();
 
+        // Report the transport actually in force, so the summary reflects
+        // what will happen rather than only the (possibly unused) SMTP row.
         $settings = [
+            'transport' => MailSettings::transport($ctx) === null
+                ? (string) config('mail.default')
+                : MailSettings::label((string) MailSettings::transport($ctx)),
+            'delivers' => MailSettings::delivers($ctx),
             'from' => strtolower((string) filter_var((string) $ctx->prefsStr('prefsEmailFrom'), FILTER_SANITIZE_EMAIL)),
             'host' => (string) $ctx->prefsStr('prefsEmailHost'),
             'username' => (string) $ctx->prefsStr('prefsEmailUsername'),
@@ -59,7 +66,10 @@ final class SendTestEmailController extends Controller
                     html_entity_decode((string) $ctx->contestStr('contestName')),
                     $settings,
                 ));
-            $sent = true;
+            // A mailer that writes to the log (or the array transport) does
+            // not throw, so "no exception" alone would report success for a
+            // message that was never handed to a delivery agent.
+            $sent = $settings['delivers'];
         } catch (\Throwable $e) {
             // Legacy echoes "Message could not be sent. Mailer Error: ..." inline.
             report($e);

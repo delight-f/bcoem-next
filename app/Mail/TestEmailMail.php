@@ -20,7 +20,7 @@ final class TestEmailMail extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @param  array{from: string, host: string, username: string, encryption: string, port: string}  $settings
+     * @param  array{transport: string, delivers: bool, from: string, host: string, username: string, encryption: string, port: string}  $settings
      */
     public function __construct(
         private readonly string $contestName,
@@ -44,6 +44,7 @@ final class TestEmailMail extends Mailable
         return '<p>A request to send a test email to this address was made from the '
             .e($this->contestName.' Server').' using the following settings:</p>'
             .'<ul>'
+            .'<li><strong>Transport:</strong> '.e($this->settings['transport']).'</li>'
             .'<li><strong>Originating Email Address:</strong> '.e($this->settings['from']).'</li>'
             .'<li><strong>Host:</strong> '.e($this->settings['host']).'</li>'
             .'<li><strong>Username:</strong> '.e($this->settings['username']).'</li>'

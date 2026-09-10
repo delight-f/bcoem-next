@@ -84,11 +84,10 @@ jobs:
         run: |
           # The baseline_*-prefixed schema is loaded separately above, so the
           # Laravel framework migrations (0001_01_01_*) would collide with it
-          # (e.g. baseline_users). Run only the port-added migrations, each by
-          # explicit --path (the migrator records them, so repeats are no-ops).
-          for path in database/migrations/2026_08_24_000000_create_payments_table.php \
-                      database/migrations/2026_08_24_100000_add_prefsstripe_to_preferences_table.php \
-                      database/migrations/2026_08_31_000000_add_contest_info_extra_to_contest_info_table.php; do
+          # (e.g. baseline_users). Run every other migration by explicit
+          # --path (the migrator records them, so repeats are no-ops). Globbed
+          # rather than listed so a new migration cannot be forgotten here.
+          for path in $(ls database/migrations/*.php | grep -v '/0001_'); do
             php artisan migrate --force --path="$path"
           done
 

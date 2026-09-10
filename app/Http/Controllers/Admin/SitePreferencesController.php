@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Mail\MailSettings;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -438,6 +439,10 @@ final class SitePreferencesController extends Controller
             'prefsEmailEncrypt' => ['nullable', 'string', 'max:10'],
             'prefsEmailPort' => ['nullable', 'integer'],
             'prefsEmailCC' => ['nullable', 'in:0,1'],
+            // Transport selection (MailSettings). Optional so a form posted
+            // without the field — or an older install — keeps working.
+            'prefsEmailTransport' => ['nullable', 'in:'.implode(',', MailSettings::TRANSPORTS)],
+            'prefsEmailApiKey' => ['nullable', 'string', 'max:255'],
         ]);
 
         $from = (string) ($data['prefsEmailFrom'] ?? '');
@@ -448,6 +453,8 @@ final class SitePreferencesController extends Controller
         $password = trim((string) ($data['prefsEmailPassword'] ?? ''));
         $confirm = (string) $data['prefsEmailRegConfirm'];
         $cc = (string) ($data['prefsEmailCC'] ?? '0');
+        $transport = strtolower(trim((string) ($data['prefsEmailTransport'] ?? '')));
+        $apiKey = trim((string) ($data['prefsEmailApiKey'] ?? ''));
 
         if ($data['change-email-password-choice'] == 1) {
             // Divergence: stored as-is (see class docblock re simpleEncrypt).
@@ -462,8 +469,16 @@ final class SitePreferencesController extends Controller
             $host = (string) ($stored['prefsEmailHost'] ?? '');
             $encrypt = (string) ($stored['prefsEmailEncrypt'] ?? '');
             $port = (string) ($stored['prefsEmailPort'] ?? '');
+            $transport = strtolower(trim((string) ($stored['prefsEmailTransport'] ?? '')));
+            $apiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
             $confirm = '0';
             $cc = '0';
+        }
+
+        // An API key left blank on an unchanged provider must not wipe the
+        // stored secret (the field is never pre-filled with it).
+        if ($apiKey === '') {
+            $apiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
         }
 
         return [
@@ -474,6 +489,8 @@ final class SitePreferencesController extends Controller
             'prefsEmailHost' => self::blankToNull($host),
             'prefsEmailEncrypt' => self::blankToNull($encrypt),
             'prefsEmailPort' => self::blankToNull($port),
+            'prefsEmailTransport' => self::blankToNull($transport),
+            'prefsEmailApiKey' => self::blankToNull($apiKey),
             'prefsContact' => self::blankToNull((string) $data['prefsContact']),
             'prefsEmailRegConfirm' => $confirm,
             'prefsEmailCC' => $cc,

@@ -440,6 +440,66 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         Mail::assertSent(TestEmailMail::class, 1);
     }
 
+    public function test_email_tab_saves_transport_and_api_key(): void
+    {
+        $this->remember('preferences');
+
+        $this->put('/admin/site-preferences/email', [
+            'prefsEmailSMTP' => '1',
+            'prefsContact' => 'N',
+            'prefsEmailRegConfirm' => '1',
+            'change-email-password-choice' => '0',
+            'prefsEmailTransport' => 'resend',
+            'prefsEmailApiKey' => 're_saved_key',
+            'prefsEmailCC' => '1',
+        ]);
+
+        $p = $this->prefs();
+        self::assertSame('resend', (string) $p['prefsEmailTransport']);
+        self::assertSame('re_saved_key', (string) $p['prefsEmailApiKey']);
+    }
+
+    public function test_email_tab_keeps_stored_api_key_when_field_left_blank(): void
+    {
+        $this->remember('preferences');
+
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsEmailApiKey' => 're_existing',
+            'prefsEmailTransport' => 'resend',
+        ]);
+
+        // The key field is never pre-filled, so an unrelated save posts it blank.
+        $this->put('/admin/site-preferences/email', [
+            'prefsEmailSMTP' => '1',
+            'prefsContact' => 'N',
+            'prefsEmailRegConfirm' => '1',
+            'change-email-password-choice' => '0',
+            'prefsEmailTransport' => 'resend',
+            'prefsEmailApiKey' => '',
+            'prefsEmailCC' => '0',
+        ]);
+
+        self::assertSame('re_existing', (string) $this->prefs()['prefsEmailApiKey']);
+    }
+
+    public function test_send_test_email_does_not_claim_success_when_only_logged(): void
+    {
+        $this->remember('preferences');
+
+        // No transport chosen and the app mailer is not a delivering one, so
+        // the mailer accepts the message without any chance of arrival.
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsEmailSMTP' => '1',
+            'prefsEmailTransport' => null,
+            'prefsEmailHost' => null,
+        ]);
+
+        $this->get('/admin/send-test-email')
+            ->assertOk()
+            ->assertSee('do not deliver mail')
+            ->assertDontSee('Test email sent');
+    }
+
     public function test_send_test_email_surfaces_transport_errors_inline(): void
     {
         // Failure path: transport throws → inline error message, no exception.

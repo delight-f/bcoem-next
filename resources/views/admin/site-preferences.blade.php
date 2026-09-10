@@ -406,15 +406,39 @@
             <form method="post" action="{{ url('/admin/site-preferences/email') }}">
                 @csrf
                 @method('put')
+                @php($emailOn = (string) $p('prefsEmailSMTP') !== '0')
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Allow BCOE&amp;M to Send Emails</label>
                     <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="1" id="smtpYes" @checked($p('prefsEmailSMTP') === '1')><label class="form-check-label" for="smtpYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="1" id="smtpYes" @checked($emailOn)><label class="form-check-label" for="smtpYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="0" id="smtpNo" @checked($p('prefsEmailSMTP') !== '1')><label class="form-check-label" for="smtpNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsEmailSMTP" value="0" id="smtpNo" @checked(! $emailOn)><label class="form-check-label" for="smtpNo">No</label></div>
+                        <div class="form-text">With "No", the platform sends nothing at all — no confirmations, resets or receipts.</div>
                     </div>
                 </div>
+                <div class="mb-4 row">
+                    <label for="prefsEmailTransport" class="col-md-4 col-form-label">How Emails Are Sent</label>
+                    <div class="col-md-9">
+                        <select class="form-select" id="prefsEmailTransport" name="prefsEmailTransport" style="max-width:32rem;">
+                            <option value="" @selected(\App\Support\Mail\MailSettings::transport($ctx) === null)>
+                                Application default (from .env)
+                            </option>
+                            @foreach (\App\Support\Mail\MailSettings::TRANSPORTS as $t)
+                                <option value="{{ $t }}" @selected((string) $p('prefsEmailTransport') === $t)>
+                                    {{ \App\Support\Mail\MailSettings::label($t) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">
+                            If your host blocks outgoing SMTP (common on shared/cPanel hosting,
+                            e.g. nfshost), choose the server's own mail program, or an HTTPS
+                            provider such as Resend or Postmark — those send over the web, not
+                            through a mail port.
+                        </div>
+                    </div>
+                </div>
+                <div id="mail-group-smtp">
                 <div class="mb-4 row">
                     <label for="prefsEmailHost" class="col-md-4 col-form-label">Host</label>
                     <div class="col-md-9"><input class="form-control" id="prefsEmailHost" name="prefsEmailHost" type="text" value="{{ $p('prefsEmailHost') }}"></div>
@@ -453,6 +477,31 @@
                 <div class="mb-4 row">
                     <label for="prefsEmailPassword" class="col-md-4 col-form-label">SMTP Password</label>
                     <div class="col-md-9"><input class="form-control" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password"></div>
+                </div>
+                </div>{{-- /mail-group-smtp --}}
+                <div id="mail-group-api">
+                    <div class="mb-4 row">
+                        <label for="prefsEmailApiKey" class="col-md-4 col-form-label">Provider API Key</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="prefsEmailApiKey" name="prefsEmailApiKey" type="password" autocomplete="new-password"
+                                   placeholder="{{ (string) $p('prefsEmailApiKey') !== '' ? 'Saved — leave blank to keep' : '' }}">
+                            <div class="form-text">From your Resend or Postmark dashboard. Leave blank to keep the stored key.</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="mail-group-sendmail">
+                    <div class="mb-4 row">
+                        <label class="col-md-4 col-form-label">Local Mail Program</label>
+                        <div class="col-md-9">
+                            <div class="form-text mt-0">
+                                Messages are handed to this server's own mail program — the same one
+                                behind PHP's <code>mail()</code> — so no outgoing SMTP port is needed.
+                                The program path is set with <code>MAIL_SENDMAIL_PATH</code> in
+                                <code>.env</code> (cPanel hosts usually want
+                                <code>/usr/sbin/sendmail -t -i</code>).
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsEmailFrom" class="col-md-4 col-form-label">Originating Email Address</label>
@@ -496,12 +545,43 @@
                             <input class="form-check-input" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
                         {{-- Legacy sends the test email directly from
                              send_test_email.admin.php (fancybox iframe);
-                             ported as SendTestEmailController. --}}
-                        <a data-fancybox data-type="iframe" class="modal-window-link hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
+                             ported as SendTestEmailController. Kept on its own
+                             line: inline with the radios it read as a label. --}}
+                        <div class="mt-3">
+                            <a data-fancybox data-type="iframe" class="modal-window-link hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
+                        </div>
+                        @unless (\App\Support\Mail\MailSettings::delivers($ctx))
+                            <div class="alert alert-warning mt-3 mb-0">
+                                The current settings do not deliver mail. Sending is
+                                {{ \App\Support\Mail\MailSettings::disabled($ctx) ? 'switched off above' : 'set to log only' }},
+                                so the test will report success without an email arriving.
+                            </div>
+                        @endunless
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Email Preferences</button>
             </form>
+            <script>
+                // Show only the fields that belong to the selected transport.
+                // Hidden inputs still submit, so switching back keeps values.
+                (function () {
+                    var select = document.getElementById('prefsEmailTransport');
+                    if (!select) { return; }
+                    var groups = {
+                        smtp: document.getElementById('mail-group-smtp'),
+                        api: document.getElementById('mail-group-api'),
+                        sendmail: document.getElementById('mail-group-sendmail')
+                    };
+                    function sync() {
+                        var v = select.value;
+                        groups.smtp.hidden = v !== 'smtp';
+                        groups.api.hidden = v !== 'resend' && v !== 'postmark';
+                        groups.sendmail.hidden = v !== 'sendmail';
+                    }
+                    select.addEventListener('change', sync);
+                    sync();
+                })();
+            </script>
         @elseif ($go === 'payment')
             <form method="post" action="{{ url('/admin/site-preferences/payment') }}">
                 @csrf
