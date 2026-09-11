@@ -177,7 +177,7 @@
 </head>
 <body>
 
-<a name="top"></a>
+<a id="top" name="top"></a>
 
 @if ($isAdminSide)
         {{-- Issue-5: the admin top bar is a Bootstrap 5 dark navbar. .admin-topbar
@@ -360,10 +360,22 @@
                 <button type="button" class="btn btn-link nav-icon-btn d-md-none" data-bs-toggle="collapse" data-bs-target="#nav-menu" aria-controls="nav-menu" aria-expanded="false" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></button>
                 <section id="nav-menu" class="collapse navbar-collapse justify-content-end">
                     @php
-                        $onLanding = request()->routeIs('home');
+                        // The root route is named home.legacy (routes/web.php):
+                        // "/" doubles as the legacy URL entry point. Matching the
+                        // real name is what makes the in-page anchors relative (#…)
+                        // on the landing page; every non-landing page keeps
+                        // absolute url('/').'#…' links so a click navigates home
+                        // and then scrolls.
+                        $onLanding = request()->routeIs('home.*');
                     @endphp
-                    @if (! ($judgingStarted ?? false))
+                    {{-- Each link's gate mirrors the include gate of the section it
+                         points at (home.blade.php): Rules/Entry Info follow
+                         $windows->futureJudgingSessions > 0, Volunteers follows
+                         ! $judgingStarted. --}}
+                    @if (($futureJudgingSessions ?? 0) > 0)
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#rules' : url('/').'#rules' }}">{{ __('site.rules') }}</a>
+                    @endif
+                    @if (! ($judgingStarted ?? false))
                         <a class="nav-item nav-link" href="{{ $onLanding ? '#volunteers' : url('/').'#volunteers' }}">{{ __('site.volunteers') }}</a>
                     @endif
                     @if (($futureJudgingSessions ?? 0) > 0)
@@ -489,13 +501,20 @@
             <p class="alert alert-warning"><span class="fa fa-lg fa-exclamation-circle"></span>
                 <strong>{{ __('site.login_problem') }}</strong> {{ __('site.login_problem_detail') }}</p>
         @endif
-        {{-- alerts.pub.php stacked info alerts ("For Your Information") --}}
+        {{-- Stacked info alerts ("For Your Information"): a slim, non-urgent
+             strip (role=status, not role=alert) so it reads as an invitation
+             rather than a warning. --}}
         @if (! empty($fyiAlerts))
-            <div class="alert alert-info d-print-none" role="alert">
-                <strong>{{ __('site.fyi') }}</strong>
-                @foreach ($fyiAlerts as $fyiAlert)
-                    <p class="mb-1">{!! $fyiAlert !!}</p>
-                @endforeach
+            <div class="fyi-alert d-print-none" role="status" aria-live="polite">
+                <div class="container-xxl d-flex align-items-start gap-3">
+                    <i class="fa fa-circle-info fyi-alert-icon" aria-hidden="true"></i>
+                    <div class="flex-grow-1">
+                        <span class="fyi-alert-title">{{ __('site.fyi') }}</span>
+                        @foreach ($fyiAlerts as $fyiAlert)
+                            <p class="fyi-alert-line">{!! $fyiAlert !!}</p>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         @endif
         @if (isset($showHero) && $showHero)
@@ -518,7 +537,7 @@
             </div>
         @endif
 
-        <div id="salutation" class="text-white bg-black pt-4 pb-3 d-print-none">
+        <div id="salutation" class="text-white bg-black pt-3 pb-2 d-print-none">
             <section class="container-xxl">
                 {!! $salutation ?? '' !!}
             </section>
@@ -651,7 +670,11 @@
     @endif
 </div>
 
-<footer class="site-footer text-white justify-content-center container-fluid fixed-bottom pt-4 d-print-none">
+{{-- Public footer flows with the document (static) so it can never overlap
+     content or the fixed #sticky-home back-to-top button at short viewport
+     heights. The admin frame keeps its fixed dark footer (its layout expects a
+     fixed bottom bar under the fixed topbar). --}}
+<footer class="site-footer text-white container-fluid {{ $isAdminSide ? 'fixed-bottom' : 'mt-5' }} pt-4 d-print-none">
     <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M 3.1.0 &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
 </footer>
 

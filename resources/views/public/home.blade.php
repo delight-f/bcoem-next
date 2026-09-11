@@ -7,6 +7,14 @@
          before judging starts, then sponsors + contact. --}}
 
     <section id="at-a-glance" class="landing-page-section pb-4">
+        {{-- Deck header: shares .landing-page-section-header with every other
+             landing section so the cards no longer start abruptly under the
+             salutation band. Gated on $cardsVisible so it only titles the deck
+             (not the results state) and matches the deck's d-print-none. --}}
+        @if ($cardsVisible)
+            <header class="landing-page-section-header py-2 d-print-none"><h1>{{ __('site.at_a_glance') }}</h1></header>
+        @endif
+
         {{-- judge_closed.pub.php: shown once registration/entry are closed
              and no future judging session remains (any winner-display state). --}}
         @if ($blurbCounts !== null)

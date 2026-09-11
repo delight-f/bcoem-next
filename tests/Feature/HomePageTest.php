@@ -40,6 +40,55 @@ final class HomePageTest extends PublicSurfaceTestCase
         }
     }
 
+    public function test_undated_pending_windows_never_render_a_dangling_date(): void
+    {
+        $snap = $this->snapshotFixture();
+
+        try {
+            DB::table('contest_info')->where('id', 1)->update([
+                'contestRegistrationOpen' => null,
+                'contestRegistrationDeadline' => null,
+                'contestEntryOpen' => null,
+                'contestEntryDeadline' => null,
+            ]);
+
+            $response = $this->get('/');
+            $response->assertOk();
+            $html = (string) $response->getContent();
+
+            // The pre-modernisation bug: an undated window still emitted
+            // "…will open ." with an empty date.
+            self::assertStringNotContainsString('will open .', $html);
+            self::assertStringContainsString(__('site.glance_dates_tba'), $html);
+        } finally {
+            $this->restoreFixture($snap);
+        }
+    }
+
+    public function test_future_windows_are_not_labelled_closed(): void
+    {
+        $snap = $this->snapshotFixture();
+
+        try {
+            $now = time();
+            DB::table('contest_info')->where('id', 1)->update([
+                'contestRegistrationOpen' => (string) ($now + 864000),
+                'contestRegistrationDeadline' => (string) ($now + 1728000),
+                'contestEntryOpen' => (string) ($now + 864000),
+                'contestEntryDeadline' => (string) ($now + 1728000),
+            ]);
+
+            $response = $this->get('/');
+            $response->assertOk();
+            $html = (string) $response->getContent();
+
+            // A window that has not opened yet reads as neutral, not failed.
+            self::assertStringContainsString(__('site.state_before'), $html);
+        } finally {
+            $this->restoreFixture($snap);
+        }
+    }
+
     public function test_results_hidden_before_reveal(): void
     {
         // anon-base dump: judging dates in the future relative to its
@@ -80,14 +129,13 @@ final class HomePageTest extends PublicSurfaceTestCase
     }
 
     /**
-     * The pro-edition at-a-glance deck (at-a-glance.pub.php): registration
-     * window cards only — the amateur Entries deck, plus Judging and Awards
-     * (which need judging sessions / a started schedule), stay absent.
+     * Registration window cards only — Judging and Awards (which need judging
+     * sessions / a started schedule) stay absent.
      *
      * The shared fixture is mutated by siblings mid-run, so this snapshot &
      * restores the rows it touches rather than trusting the ambient state.
      */
-    public function test_glance_cards_match_legacy_pro_deck(): void
+    public function test_glance_cards_render_registration_windows(): void
     {
         $snap = $this->snapshotFixture();
 
@@ -125,8 +173,7 @@ final class HomePageTest extends PublicSurfaceTestCase
             self::assertSame([
                 'Entry Registration',
                 'Account Registration',
-                'Judge Registration',
-                'Steward Registration',
+                'Volunteer Registration',
                 'Entry Drop-Off',
                 'Entry Shipping',
             ], $this->glanceHeaders((string) $response->getContent()));
@@ -136,11 +183,11 @@ final class HomePageTest extends PublicSurfaceTestCase
     }
 
     /**
-     * Amateur edition deck with judging sessions, awards, drop-off and
-     * shipping all configured renders the full legacy card set in order;
-     * unsetting the optional data hides exactly those cards.
+     * Full deck with judging sessions, awards, drop-off and shipping all
+     * configured renders every card in order; unsetting the optional data
+     * hides exactly those cards.
      */
-    public function test_glance_cards_seeded_and_hidden_like_legacy(): void
+    public function test_glance_cards_seeded_and_trimmed(): void
     {
         $snap = $this->snapshotFixture();
 
@@ -184,15 +231,13 @@ final class HomePageTest extends PublicSurfaceTestCase
             $response = $this->get('/');
             $response->assertOk();
             self::assertSame([
-                'Entries',
-                'Awards',
-                'Judging',
                 'Entry Registration',
                 'Account Registration',
-                'Judge Registration',
-                'Steward Registration',
+                'Volunteer Registration',
                 'Entry Drop-Off',
                 'Entry Shipping',
+                'Judging',
+                'Awards',
             ], $this->glanceHeaders((string) $response->getContent()));
 
             // Drop the optional gating data: the conditional cards disappear
@@ -213,11 +258,9 @@ final class HomePageTest extends PublicSurfaceTestCase
             $response = $this->get('/');
             $response->assertOk();
             self::assertSame([
-                'Entries',
                 'Entry Registration',
                 'Account Registration',
-                'Judge Registration',
-                'Steward Registration',
+                'Volunteer Registration',
             ], $this->glanceHeaders((string) $response->getContent()));
         } finally {
             $this->restoreFixture($snap);

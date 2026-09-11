@@ -1,5 +1,10 @@
 import * as bootstrap from 'bootstrap/dist/js/bootstrap.bundle.js';
 
+// Mark the document as JS-enabled. CSS scopes JS-only states (the
+// .reveal-element hidden state) under this class, so content is visible by
+// default whenever the bundle fails to load or JS is disabled.
+document.documentElement.classList.add('js');
+
 // The BS5 UMD attaches to module.exports under Vite (CJS branch), so it never
 // reaches window.bootstrap — expose it explicitly for callers that use
 // bootstrap.Modal/.Offcanvas programmatically (session modals, login reopen).

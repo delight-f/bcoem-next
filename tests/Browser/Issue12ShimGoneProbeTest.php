@@ -46,7 +46,7 @@ final class Issue12ShimGoneProbeTest extends DuskTestCase
             $this->assertTrue($nav['menuCollapse'], '#nav-menu not a BS5 collapse');
             $this->assertTrue($nav['menuCollapseNavbar'], '#nav-menu not navbar-collapse');
 
-            // Hero + salutation + fixed footer visual invariants.
+            // Hero + salutation + static footer visual invariants.
             $probe = $browser->script("
                 const hero = document.getElementById('hero');
                 const sal = document.getElementById('salutation');
@@ -62,7 +62,7 @@ final class Issue12ShimGoneProbeTest extends DuskTestCase
             $this->assertSame('flex', $probe['heroDisplay'], 'hero not a flex row (lost d-flex)');
             $this->assertSame('rgb(255, 255, 255)', $probe['heroColor'], 'hero lost white text');
             $this->assertSame('rgb(0, 0, 0)', $probe['salBg'], 'salutation lost black band');
-            $this->assertSame('fixed', $probe['footerPos'], 'public footer not fixed');
+            $this->assertSame('static', $probe['footerPos'], 'public footer should be static (flows with the document)');
         });
     }
 

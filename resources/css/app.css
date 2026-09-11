@@ -95,9 +95,13 @@ body {
     position: relative;
     margin-top: 55px;
     min-height: 100%;
+    color: #000;
+}
+/* The admin frame keeps a fixed bottom footer, so it reserves space beneath
+   its content; public pages use a static footer that needs no clearance. */
+[data-bs-theme="bcoem-brux"] body {
     padding-bottom: 60px;
     margin-bottom: 60px;
-    color: #000;
 }
 
 h1, h2, h3, h4, h5 {
@@ -146,22 +150,29 @@ html {
     margin: -50px 0 0;
 }
 
-/* Reveal Elements (activated by IntersectionObserver in app.js) */
+/* Reveal Elements (activated by IntersectionObserver in app.js). The hidden
+   state is scoped under the `js` class that app.js adds to <html>, so content
+   renders fully visible when JavaScript is unavailable or the bundle fails to
+   load — JS is the only thing that may hide then reveal it. */
 .reveal-element {
     position: relative;
-    transform: translateY(-15px);
-    opacity: 0;
     transition: 1s all ease;
 }
-.reveal-element.active-element {
+.js .reveal-element {
+    transform: translateY(-15px);
+    opacity: 0;
+}
+.js .reveal-element.active-element {
     transform: translateY(0);
     opacity: 1;
 }
 
-/* Hero */
+/* Hero. Kept intentionally short: the hero is immediately followed by the
+   black salutation band (#salutation), so a tall hero stacked too much dark
+   chrome before any content. */
 @media screen and (max-width: 768px) {
     .layout-hero {
-        min-height: 50vh;
+        min-height: 30vh;
     }
     .layout-hero h1 {
         font-size: 3.2em;
@@ -170,7 +181,7 @@ html {
 }
 @media screen and (min-width: 769px) {
     .layout-hero {
-        min-height: 40vh;
+        min-height: 24vh;
     }
     .layout-hero h1 {
         font-size: 4.2em;
@@ -270,7 +281,6 @@ html {
     .landing-page-section-header {
         border-bottom: 5px solid #000;
         margin-bottom: 20px;
-        width: 90hw;
     }
     .landing-page-section-header h1 {
         font-size: 2.2em;
@@ -304,7 +314,6 @@ html {
     .landing-page-section-header {
         border-bottom: 5px solid #000;
         margin: 20px 0 30px 0;
-        width: 90hw;
     }
     .landing-page-section-header h1 {
         font-size: 2.5em;
@@ -360,6 +369,16 @@ html {
 }
 
 /* At a Glance Cards */
+/* Landing deck: cap the width (at container-xxl each 3-col card was very wide
+   with long, whitespace-heavy lines) and centre it. The row also carries
+   Bootstrap's .justify-content-center so an incomplete final row (5 or 7
+   cards at 3 columns) is centred instead of leaving a ragged hole. The stacked
+   sidebar variant never gets this class, so it keeps full width. */
+.glance-deck {
+    max-width: 68rem;
+    margin-left: auto;
+    margin-right: auto;
+}
 .table { font-size: 14px; }
 
 /* Account */
@@ -411,37 +430,212 @@ html {
     margin-bottom: 1rem;
 }
 
-/* ---- Glance cards (at-a-glance.pub.php). Unlayered: beats the `bs5` layer
-   .badge/.card primitives so the legacy glance look is preserved. ---- */
-.glance-card-bg {
-    background-color: #fefefe;
-    border: 1px solid #aeaeae;
-    box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+/* ---- "For Your Information" band (public landing alerts).
+   Rendered directly beneath the fixed dark navbar in the header. It is a
+   full-bleed tinted band with its own padding, so it reads as a deliberate
+   strip with breathing room from the nav instead of stray text. ---- */
+/* Breathing room between the fixed dark navbar and the band. Padding, not
+   margin: a margin here would collapse into the body's top offset and have
+   no effect. */
+.site-header:has(.fyi-alert) {
+    padding-top: 0.65rem;
 }
-.glance-card-text {
-    font-family: var(--font-family-sans-serif);
+.fyi-alert {
+    background-color: #eaf3fd;
+    border-bottom: 1px solid #cfe2ff;
+    color: #084298;
+    padding: 0.9rem 0;
+}
+.fyi-alert-icon {
+    flex: 0 0 auto;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: #0d6efd;
+}
+.fyi-alert-title {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0a58ca;
+    margin-bottom: 0.2rem;
+}
+.fyi-alert-line {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+.fyi-alert-line + .fyi-alert-line {
+    margin-top: 0.3rem;
+}
+
+/* ---- At-a-glance cards (public landing + account sidebar).
+   Modern card: a tinted surface and bold accent per state, a soft shadow, an
+   inline status chip and a condensed date lead. Unlayered so the colour
+   variants beat the `bs5` layer's .card defaults. ---- */
+.glance-card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-top: 5px solid #6c757d;
+    border-radius: 0.6rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+/* Domain accents — one hue per card subject, so the deck stays legible
+   regardless of the (shared) window state. */
+.glance-card--blue {
+    background-color: #f2f7fe;
+    border-color: #cfe2ff;
+    border-top-color: #0d6efd;
+}
+.glance-card--indigo {
+    background-color: #f5f3ff;
+    border-color: #ddd6fe;
+    border-top-color: #6610f2;
+}
+.glance-card--teal {
+    background-color: #f0fdfa;
+    border-color: #ccfbf1;
+    border-top-color: #0f766e;
+}
+.glance-card--cyan {
+    background-color: #ecfeff;
+    border-color: #cffafe;
+    border-top-color: #0891b2;
+}
+.glance-card--purple {
+    background-color: #faf5ff;
+    border-color: #e9d5ff;
+    border-top-color: #6f42c1;
+}
+.glance-card--amber {
+    background-color: #fffbeb;
+    border-color: #fde68a;
+    border-top-color: #b45309;
+}
+/* Tolerate the legacy state-colour names still used by older card payloads. */
+.glance-card--success { background-color: #f3fbf6; border-color: #c9e7d3; border-top-color: #198754; }
+.glance-card--info { background-color: #f2f7fe; border-color: #cfe2ff; border-top-color: #0d6efd; }
+.glance-card--primary { background-color: #f2f7fe; border-color: #cfe2ff; border-top-color: #0d6efd; }
+.glance-card--secondary { background-color: #f7f8f9; border-color: #dee2e6; border-top-color: #6c757d; }
+.glance-card--danger { background-color: #fdf3f4; border-color: #f5c2c7; border-top-color: #dc3545; }
+
+.glance-card-body {
+    padding: 1rem 1.15rem 1.15rem;
 }
 .glance-card-body h5 {
-    margin: 0.5em 0;
+    margin: 0;
 }
 .glance-header {
-    font-weight: 800;
+    font-weight: 700;
+    font-size: 1.05rem;
     font-family: var(--font-family-sans-serif);
 }
-.badge.glance-status-pill {
-    width: 45%;
-    font-size: 0.85em;
-    font-weight: 500;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 3px 3px 0px;
+.glance-header--blue { color: #084298; }
+.glance-header--indigo { color: #4c1d95; }
+.glance-header--teal { color: #115e59; }
+.glance-header--cyan { color: #155e75; }
+.glance-header--purple { color: #5b21b6; }
+.glance-header--amber { color: #92400e; }
+.glance-header--success { color: #0f5132; }
+.glance-header--info { color: #084298; }
+.glance-header--primary { color: #084298; }
+.glance-header--secondary { color: #495057; }
+.glance-header--danger { color: #842029; }
+
+.glance-card-text {
+    font-size: 0.95rem;
+    color: #343a40;
 }
-.glance-status-pill.bg-success-glance-pill { background-color: #0F5132; color: #fff; }
-.glance-status-pill.bg-secondary-glance-pill { background-color: #495057; color: #fff; }
-.glance-status-pill.bg-danger-glance-pill { background-color: #842029; color: #fff; }
-.glance-status-pill.bg-primary-glance-pill { background-color: #084298; color: #fff; }
-.glance-header.text-success-glance-header { color: #0F5132; }
-.glance-header.text-secondary-glance-header { color: #495057; }
-.glance-header.text-danger-glance-header { color: #842029; }
-.glance-header.text-primary-glance-header { color: #084298; }
+.glance-card-text ul {
+    margin-bottom: 0;
+}
+.glance-date {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #212529;
+}
+.glance-date-sub {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.glance-status-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+    color: #fff;
+    background-color: #6c757d;
+}
+.glance-status-pill--success { background-color: #198754; }
+.glance-status-pill--info { background-color: #0d6efd; }
+.glance-status-pill--primary { background-color: #0d6efd; }
+.glance-status-pill--secondary { background-color: #6c757d; }
+.glance-status-pill--dark { background-color: #212529; }
+.glance-status-pill--danger { background-color: #dc3545; }
+
+/* Solid buttons in the domain accent hues (BS5 has no btn-blue etc.). */
+.btn-blue {
+    --bs-btn-bg: #0d6efd;
+    --bs-btn-border-color: #0d6efd;
+    --bs-btn-hover-bg: #0b5ed7;
+    --bs-btn-hover-border-color: #0a58ca;
+    --bs-btn-active-bg: #0a58ca;
+    --bs-btn-active-border-color: #0a53be;
+    --bs-btn-color: #fff;
+}
+.btn-indigo {
+    --bs-btn-bg: #6610f2;
+    --bs-btn-border-color: #6610f2;
+    --bs-btn-hover-bg: #5a0ed3;
+    --bs-btn-hover-border-color: #540dc4;
+    --bs-btn-active-bg: #540dc4;
+    --bs-btn-active-border-color: #4e0cb6;
+    --bs-btn-color: #fff;
+}
+.btn-teal {
+    --bs-btn-bg: #0f766e;
+    --bs-btn-border-color: #0f766e;
+    --bs-btn-hover-bg: #0d655e;
+    --bs-btn-hover-border-color: #0c5d57;
+    --bs-btn-active-bg: #0c5d57;
+    --bs-btn-active-border-color: #0b554f;
+    --bs-btn-color: #fff;
+}
+.btn-cyan {
+    --bs-btn-bg: #0891b2;
+    --bs-btn-border-color: #0891b2;
+    --bs-btn-hover-bg: #077d99;
+    --bs-btn-hover-border-color: #06718a;
+    --bs-btn-active-bg: #06718a;
+    --bs-btn-active-border-color: #05657c;
+    --bs-btn-color: #fff;
+}
+.btn-purple {
+    --bs-btn-bg: #6f42c1;
+    --bs-btn-border-color: #6f42c1;
+    --bs-btn-hover-bg: #5f39a6;
+    --bs-btn-hover-border-color: #593592;
+    --bs-btn-active-bg: #593592;
+    --bs-btn-active-border-color: #533183;
+    --bs-btn-color: #fff;
+}
+.btn-amber {
+    --bs-btn-bg: #b45309;
+    --bs-btn-border-color: #b45309;
+    --bs-btn-hover-bg: #9b4708;
+    --bs-btn-hover-border-color: #8e4107;
+    --bs-btn-active-bg: #8e4107;
+    --bs-btn-active-border-color: #813b06;
+    --bs-btn-color: #fff;
+}
 
 /* ---- Bruxellensis admin-side theme (migrated from css/bruxellensis.css).
    Active only when <html data-bs-theme="bcoem-brux"> (admin/backoffice/eval

@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Route;
 // clean port URLs per the HANDOVER §4.3 contract; anything without a
 // recognized legacy section renders home as before.
 Route::get('/', LegacyRedirectController::class)->name('home.legacy');
-Route::get('/index.php', LegacyRedirectController::class);
+Route::get('/index.php', LegacyRedirectController::class)->name('home.index');
 // Legacy awards.php → /awards (301, query preserved) — the awards
 // presentation shipped as a top-level legacy file, so old links land here.
 Route::get('/awards.php', fn (Request $r) => new RedirectResponse('/awards'.($r->getQueryString() ? '?'.$r->getQueryString() : ''), 301));
