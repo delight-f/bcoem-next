@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Legacy URL redirect contract (HANDOVER §4.3): every canonical
- * role|legacy|port pair from tools/parity/urls.txt redirects off the bcoem
+ * role|legacy|port pair from tests/fixtures/legacy-urls.txt redirects off the bcoem
  * query-string shape onto the clean port URL; unknown sections fall back
  * to home; the login form's process.inc.php POST keeps method+body (307)
  * because the port login accepts the legacy field names verbatim.
@@ -53,7 +53,7 @@ final class LegacyUrlRedirectTest extends PublicSurfaceTestCase
      */
     public static function urlsProvider(): array
     {
-        $lines = file(dirname(__DIR__, 2).'/tools/parity/urls.txt', FILE_IGNORE_NEW_LINES) ?: [];
+        $lines = file(dirname(__DIR__, 2).'/tests/fixtures/legacy-urls.txt', FILE_IGNORE_NEW_LINES) ?: [];
 
         $cases = [];
         foreach ($lines as $line) {

@@ -563,7 +563,7 @@ final class BrewController extends Controller
         $set = $ctx->prefsStr('prefsStyleSet');
         // Under the BJCP2025 set only C-groups read the 2025 rows; every
         // other group falls back to BJCP2021, matching legacy style
-        // resolution (process_brewing.inc.php:335-341 — season-sim §8.3).
+        // resolution (process_brewing.inc.php:335-341).
         $version = $set === 'BJCP2025'
             ? (mb_substr(self::styleSort($code), 0, 1) === 'C' ? 'BJCP2025' : 'BJCP2021')
             : $set;

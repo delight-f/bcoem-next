@@ -12,7 +12,7 @@ use Tests\DuskTestCase;
  * key surfaces at desktop and tablet width for the human visual gate:
  * admin dashboard, a representative admin form (desktop + tablet, proving the
  * BS5 grid tier-shift), a judging/scoresheet page, the public home, and an
- * auth page. Frames land in tools/parity/screenshots/ for the user's review.
+ * auth page. Frames land in tests/Browser/screenshots/ for the user's review.
  */
 final class VisualScreenshotPassTest extends DuskTestCase
 {
@@ -20,7 +20,7 @@ final class VisualScreenshotPassTest extends DuskTestCase
 
     private const ADMIN_PASS = 'bcoem';
 
-    private const SHOT_DIR = __DIR__.'/../../tools/parity/screenshots';
+    private const SHOT_DIR = __DIR__.'/screenshots';
 
     public function test_issue13_visual_screenshot_pass(): void
     {

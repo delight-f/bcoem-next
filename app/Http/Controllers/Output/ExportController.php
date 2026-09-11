@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * "All Entries: All Data" CSV export (spec §7 P5.3) — the one artifact class
- * spec §8.3 byte-compares at graduation.
+ * "All Entries: All Data" CSV export (spec §7 P5.3) — byte-for-byte
+ * compatible with the legacy export.
  *
  * Legacy: output/export.output.php ($section=export-entries, $go=csv,
  * $action=all, $tb=all) + includes/db/output_entries_export*.db.php.

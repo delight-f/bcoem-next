@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
  * dispatch and includes/process.inc.php POST targets); every mapped shape
  * 301s to the clean port URL so old links keep working drop-in.
  *
- * The map is hand-written from tools/parity/urls.txt (canonical inventory)
+ * The map is hand-written from tests/fixtures/legacy-urls.txt (canonical inventory)
  * cross-checked against index.legacy.php and process.inc.php — never
  * invented. Requests under /index.php and plain "/" both land on this
  * controller because the front controller strips its own script name from

@@ -140,7 +140,7 @@ green because the old shim still exists until #12.
   `sql/bcoem_baseline_3.0.X.sql`). Feature tests skip locally without MySQL.
 - Dev server already running on :8000 (`php artisan serve`), plus a raw `php -S` on 8899.
 - Admin login for browser work: `smoke.p57@brewingcompetitions.com` / `bcoem` (level 0).
-- graphify: `graphify-out/` exists with a presentation-layer graph (resources/, docs/parity,
+- graphify: `graphify-out/` exists with a presentation-layer graph (resources/,
   package.json, vite.config.js). Query with `graphify query "…"` or the `/graphify` skill.
 
 ---

@@ -31,9 +31,6 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .scratch/
-tools/parity/reports/
-docs/parity/PARITY-PLAN-*.md
-tools/parity/screenshots/
 /mods/*
 !/mods/.gitkeep
 .phpunit.result.cache
