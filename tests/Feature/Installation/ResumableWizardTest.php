@@ -271,14 +271,17 @@ final class ResumableWizardTest extends InstallationTestCase
 
         $this->actingAs($admin)->postJson('/upgrade/run', ['token' => $token])->assertOk();
 
-        // The first poll runs the backup alone. The second enters maintenance,
-        // and because the site is 503'd while maintenance is on, that same
-        // request must finish the remaining steps (migrate throws here).
-        $backupStep = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
-        $this->assertSame(1, $backupStep['cursor'] ?? null);
-        $this->assertSame('running', $backupStep['status'] ?? null);
+        // One step per request: backup, then maintenance, then the throw. The
+        // post-maintenance poll must be 200 — that is the exemption this test
+        // guards alongside the reachability test below.
+        $first = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        $this->assertSame(1, $first['cursor'] ?? null);
+        $this->assertSame('running', $first['status'] ?? null);
 
-        $terminal = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        $terminal = $first;
+        for ($i = 0; $i < 6 && ! in_array($terminal['status'] ?? null, ['complete', 'failed'], true); $i++) {
+            $terminal = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        }
 
         $error = is_array($terminal['error'] ?? null) ? $terminal['error'] : [];
 
@@ -294,6 +297,51 @@ final class ResumableWizardTest extends InstallationTestCase
         $tracker = new ProgressTracker;
         $this->assertTrue($tracker->acquire('upgrade'));
         $tracker->release('upgrade');
+    }
+
+    /**
+     * The exemption in bootstrap/app.php: the site is down for everyone, but
+     * the upgrade control plane must stay reachable so the upgrade that put it
+     * down can finish. Without it, the poll after the maintenance step is 503.
+     */
+    public function test_upgrade_progress_is_reachable_while_the_site_is_in_maintenance(): void
+    {
+        $this->importBaseline();
+        DB::table('bcoem_sys')->where('id', 1)->update(['setup' => 1, 'version' => '3.0.1.0']);
+        file_put_contents($this->root.'/VERSION', '4.0.0');
+
+        $this->app->instance(UpgradeService::class, new UpgradeService(new InstallationService($this->root), $this->root));
+
+        $admin = $this->admin();
+        $token = 'resumemaint001';
+
+        $this->actingAs($admin)->postJson('/upgrade/run', ['token' => $token])->assertOk();
+
+        // Step 0: backup, site still up.
+        $backup = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        $this->assertSame(1, $backup['cursor'] ?? null);
+        $this->assertFalse(app(Application::class)->isDownForMaintenance());
+
+        // Step 1: maintenance on.
+        $maintenance = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        $this->assertSame(2, $maintenance['cursor'] ?? null);
+        $this->assertTrue(app(Application::class)->isDownForMaintenance());
+
+        // The public site is down…
+        $this->get('/')->assertStatus(503);
+
+        // …but the control plane stays reachable and advances exactly one step.
+        $next = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        $this->assertSame(3, $next['cursor'] ?? null);
+
+        // Finish: the last step exits maintenance and completes in band.
+        $terminal = $next;
+        for ($i = 0; $i < 5 && ! in_array($terminal['status'] ?? null, ['complete', 'failed'], true); $i++) {
+            $terminal = (array) $this->actingAs($admin)->getJson('/upgrade/progress?token='.$token)->assertOk()->json();
+        }
+
+        $this->assertSame('complete', $terminal['status'] ?? null);
+        $this->assertFalse(app(Application::class)->isDownForMaintenance());
     }
 
     public function test_upgrade_completes_in_band_when_the_last_step_runs(): void

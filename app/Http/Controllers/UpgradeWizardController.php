@@ -8,7 +8,6 @@ use App\Jobs\RunUpgradeJob;
 use App\Services\Installation\UpgradeService;
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -97,8 +96,7 @@ final class UpgradeWizardController extends Controller
         }
 
         // ponytail: this GET mutates. It is gated by the 48-hex token and a
-        // live marker; also requiring the session is impossible because the
-        // key step rotates APP_KEY mid-upgrade and invalidates the cookie.
+        // live marker, and it is the only path that can resume a dead upgrade.
         $marker = $tracker->get($token);
         if ($marker === null || in_array($marker['status'], ['complete', 'failed'], true)) {
             return response()->json($marker ?? ['status' => 'unknown']);
@@ -109,24 +107,12 @@ final class UpgradeWizardController extends Controller
         }
 
         try {
-            // ponytail: one step is one request, but PreventRequestsDuringMaintenance
-            // 503s every request once the maintenance step has run. The steps
-            // that run while the site is down (migrate, fixups, caches, marker,
-            // exit) must therefore finish in the same request, or the next poll
-            // could never reach them and the site would stay down.
+            // Exempt from maintenance mode in bootstrap/app.php: this route is
+            // the control plane that has to finish the upgrade that took the
+            // site down. One step per request.
             @set_time_limit(0);
 
-            $guard = 0;
-            do {
-                $running = $tracker->raw($token) ?? $raw;
-                $cursor = (int) ($running['cursor'] ?? 0);
-
-                RunUpgradeJob::dispatch($token, $cursor);
-
-                $marker = $tracker->get($token) ?? $marker;
-            } while ($guard++ < 10
-                && ! in_array($marker['status'], ['complete', 'failed'], true)
-                && app(Application::class)->isDownForMaintenance());
+            RunUpgradeJob::dispatch($token, $marker['cursor']);
         } finally {
             $tracker->release('step-'.$token);
         }

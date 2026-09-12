@@ -30,6 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'webhooks/paypal',
         ]);
 
+        // The upgrade wizard is the control plane that must stay reachable while
+        // the site is down: the operator needs it to finish the upgrade that put
+        // the site into maintenance. Access stays gated to a Top-Level
+        // Administrator by EnsureInstalled, and the wizard exits maintenance on
+        // its last step.
+        $middleware->preventRequestsDuringMaintenance(['upgrade', 'upgrade/*']);
+
         // Upstream 3.1.0 custom session timeout. PREPENDED, not appended:
         // StartSession resolves the session driver (and its idle window) from
         // config at startup, so the preference must be applied before it runs.
