@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -119,7 +120,10 @@ final class InstallWizardController extends Controller
             'app_url' => $data['app_url'],
             'admin_name' => $data['admin_name'],
             'admin_email' => $data['admin_email'],
-            'admin_password' => $data['admin_password'],
+            // Encrypted before it reaches the session store: SESSION_ENCRYPT is
+            // off by default, so a plaintext password would wait in the clear
+            // in the session store between screens 4 and 6.
+            'admin_password' => Crypt::encryptString($data['admin_password']),
         ]);
 
         return redirect()->route('wizard.install.confirm');
@@ -151,7 +155,13 @@ final class InstallWizardController extends Controller
 
         $db = $request->session()->get('wizard.install.db');
         $site = $request->session()->get('wizard.install.site');
-        if (! is_array($db) || ! is_array($site)) {
+        if (! is_array($db) || ! is_array($site) || ! is_string($site['admin_password'] ?? null)) {
+            return response()->json(['error' => 'Your details expired. Please start again.'], 422);
+        }
+
+        try {
+            $adminPassword = Crypt::decryptString($site['admin_password']);
+        } catch (\Throwable) {
             return response()->json(['error' => 'Your details expired. Please start again.'], 422);
         }
 
@@ -167,10 +177,18 @@ final class InstallWizardController extends Controller
             $site['app_url'],
             $site['admin_name'],
             $site['admin_email'],
-            $site['admin_password'],
+            $adminPassword,
         );
 
-        RunInstallationJob::dispatch($input, $token);
+        try {
+            RunInstallationJob::dispatch($input, $token);
+        } finally {
+            // The password has been consumed; do not leave the ciphertext (or
+            // the rest of the account details) in the session store. This runs
+            // on the job's failure path too — the job swallows its own
+            // exceptions, so the finally always sees the settled outcome.
+            $request->session()->forget('wizard.install.site');
+        }
 
         return response()->json(['token' => $token]);
     }

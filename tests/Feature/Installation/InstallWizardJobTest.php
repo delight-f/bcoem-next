@@ -9,6 +9,9 @@ use App\Services\Installation\Data\DbCredentials;
 use App\Services\Installation\Data\InstallInput;
 use App\Services\Installation\InstallationService;
 use App\Support\Wizard\ProgressTracker;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Drives the sync-queue job that wraps InstallationService::install().
@@ -50,6 +53,41 @@ final class InstallWizardJobTest extends InstallationTestCase
         // Re-read through a fresh tracker: the marker is in the pinned store,
         // not somewhere the .env rewrite moved it to.
         $this->assertNotNull((new ProgressTracker)->get($token));
+    }
+
+    /**
+     * The full wizard HTTP path, safe here because the service is bound to the
+     * test's throwaway root: run() must decrypt the session password, install
+     * with it, and clear the session on the success path.
+     */
+    public function test_http_run_installs_with_the_decrypted_password_and_clears_the_session(): void
+    {
+        $this->app->instance(InstallationService::class, new InstallationService($this->root));
+
+        $token = $this->token('http');
+
+        $this->withSession([
+            'wizard.install.db' => [
+                'host' => $this->server['host'],
+                'port' => $this->server['port'],
+                'database' => $this->database,
+                'username' => $this->server['user'],
+                'password' => $this->server['pass'],
+            ],
+            'wizard.install.site' => [
+                'app_url' => 'http://example.test',
+                'admin_name' => 'Jane Admin',
+                'admin_email' => 'jane@example.test',
+                'admin_password' => Crypt::encryptString('s3cret-pass'),
+            ],
+        ])->postJson('/install/run', ['token' => $token])->assertOk();
+
+        $marker = (new ProgressTracker)->get($token) ?? [];
+        $this->assertSame('complete', $marker['status'] ?? null);
+        $this->assertNull(session('wizard.install.site'), 'the success path must clear the stored password');
+
+        $hash = (string) DB::table('users')->where('user_name', 'jane@example.test')->value('password');
+        $this->assertTrue(Hash::check('s3cret-pass', $hash), 'the install must use the decrypted password');
     }
 
     public function test_install_job_failure_marks_the_marker_with_both_messages(): void
