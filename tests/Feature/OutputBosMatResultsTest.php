@@ -189,6 +189,67 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
         $this->assertStringNotContainsString('Best of Show', $html);
     }
 
+    /**
+     * Issue 32: a group with no qualifying entries must not print a page of
+     * blank squares — no tiles at all, just the "no entries" notice.
+     */
+    public function test_bos_mat_skips_groups_without_entries(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        // Style type 2 (Cider, BOS=Y) has no scored entries.
+        $empty = $this->decodePdfText($this->get('/admin/output/bos_mat?view=2'));
+        $this->assertStringContainsString('No best of show entries are present.', $empty);
+        $this->assertStringNotContainsString('BMR Irish Red Ale', $empty);
+        $this->assertStringNotContainsString('Table 9701', $empty);
+    }
+
+    /**
+     * Issue 32: a group longer than one 2×3 page continues onto further
+     * pages instead of being truncated to the first six entries.
+     */
+    public function test_bos_mat_paginates_groups_over_six_entries(): void
+    {
+        $this->seedBosMat();
+        $this->seedExtraBeerEntries(7);
+        $this->login();
+
+        $html = $this->decodePdfText($this->get('/admin/output/bos_mat?filter=entry'));
+
+        $this->assertStringContainsString('BMR Irish Red Ale', $html);
+        foreach (range(2, 8) as $n) {
+            $this->assertStringContainsString('BMR Ale '.$n, $html, 'entry '.$n.' must not be dropped');
+        }
+    }
+
+    /** Seven more Beer entries on the seed table, same style, all placed 1st. */
+    private function seedExtraBeerEntries(int $count): void
+    {
+        for ($n = 2; $n <= $count + 1; $n++) {
+            $id = (int) DB::table('brewing')->insertGetId([
+                'brewName' => 'BMR Entry '.$n,
+                'brewStyle' => 'BMR Ale '.$n,
+                'brewCategory' => '17',
+                'brewCategorySort' => '17',
+                'brewSubCategory' => 'A',
+                'brewJudgingNumber' => '9701'.$n.'0',
+                'brewBrewerID' => 1,
+                'brewReceived' => '1',
+                'brewConfirmed' => '1',
+            ]);
+            $this->entryIds[] = $id;
+            $this->scoreIds[] = (int) DB::table('judging_scores')->insertGetId([
+                'eid' => $id,
+                'scoreTable' => $this->tableId,
+                'scoreType' => 1,
+                'scorePlace' => 1,
+                'scoreEntry' => 38,
+                'scoreMiniBOS' => 0,
+            ]);
+        }
+    }
+
     public function test_results_shapes_return_pdf_with_filename(): void
     {
         $this->seedBosMat();

@@ -36,14 +36,15 @@
     </table>
 @else
             @foreach ($groups as $group)
+        @continue ($group['rows'] === [])
         @php
-            // Legacy renders one table per group, each a 2×3 page padded
-            // with empty mats to six cells, page-break-after every group —
-            // an empty group still emits an empty mat page (view=2 Cider
-            // above). The "No entries" message only fires when no group
-            // was displayed at all, hence the count($groups) test.
-            $tiles = $group['rows'];
+            // Issue 32: a group with no qualifying entries used to render a
+            // full page of blank squares — every table/style type without
+            // entries printed one. Skip it. Groups longer than one 2×3 page
+            // continue onto further pages like legacy's six-tile pagination,
+            // the final page padded to six.
         @endphp
+                @foreach (array_chunk($group['rows'], 6) as $tiles)
         <table class="mat">
             @for ($i = 0; $i < 2; $i++)
                 <tr>
@@ -102,9 +103,10 @@
             @endfor
         </table>
         <div class="page-break"></div>
-    @endforeach
+                @endforeach
+            @endforeach
 
-        @if (count($groups) === 0)
+        @if (! $anyTiles)
         <h1>No {{ strtolower($heading) }} entries are present.</h1>
     @endif
 @endif
