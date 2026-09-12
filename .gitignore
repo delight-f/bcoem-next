@@ -38,6 +38,7 @@ graphify-out/
 resources/graphify-out/
 
 # runtime/derived artifacts (not source)
+/build/output/
 /storage/user_docs/
 
 # Part A output of the central clubs list pipeline; the published copy lives
