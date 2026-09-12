@@ -429,6 +429,35 @@ html {
 .bcoem-admin-dashboard-accordion .card-body > .row {
     margin-bottom: 1rem;
 }
+/* Issue 31: the option rows inside a panel read as one unbroken run of
+   hyperlinks. Give each category row a thin rule at its top edge so the
+   (bold) category label starts a visibly separate section. The Reports
+   Before/During/After Judging headings draw their own rule, so they opt out. */
+.bcoem-admin-dashboard-accordion .card-body > .row + .row:not(.bcoem-dash-subhead) {
+    border-top: 1px solid var(--bs-border-color-translucent);
+    padding-top: 0.75rem;
+}
+/* Issue 31: make the category label unmistakably a heading, not just the
+   first link in the row. */
+.bcoem-admin-dashboard-accordion .card-body .bcoem-dash-label {
+    color: var(--bs-emphasis-color);
+}
+/* Issue 31: draw every option link as an outlined chip so adjacent links are
+   visually distinct instead of merging into a single line of blue text. */
+.bcoem-admin-dashboard-accordion .card-body ul.list-inline > li > a,
+.bcoem-admin-dashboard-accordion .card-body ul.list-unstyled > li > a {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-pill);
+    line-height: 1.35;
+    text-decoration: none;
+}
+.bcoem-admin-dashboard-accordion .card-body ul.list-inline > li > a:hover,
+.bcoem-admin-dashboard-accordion .card-body ul.list-unstyled > li > a:hover {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-primary-border-subtle);
+}
 
 /* ---- "For Your Information" band (public landing alerts).
    Rendered directly beneath the fixed dark navbar in the header. It is a

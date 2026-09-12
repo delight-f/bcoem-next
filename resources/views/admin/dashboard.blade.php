@@ -124,7 +124,7 @@
                                                     @php
                                                         $isFirstSection = $rowLinks === 'Before Judging';
                                                     @endphp
-                                                    <div class="row @if (! $isFirstSection) pt-3 @endif pb-3">
+                                                    <div class="row bcoem-dash-subhead @if (! $isFirstSection) pt-3 @endif pb-3">
                                                         <div class="col-12 small">
                                                             @if (! $isFirstSection)
                                                                 <hr class="my-2">
@@ -140,7 +140,7 @@
                                                          are link items or {text:...} literals. --}}
                                                     <div class="row mb-3">
                                                         <div class="col-12 col-md-4 small">
-                                                            <strong>{{ $category }}</strong>
+                                                            <strong class="bcoem-dash-label">{{ $category }}</strong>
                                                         </div>
                                                         <div class="col-12 col-md-8 small">
                                                             @foreach ($rowLinks['blocks'] as $block)
@@ -189,7 +189,7 @@
                                                          indicator + both switch buttons under them. --}}
                                                     <div class="row">
                                                         <div class="col-12 col-md-4 small">
-                                                            <strong>Tables</strong>
+                                                            <strong class="bcoem-dash-label">Tables</strong>
                                                         </div>
                                                         <div class="col-12 col-md-8 small">
                                                             <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
@@ -226,7 +226,7 @@
                                                          score_custom_winning_choose). Links render above the dropdown. --}}
                                                     <div class="row">
                                                         <div class="col-12 col-md-4 small">
-                                                            <strong>{{ $category }}</strong>
+                                                            <strong class="bcoem-dash-label">{{ $category }}</strong>
                                                         </div>
                                                         <div class="col-12 col-md-8 small">
                                                             <ul class="d-flex flex-wrap list-unstyled gap-2 mb-1">
@@ -252,7 +252,7 @@
                                                          "Number of Labels per Entry/Table/Judge" 1-12 dropdown. --}}
                                                     <div class="row" style="padding-top: 20px;">
                                                         <div class="col-12">
-                                                            <strong>{{ $category }}</strong>
+                                                            <strong class="bcoem-dash-label">{{ $category }}</strong>
                                                         </div>
                                                     </div>
                                                     @foreach ($rowLinks['matrix'] as $paper)
@@ -317,7 +317,7 @@
                                                 @else
                                                 <div class="row">
                                                     <div class="col-12 col-md-4 small">
-                                                        <strong>{{ $category }}</strong>
+                                                        <strong class="bcoem-dash-label">{{ $category }}</strong>
                                                     </div>
                                                     <div class="col-12 col-md-8 small">
                                                         {{-- Legacy default.admin.php keeps per-row option groups in separate
