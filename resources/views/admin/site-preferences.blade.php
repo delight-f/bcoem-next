@@ -1082,49 +1082,59 @@
             <form method="post" action="{{ url('/admin/site-preferences/best') }}">
                 @csrf
                 @method('put')
+
+                <h4>Best Brewer</h4>
                 <div class="mb-4 row">
                     <label for="prefsShowBestBrewer" class="col-md-4 col-form-label">Best Brewer Display? Up to which Position?</label>
                     <div class="col-md-8">
-                        <select class="form-select" name="prefsShowBestBrewer" id="prefsShowBestBrewer">{!! $positionOptions($p('prefsShowBestBrewer')) !!}</select>
-                        <p class="form-text">Indicate whether you want to display the list of best brewers according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display.</p>
+                        <select class="form-select" name="prefsShowBestBrewer" id="prefsShowBestBrewer" style="width:auto;">{!! $positionOptions($p('prefsShowBestBrewer')) !!}</select>
+                        <span class="form-text">Shown at the same time as the Winners Display. Leave on &ldquo;Do not display&rdquo; to omit the Best Brewer list.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsBestBrewerTitle" class="col-md-4 col-form-label">Best Brewer Title</label>
                     <div class="col-md-8">
                         <input class="form-control" id="prefsBestBrewerTitle" name="prefsBestBrewerTitle" type="text" value="{{ $p('prefsBestBrewerTitle') }}">
-                        <p class="form-text">Enter the title for the Best Brewer award (e.g., Heavy Medal, Ninkasi Award).</p>
+                        <span class="form-text">Heading for the award (e.g., Heavy Medal, Ninkasi Award).</span>
                     </div>
                 </div>
+
                 {{-- Clubs are amateur-only: legacy hides #bestClub when the
                      competition is set to Professional (prefsProEdition = 1).
                      Kept in the DOM (display:none) so the values still submit. --}}
                 <div id="bestClub"{!! $p('prefsProEdition') === '1' ? ' style="display:none;"' : '' !!}>
+                    <h4>Best Club</h4>
                     <div class="mb-4 row">
                         <label for="prefsShowBestClub" class="col-md-4 col-form-label">Best Club Display? Up to which Position?</label>
                         <div class="col-md-8">
                             <select class="form-select" name="prefsShowBestClub" id="prefsShowBestClub" style="width:auto;">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
-                            <p class="form-text">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
+                            <span class="form-text">Shown at the same time as the Winners Display. Applies to the amateur edition only.</span>
                         </div>
                     </div>
                     <div class="mb-4 row">
                         <label for="prefsBestClubTitle" class="col-md-4 col-form-label">Best Club Title</label>
                         <div class="col-md-8">
                             <input class="form-control" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
-                            <p class="form-text">Enter the title for the Best Club award.</p>
+                            <span class="form-text">Heading for the Best Club award.</span>
                         </div>
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label class="col-md-4 col-form-label">Include BOS in Calculations?</label>
-                    <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="1" id="bbosYes" @checked($p('prefsBestUseBOS') === '1')><label class="form-check-label" for="bbosYes">Yes</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="0" id="bbosNo" @checked($p('prefsBestUseBOS') !== '1')><label class="form-check-label" for="bbosNo">No</label></div>
-                        <p class="form-text">Indicate whether you wish to include any Best of Show (BOS) places in Best Brewer and Best Club calculations.</p>
+
+                <h4>Scoring Method</h4>
+                {{-- Circuit of America overrides every other calculation
+                     preference, so legacy hides the BOS question while it is on. --}}
+                <section id="bos-in-calcs" @if ($p('prefsScoringCOA') === '1') hidden @endif>
+                    <div class="mb-4 row">
+                        <label class="col-md-4 col-form-label">Include BOS in Calculations?</label>
+                        <div class="col-md-8">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="1" id="bbosYes" @checked($p('prefsBestUseBOS') === '1')><label class="form-check-label" for="bbosYes">Yes</label></div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="prefsBestUseBOS" value="0" id="bbosNo" @checked($p('prefsBestUseBOS') !== '1')><label class="form-check-label" for="bbosNo">No</label></div>
+                            <span class="form-text">Count Best of Show places towards a brewer's or club's total.</span>
+                        </div>
                     </div>
-                </div>
+                </section>
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Use Circuit of America Calculations?</label>
                     <div class="col-md-8">
@@ -1132,53 +1142,61 @@
                             <input class="form-check-input" type="radio" name="prefsScoringCOA" value="1" id="coaYes" @checked($p('prefsScoringCOA') === '1')><label class="form-check-label" for="coaYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsScoringCOA" value="0" id="coaNo" @checked($p('prefsScoringCOA') !== '1')><label class="form-check-label" for="coaNo">No</label></div>
-                        <p class="form-text">Indicate whether you wish use the Master Homebrewer Program's <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank">Circuit of America</a> scoring methodolgy for all Best Brewer and Best Club calculations. <strong>Indicating "Yes" here will override all other calculation preferences.</strong></p>
-                        <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#coa-info-modal">Circuit of America Calculations Info</button>
+                        <span class="form-text">Uses the Master Homebrewer Program's <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank" rel="noopener">Circuit of America</a> methodology for every Best Brewer and Best Club calculation. <strong>Yes overrides all other calculation preferences.</strong></span>
+                        <span class="form-text">
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#coa-info-modal">Circuit of America Calculations Info</button>
+                        </span>
                     </div>
                 </div>
+
                 <section id="non-COA-scoring" @if ($p('prefsScoringCOA') === '1') hidden @endif>
-                    @foreach ([
-                        'prefsFirstPlacePts' => ['Points for First Place', 'Enter the number of points awarded for each first place that an entrant receives.'],
-                        'prefsSecondPlacePts' => ['Points for Second Place', 'Enter the number of points awarded for each second place that an entrant receives.'],
-                        'prefsThirdPlacePts' => ['Points for Third Place', 'Enter the number of points awarded for each third place that an entrant receives.'],
-                        'prefsFourthPlacePts' => ['Points for Fourth Place', 'Enter the number of points awarded for each fourth place that an entrant receives.'],
-                        'prefsHMPts' => ['Points for Honorable Mention', 'Enter the number of points awarded for each Honorable Mention that an entrant receives.'],
-                    ] as $field => [$label, $help])
-                        {{-- Legacy offered 0-25; the port trims to 0-9. If an
-                             existing install holds a higher value, keep it
-                             selectable rather than silently resetting it.
-                             NB: use one-liner @php() calls only here — a bare
-                             PHP directive would pair with the @php() calls
-                             above and swallow the whole tab (Blade's
-                             storePhpBlocks pairs the first open with the
-                             first close). --}}
-                        @php($storedPts = (int) $p($field))
-                        @php($points = $storedPts > 9 ? [...range(0, 9), $storedPts] : range(0, 9))
-                        <div class="mb-4 row">
-                            <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
-                            <div class="col-md-8">
-                                <select class="form-select" name="{{ $field }}" id="{{ $field }}" style="width:auto;">
+                    <h4>Points per Place</h4>
+                    <span class="form-text">Awarded for each place an entrant receives, from first place through honorable mention.</span>
+                    <div class="row g-3 mt-2 mb-4">
+                        @foreach ([
+                            'prefsFirstPlacePts' => ['First Place', 'Enter the number of points awarded for each first place that an entrant receives.'],
+                            'prefsSecondPlacePts' => ['Second Place', 'Enter the number of points awarded for each second place that an entrant receives.'],
+                            'prefsThirdPlacePts' => ['Third Place', 'Enter the number of points awarded for each third place that an entrant receives.'],
+                            'prefsFourthPlacePts' => ['Fourth Place', 'Enter the number of points awarded for each fourth place that an entrant receives.'],
+                            'prefsHMPts' => ['Honorable Mention', 'Enter the number of points awarded for each Honorable Mention that an entrant receives.'],
+                        ] as $field => [$label, $help])
+                            {{-- Legacy offered 0-25; the port trims to 0-9. If an
+                                 existing install holds a higher value, keep it
+                                 selectable rather than silently resetting it.
+                                 NB: one-liner @php() calls only — a bare PHP
+                                 directive would pair with the @php() calls
+                                 above and swallow the whole tab (Blade's
+                                 storePhpBlocks pairs first open with first
+                                 close). --}}
+                            @php($storedPts = (int) $p($field))
+                            @php($points = $storedPts > 9 ? [...range(0, 9), $storedPts] : range(0, 9))
+                            <div class="col-6 col-md-4 col-xl-2">
+                                <label class="form-label" for="{{ $field }}">{{ $label }}</label>
+                                <select class="form-select" name="{{ $field }}" id="{{ $field }}" title="{{ $help }}">
                                     @foreach ($points as $i)
                                         <option value="{{ $i }}" @selected((string) $i === (string) $p($field))>{{ $i }}</option>
                                     @endforeach
                                 </select>
-                                <span class="form-text">{{ $help }}</span>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    </div>
                 </section>
-                @foreach (range(1, 6) as $i)
-                    <div class="mb-4 row">
-                        <label for="prefsTieBreakRule{{ $i }}" class="col-md-4 col-form-label">Tie Break Rule #{{ $i }}</label>
-                        <div class="col-md-8">
+
+                <h4>Tie Break Rules</h4>
+                <span class="form-text">Used in order to separate tied standings &mdash; rule #1 first, then #2, and so on. Leave a rule on &ldquo;Unused&rdquo; to skip it.</span>
+                <div class="row g-3 mt-2 mb-4">
+                    @foreach (range(1, 6) as $i)
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" for="prefsTieBreakRule{{ $i }}">Tie Break Rule #{{ $i }}</label>
                             <select class="form-select" name="prefsTieBreakRule{{ $i }}" id="prefsTieBreakRule{{ $i }}">
                                 @foreach ($tieBreakRules as $rule => $label)
                                     <option value="{{ $rule }}" @selected((string) $p('prefsTieBreakRule'.$i) === (string) $rule)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
+
                 <button type="submit" class="btn btn-primary">Save Best Brewer/Club Preferences</button>
             </form>
             <div class="modal fade" id="coa-info-modal" tabindex="-1" aria-labelledby="coa-info-modal-label" aria-hidden="true">
@@ -1198,11 +1216,17 @@
                 </div>
             </div>
             <script>
+                // Circuit of America overrides the other calculation settings,
+                // so hide the BOS question and the manual points grid while it
+                // is on (legacy hides #bos-in-calcs and #non-COA-scoring).
                 document.addEventListener('DOMContentLoaded', () => {
                     const sync = () => {
                         const coa = document.querySelector('input[name="prefsScoringCOA"]:checked');
-                        const section = document.getElementById('non-COA-scoring');
-                        if (coa && section) section.hidden = coa.value === '1';
+                        const on = !!coa && coa.value === '1';
+                        ['bos-in-calcs', 'non-COA-scoring'].forEach((id) => {
+                            const el = document.getElementById(id);
+                            if (el) el.hidden = on;
+                        });
                     };
                     document.querySelectorAll('input[name="prefsScoringCOA"]').forEach((r) => r.addEventListener('click', sync));
                     sync();

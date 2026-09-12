@@ -468,6 +468,30 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('id="bestClub" style="display:none;"', false);
     }
 
+    public function test_best_tab_is_grouped_into_sections(): void
+    {
+        $this->login();
+
+        $this->get('/admin/site-preferences/best')
+            ->assertOk()
+            // Sub-sections rather than one flat run of label/control rows.
+            ->assertSee('<h4>Best Brewer</h4>', false)
+            ->assertSee('<h4>Best Club</h4>', false)
+            ->assertSee('<h4>Scoring Method</h4>', false)
+            ->assertSee('<h4>Points per Place</h4>', false)
+            ->assertSee('<h4>Tie Break Rules</h4>', false)
+            // Circuit of America hides the BOS question too (legacy parity).
+            ->assertSee('id="bos-in-calcs"', false)
+            ->assertSee("['bos-in-calcs', 'non-COA-scoring']", false)
+            // Point controls are a compact grid; the detailed legacy copy is
+            // kept as a per-select tooltip instead of a paragraph per row.
+            ->assertSee('<label class="form-label" for="prefsFirstPlacePts">First Place</label>', false)
+            ->assertSee('id="prefsFirstPlacePts" title="Enter the number of points awarded for each first place that an entrant receives."', false)
+            // Tie-break rules sit two-up and explain that order matters.
+            ->assertSee('<label class="form-label" for="prefsTieBreakRule6">Tie Break Rule #6</label>', false)
+            ->assertSee('rule #1 first, then #2', false);
+    }
+
     public function test_email_tab_renders_contact_options_and_smtp_test_section(): void
     {
         $this->login();
