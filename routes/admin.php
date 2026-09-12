@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AllDatesController;
 use App\Http\Controllers\Admin\ChangeUserPasswordController;
+use App\Http\Controllers\Admin\ClubsAdminController;
 use App\Http\Controllers\Admin\CompetitionInfoController;
 use App\Http\Controllers\Admin\ContactsController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -44,6 +45,14 @@ Route::middleware(['web', 'auth'])->group(function (): void {
     // competition-info edit page.
     Route::put('/admin/competition-info/qr-password', [CompetitionInfoController::class, 'updateQrPassword'])
         ->name('admin.competition_info.qr_password');
+
+    // Central clubs list (issue #22): mirror status + review, and a manual
+    // sync. Synchronous form POST — the operation is a few hundred string
+    // comparisons, so it needs none of the installer's job/queue machinery.
+    Route::get('/admin/clubs', [ClubsAdminController::class, 'show'])
+        ->name('admin.clubs.index');
+    Route::post('/admin/clubs/sync', [ClubsAdminController::class, 'sync'])
+        ->name('admin.clubs.sync');
 
     // site_preferences — five tabbed sub-forms (go=default|entries|email|payment|best).
     Route::get('/admin/site-preferences/{go?}', [SitePreferencesController::class, 'edit'])

@@ -6,6 +6,7 @@ namespace App\Support\Brewer;
 
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Legacy `brewerClubs` storage semantics, ported byte-for-byte from
@@ -15,10 +16,10 @@ use Illuminate\Support\Facades\DB;
  * cleared. The value is a single string — legacy's select offers one club,
  * never a list.
  *
- * Known-club source for the picker and validation: the contest-info
- * `contestClubs` JSON session list plus every club already stored on a
- * `brewer` row (ledger/contest-info.md; legacy fetched the same list from
- * a remote corpus with contestClubs merged on top).
+ * Known-club sources for the picker and validation: the contest-info
+ * `contestClubs` JSON session list, every club already stored on a `brewer`
+ * row, and — since issue #22 — the local mirror of the published central
+ * clubs list (`clubs` table, populated by ClubsSyncService).
  */
 final class Clubs
 {
@@ -113,6 +114,25 @@ final class Clubs
         foreach ($stored as $club) {
             if (is_string($club) && $club !== '') {
                 $found[] = $club;
+            }
+        }
+
+        // Synced central list (issue #22). Appended last so an existing local
+        // spelling — from contestClubs or a brewer row — still wins the
+        // case-insensitive de-dupe in all(); the sync keeps local casing too.
+        // Guarded because this helper also runs during a rolling upgrade,
+        // before the clubs migration has applied.
+        if (Schema::hasTable('clubs')) {
+            $synced = DB::table('clubs')
+                ->whereNotNull('name')
+                ->where('name', '!=', '')
+                ->distinct()
+                ->pluck('name');
+
+            foreach ($synced as $club) {
+                if (is_string($club) && $club !== '') {
+                    $found[] = $club;
+                }
             }
         }
 

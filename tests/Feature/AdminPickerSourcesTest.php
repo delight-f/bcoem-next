@@ -120,4 +120,61 @@ final class AdminPickerSourcesTest extends AdminScreensTestCase
             'styles must render in more than one group',
         );
     }
+
+    /**
+     * Issue #22: the mirrored central clubs list is a third picker source.
+     */
+    public function test_synced_central_clubs_feed_the_picker(): void
+    {
+        $now = now();
+
+        DB::table('clubs')->insert([
+            'name' => 'Central Picker Club',
+            'name_normalized' => 'central picker club',
+            'source' => 'upstream',
+            'last_seen_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        try {
+            self::assertContains('Central Picker Club', Clubs::all(TenantContext::load()));
+            self::assertContains('Central Picker Club', $this->clubsFromPage());
+        } finally {
+            DB::table('clubs')->where('name', 'Central Picker Club')->delete();
+        }
+    }
+
+    /**
+     * Issue #22: when a synced club collides case-insensitively with a local
+     * one, the local spelling is kept (same precedence the sync documents).
+     */
+    public function test_local_casing_wins_over_a_synced_duplicate(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestClubs' => json_encode(['Shared Casing Club'], JSON_THROW_ON_ERROR),
+        ]);
+
+        $now = now();
+        DB::table('clubs')->insert([
+            'name' => 'shared casing club',
+            'name_normalized' => 'shared casing club',
+            'source' => 'upstream',
+            'last_seen_at' => $now,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        try {
+            $matches = array_values(array_filter(
+                Clubs::all(TenantContext::load()),
+                static fn (string $name): bool => strtolower($name) === 'shared casing club',
+            ));
+
+            self::assertCount(1, $matches, 'the club must not appear twice');
+            self::assertSame('Shared Casing Club', $matches[0], 'the pre-existing local spelling is kept');
+        } finally {
+            DB::table('clubs')->where('name', 'shared casing club')->delete();
+        }
+    }
 }

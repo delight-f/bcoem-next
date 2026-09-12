@@ -68,4 +68,16 @@ return [
     'email_verification' => [
         'enabled' => env('EMAIL_VERIFICATION_ENABLED', false),
     ],
+
+    /*
+| Central clubs list (issue #22). The published JSON artifact produced by
+| tools/clubs-sync/convert.js and mirrored into the public
+| delight-f/clubs-list repo. The Laravel side only ever sees this URL and
+| the agreed JSON shape; it has no knowledge of the upstream JavaScript.
+| A failed fetch is a no-op, never a partial sync — see ClubsSyncService.
+*/
+    'clubs_list' => [
+        'source_url' => env('CLUBS_LIST_URL', 'https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json'),
+        'timeout_seconds' => (int) env('CLUBS_LIST_TIMEOUT', 10),
+    ],
 ];

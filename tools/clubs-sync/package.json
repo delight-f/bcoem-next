@@ -1,0 +1,14 @@
+{
+  "name": "bcoem-clubs-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Convert the upstream homebrew-clubs-list clubs.js into a clean, versioned JSON artifact for BCOE&M.",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "convert": "node convert.js",
+    "test": "node --test"
+  }
+}

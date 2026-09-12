@@ -1,0 +1,103 @@
+name: Sync clubs list
+
+# Part A of issue #22. Converts the upstream homebrew-clubs-list `clubs.js`
+# into a clean, versioned JSON artifact and publishes it to the public
+# `delight-f/clubs-list` repo, which the Laravel app fetches from.
+#
+# Credential: CLUBS_LIST_DEPLOY_KEY — an ed25519 private key whose public half
+# is registered as a WRITE deploy key on delight-f/clubs-list ONLY. A deploy
+# key is used instead of a PAT because GitHub has no API to mint a
+# fine-grained PAT (that needs a browser), and a deploy key is both creatable
+# non-interactively and narrower: write access to exactly one repository.
+#
+# Failure behaviour: if the converter fails (bad upstream, unreachable,
+# validation error) the step exits non-zero and the run goes red, so the
+# publish step never executes and the previously published clubs.json is left
+# untouched. Nothing is written on a partial or empty list.
+
+on:
+  schedule:
+    # Daily. The upstream list changes a few times a year, so there is no
+    # value in running more often.
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-clubs-list
+  cancel-in-progress: false
+
+jobs:
+  convert-and-publish:
+    name: Convert and publish clubs.json
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Converter tests
+        working-directory: tools/clubs-sync
+        run: npm test
+
+      - name: Convert upstream clubs.js to JSON
+        working-directory: tools/clubs-sync
+        run: npm run convert
+
+      - name: Check the publishing credential is configured
+        env:
+          DEPLOY_KEY: ${{ secrets.CLUBS_LIST_DEPLOY_KEY }}
+        run: |
+          if [ -z "${DEPLOY_KEY:-}" ]; then
+            echo "::error::CLUBS_LIST_DEPLOY_KEY is not set; the clubs list cannot be published."
+            exit 1
+          fi
+
+      - name: Check out the published clubs-list repo
+        uses: actions/checkout@v5
+        with:
+          repository: delight-f/clubs-list
+          ref: main
+          path: publish-repo
+          ssh-key: ${{ secrets.CLUBS_LIST_DEPLOY_KEY }}
+
+      - name: Read the currently published version
+        id: published
+        working-directory: publish-repo
+        run: |
+          if [ -f dist/clubs.json ]; then
+            echo "version=$(node -p "require('./dist/clubs.json').version")" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read the newly converted version
+        id: fresh
+        working-directory: tools/clubs-sync
+        run: echo "version=$(node -p "require('./dist/clubs.json').version")" >> "$GITHUB_OUTPUT"
+
+      # `version` is derived from the club content only, so an equal version
+      # means the list is unchanged — skip the commit entirely.
+      - name: Publish when the content version changed
+        if: steps.published.outputs.version != steps.fresh.outputs.version
+        working-directory: publish-repo
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp ../tools/clubs-sync/dist/clubs.json dist/clubs.json
+          git config user.name "bcoem-clubs-sync[bot]"
+          git config user.email "bcoem-clubs-sync@users.noreply.github.com"
+          git add dist/clubs.json
+          git commit -m "chore: sync clubs list to ${{ steps.fresh.outputs.version }}"
+          git push
+          echo "Published clubs list version ${{ steps.fresh.outputs.version }}." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Nothing to publish
+        if: steps.published.outputs.version == steps.fresh.outputs.version
+        run: echo "Upstream unchanged (version ${{ steps.fresh.outputs.version }}); nothing to publish."

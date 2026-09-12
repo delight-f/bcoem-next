@@ -39,3 +39,7 @@ resources/graphify-out/
 
 # runtime/derived artifacts (not source)
 /storage/user_docs/
+
+# Part A output of the central clubs list pipeline; the published copy lives
+# in the public delight-f/clubs-list repo (see .github/workflows/sync-clubs-list.yml)
+/tools/clubs-sync/dist/
