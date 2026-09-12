@@ -498,7 +498,7 @@
                     <div class="mb-4 row">
                         <label for="styleLimitsEdit" class="col-md-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
                         <div class="col-md-8">
-                            <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list" aria-expanded="false" aria-controls="style-limits-list">Expand/Collapse the {{ $styleSet }} Style List ({{ count($styleLimitRows) }} styles)</button>
+                            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list" aria-expanded="false" aria-controls="style-limits-list">Expand/Collapse the {{ $styleSet }} Style List ({{ count($styleLimitRows) }} styles)</button>
                             <div class="collapse" id="style-limits-list">
                                 <div class="border rounded p-2 mt-2" style="max-height:24rem; overflow:auto;">
                                     @foreach ($styleLimitRows as $row)
@@ -621,7 +621,7 @@
                 <div class="mb-4 row" id="subStyleExeptionsEdit">
                     <label for="prefsUSCLEx" class="col-md-4 col-form-label">Exceptions to Per Participant Sub-Style Entry Limit</label>
                     <div class="col-md-8">
-                        <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List ({{ count($styleExceptions) }} styles)</button>
+                        <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List ({{ count($styleExceptions) }} styles)</button>
                         <div class="collapse" id="sub-style-list">
                             <div class="d-flex flex-wrap gap-2 align-items-center my-2">
                                 <input type="search" class="form-control form-control-sm" id="usclExFilter" placeholder="Filter sub-styles&hellip;" style="max-width:18rem;" autocomplete="off">

@@ -184,6 +184,11 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             // The ~150-row per-style grid starts collapsed behind a toggle.
             ->assertSee('data-bs-target="#style-limits-list"', false)
             ->assertSee('class="collapse" id="style-limits-list"', false)
+            // Both toggles are full-size solid buttons, not the old unstyled
+            // small ones (btn-default is not a BS5 class, so it had no styling).
+            ->assertSee('class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list"', false)
+            ->assertSee('class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list"', false)
+            ->assertDontSee('btn-sm btn-default', false)
             // The exception picker is filterable/grouped, not a bare wall.
             ->assertSee('id="usclExFilter"', false)
             ->assertSee('id="usclExAll"', false)
