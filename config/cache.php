@@ -53,6 +53,16 @@ return [
             'lock_path' => storage_path('framework/cache/data'),
         ],
 
+        // Install/upgrade wizard progress markers. Its own path (not the
+        // default `file` store) for two reasons: the install rewrites
+        // CACHE_STORE in .env mid-run, and UpgradeService runs `cache:clear`
+        // against the default store — either would otherwise drop the marker.
+        'wizard' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/wizard'),
+            'lock_path' => storage_path('framework/cache/wizard'),
+        ],
+
         'storage' => [
             'driver' => 'storage',
             'disk' => env('CACHE_STORAGE_DISK'),

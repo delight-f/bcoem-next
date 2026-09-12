@@ -87,6 +87,10 @@ final class ArchiveFlowsTest extends PublicSurfaceTestCase
 
     private function seedConfigRows(): void
     {
+        // The clone copies structure only, so the install marker has no row.
+        // The install/upgrade routing middleware (EnsureInstalled) treats a
+        // site without it as uninstalled and would redirect every request.
+        DB::table('bcoem_sys')->insert(['id' => 1, 'version' => '3.0.1.0', 'setup' => 1]);
         DB::table('contest_info')->insert(['id' => 1, 'contestID' => '12345', 'contestName' => 'P56 Test Comp']);
         DB::table('preferences')->insert(['id' => 1, 'prefsStyleSet' => 'BJCP2021']);
         DB::table('judging_preferences')->insert(['id' => 1]);

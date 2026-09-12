@@ -7,6 +7,23 @@
                 <h1>Administration Dashboard</h1>
             </div>
 
+            {{-- New release published (Task 2.2). Lighter-weight than the
+                 upgrade banner: it points at the download, because the upgrade
+                 wizard has nothing to do until the files are on the server. --}}
+            @if (! empty($updateNotice))
+                <div class="alert alert-info d-flex align-items-center gap-3" role="alert">
+                    <i class="fa fa-cloud-download fa-lg" aria-hidden="true"></i>
+                    <div class="flex-grow-1">
+                        <strong>Version {{ $updateNotice['version'] }} is available.</strong>
+                        <a href="{{ $updateNotice['url'] }}" target="_blank" rel="noopener">Read the release notes and download it</a>.
+                    </div>
+                    <form method="post" action="{{ route('wizard.notice.dismiss') }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
+                    </form>
+                </div>
+            @endif
+
             {{-- mods_top.inc.php — the admin-side (go=default) missing-module-
                  file alert. Legacy renders one danger list for enabled mods
                  whose mods/<mod_filename> file is absent and one warning list

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Installation\UpgradeService;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\PayPalGateway;
 use App\Support\Results\BestBrewerStandings;
@@ -12,6 +13,7 @@ use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
+use App\Support\Wizard\RemoteVersionChecker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +46,17 @@ final class DashboardController extends Controller
         $windows = Windows::derive($ctx, $now);
         $user = $request->user();
 
+        // "New release published" notice (Task 2.2). Top-Level Administrators
+        // only: noticeFor() returns null immediately for anyone else, so the
+        // check does not even run for mid-level admins or participants.
+        $updateNotice = null;
+        if (! $request->session()->get('wizard.update-notice.dismissed', false)) {
+            $updateNotice = app(RemoteVersionChecker::class)->noticeFor(
+                (int) $user->userLevel,
+                app(UpgradeService::class)->getCurrentVersion(),
+            );
+        }
+
         $prefs = [
             'stripeConnected' => str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id'),
             'entryForm' => (int) $ctx->prefsStr('prefsEntryForm'),
@@ -75,6 +88,7 @@ final class DashboardController extends Controller
         $sections = $this->sections((int) $user->userLevel, (int) $user->userAdminObfuscate, $prefs, $counts);
 
         return view('admin.dashboard', [
+            'updateNotice' => $updateNotice,
             'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],

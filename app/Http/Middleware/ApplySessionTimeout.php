@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\Installation\InstallationService;
 use App\Support\Tenant\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -27,7 +28,20 @@ final class ApplySessionTimeout
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $ctx = TenantContext::load();
+        try {
+            $ctx = TenantContext::load();
+        } catch (\Throwable $e) {
+            // A bare upload has no database yet; there is no preference to
+            // apply, so continue with the .env default. Rethrow on an installed
+            // site so a real failure is not masked (and the healthy path above
+            // is untouched).
+            if (app(InstallationService::class)->isAlreadyInstalled()) {
+                throw $e;
+            }
+
+            return $next($request);
+        }
+
         $minutes = (int) ($ctx->prefsStr('prefsSessionTimeout') ?? '');
 
         if ($minutes <= 0) {

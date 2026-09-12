@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\ApplyMailSettings;
 use App\Http\Middleware\ApplySessionTimeout;
+use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\SetLocale;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -32,6 +34,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // StartSession resolves the session driver (and its idle window) from
         // config at startup, so the preference must be applied before it runs.
         $middleware->prependToGroup('web', ApplySessionTimeout::class);
+
+        // Install/upgrade routing (issue 27, Task 2.3). Appended to `web`, so
+        // the session (and therefore `$request->user()`) is available, and
+        // given priority ahead of Authenticate: otherwise a route's `auth`
+        // middleware would bounce an uninstalled site to /login instead of the
+        // wizard. Still after StartSession/ShareErrorsFromSession.
+        $middleware->appendToGroup('web', EnsureInstalled::class);
+        $middleware->prependToPriorityList(
+            AuthenticatesRequests::class,
+            EnsureInstalled::class,
+        );
 
         // PARITY-026: locale resolution per legacy language.lang.php:42-78.
         $middleware->appendToGroup('web', SetLocale::class);

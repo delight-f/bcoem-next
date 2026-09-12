@@ -99,4 +99,22 @@ return [
         'source_url' => env('CLUBS_LIST_URL', 'https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json'),
         'timeout_seconds' => (int) env('CLUBS_LIST_TIMEOUT', 10),
     ],
+
+    /*
+| GitHub Releases. The installer wizard's "update available" notice reads the
+| latest published release for this repository. A restricted host with no
+| outbound access simply gets no notice — see RemoteVersionChecker.
+*/
+    'github' => [
+        'repository' => env('BCOEM_GITHUB_REPOSITORY', 'bcoem/bcoem-next'),
+        'timeout_seconds' => (int) env('BCOEM_GITHUB_TIMEOUT', 5),
+    ],
+
+    /*
+| Support contact shown on the upgrade failure screen. Pre-filled with the
+| failure detail so a non-technical club member can relay it in one click.
+*/
+    'support' => [
+        'email' => env('BCOEM_SUPPORT_EMAIL', 'support@brewingcompetitions.com'),
+    ],
 ];

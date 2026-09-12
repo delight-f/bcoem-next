@@ -509,6 +509,26 @@
             <p class="alert alert-warning"><span class="fa fa-lg fa-exclamation-circle"></span>
                 <strong>{{ __('site.login_problem') }}</strong> {{ __('site.login_problem_detail') }}</p>
         @endif
+        {{-- Upgrade-available banner (issue 27, Task 2.3): shared by
+             EnsureInstalled for Top-Level Administrators only, when newer
+             files are on disk. Per-session dismissal posts to
+             wizard.upgrade.dismiss. --}}
+        @if (! empty($upgradeBanner ?? null))
+            <div class="alert alert-warning d-print-none mb-0" role="alert">
+                <div class="container-fluid d-flex align-items-center gap-3">
+                    <i class="fa fa-arrow-circle-up fa-lg" aria-hidden="true"></i>
+                    <div class="flex-grow-1">
+                        <strong>Version {{ $upgradeBanner['version'] }} is available</strong>
+                        (you are running {{ $upgradeBanner['current'] }}).
+                        <a class="alert-link" href="{{ $upgradeBanner['url'] }}">Update your site</a>.
+                    </div>
+                    <form method="post" action="{{ $upgradeBanner['dismiss'] }}">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
+                    </form>
+                </div>
+            </div>
+        @endif
         {{-- Stacked info alerts ("For Your Information"): a slim, non-urgent
              strip (role=status, not role=alert) so it reads as an invitation
              rather than a warning. --}}

@@ -233,6 +233,8 @@ Route::post('/ajax/count-records', [AjaxController::class, 'countRecords'])->nam
 // effective timeout, so there is nothing to protect beyond the login gate.
 Route::get('/ajax/heartbeat', [AjaxController::class, 'heartbeat'])->name('ajax.heartbeat');
 
+require __DIR__.'/wizard.php';
+
 require __DIR__.'/judging.php';
 require __DIR__.'/eval.php';
 

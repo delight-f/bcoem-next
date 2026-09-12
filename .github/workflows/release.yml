@@ -1,0 +1,183 @@
+name: Release
+
+# Builds the versioned release zip with `build/release.sh` and publishes it as
+# a GitHub Release. Triggered by tags like `v4.0.0` only — a release must be a
+# deliberate act, not a side effect of a branch push. Part of issue #27.
+#
+# The `test` job mirrors ci.yml (same PHP matrix, same extensions, same MySQL
+# service and phpunit invocation) so the release gate cannot drift away from
+# what CI checks. `release` only runs if every matrix leg passed, so failing
+# tests mean no zip and no release.
+#
+# Tags are immutable in practice, but a workflow can be re-run by hand:
+# `softprops/action-gh-release` looks the release up by tag and updates it in
+# place, so a re-run overwrites the asset instead of creating a duplicate.
+# The concurrency group additionally serialises runs for the same tag.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Tests on PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: true
+      matrix:
+        php: ['8.4', '8.5']
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: bcoem_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, mbstring, intl, gd
+          coverage: none
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # Evaluates composer.json's `require.php` constraint (and, once Part 1
+      # adds them, the ext-* requirements) instead of re-parsing the version
+      # string by hand. Non-zero exit if this PHP does not satisfy it.
+      - name: Assert PHP satisfies composer.json
+        run: composer check-platform-reqs
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Load baseline schema into MySQL
+        run: mysql -h 127.0.0.1 -uroot -proot bcoem_test < sql/bcoem_baseline_3.0.X.sql
+
+      - name: Run migrations against MySQL
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: bcoem_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_TABLE_PREFIX: baseline_
+        run: |
+          # The baseline_*-prefixed schema is loaded separately above, so the
+          # framework's 0001_01_01_* migrations would collide with it. Run the
+          # rest by explicit --path.
+          for path in $(ls database/migrations/*.php | grep -v '/0001_'); do
+            php artisan migrate --force --path="$path"
+          done
+
+      # The output/PDF tests extract rendered PDF text with `pdftotext`.
+      - name: Install pdftotext
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils
+
+      - name: PHPUnit
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: bcoem_test
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          BCOEM_TEST_DB_HOST: 127.0.0.1
+          BCOEM_TEST_DB_USER: root
+          BCOEM_TEST_DB_PASS: root
+          BCOEM_TEST_DB_NAME: bcoem_test
+        run: vendor/bin/phpunit
+
+  release:
+    name: Package and publish
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          # Package once, on the oldest supported PHP. The matrix above has
+          # already proven the suite passes on every supported version.
+          php-version: '8.4'
+          extensions: mysqli, mbstring, intl, gd
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Build release zip
+        run: bash build/release.sh "${GITHUB_REF_NAME#v}"
+
+      # Machine-checked, not by eye: the VERSION file inside the zip must be
+      # the tag with the leading `v` stripped.
+      - name: Assert VERSION inside the zip matches the tag
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          actual="$(unzip -p "build/output/bcoem-${version}.zip" "bcoem-${version}/VERSION")"
+          if [ "$actual" != "$version" ]; then
+            echo "::error::VERSION inside the zip is '${actual}', expected '${version}'"
+            exit 1
+          fi
+          echo "VERSION inside the zip matches the tag: ${actual}"
+
+      # Release notes come from the CHANGELOG.md section for this version.
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            f && /^## / { exit }
+            f { print }
+            index($0, "## [" v "]") == 1 { f = 1 }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            printf 'See [CHANGELOG.md](CHANGELOG.md) for the changes in %s.\n' "$GITHUB_REF_NAME" > release-notes.md
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/output/*.zip
+          body_path: release-notes.md
+          fail_on_unmatched_files: true

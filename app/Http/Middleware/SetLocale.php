@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Services\Installation\InstallationService;
 use App\Support\Tenant\Language;
 use App\Support\Tenant\TenantContext;
 use Closure;
@@ -21,7 +22,18 @@ final class SetLocale
 {
     public function handle(Request $request, Closure $next): mixed
     {
-        $ctx = TenantContext::load();
+        try {
+            $ctx = TenantContext::load();
+        } catch (\Throwable $e) {
+            // A bare upload has no database yet: there is no tenant language to
+            // resolve, so keep the default locale and carry on. On an installed
+            // site the failure is rethrown rather than masked.
+            if (app(InstallationService::class)->isAlreadyInstalled()) {
+                throw $e;
+            }
+
+            return $next($request);
+        }
 
         // ?lang= param → set 30-day cookie + redirect (nav.pub.php:142-152).
         $langParam = $request->query('lang');

@@ -157,6 +157,147 @@ Actions secret — the workflow checks out the publishing repo over SSH with it.
 deploy key is used rather than a personal access token because it can be created
 non-interactively and grants write access to that one repository only.
 
+## Installing and upgrading
+
+The old routine was: download a source zip, FTP it up, hand-edit the config, and
+hope. bcoem-next replaces it with one coherent system — a properly built release
+artifact, and a single pair of service classes, `InstallationService` and
+`UpgradeService`, that hold all the install, backup, migration and validation
+logic exactly once. Three thin interfaces sit on top of those services, so none
+of them re-implements any of it:
+
+| Interface | Who it is for | How it runs |
+|---|---|---|
+| CLI | developers, and the SSH script | `php artisan app:install` / `app:upgrade` |
+| Web wizard | organisers with only FTP access | `/install` and `/upgrade` |
+| SSH script | VPS operators who want one command | `scripts/install.sh` |
+
+Whatever the interface, it is the same code path: there is exactly one place
+that knows how to stand up a fresh install, and exactly one place that knows how
+to back up a database and migrate an existing one.
+
+### The release artifact
+
+A release is a zip built from a tag. `.github/workflows/release.yml` runs the
+test suite first — a failing matrix leg means no zip and no release — then
+packages with `build/release.sh <version>`, asserts that the `VERSION` file
+inside the zip equals the tag with the leading `v` stripped, and attaches the
+zip to a GitHub Release whose notes come from the matching `CHANGELOG.md`
+section. Re-running the workflow on the same tag updates the release in place.
+
+`build/release.sh` copies the tree without `.git`, `.github`, `node_modules`,
+`tests`, `build/` or local artifacts, runs `composer install --no-dev` and
+`npm ci && npm run build` **inside the package**, deletes `node_modules`, and
+writes a `VERSION` file. Because `vendor/` and the compiled assets are already
+in the zip, the target host needs only PHP and a web server — no Composer, no
+Node.
+
+The zip also carries a credential-free placeholder `.env`: a build-time
+`APP_KEY`, `APP_ENV=production`, `APP_DEBUG=false`, `LOG_CHANNEL=stack`, and
+file-backed session and cache with a sync queue. It contains no database, mail
+or other credentials. It is what lets a freshly uploaded copy boot far enough to
+serve the installer with no database configured at all, which is what makes the
+wizard below reachable by FTP alone. `InstallationService::install()` rewrites it
+with the real settings on the first run.
+
+### Three ways to install
+
+**CLI.** `php artisan app:install` prompts for the database and site details, or
+takes every value as a flag (with `--no-interaction`) for unattended use:
+
+```bash
+php artisan app:install \
+  --db-host=127.0.0.1 --db-port=3306 --db-name=bcoem \
+  --db-username=bcoem --db-password=secret \
+  --app-url=https://beer.example.com \
+  --admin-name="Club Admin" --admin-email=admin@example.com --admin-password=secret
+```
+
+It checks the preconditions, tests the database connection, and only then
+installs — a bad password stops before anything is written.
+
+**Web wizard.** `/install` walks through six screens — welcome, system check,
+database connection, site details, confirm, progress — with no terminal use at
+all. The connection test and the progress poll are small `fetch` calls, and the
+install itself runs inline on the sync queue, so a fresh upload needs no queue
+worker. A resubmitted confirmation screen cannot install twice.
+
+**SSH script.** On a VPS you already have SSH on:
+
+```bash
+curl -sSL https://get.yourapp.com/install.sh | bash
+```
+
+`scripts/install.sh` checks PHP, the required extensions and `unzip`, downloads
+the release zip (or takes a local `--zip-file`), and then drives `php artisan
+app:install` with the collected values. It adds the Laravel scheduler cron entry
+if one is not already present. The hosting of that short URL is separate
+infrastructure, decided elsewhere.
+
+### Upgrading
+
+- **CLI** — `php artisan app:upgrade` takes a backup and applies pending
+  updates. It confirms first, or accepts `--force` for unattended use.
+- **Web wizard** — `/upgrade` is reachable by Top-Level Administrators only, and
+  a dismissable banner appears when newer files are already on the server.
+  Non-admins neither see the banner nor can reach the wizard.
+- **SSH script** — the same `scripts/install.sh` detects an existing install and
+  runs the upgrade path: it stages the new version beside the live one, copies
+  the live `.env` and `storage/` across (the release zip never contains
+  credentials or uploaded data), swaps directories keeping the old one at
+  `<target>.bak-<timestamp>`, and runs `app:upgrade`.
+
+Every path runs the same order, and that order is deliberate:
+
+1. **Back up first**, before anything touches the database. This shells out to
+   `mysqldump`; if that binary cannot be executed, it falls back to a PHP export
+   of every table, so a backup always exists.
+2. **Verify the backup** (the file exists and is non-empty). If verification
+   fails the run stops before any change, and says so.
+3. Enter maintenance mode.
+4. Run pending migrations.
+5. Run any version-specific fixups registered for that version jump.
+6. Clear caches.
+7. Update the stored version marker.
+8. Leave maintenance mode.
+
+**There is no automatic database rollback.** If a step after the backup fails,
+the backup file's path travels with the error so every interface can surface it,
+and a person decides whether to restore. The SSH script likewise never swaps the
+old files back on its own. Upgrading an already-current install is a safe no-op
+that still takes the backup, so a re-run after a failed attempt always has its
+safety net.
+
+### Safety guarantees
+
+- **Preconditions fail before anything is written.** The PHP version is checked
+  against `composer.json`'s constraint with `composer/semver` — not a
+  hand-parsed version — and the required extensions are read from the same
+  `composer.json` entries CI and the SSH check script use. Storage writability,
+  and free disk space for the backup, are checked too.
+- **A wrong database password changes nothing.** The connection is tested before
+  install writes a file, and the failure carries a plain-language message
+  ("That database password looks wrong…") rather than a raw driver error.
+- **Installing twice is refused**, and upgrading a site that is not installed is
+  refused — both with typed exceptions, never a silent overwrite.
+- **The release zip carries no secrets and no data** — no real `.env`, no
+  `storage/` contents; the SSH upgrade copies those from the live install.
+- **Wizards disappear when they have nothing to do.** Once installed and
+  current, `/install` and `/upgrade` both return 404.
+
+### Checks and diagnostics
+
+```bash
+php artisan app:version          # the installed version
+php artisan app:version --check  # …and whether a newer release exists
+php artisan app:health           # database, storage, extensions, queue
+```
+
+`app:version --check` asks GitHub for the latest release; on a host with no
+outbound network access it simply omits the "update available" line instead of
+erroring. `app:health` reuses the installer's own precondition checks, so it
+cannot disagree with what an install would require.
+
 ## Repository layout
 
 ```
