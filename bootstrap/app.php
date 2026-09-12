@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApplyMailSettings;
+use App\Http\Middleware\ApplySessionTimeout;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'includes/process.inc.php',
         ]);
+
+        // Upstream 3.1.0 custom session timeout. PREPENDED, not appended:
+        // StartSession resolves the session driver (and its idle window) from
+        // config at startup, so the preference must be applied before it runs.
+        $middleware->prependToGroup('web', ApplySessionTimeout::class);
 
         // PARITY-026: locale resolution per legacy language.lang.php:42-78.
         $middleware->appendToGroup('web', SetLocale::class);
