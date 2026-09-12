@@ -162,6 +162,37 @@ final class AjaxController extends Controller
     }
 
     /**
+     * heartbeat.ajax.php (upstream 3.1.0, issue #870): session keep-alive +
+     * countdown resync. Any web-group request refreshes the framework
+     * session's idle timer, so this only has to hand back the effective
+     * timeout and a fresh expiry for the client countdowns.
+     *
+     * The client (resources/js/app.js) calls it on genuine activity
+     * (click/keydown, throttled to once a minute), so a page whose only
+     * "activity" is client-side — DataTables filtering, type-ahead — stops
+     * the warning modals from firing against a session that was just
+     * extended. status 9 = no session, matching legacy.
+     */
+    public function heartbeat(Request $request): JsonResponse
+    {
+        if (! ($request->user() instanceof User)) {
+            return response()->json([
+                'status' => '9',
+                'session_expire_after_minutes' => 0,
+                'session_end_seconds' => 0,
+            ]);
+        }
+
+        $minutes = TenantContext::load()->sessionTimeoutMinutes();
+
+        return response()->json([
+            'status' => '1',
+            'session_expire_after_minutes' => $minutes,
+            'session_end_seconds' => time() + $minutes * 60,
+        ]);
+    }
+
+    /**
      * save.ajax.php, action=brewing: single-field inline updates behind the
      * admin entries surface. Empty writes NULL ('' when rid2=text-col),
      * "0" writes NULL, everything else writes the sterilized input — the

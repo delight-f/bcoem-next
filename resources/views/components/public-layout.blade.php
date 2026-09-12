@@ -475,9 +475,11 @@
                                 <li class="small"><hr class="dropdown-divider"></li>
                                 <li class="small" style="font-size: .75em;">
                                     {{-- pub/nav.pub.php:189 — "Auto Log Out in <span id=session-end>"
-                                         countdown footer. app.js ticks #session-end from the session
-                                         lifetime and auto-logs-out at zero (nav.pub.php session-end JS). --}}
-                                    <span class="dropdown-item-text text-body-secondary">{{ __('site.auto_log_out') }} <span id="session-end" data-session-end-seconds="{{ (int) config('session.lifetime', 120) * 60 }}"></span></span>
+                                         countdown footer. app.js ticks #session-end from the
+                                         effective session timeout (preferences.prefsSessionTimeout
+                                         when set, else config('session.lifetime')) and auto-logs-out
+                                         at zero (nav.pub.php session-end JS). --}}
+                                    <span class="dropdown-item-text text-body-secondary">{{ __('site.auto_log_out') }} <span id="session-end" data-session-end-seconds="{{ $ctx->sessionTimeoutMinutes() * 60 }}" data-session-heartbeat-url="{{ route('ajax.heartbeat') }}"></span></span>
                                 </li>
                             </ul>
                         </div>
@@ -682,8 +684,11 @@
     @auth
         {{-- Legacy index.legacy.php:259-302 — the two session-expire modals are on
              every admin page. Copy modal bodies verbatim (labels from
-             lang/en/en-US.lang.php:1782-1784, alert_text_090/091 at :1862-1863). --}}
-        <script>window.bcoemAdminSession = { endSeconds: {{ (int) (time() + (int) config('session.lifetime', 120) * 60) }}, lifetimeMin: {{ (int) config('session.lifetime', 120) }}, redirect: "{{ route('logout') }}" };</script>
+             lang/en/en-US.lang.php:1782-1784, alert_text_090/091 at :1862-1863).
+             lifetimeMin/endSeconds come from the effective timeout
+             (preferences.prefsSessionTimeout, else session.lifetime) and
+             heartbeatUrl feeds the app.js resync (ajax/heartbeat.ajax.php). --}}
+        <script>window.bcoemAdminSession = { endSeconds: {{ time() + $ctx->sessionTimeoutMinutes() * 60 }}, lifetimeMin: {{ $ctx->sessionTimeoutMinutes() }}, heartbeatUrl: "{{ route('ajax.heartbeat') }}", redirect: "{{ route('logout') }}" };</script>
 
         <!-- Session Expiring Modal: 2 Minute Warning -->
         <div class="modal fade" id="session-expire-warning" tabindex="-1" aria-labelledby="session-expire-warning-label" aria-hidden="true">

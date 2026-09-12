@@ -67,6 +67,30 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
     revealables.forEach((el) => el.classList.add('active-element'));
 }
 
+// Auto-logout countdown resync (legacy js_includes/autologout.min.js
+// heartbeat() → ajax/heartbeat.ajax.php). Genuine activity that never causes
+// a page load (DataTables filtering/sorting, type-ahead) still refreshes the
+// framework session server-side, so the visible countdowns re-read the
+// server's expiry instead of running against a session that was extended.
+// Sent on click/keydown, throttled to one request a minute; the server, not
+// this file, knows the effective timeout (preferences.prefsSessionTimeout,
+// else config('session.lifetime')).
+const sessionResyncHandlers = [];
+let heartbeatLastSent = 0;
+const sessionHeartbeat = (url) => {
+    if (!url) return;
+    const now = Date.now();
+    if (now - heartbeatLastSent < 60000) return;
+    heartbeatLastSent = now;
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+            if (!data || data.status !== '1') return;
+            sessionResyncHandlers.forEach((fn) => fn(Number(data.session_end_seconds)));
+        })
+        .catch(() => {});
+};
+
 // Public-nav "Auto Log Out in <mm:ss>" countdown (legacy nav.pub.php
 // session-end). Ticks the seconds span in the logged-in user dropdown from
 // the session lifetime and auto-logs-out (submits the navbar logout form)
@@ -107,6 +131,11 @@ if ('IntersectionObserver' in window && revealables.length > 0) {
             }
         }
     };
+    // Activity heartbeat: restart the countdown from the server's expiry.
+    sessionResyncHandlers.push((endSeconds) => {
+        remaining = Math.max(0, endSeconds - Math.floor(Date.now() / 1000));
+        render();
+    });
     render();
     const timer = setInterval(() => {
         remaining -= 1;
@@ -211,10 +240,10 @@ if (dateTimeInputs.length > 0 && window.flatpickr) {
 // globals); shown via Bootstrap 5's Modal API (issue 8 — the modals are BS5
 // markup; bootstrap.Modal is the bundled BS5 global).
 if (window.bcoemAdminSession) {
-    const { endSeconds, redirect } = window.bcoemAdminSession;
+    const { redirect } = window.bcoemAdminSession;
     let expiryShown = null;
-    setInterval(() => {
-        const remaining = endSeconds - Math.floor(Date.now() / 1000);
+    const tick = () => {
+        const remaining = window.bcoemAdminSession.endSeconds - Math.floor(Date.now() / 1000);
         if (remaining <= 0) {
             window.location.replace(redirect);
             return;
@@ -229,7 +258,24 @@ if (window.bcoemAdminSession) {
             bootstrap.Modal.getOrCreateInstance('#session-expire-warning').show();
             expiryShown = 120;
         }
-    }, 1000);
+    };
+    setInterval(tick, 1000);
+    // Activity heartbeat: server expiry wins, and a fresh expiry re-arms
+    // whichever warning has already fired.
+    sessionResyncHandlers.push((endSeconds) => {
+        window.bcoemAdminSession.endSeconds = endSeconds;
+        expiryShown = null;
+    });
+}
+
+// Heartbeat triggers: any click or keydown counts as activity (legacy
+// autologout.min.js); the throttle in sessionHeartbeat keeps it to one
+// request a minute. Bound once — both countdowns share the single heartbeat.
+const heartbeatUrl = window.bcoemAdminSession?.heartbeatUrl
+    ?? document.getElementById('session-end')?.dataset.sessionHeartbeatUrl;
+if (sessionResyncHandlers.length > 0 && heartbeatUrl) {
+    document.addEventListener('click', () => sessionHeartbeat(heartbeatUrl), true);
+    document.addEventListener('keydown', () => sessionHeartbeat(heartbeatUrl), true);
 }
 // ── Tooltips (INTERACTION-PARITY; legacy $('[data-toggle="tooltip"]').tooltip()).
 // Bootstrap JS is loaded on admin pages only; a CSS tooltip works on every

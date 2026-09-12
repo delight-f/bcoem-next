@@ -205,15 +205,51 @@ final class PayPageTest extends PublicSurfaceTestCase
         // Legacy currency_info(...,1) (lib/common.lib.php:662-698): AUD
         // renders the symbol "$" with code AUD, not the literal "A$" option
         // value (P4 Slice 3). Regression: the port rendered "A$8.00".
-        DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'A$']);
-        $this->setFee('8');
-        $this->bindFakeGateway();
-        $this->login();
+        // Restore the shared prefs row: leaving 'A$' behind leaks into sibling
+        // suites, whose currency assertions then depend on run order.
+        $prefs = (array) DB::table('preferences')->where('id', 1)->first();
 
-        $this->makeEntry(['brewName' => 'Aud Ale']);
-        $html = $this->html();
-        self::assertStringContainsString('$8.00', $html);
-        self::assertStringNotContainsString('A$8.00', $html);
+        try {
+            DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'A$']);
+            $this->setFee('8');
+            $this->bindFakeGateway();
+            $this->login();
+
+            $this->makeEntry(['brewName' => 'Aud Ale']);
+            $html = $this->html();
+            self::assertStringContainsString('$8.00', $html);
+            self::assertStringNotContainsString('A$8.00', $html);
+        } finally {
+            DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => $prefs['prefsCurrency']]);
+        }
+    }
+
+    /**
+     * Upstream 3.1.0 added Korean Won (₩, KRW) to the currency map, and
+     * widened the fee columns from float(6,2) to DECIMAL(9,2): a Won entry
+     * fee runs to five figures, past the old 9999.99 ceiling. The pay page
+     * must show the whole amount under ₩.
+     */
+    public function test_krw_currency_renders_a_wide_won_entry_fee_whole(): void
+    {
+        $prefs = (array) DB::table('preferences')->where('id', 1)->first();
+
+        try {
+            DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'krw']);
+            $this->setFee('15000.50');
+            $this->bindFakeGateway();
+            $this->login();
+
+            $this->makeEntry(['brewName' => 'Won Ale']);
+            $html = $this->html();
+
+            self::assertStringContainsString('Won Ale', $html);
+            self::assertStringContainsString('₩15,000.50', $html);
+            // Nothing cut off at the old float(6,2) ceiling.
+            self::assertStringNotContainsString('9,999.99', $html);
+        } finally {
+            DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => $prefs['prefsCurrency']]);
+        }
     }
 
     public function test_unconfirmed_entries_are_not_charged_or_listed(): void

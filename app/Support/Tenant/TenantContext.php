@@ -55,6 +55,21 @@ final class TenantContext
         return self::str($this->judging, $key);
     }
 
+    /**
+     * Effective auto-logout timeout, in minutes. The admin-configured
+     * `preferences.prefsSessionTimeout` (upstream 3.1.0) wins when set;
+     * NULL/blank falls back to the installation default that the legacy
+     * `$session_expire_after` mirrors — Laravel's config('session.lifetime').
+     * Both countdown boot sites (public nav #session-end, admin expiry modal)
+     * and the resync heartbeat read this, never the raw config.
+     */
+    public function sessionTimeoutMinutes(): int
+    {
+        $override = (int) ($this->prefsStr('prefsSessionTimeout') ?? '');
+
+        return $override > 0 ? $override : (int) config('session.lifetime', 120);
+    }
+
     /** prefsCurrency code -> symbol (legacy common.lib currency map). */
     public function currencySymbol(): string
     {

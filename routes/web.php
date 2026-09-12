@@ -189,6 +189,10 @@ Route::post('/ajax/valid-email', [AjaxController::class, 'validEmail'])->name('a
 Route::post('/ajax/account-checks', [AjaxController::class, 'accountChecks'])->name('ajax.account_checks');
 Route::post('/ajax/save', [AjaxController::class, 'save'])->name('ajax.save');
 Route::post('/ajax/count-records', [AjaxController::class, 'countRecords'])->name('ajax.count_records');
+// Session resync (upstream ajax/heartbeat.ajax.php): a GET so the client can
+// poll it repeatedly on activity without a CSRF token; it only reads the
+// effective timeout, so there is nothing to protect beyond the login gate.
+Route::get('/ajax/heartbeat', [AjaxController::class, 'heartbeat'])->name('ajax.heartbeat');
 
 require __DIR__.'/judging.php';
 require __DIR__.'/eval.php';
