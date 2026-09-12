@@ -234,6 +234,24 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('#1 Incremental Entry Limit per Participant Days', false);
     }
 
+    public function test_entries_limit_method_is_a_stacked_option_list(): void
+    {
+        $this->login();
+
+        // Was three inline radios followed by three stacked help paragraphs —
+        // a wall of text. Now each method is its own row: title + one-line
+        // description, with the caution as a single compact note.
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('<strong class="d-block">Disable</strong>', false)
+            ->assertSee('<strong class="d-block">Enable By Table or Medal Group</strong>', false)
+            ->assertSee('<strong class="d-block">Enable By Style</strong>', false)
+            ->assertSee('No limit on how many entries a participant may submit.', false)
+            ->assertSee('Requires <strong>Tables Planning Mode</strong>', false)
+            ->assertSee('Set a numerical limit on overall styles or style groups in the grid below.', false)
+            ->assertSee('changing the method deletes any limits set under the previous one', false);
+    }
+
     public function test_entries_style_type_limits_round_trip(): void
     {
         $this->login();

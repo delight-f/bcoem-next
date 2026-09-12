@@ -481,17 +481,34 @@
                 @endif
                 <h4>Entry Limits by Style or Table/Medal Group</h4>
                 <div class="mb-4 row">
-                    <label for="choose-style-entry-limits" class="col-md-4 col-form-label">Entry Limit Method</label>
+                    <span class="col-md-4 col-form-label">Entry Limit Method</span>
                     <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="0" id="csel_0" @checked($p('prefsStyleLimits') === '')><label class="form-check-label" for="csel_0">Disable</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="2" id="csel_2" @checked($p('prefsStyleLimits') === '2')><label class="form-check-label" for="csel_2">Enable By Table or Medal Group</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="1" id="csel_1" @checked(str_starts_with($p('prefsStyleLimits'), '{'))><label class="form-check-label" for="csel_1">Enable By Style</label></div>
-                        <span class="form-text"><strong class="text-primary">Please note:</strong> If you choose a different entry limit method than what is currently defined, any limits set previously will be deleted and all styles previously disabled due to limits will be enabled.</span>
-                        <span class="form-text"><strong>Limiting by table or medal group</strong> requires that your installation be placed into <strong>Tables Planning Mode</strong> and <a href="{{ url('/admin/judging/tables') }}">tables/medal groups defined</a> (limits are set when creating or editing tables/medal groups).</span>
-                        <span class="form-text"><strong>Limiting entries by style</strong> allows you to define a numerical limit on overall styles or style groups. Define your per-style limits below.</span>
+                        <div class="border rounded">
+                            <label class="d-flex gap-2 align-items-start p-2 mb-0 border-bottom">
+                                <input class="form-check-input flex-shrink-0 mt-1" type="radio" name="choose-style-entry-limits" value="0" id="csel_0" @checked($p('prefsStyleLimits') === '')>
+                                <span>
+                                    <strong class="d-block">Disable</strong>
+                                    <small class="text-muted">No limit on how many entries a participant may submit.</small>
+                                </span>
+                            </label>
+                            <label class="d-flex gap-2 align-items-start p-2 mb-0 border-bottom">
+                                <input class="form-check-input flex-shrink-0 mt-1" type="radio" name="choose-style-entry-limits" value="2" id="csel_2" @checked($p('prefsStyleLimits') === '2')>
+                                <span>
+                                    <strong class="d-block">Enable By Table or Medal Group</strong>
+                                    <small class="text-muted">Limits are set on the tables/medal groups themselves. Requires <strong>Tables Planning Mode</strong> and <a href="{{ url('/admin/judging/tables') }}">defined tables</a>.</small>
+                                </span>
+                            </label>
+                            <label class="d-flex gap-2 align-items-start p-2 mb-0">
+                                <input class="form-check-input flex-shrink-0 mt-1" type="radio" name="choose-style-entry-limits" value="1" id="csel_1" @checked(str_starts_with($p('prefsStyleLimits'), '{'))>
+                                <span>
+                                    <strong class="d-block">Enable By Style</strong>
+                                    <small class="text-muted">Set a numerical limit on overall styles or style groups in the grid below.</small>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="alert alert-info py-2 px-3 mt-2 mb-0 small">
+                            <strong>Please note:</strong> changing the method deletes any limits set under the previous one and re-enables every style they had disabled.
+                        </div>
                     </div>
                 </div>
                 <section id="define-style-entry-limits">
