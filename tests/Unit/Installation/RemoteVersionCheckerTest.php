@@ -5,12 +5,43 @@ declare(strict_types=1);
 namespace Tests\Unit\Installation;
 
 use App\Support\Wizard\RemoteVersionChecker;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 final class RemoteVersionCheckerTest extends TestCase
 {
+    public function test_the_requested_url_uses_the_configured_repository(): void
+    {
+        Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v4.1.0'], 200)]);
+        Cache::forget('bcoem.remote-version');
+
+        config()->set('services.github.repository', 'some-org/some-repo');
+
+        (new RemoteVersionChecker)->latestPublishedVersion();
+
+        Http::assertSent(static fn (Request $request): bool => $request->url()
+            === 'https://api.github.com/repos/some-org/some-repo/releases/latest');
+    }
+
+    public function test_the_shipped_default_repository_is_the_project_remote(): void
+    {
+        Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v4.1.0'], 200)]);
+        Cache::forget('bcoem.remote-version');
+
+        $this->assertSame('delight-f/bcoem-next', config('services.github.repository'));
+        $this->assertSame(
+            'https://github.com/delight-f/bcoem-next/releases',
+            (new RemoteVersionChecker)->releasesUrl(),
+        );
+
+        (new RemoteVersionChecker)->latestPublishedVersion();
+
+        Http::assertSent(static fn (Request $request): bool => $request->url()
+            === 'https://api.github.com/repos/delight-f/bcoem-next/releases/latest');
+    }
+
     public function test_latest_version_is_fetched_once_then_served_from_cache(): void
     {
         Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v4.1.0'], 200)]);

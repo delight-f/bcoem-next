@@ -106,7 +106,7 @@ return [
 | outbound access simply gets no notice — see RemoteVersionChecker.
 */
     'github' => [
-        'repository' => env('BCOEM_GITHUB_REPOSITORY', 'bcoem/bcoem-next'),
+        'repository' => env('BCOEM_GITHUB_REPOSITORY', 'delight-f/bcoem-next'),
         'timeout_seconds' => (int) env('BCOEM_GITHUB_TIMEOUT', 5),
     ],
 
