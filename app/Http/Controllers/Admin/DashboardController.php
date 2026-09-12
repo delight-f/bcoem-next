@@ -728,7 +728,8 @@ final class DashboardController extends Controller
             }
             $rows[] = ['BJCP Points', ['blocks' => [
                 $inline([$l('/admin/output/staff_points', 'Print'),
-                    $l('/admin/output/staff_points?action=download&view=pdf', 'PDF')]),
+                    $l('/admin/output/staff_points?action=download&view=pdf', 'PDF'),
+                    $l('/admin/output/staff_points?view=xml', 'XML')]),
             ]]];
             if ($tables > 0) {
                 $rows[] = ['Award Labels', ['blocks' => [

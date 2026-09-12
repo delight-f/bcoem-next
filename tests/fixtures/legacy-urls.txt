@@ -640,6 +640,7 @@ admin|includes/output.inc.php?section=export-results&go=judging_scores&action=de
 admin|includes/output.inc.php?section=export-results&go=judging_scores&action=default&tb=none&view=html|/admin/output/results?action=default&go=judging_scores&tb=none&view=html
 admin|includes/output.inc.php?section=staff&go=judging_assignments&action=download&filter=default&view=default|/admin/output/staff_points
 admin|includes/output.inc.php?section=export-staff&go=judging_assignments&action=download&filter=default&view=pdf|/admin/output/staff_points?action=download&view=pdf
+admin|includes/output.inc.php?section=export-staff&go=judging_assignments&action=download&filter=default&view=xml|/admin/output/staff_points?view=xml
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff|/admin/output/assignments?filter=staff
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=staff&view=name|/admin/output/assignments?filter=staff&view=name
 admin|includes/output.inc.php?section=assignments&go=judging_assignments&filter=judges&view=name&tb=view|/admin/output/assignments?filter=judges&view=name&tb=view

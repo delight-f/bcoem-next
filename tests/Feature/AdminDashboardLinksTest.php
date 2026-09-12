@@ -140,6 +140,7 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ['/admin/output/participant_summary', 'All Participants with Entries'],
             ['/admin/output/participant_entries_list', 'All Entries by Particpant'],
             ['/admin/output/staff_points', 'Print'],
+            ['/admin/output/staff_points?view=xml', 'XML'],
             ['/admin/output/post_judge_inventory', 'With Scores'],
             ['/admin/output/post_judge_inventory', 'Without Scores'],
             // Data Exports — active CSV
