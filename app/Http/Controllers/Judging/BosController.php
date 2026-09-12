@@ -46,8 +46,79 @@ final class BosController extends Controller
             'groups' => collect($types)->map(fn (object $type): object => (object) [
                 'type' => $type,
                 'rows' => self::eligible((int) $type->id),
+                'judges' => self::panelJudgeUids((int) $type->id),
             ])->all(),
+            'candidates' => self::panelCandidates(),
         ]);
+    }
+
+    /**
+     * Save who sat a style type's BOS panel. The BJCP experience-point
+     * schedule caps the BOS bonus per panel, and the legacy schema recorded
+     * only the global staff_judge_bos flag, so panel membership has to be
+     * captured explicitly (bos_panel_judges).
+     */
+    public function updatePanels(Request $request, int $styleType): RedirectResponse
+    {
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            return redirect('/?msg=99');
+        }
+
+        if (! DB::table('style_types')->where('id', $styleType)->where('styleTypeBOS', 'Y')->exists()) {
+            return redirect('/admin/judging/bos');
+        }
+
+        /** @var list<int> $uids */
+        $uids = array_values(array_unique(array_map(
+            static fn (mixed $uid): int => (int) $uid,
+            (array) $request->input('judges', []),
+        )));
+
+        DB::transaction(function () use ($styleType, $uids): void {
+            DB::table('bos_panel_judges')->where('bosType', $styleType)->delete();
+
+            foreach ($uids as $uid) {
+                DB::table('bos_panel_judges')->insert(['bosType' => $styleType, 'uid' => $uid]);
+            }
+        });
+
+        return redirect('/admin/judging/bos');
+    }
+
+    /**
+     * Uids assigned to a BOS panel.
+     *
+     * @return list<int>
+     */
+    private static function panelJudgeUids(int $styleType): array
+    {
+        return array_values(
+            DB::table('bos_panel_judges')->where('bosType', $styleType)->pluck('uid')
+                ->map(static fn (mixed $uid): int => (int) $uid)
+                ->all()
+        );
+    }
+
+    /**
+     * Judges and BOS judges eligible to sit a panel, in name order.
+     *
+     * @return list<\stdClass>
+     */
+    private static function panelCandidates(): array
+    {
+        return array_values(
+            DB::table('staff as s')
+                ->join('brewer as b', 's.uid', '=', 'b.uid')
+                ->where(function ($query): void {
+                    $query->where('s.staff_judge', '1')->orWhere('s.staff_judge_bos', '1');
+                })
+                ->orderBy('b.brewerLastName')
+                ->orderBy('b.brewerFirstName')
+                ->get(['s.uid', 'b.brewerFirstName', 'b.brewerLastName'])
+                ->unique('uid')
+                ->values()
+                ->all()
+        );
     }
 
     /** Add/update form for one BOS style type ("enter" in legacy). */

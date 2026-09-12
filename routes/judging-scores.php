@@ -25,6 +25,8 @@ Route::get('/admin/judging/bos/{styleType}/edit', [BosController::class, 'edit']
     ->name('admin.judging.bos.edit')->middleware('auth');
 Route::put('/admin/judging/bos/{styleType}', [BosController::class, 'update'])
     ->name('admin.judging.bos.update')->middleware('auth');
+Route::put('/admin/judging/bos/{styleType}/panels', [BosController::class, 'updatePanels'])
+    ->name('admin.judging.bos.panels')->middleware('auth');
 
 Route::get('/admin/judging/special-best', [SpecialBestController::class, 'index'])
     ->name('admin.specialbest.index')->middleware('auth');

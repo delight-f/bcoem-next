@@ -47,6 +47,24 @@
             @php($rows = $group->rows)
             @php($type = $group->type)
             <h3>BOS Entries and Places for {{ $type->styleTypeName }}</h3>
+
+            {{-- BOS panel composition (bos_panel_judges). The BJCP awards the
+                 BOS bonus per panel — 3 judges for 5-14 entries, 5 for 15+ —
+                 and the legacy global staff_judge_bos flag cannot express who
+                 sat which panel. --}}
+            <form method="POST" action="{{ route('admin.judging.bos.panels', ['styleType' => $type->id]) }}" class="bcoem-admin-element d-print-none mb-3">
+                @csrf
+                @method('PUT')
+                <label class="form-label" for="bos-panel-judges-{{ $type->id }}"><strong>{{ $type->styleTypeName }} BOS panel judges</strong></label>
+                <select class="form-select" id="bos-panel-judges-{{ $type->id }}" name="judges[]" multiple size="5">
+                    @foreach ($candidates as $candidate)
+                        <option value="{{ $candidate->uid }}" @selected(in_array((int) $candidate->uid, $group->judges, true))>{{ $candidate->brewerLastName }}, {{ $candidate->brewerFirstName }}</option>
+                    @endforeach
+                </select>
+                <div class="form-text">Judges who sat this BOS panel. The BJCP bonus is capped per panel: 3 judges for 5-14 entries, 5 for 15 or more.</div>
+                <button type="submit" class="btn btn-primary btn-sm mt-2">Save panel judges</button>
+            </form>
+
             @if (count($rows) === 0)
                 <p>No entries are eligible.</p>
             @else
