@@ -122,6 +122,129 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('name="styleEntryLimit-'.$set.'-'.$group.'" value="5"', false);
     }
 
+    public function test_entries_tab_matches_legacy_structure_and_options(): void
+    {
+        $this->login();
+
+        $bos = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
+
+        $response = $this->get('/admin/site-preferences/entries')->assertOk();
+
+        // Legacy section headings (the port had invented its own).
+        $response->assertSee('<h3>Entries</h3>', false)
+            ->assertSee('<h4>Fees and Discounts</h4>', false)
+            ->assertSee('<h4>Limits</h4>', false);
+
+        // Full bottle/can label list — the port offered only 7 of the 12.
+        foreach ([
+            'Standard - Larger Printed Number and Style',
+            'Standard with Barcode/QR Code',
+            'Standard - Larger Printed Number and Style with Barcode/QR Code',
+            'Anonymous - Smaller Printed Entry Number',
+            'Anonymous - Smaller Printed Entry Number with Barcode/QR Code',
+            'Anonymous - Smaller Printed Random Number',
+            'Anonymous - Smaller Printed Random Number with Barcode/QR Code',
+            'Anonymous - Larger Printed Entry Number',
+            'Anonymous - Larger Printed Entry Number with Barcode/QR Code',
+            'Anonymous - Larger Printed Random Number',
+            'Anonymous - Larger Printed Random Number with Barcode/QR Code',
+        ] as $label) {
+            $response->assertSee($label, false);
+        }
+        $response->assertSee('optgroup label="Print Multiple Entries at a Time"', false);
+
+        // Restored control types: the limit method is a radio group again, and
+        // the per-participant limits are selects (legacy 1..25 / 1..100).
+        $response->assertSee('type="radio" name="choose-style-entry-limits" value="1"', false)
+            ->assertSee('name="prefsUserEntryLimit"', false)
+            ->assertSee('name="prefsUserSubCatLimit"', false)
+            ->assertSee('name="prefsUSCLExLimit"', false)
+            ->assertDontSee('name="choose-style-entry-limits" style', false);
+
+        // Restored fields the port never rendered: per-BOS-type limits, the
+        // incremental tiers, and the per-sub-style exception checkboxes.
+        $response->assertSee('name="style_type_entry_limits"', false)
+            ->assertSee('name="prefsUSCLEx[]"', false)
+            ->assertSee('name="user-entry-limit-number-1"', false)
+            ->assertSee('name="user-entry-limit-expire-days-1"', false)
+            ->assertSee('name="user-entry-limit-number-4"', false)
+            ->assertSee('id="sub-style-list"', false);
+
+        foreach ($bos as $st) {
+            $response->assertSee('name="styleTypeEntryLimit-'.$st->id.'"', false);
+        }
+    }
+
+    public function test_entries_style_type_limits_round_trip(): void
+    {
+        $this->login();
+
+        $bos = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
+        $first = $bos->first();
+        $original = DB::table('style_types')->pluck('styleTypeEntryLimit', 'id')->all();
+
+        try {
+            $this->put('/admin/site-preferences/entries', [
+                'prefsStyleSet' => $this->pref('prefsStyleSet'),
+                'prefsEntryForm' => '7',
+                'prefsSpecific' => '0',
+                'prefsSpecialCharLimit' => '150',
+                'choose-style-entry-limits' => '1',
+                'style_type_entry_limits' => $bos->pluck('id')->implode(','),
+                'styleTypeEntryLimit-'.$first->id => '4',
+            ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+            self::assertSame('4', (string) DB::table('style_types')->where('id', $first->id)->value('styleTypeEntryLimit'));
+
+            $this->get('/admin/site-preferences/entries')
+                ->assertOk()
+                ->assertSee('name="styleTypeEntryLimit-'.$first->id.'" type="number" min="0" style="width:auto;" value="4"', false);
+        } finally {
+            foreach ($original as $id => $value) {
+                DB::table('style_types')->where('id', $id)->update(['styleTypeEntryLimit' => $value]);
+            }
+        }
+    }
+
+    public function test_entries_incremental_and_exception_limits_round_trip(): void
+    {
+        $this->login();
+
+        $styleId = (int) DB::table('styles')->where('brewStyleVersion', $this->pref('prefsStyleSet'))->value('id');
+
+        $this->put('/admin/site-preferences/entries', [
+            'prefsStyleSet' => $this->pref('prefsStyleSet'),
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '1',
+            'prefsUserEntryLimit' => '12',
+            'prefsUserSubCatLimit' => '3',
+            'prefsUSCLExLimit' => '90',
+            'prefsUSCLEx' => [(string) $styleId],
+            'user-entry-limit-number-1' => '5',
+            'user-entry-limit-expire-days-1' => '10',
+            'user-entry-limit-number-2' => '8',
+            'user-entry-limit-expire-days-2' => '20',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        self::assertSame('12', $this->pref('prefsUserEntryLimit'));
+        self::assertSame('3', $this->pref('prefsUserSubCatLimit'));
+        self::assertSame('90', $this->pref('prefsUSCLExLimit'));
+        self::assertSame((string) $styleId, $this->pref('prefsUSCLEx'));
+
+        $tiers = json_decode($this->pref('prefsUserEntryLimitDates'), true);
+        self::assertSame(['limit-number' => '5', 'limit-days' => '10'], $tiers['1']);
+        self::assertSame(['limit-number' => '8', 'limit-days' => '20'], $tiers['2']);
+
+        // The re-render reflects the stored tiers and the checked exception.
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('name="prefsUSCLEx[]" value="'.$styleId.'"', false)
+            ->assertSee('id="user-entry-limit-number-1"', false)
+            ->assertSee('value="5" selected', false);
+    }
+
     public function test_default_tab_general_values_round_trip_with_legacy_encodings(): void
     {
         $this->login();

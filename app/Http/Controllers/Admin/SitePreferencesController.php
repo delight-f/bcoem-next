@@ -120,16 +120,30 @@ final class SitePreferencesController extends Controller
             return redirect('/admin/site-preferences');
         }
 
+        $ctx = TenantContext::load();
+        $set = $ctx->prefsStr('prefsStyleSet') ?? '';
+
         return view('admin.site-preferences', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'go' => $go,
             'styleTypes' => DB::table('style_types')->orderBy('id')->get(),
+            // Per-style-type entry limits: only the BOS style types carry one
+            // (site_preferences.admin.php:2048-2065).
+            'styleTypesBos' => DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get(),
             'languages' => self::LANGUAGES,
             'timezones' => self::TIMEZONES,
-            'styleSet' => TenantContext::load()->prefsStr('prefsStyleSet'),
+            'styleSet' => $set,
             // Picker source: the six sets from the single definition.
             'styleSets' => StyleSets::all(),
-            'styleLimitRows' => $this->styleLimitRows(TenantContext::load()->prefsStr('prefsStyleSet') ?? ''),
+            'styleLimitRows' => $this->styleLimitRows($set),
+            // Active-set styles offered as per-sub-style limit exceptions
+            // (legacy $prefsUSCLEx checkbox group).
+            'styleExceptions' => $this->styleExceptions($set),
+            // Legacy $incremental_limits: the stored per-participant tiered
+            // limits, keyed 1..4 with {limit-number, limit-days}.
+            'incrementalLimits' => json_decode((string) $ctx->prefsStr('prefsUserEntryLimitDates'), true) ?: [],
+            // Entry-window open epoch, used for the incremental tier date hints.
+            'entryOpen' => (int) ($ctx->contestStr('contestEntryOpen') ?? 0),
             // Installation default for the blank Session Timeout placeholder
             // (legacy $session_expire_after in config.php).
             'sessionTimeoutDefault' => (int) config('session.lifetime', 120),
@@ -160,6 +174,35 @@ final class SitePreferencesController extends Controller
         return StyleSets::activeQuery($set)
             ->select('brewStyleGroup', 'brewStyleCategory', 'brewStyle')
             ->orderBy('brewStyleGroup');
+    }
+
+    /**
+     * Active-set styles for the per-sub-style limit exception checkbox group
+     * (legacy $prefsUSCLEx / site_preferences.admin.php:224-253). Only the
+     * active set is listed — the port rebuilds prefsSelectedStyles on a set
+     * change, so the other sets' lists would be dead weight.
+     *
+     * @return list<array{id: int, label: string}>
+     */
+    private function styleExceptions(string $set): array
+    {
+        $noNumbering = StyleSets::noNumbering($set);
+        $separator = StyleSets::separator($set);
+
+        return array_values(StyleSets::activeQuery($set)
+            ->select('id', 'brewStyleGroup', 'brewStyleNum', 'brewStyle')
+            ->orderBy('brewStyleGroup')->orderBy('brewStyleNum')
+            ->get()
+            ->map(function ($s) use ($noNumbering, $separator): array {
+                $group = ltrim((string) $s->brewStyleGroup, '0') ?: '0';
+                $number = trim($group.$separator.(string) $s->brewStyleNum, $separator);
+
+                return [
+                    'id' => (int) $s->id,
+                    'label' => $noNumbering ? (string) $s->brewStyle : trim($number.' '.(string) $s->brewStyle),
+                ];
+            })
+            ->all());
     }
 
     public function update(Request $request, string $go = 'default'): RedirectResponse
@@ -392,6 +435,20 @@ final class SitePreferencesController extends Controller
         // Not limiting per-style/table → clear every at-limit flag.
         if ($data['choose-style-entry-limits'] != 1) {
             DB::table('styles')->update(['brewStyleAtLimit' => null]);
+        }
+
+        // Per-style-type entry limits live on style_types, and only the BOS
+        // types are posted. style_type_entry_limits is the hidden comma-list of
+        // their ids (site_preferences.admin.php:2048-2066 /
+        // process_prefs.inc.php:339-357).
+        foreach (explode(',', (string) $request->input('style_type_entry_limits', '')) as $id) {
+            $id = (int) trim($id);
+            if ($id < 1) {
+                continue;
+            }
+            DB::table('style_types')->where('id', $id)->update([
+                'styleTypeEntryLimit' => self::blankToNull(trim((string) $request->input('styleTypeEntryLimit-'.$id, ''))),
+            ]);
         }
 
         return $prefs;

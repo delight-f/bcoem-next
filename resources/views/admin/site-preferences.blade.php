@@ -288,49 +288,16 @@
                 <button type="submit" class="btn btn-primary">Save Preferences</button>
             </form>
         @elseif ($go === 'entries')
+            <h3>Entries</h3>
             <form method="post" action="{{ url('/admin/site-preferences/entries') }}">
                 @csrf
                 @method('put')
-                <h3>Fees (stored on contest info)</h3>
-                @php $c = fn (string $k) => (string) ($ctx->contestStr($k) ?? ''); @endphp
-                <div class="mb-4 row">
-                    <label for="contestEntryFee" class="col-md-4 col-form-label">Per Entry Fee</label>
-                    <div class="col-md-8"><input class="form-control" id="contestEntryFee" name="contestEntryFee" type="text" style="width:auto;" value="{{ $c('contestEntryFee') }}"></div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFee2" class="col-md-4 col-form-label">Discounted Entry Fee</label>
-                    <div class="col-md-8"><input class="form-control" id="contestEntryFee2" name="contestEntryFee2" type="text" style="width:auto;" value="{{ $c('contestEntryFee2') }}"></div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscountNum" class="col-md-4 col-form-label">Minimum Entries for Discount</label>
-                    <div class="col-md-8"><input class="form-control" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}"></div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryCap" class="col-md-4 col-form-label">Fee Cap</label>
-                    <div class="col-md-8"><input class="form-control" id="contestEntryCap" name="contestEntryCap" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryCap') }}"></div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscount" class="col-md-4 col-form-label">Discount Multiple Entries</label>
-                    <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="N" id="discN" @checked($c('contestEntryFeeDiscount') !== 'Y')><label class="form-check-label" for="discN">No</label></div>
-                    </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFeePassword" class="col-md-4 col-form-label">Member Discount Password</label>
-                    <div class="col-md-8">
-                        <input class="form-control" id="contestEntryFeePassword" name="contestEntryFeePassword" type="text" value="{{ $c('contestEntryFeePassword') }}">
-                        <span class="form-text">Password for participants to enter to receive discounted entry fees.</span>
-                    </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFeePasswordNum" class="col-md-4 col-form-label">Member Discount Fee</label>
-                    <div class="col-md-8"><input class="form-control" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="0" step="0.01" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
-                </div>
-
-                <h3>Limits</h3>
+                @php
+                    $c = fn (string $k) => (string) ($ctx->contestStr($k) ?? '');
+                    $cur = $ctx->currencySymbol();
+                    $usclChecked = array_filter(array_map('trim', explode(',', $p('prefsUSCLEx'))));
+                    $entryOpenEpoch = (int) $entryOpen;
+                @endphp
                 <div class="mb-4 row">
                     <label for="prefsStyleSet" class="col-md-4 col-form-label">Style Set</label>
                     <div class="col-md-8">
@@ -339,53 +306,40 @@
                                 <option value="{{ $setValue }}" @selected($p('prefsStyleSet') === $setValue)>{{ $set['short'] }}</option>
                             @endforeach
                         </select>
-                        <span class="form-text">Changing the set rebuilds the accepted-styles list.</span>
+                        <span class="form-text">Please note that every effort is made to keep the BA style data current; however, the latest <a class="hide-loader" href="https://www.brewersassociation.org/resources/brewers-association-beer-style-guidelines/" target="_blank" rel="noopener">BA style set</a> may <strong>not</strong> be available in this application.</span>
+                        <span class="form-text">Please note that every effort is made to keep the AABC style data current; however, the latest <a class="hide-loader" href="https://aabc.asn.au" target="_blank" rel="noopener">AABC style set</a> may <strong>not</strong> be available for use in this application.</span>
                     </div>
                 </div>
-                @foreach ([
-                    'prefsEntryLimit' => 'Total Entry Limit &ndash; Paid/Unpaid',
-                    'prefsEntryLimitPaid' => 'Total Entry Limit &ndash; Paid',
-                    'prefsUserEntryLimit' => 'Overall Entry Limit per Participant',
-                    'prefsUserSubCatLimit' => 'Per Participant Sub-Style Entry Limit',
-                ] as $field => $label)
-                    <div class="mb-4 row">
-                        <label for="{{ $field }}" class="col-md-4 col-form-label">{!! $label !!}</label>
-                        <div class="col-md-8"><input class="form-control" id="{{ $field }}" name="{{ $field }}" type="number" min="1" style="width:auto;" value="{{ $p($field) }}"></div>
-                    </div>
-                @endforeach
-                <div class="mb-4 row">
-                    <label for="prefsUSCLExLimit" class="col-md-4 col-form-label">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles</label>
-                    <div class="col-md-8">
-                        <select class="form-select" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
-                            <option value="" @selected($p('prefsUSCLExLimit') === '')></option>
-                            @foreach (range(1, 50) as $i)
-                                <option value="{{ $i }}" @selected($p('prefsUSCLExLimit') === (string) $i)>{{ $i }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
                 <div class="mb-4 row">
                     <label for="prefsEntryForm" class="col-md-4 col-form-label">Printed Entry Bottle/Can Labels</label>
                     <div class="col-md-8">
                         <select class="form-select" id="prefsEntryForm" name="prefsEntryForm" style="width:auto;">
-                            @foreach ([
-                                '7' => 'Standard',
-                                '10' => 'Standard - Larger Printed Number and Style',
-                                '5' => 'Standard with Barcode/QR Code',
-                                '11' => 'Standard - Larger Printed Number and Style with Barcode/QR Code',
-                                '8' => 'Anonymous - Smaller Printed Entry Number',
-                                '6' => 'Anonymous - Smaller Printed Entry Number with Barcode/QR Code',
-                                '9' => 'Anonymous - Smaller Printed Random Number',
-                            ] as $val => $label)
-                                <option value="{{ $val }}" @selected($p('prefsEntryForm') === $val)>{{ $label }}</option>
-                            @endforeach
+                            <optgroup label="Print Multiple Entries at a Time">
+                                @foreach ([
+                                    '7' => 'Standard',
+                                    '10' => 'Standard - Larger Printed Number and Style',
+                                    '5' => 'Standard with Barcode/QR Code',
+                                    '11' => 'Standard - Larger Printed Number and Style with Barcode/QR Code',
+                                    '8' => 'Anonymous - Smaller Printed Entry Number',
+                                    '6' => 'Anonymous - Smaller Printed Entry Number with Barcode/QR Code',
+                                    '9' => 'Anonymous - Smaller Printed Random Number',
+                                    '0' => 'Anonymous - Smaller Printed Random Number with Barcode/QR Code',
+                                    '2' => 'Anonymous - Larger Printed Entry Number',
+                                    '1' => 'Anonymous - Larger Printed Entry Number with Barcode/QR Code',
+                                    '4' => 'Anonymous - Larger Printed Random Number',
+                                    '3' => 'Anonymous - Larger Printed Random Number with Barcode/QR Code',
+                                ] as $val => $label)
+                                    <option value="{{ $val }}" @selected($p('prefsEntryForm') === $val)>{{ $label }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                         <span class="form-text">
+                            <p><strong>Standard Entry Labels</strong> feature the participant's name and contact info, the name of the entry, and the entry's style/category.</p>
+                            <p><strong>Anonymous Entry Labels</strong> DO NOT list the participant's information. These labels are intended to be taped to bottles by entrants before submittal.</p>
+                        </span>
+                        <span class="form-text">
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#entryFormModal">Printed Entry Form and/or Bottle Labels Info</button>
                             <a class="btn btn-sm btn-info hide-loader" data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard.png') }}" data-caption="Standard">Examples</a>
-                            <p class="mt-2">Both label types are available with or without a barcode and QR code corresponding to the unique identification number.</p>
-                            <p>The Barcode options are intended to be used with a USB barcode scanner and the <a class="hide-loader" href="{{ url('/admin/judging/checkin') }}">barcode entry check-in function</a>.</p>
-                            <p>The QR code options are intended to be used with a mobile device and <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR code entry check-in function</a> (requires a QR code reading app).</p>
                         </span>
                         <div class="d-none">
                             <a data-fancybox="gallery" rel="group-bottle-labels" href="{{ asset('images/label_standard_large_number.png') }}" data-caption="Standard - Larger Printed Number and Style">Link</a>
@@ -398,13 +352,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label for="prefsSpecific" class="col-md-4 col-form-label">Hide Brewer's Specifics Field</label>
+                <div class="mb-4 row" id="prefsHideSpecific">
+                    <label for="prefsSpecific" class="col-md-4 col-form-label">Hide Brewer&rsquo;s Specifics Field</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsSpecific" value="1" id="specY" @checked($p('prefsSpecific') === '1')><label class="form-check-label" for="specY">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsSpecific" value="0" id="specN" @checked($p('prefsSpecific') !== '1')><label class="form-check-label" for="specN">No</label></div>
+                        <span class="form-text">
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#prefsSpecificModal">Hide Brewer&rsquo;s Specifics Field Info</button>
+                        </span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -415,20 +372,125 @@
                                 <option value="{{ $i }}" @selected($p('prefsSpecialCharLimit') === (string) $i)>{{ $i }}</option>
                             @endforeach
                         </select>
-                        <span class="form-text">Limit for special ingredients, optional ingredients, and brewer's specifics. 65 or less suggested when attaching bottle labels at sorting.</span>
+                        <span class="form-text">
+                            <p>Indicate the limit of characters users can enter when specifying special ingredients, optional ingredients, and brewer's specifics. A limit of <strong>65 characters or less</strong> is suggested for competitions that attach &ldquo;Bottle Labels with Required Info&rdquo; to entry bottles at sorting.</p>
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#charLimitModal">Character Limit Info</button>
+                        </span>
                     </div>
                 </div>
 
-                <h3>Per-style limits</h3>
+                <h4>Fees and Discounts</h4>
+                <div class="mb-4 row">
+                    <label for="contestEntryFee" class="col-md-4 col-form-label">Per Entry Fee</label>
+                    <div class="col-md-8">
+                        <div class="input-group" style="width:auto;">
+                            <span class="input-group-text">{{ $cur }}</span>
+                            <input class="form-control" id="contestEntryFee" name="contestEntryFee" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryFee') }}">
+                        </div>
+                        <span class="form-text">Fee for a single entry. Enter a zero (0) for a free entry fee.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryCap" class="col-md-4 col-form-label">Fee Cap</label>
+                    <div class="col-md-8">
+                        <div class="input-group" style="width:auto;">
+                            <span class="input-group-text">{{ $cur }}</span>
+                            <input class="form-control" id="contestEntryCap" name="contestEntryCap" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryCap') }}">
+                        </div>
+                        <span class="form-text">Enter the maximum amount for each entrant. Leave blank if no cap.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeeDiscount" class="col-md-4 col-form-label">Discount Multiple Entries</label>
+                    <div class="col-md-8">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="N" id="discN" @checked($c('contestEntryFeeDiscount') !== 'Y')><label class="form-check-label" for="discN">No</label></div>
+                        <span class="form-text">Designate Yes or No if your competition offers a discounted entry fee after a certain number is reached.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeeDiscountNum" class="col-md-4 col-form-label">Minimum Entries for Discount</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="text" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}">
+                        <span class="form-text">The entry threshold participants must exceed to take advantage of the per entry fee discount (designated below). If no discounted fee exists, leave blank.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFee2" class="col-md-4 col-form-label">Discounted Entry Fee</label>
+                    <div class="col-md-8">
+                        <div class="input-group" style="width:auto;">
+                            <span class="input-group-text">{{ $cur }}</span>
+                            <input class="form-control" id="contestEntryFee2" name="contestEntryFee2" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryFee2') }}">
+                        </div>
+                        <span class="form-text">Fee for a single, discounted entry.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeePassword" class="col-md-4 col-form-label">Member Discount Password</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="contestEntryFeePassword" name="contestEntryFeePassword" type="text" value="{{ $c('contestEntryFeePassword') }}">
+                        <span class="form-text">Designate a password for participants to enter to receive discounted entry fees. Useful if your competition provides a discount for members of the sponsoring club(s).</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="contestEntryFeePasswordNum" class="col-md-4 col-form-label">Member Discount Fee</label>
+                    <div class="col-md-8">
+                        <div class="input-group" style="width:auto;">
+                            <span class="input-group-text">{{ $cur }}</span>
+                            <input class="form-control" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}">
+                        </div>
+                        <span class="form-text">Fee for a single, discounted member entry. If you wish the member discount to be free, enter a zero (0). Leave blank for no discount.</span>
+                    </div>
+                </div>
+
+                <h4>Limits</h4>
+                <div class="mb-4 row">
+                    <label for="prefsEntryLimit" class="col-md-4 col-form-label">Total Entry Limit &ndash; Paid/Unpaid</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsEntryLimit" name="prefsEntryLimit" type="text" style="width:auto;" value="{{ $p('prefsEntryLimit') }}">
+                        <span class="form-text">Limit of <strong class="text-danger">total</strong> entries you will accept in the competition. Leave blank if no limit.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsEntryLimitPaid" class="col-md-4 col-form-label">Total Entry Limit &ndash; Paid</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsEntryLimitPaid" name="prefsEntryLimitPaid" type="text" style="width:auto;" value="{{ $p('prefsEntryLimitPaid') }}">
+                        <span class="form-text">
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#entryLimitPaidModal">Paid Entry Limit Info</button>
+                            <p class="mt-2">Limit of <strong class="text-danger">paid</strong> entries you will accept in the competition. Leave blank if no limit.</p>
+                        </span>
+                    </div>
+                </div>
+                @if ($styleTypesBos->isNotEmpty())
+                    @foreach ($styleTypesBos as $st)
+                        <div class="mb-4 row">
+                            <label for="styleTypeEntryLimit-{{ $st->id }}" class="col-md-4 col-form-label">Entry Limit &ndash; {{ $st->styleTypeName }}</label>
+                            <div class="col-md-8">
+                                <input class="form-control" id="styleTypeEntryLimit-{{ $st->id }}" name="styleTypeEntryLimit-{{ $st->id }}" type="number" min="0" style="width:auto;" value="{{ $st->styleTypeEntryLimit }}">
+                            </div>
+                        </div>
+                    @endforeach
+                    <div class="mb-4 row">
+                        <div class="col-md-8 offset-md-4">
+                            <span class="form-text">Individual style type entry limits above are only for those that have BOS enabled. <a href="{{ url('/admin/style-types') }}">Manage your competition style types</a> to specify entry limits for others.</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="style_type_entry_limits" value="{{ $styleTypesBos->pluck('id')->implode(',') }}">
+                @endif
                 <div class="mb-4 row">
                     <label for="choose-style-entry-limits" class="col-md-4 col-form-label">Entry Limits by Style or Table/Medal Group</label>
                     <div class="col-md-8">
-                        <select class="form-select" id="choose-style-entry-limits" name="choose-style-entry-limits" style="width:auto;">
-                            <option value="0" @selected($p('prefsStyleLimits') === '')>Disable</option>
-                            <option value="1" @selected(str_starts_with($p('prefsStyleLimits'), '{'))>Enable By Style</option>
-                            <option value="2" @selected($p('prefsStyleLimits') === '2')>Enable By Table or Medal Group</option>
-                        </select>
-                        <span class="form-text">Limiting by table or medal group requires Tables Planning Mode and defined tables/medal groups. Limiting entries by style allows a numerical limit on overall styles or style groups.</span>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="0" id="csel_0" @checked($p('prefsStyleLimits') === '')><label class="form-check-label" for="csel_0">Disable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="2" id="csel_2" @checked($p('prefsStyleLimits') === '2')><label class="form-check-label" for="csel_2">Enable By Table or Medal Group</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="1" id="csel_1" @checked(str_starts_with($p('prefsStyleLimits'), '{'))><label class="form-check-label" for="csel_1">Enable By Style</label></div>
+                        <span class="form-text"><strong class="text-primary">Please note:</strong> If you choose a different entry limit method than what is currently defined, any limits set previously will be deleted and all styles previously disabled due to limits will be enabled.</span>
+                        <span class="form-text"><strong>Limiting by table or medal group</strong> requires that your installation be placed into <strong>Tables Planning Mode</strong> and <a href="{{ url('/admin/judging/tables') }}">tables/medal groups defined</a> (limits are set when creating or editing tables/medal groups).</span>
+                        <span class="form-text"><strong>Limiting entries by style</strong> allows you to define a numerical limit on overall styles or style groups. Define your per-style limits below.</span>
                     </div>
                 </div>
                 <section id="define-style-entry-limits">
@@ -446,6 +508,184 @@
                         </div>
                     </div>
                 </section>
+                <div class="mb-4 row">
+                    <label for="prefsUserEntryLimit" class="col-md-4 col-form-label">Overall Entry Limit per Participant</label>
+                    <div class="col-md-8">
+                        <select class="form-select" name="prefsUserEntryLimit" id="prefsUserEntryLimit" style="width:auto;">
+                            <option value="" @selected($p('prefsUserEntryLimit') === '')></option>
+                            @foreach (range(1, 25) as $i)
+                                <option value="{{ $i }}" @selected($p('prefsUserEntryLimit') === (string) $i)>{{ $i }}</option>
+                            @endforeach
+                        </select>
+                        <span class="form-text">Overall limit of entries that each participant can enter. Will override any incremental limit defined below IF this number is lower. Leave blank if no OVERALL entry limit.</span>
+                    </div>
+                </div>
+                @foreach (range(1, 4) as $i)
+                    <section id="user-entry-limit-increment-{{ $i }}">
+                        <div class="mb-4 row">
+                            <label for="user-entry-limit-number-{{ $i }}" class="col-md-4 col-form-label">#{{ $i }} Incremental Entry Limit per Participant</label>
+                            <div class="col-md-8">
+                                <select class="form-select" name="user-entry-limit-number-{{ $i }}" id="user-entry-limit-number-{{ $i }}" style="width:auto;">
+                                    <option value=""></option>
+                                    @foreach (range(1, 25) as $a)
+                                        <option value="{{ $a }}" @selected((string) ($incrementalLimits[$i]['limit-number'] ?? '') === (string) $a)>{{ $a }}</option>
+                                    @endforeach
+                                </select>
+                                <span class="form-text">Numerical limit of entries per participant for the specified number of days AFTER the entry window opening date.</span>
+                            </div>
+                        </div>
+                        <div class="mb-4 row">
+                            <label for="user-entry-limit-expire-days-{{ $i }}" class="col-md-4 col-form-label">#{{ $i }} Incremental Entry Limit per Participant <span class="text-primary">Days</span></label>
+                            <div class="col-md-8">
+                                <select class="form-select" id="user-entry-limit-expire-days-{{ $i }}" name="user-entry-limit-expire-days-{{ $i }}" style="width:auto;">
+                                    <option value=""></option>
+                                    @foreach (range(1, 60) as $b)
+                                        <option value="{{ $b }}" @selected((string) ($incrementalLimits[$i]['limit-days'] ?? '') === (string) $b)>{{ $b }}@if ($entryOpenEpoch > 0) - {{ \App\Support\Tenant\DateFmt::dateTime($entryOpenEpoch + $b * 86400, $tz, $ctx->prefsStr('prefsDateFormat'), $tf) }}@endif</option>
+                                    @endforeach
+                                </select>
+                                <span class="form-text">Number of days AFTER the entry window opening date that the #{{ $i }} per participant limit will EXPIRE.</span>
+                            </div>
+                        </div>
+                        @if ($i < 4)<hr>@endif
+                    </section>
+                @endforeach
+                <div class="mb-4 row">
+                    <label for="prefsUserSubCatLimit" class="col-md-4 col-form-label">Per Participant Sub-Style Entry Limit</label>
+                    <div class="col-md-8">
+                        <select class="form-select" name="prefsUserSubCatLimit" id="prefsUserSubCatLimit" style="width:auto;">
+                            <option value="" @selected($p('prefsUserSubCatLimit') === '')></option>
+                            @foreach (range(1, 25) as $i)
+                                <option value="{{ $i }}" @selected($p('prefsUserSubCatLimit') === (string) $i)>{{ $i }}</option>
+                            @endforeach
+                        </select>
+                        <span class="form-text">Limit of entries that each participant can enter into a single sub-style. Leave blank if no limit.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsUSCLExLimit" class="col-md-4 col-form-label">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles</label>
+                    <div class="col-md-8">
+                        <select class="form-select" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
+                            <option value="" @selected($p('prefsUSCLExLimit') === '')></option>
+                            @foreach (range(1, 100) as $i)
+                                <option value="{{ $i }}" @selected($p('prefsUSCLExLimit') === (string) $i)>{{ $i }}</option>
+                            @endforeach
+                        </select>
+                        <span class="form-text">
+                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#exceptdSubstylesModal">Per Participant Entry Limit For <em>Excepted</em> Sub-Styles Info</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="mb-4 row" id="subStyleExeptionsEdit">
+                    <label for="prefsUSCLEx" class="col-md-4 col-form-label">Exceptions to Per Participant Sub-Style Entry Limit</label>
+                    <div class="col-md-8">
+                        <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List</button>
+                        <div class="collapse" id="sub-style-list">
+                            <div class="input-group">
+                                @foreach ($styleExceptions as $ex)
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="prefsUSCLEx[]" value="{{ $ex['id'] }}" id="usclEx-{{ $ex['id'] }}" @checked(in_array((string) $ex['id'], $usclChecked, true))>
+                                        <label class="form-check-label" for="usclEx-{{ $ex['id'] }}">{{ $ex['label'] }}</label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Modals (legacy entryFormModal / prefsSpecificModal / charLimitModal / entryLimitPaidModal / exceptdSubstylesModal). --}}
+                <div class="modal fade" id="entryFormModal" tabindex="-1" aria-labelledby="entryFormModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="entryFormModalLabel">Printed Entry Labels</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>There are two types of entry labels available:</p>
+                                <ul>
+                                    <li>Standard Entry Labels feature the participant's name and contact info, the name of the entry, and the entry's style/category.</li>
+                                    <li>Anonymous Entry Labels DO NOT list the participant's information. These labels are intended to be taped to bottles by entrants before submittal, thereby saving the labor and waste of removing rubberbanded labels by competition staff when sorting. <strong>It is recommended that you specify taping these labels to entries in your Entry Acceptance Rules,</strong> specified via the <a href="{{ url('/admin/competition-info') }}">Edit Competition Info function</a>.</li>
+                                </ul>
+                                <p>Both label types are available with or without a barcode and QR code corresponding to the unique identification number.</p>
+                                <p>The Barcode options are intended to be used with a USB barcode scanner and the <a href="{{ url('/admin/judging/checkin') }}">barcode entry check-in function</a>.</p>
+                                <p>The QR code options are intended to be used with a mobile device and <a class="hide-loader" href="{{ url('/qr') }}" target="_blank" rel="noopener">QR code entry check-in function</a> (requires a QR code reading app).</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="prefsSpecificModal" tabindex="-1" aria-labelledby="prefsSpecificModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="prefsSpecificModalLabel">Hide Brewer&rsquo;s Specifics Field</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Indicate if the Brewer&rsquo;s Specifics field on the Add Entry or Edit Entry screens will be displayed to users. The field is sometimes confused with the required &ldquo;Special Ingredients&rdquo; field.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="charLimitModal" tabindex="-1" aria-labelledby="charLimitModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="charLimitModalLabel">Character Limit Info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Limit of characters allowed for the Required Info section when adding an entry.</p>
+                                <p><strong>65 characters</strong> is the maximum recommended when utilizing the &ldquo;Bottle Labels with Required Info&rdquo; report. This ensures that the required and optional information added by the entrant will fit on a single address-size label.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="entryLimitPaidModal" tabindex="-1" aria-labelledby="entryLimitPaidLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="entryLimitPaidLabel">Paid Entry Limit Info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>This option should be used with caution as it depends upon one or more factors for successful implementation:</p>
+                                <ol>
+                                    <li>Whether or not the competition is accepting online payments.</li>
+                                    <li>Whether or not the competition organization facilitates multiple pickups from drop-off sites <em>before</em> the drop-off deadline date (so that Admins can mark entries as paid before sorting day).</li>
+                                    <li>Whether or not the competition is employing multiple sorting dates to check-in entries and mark them as paid.</li>
+                                </ol>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="exceptdSubstylesModal" tabindex="-1" aria-labelledby="exceptdSubstylesModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exceptdSubstylesModalLabel">Entry Limit For Excepted Sub-Styles Info</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Limit of entries that each participant can enter into one of the sub-styles that have been checked. Leave blank if no limit <strong>for the sub-styles that have been checked</strong>.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <button type="submit" class="btn btn-primary">Save Entry Preferences</button>
             </form>
