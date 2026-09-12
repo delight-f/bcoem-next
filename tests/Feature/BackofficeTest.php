@@ -63,10 +63,11 @@ final class BackofficeTest extends PublicSurfaceTestCase
         ]);
 
         foreach (['prefsStyleSet', 'prefsSelectedStyles'] as $key) {
-            $orig = DB::table('preferences')->where('id', 1)->value($key);
-            if ($orig !== null) {
-                $this->origPrefs[$key] = $orig;
-            }
+            // Capture the raw value INCLUDING null. The baseline row's
+            // prefsSelectedStyles is NULL, and skipping null here meant the
+            // fixture value below was never restored — it leaked into sibling
+            // suites whose assertions then depend on run order.
+            $this->origPrefs[$key] = DB::table('preferences')->where('id', 1)->value($key);
         }
         DB::table('preferences')->where('id', 1)->update([
             // Real BJCP2021 rows of the baseline set: 01/A (id 453) and
@@ -226,6 +227,27 @@ final class BackofficeTest extends PublicSurfaceTestCase
         $this->from('/backoffice/entries/'.$entry.'/edit')
             ->put('/backoffice/entries/'.$entry, ['brewName' => 'P55 Bad', 'brewStyle' => '1-A-X'])
             ->assertSessionHasErrors('brewStyle');
+    }
+
+    /**
+     * AABC2025 spans AABC2022 for beer: the admin re-assignment must accept
+     * a beer code that lives only under AABC2022, rather than rejecting it
+     * with "Choose a style from the active style set.".
+     */
+    public function test_aabc2025_beer_style_update_resolves_from_aabc2022(): void
+    {
+        $entry = $this->makeEntry(['brewName' => 'P55 AABC2025']);
+        DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'AABC2025']);
+        $this->login(self::ADMIN_EMAIL);
+
+        $this->put('/backoffice/entries/'.$entry, ['brewName' => 'P55 AABC2025', 'brewStyle' => '01-04'])
+            ->assertRedirect('/backoffice/entries?msg=updated');
+
+        $row = (array) DB::table('brewing')->where('id', $entry)->first();
+        self::assertSame('American Light Lager [BJCP 1A]', $row['brewStyle']);
+        self::assertSame('01', (string) $row['brewCategorySort']);
+        self::assertSame('04', $row['brewSubCategory']);
+        self::assertSame(1, (int) $row['brewStyleType']);
     }
 
     public function test_participant_delete_cascades_like_legacy(): void
