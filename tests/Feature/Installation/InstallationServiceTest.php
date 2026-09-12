@@ -38,11 +38,42 @@ final class InstallationServiceTest extends InstallationTestCase
         $this->assertGreaterThan(0, DB::table('styles')->count());
         $this->assertGreaterThan(0, DB::table('preferences')->count());
 
+        $env = (string) file_get_contents($this->root.'/.env');
+        $this->assertStringContainsString('CACHE_STORE=file', $env, 'the install must rewrite CACHE_STORE');
+        $this->assertStringContainsString('SESSION_DRIVER=file', $env, 'the install must rewrite SESSION_DRIVER');
+        $this->assertStringContainsString('QUEUE_CONNECTION=sync', $env, 'the install must rewrite QUEUE_CONNECTION');
+
         try {
             $service->install($this->input($this->credentials()));
             $this->fail('second install() should have thrown');
         } catch (AlreadyInstalledException $e) {
             $this->assertSame(1, DB::table('users')->count(), 'second install() must not touch anything');
+        }
+    }
+
+    public function test_install_probes_the_named_database_not_the_ambient_connection(): void
+    {
+        // The ambient default connection is an already-installed database...
+        $this->importBaseline();
+        DB::table('bcoem_sys')->where('id', 1)->update(['setup' => 1, 'version' => '3.0.1.0']);
+        $this->assertTrue((new InstallationService($this->root))->isAlreadyInstalled());
+
+        // ...while the input names a different, not-installed database.
+        $target = $this->database.'_ambient';
+        $this->serverPdo()->exec('CREATE DATABASE `'.$target.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+
+        try {
+            (new InstallationService($this->root))->install($this->input($this->credentials($target)));
+
+            $installed = $this->serverPdo($target)->query('SELECT setup FROM bcoem_sys WHERE id = 1');
+            $this->assertNotFalse($installed);
+            $this->assertSame(1, (int) $installed->fetchColumn(), 'the install must land in the database the caller named');
+
+            $ambient = $this->serverPdo($this->database)->query('SELECT version FROM bcoem_sys WHERE id = 1');
+            $this->assertNotFalse($ambient);
+            $this->assertSame('3.0.1.0', (string) $ambient->fetchColumn(), 'the ambient database must be left exactly as it was');
+        } finally {
+            $this->serverPdo()->exec('DROP DATABASE IF EXISTS `'.$target.'`');
         }
     }
 

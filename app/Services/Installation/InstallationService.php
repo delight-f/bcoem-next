@@ -90,20 +90,42 @@ class InstallationService
      */
     public function install(InstallInput $input, ?callable $onStep = null): void
     {
-        if ($this->isAlreadyInstalled()) {
-            throw new AlreadyInstalledException(
-                'Refusing to install: bcoem_sys.setup is already 1.',
-                'This site is already installed. Use the upgrade process to update it instead.',
-            );
-        }
+        $ambientMysql = (array) config('database.connections.mysql');
+        $ambientDefault = config('database.default');
 
-        // Fail before writing anything: a bad password must leave the site untouched.
-        $connection = $this->testDatabaseConnection($input->db);
-        if (! $connection->success) {
-            throw new DatabaseConnectionException(
-                'Database connection failed for '.$input->db->host.':'.$input->db->port.'/'.$input->db->database.'.',
-                $connection->message,
-            );
+        // Point the connection at the credentials the caller named before the
+        // "already installed" probe. Probing first reads whatever the ambient
+        // config points at (a stale .env, exported DB_*), which can throw
+        // against a perfectly valid input. The probe must mean "is the
+        // database I was asked to install into already installed".
+        $this->applyDatabaseConfig($input->db, '');
+
+        try {
+            if ($this->isAlreadyInstalled()) {
+                throw new AlreadyInstalledException(
+                    'Refusing to install: bcoem_sys.setup is already 1.',
+                    'This site is already installed. Use the upgrade process to update it instead.',
+                );
+            }
+
+            // Fail before writing anything: a bad password must leave the site untouched.
+            $connection = $this->testDatabaseConnection($input->db);
+            if (! $connection->success) {
+                throw new DatabaseConnectionException(
+                    'Database connection failed for '.$input->db->host.':'.$input->db->port.'/'.$input->db->database.'.',
+                    $connection->message,
+                );
+            }
+        } catch (\Throwable $e) {
+            // A failed pre-flight must not strand the rest of the request on
+            // the credentials it just rejected (the wizard tears down its own
+            // connection after a pollable failure); put the ambient one back.
+            config()->set('database.connections.mysql', $ambientMysql);
+            config()->set('database.default', $ambientDefault);
+            DB::purge('mysql');
+            DB::setDefaultConnection(is_string($ambientDefault) ? $ambientDefault : 'mysql');
+
+            throw $e;
         }
 
         $this->step($onStep, 'Writing your configuration…');
@@ -127,8 +149,11 @@ class InstallationService
             // migrations too, so the shipped database driver would break the
             // first request after an otherwise successful install.
             'SESSION_DRIVER' => 'file',
+            // And the `jobs` table is skipped with them, so the shipped
+            // database driver would stall every queued job. The wizard never
+            // runs a worker: sync is the only queue that works on a fresh host.
+            'QUEUE_CONNECTION' => 'sync',
         ]);
-        $this->applyDatabaseConfig($input->db, '');
 
         $this->step($onStep, 'Generating a new application key…');
         $key = 'base64:'.base64_encode(random_bytes(32));
