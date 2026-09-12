@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Support\Entries\EntryGates;
 use App\Support\Entries\EntryLimits;
 use App\Support\Entries\JudgingNumber;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
@@ -474,28 +475,18 @@ final class BrewController extends Controller
      */
     public static function activeStyles(TenantContext $ctx): Collection
     {
-        $set = $ctx->prefsStr('prefsStyleSet');
-        $query = DB::table('styles')->where(function ($q) use ($set): void {
-            if ($set === 'BJCP2025') {
-                // First char of group 'C' → BJCP2025 rows; everything else
-                // BJCP2021 (styles ledger #6).
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2021')->where('brewStyleType', '!=', '2');
-                });
-            } else {
-                $q->where('brewStyleVersion', $set);
-            }
-            $q->orWhere('brewStyleOwn', 'custom');
-        });
+        // Styles ledger #5/#6/#7 predicate — one definition, shared with the
+        // admin styles screen and the site-preferences rebuild.
+        $set = (string) $ctx->prefsStr('prefsStyleSet');
+        $query = StyleSets::activeQuery($set);
 
         $selected = json_decode((string) $ctx->prefsStr('prefsSelectedStyles'), true);
         if (is_array($selected) && $selected !== []) {
             $query->whereIn('id', array_map(intval(...), array_keys($selected)));
         }
 
-        $order = $set === 'BA'
+        // No-numbering sets (BA) have no style numbers to order by.
+        $order = StyleSets::noNumbering($set)
             ? ['brewStyleType', 'brewStyleGroup', 'brewStyle']
             : ['brewStyleType', 'brewStyleGroup', 'brewStyleNum'];
 
@@ -541,7 +532,8 @@ final class BrewController extends Controller
     public static function optionalInfoStyles(string $set): array
     {
         return match ($set) {
-            'BA' => [],
+            // BA sets do not number styles, so they carry no style codes.
+            'BA', 'BA2026' => [],
             'AABC' => ['12-01', '14-08', '17-03', '18-04', '18-05', '19-05', '19-07', '16-01', '19-01', '19-02', '19-03', '19-04', '19-06', '20-02', '20-03'],
             'AABC2022' => ['07-03', '12-01', '14-08', '17-03', '18-04', '18-05', '16-01', '19-01', '19-02', '19-03', '19-04', '19-05', '19-06', '19-07', '19-08', '19-09', '19-10', '19-11', '19-12', '19-13', '20-02', '20-03', '16-08'],
             'AABC2025' => ['07-03', '12-01', '14-08', '17-03', '18-04', '18-05', '16-01', '16-08', '19-01', '19-02', '19-03', '19-04', '19-05', '19-06', '19-07', '19-08', '19-09', '19-10', '19-11', '19-12', '19-13', '20-01', '20-02', '20-03', '20-04', '20-05', '20-10', '20-11', '20-12', '20-16'],
@@ -560,23 +552,17 @@ final class BrewController extends Controller
             return null;
         }
 
-        $set = $ctx->prefsStr('prefsStyleSet');
-        // Under the BJCP2025 set only C-groups read the 2025 rows; every
-        // other group falls back to BJCP2021, matching legacy style
-        // resolution (process_brewing.inc.php:335-341).
-        $version = $set === 'BJCP2025'
-            ? (mb_substr(self::styleSort($code), 0, 1) === 'C' ? 'BJCP2025' : 'BJCP2021')
-            : $set;
-
-        $row = DB::table('styles')
-            ->where('brewStyleGroup', self::styleSort($code))
-            ->where('brewStyleNum', self::styleSub($code))
-            ->where(function ($q) use ($version): void {
-                $q->where('brewStyleVersion', $version)->orWhere('brewStyleOwn', 'custom');
-            })
-            ->first();
-
-        return $row === null ? null : (object) $row;
+        // Resolve against the set's versions via ordered fallback, newest
+        // first (StyleSets::findStyle) — the fragile first-character-'C'
+        // heuristic is gone. A dual set's newest version wins where a code
+        // exists in both (BJCP cider under BJCP2025), while codes living
+        // only in the predecessor (all AABC beer styles under AABC2025)
+        // are still found. Custom styles extend every version.
+        return StyleSets::findStyle(
+            $ctx->prefsStr('prefsStyleSet') ?? '',
+            self::styleSort($code),
+            self::styleSub($code),
+        );
     }
 
     /**

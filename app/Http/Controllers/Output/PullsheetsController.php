@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\StreamPdf;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
@@ -381,21 +382,22 @@ final class PullsheetsController extends Controller
     /** style_number_const(method 1): group + style-set separator + sub. */
     private static function styleNumber(string $group, string $sub, string $styleSet): string
     {
-        if ($styleSet === 'BA') {
+        // style_number_const(method 1) returns nothing for no-numbering
+        // sets: BA does not number its styles (styles.inc.php).
+        if (StyleSets::noNumbering($styleSet)) {
             return '';
         }
 
         return $group.self::styleSeparator($styleSet).$sub;
     }
 
-    /** Style-set display separator (styles.inc.php). */
+    /** Style-set display separator (styles.inc.php) — from the definition. */
     private static function styleSeparator(string $styleSet): string
     {
-        return match ($styleSet) {
-            'AABC', 'AABC2022', 'AABC2025' => '.',
-            'NWCiderCup' => '-',
-            default => '',
-        };
+        // `AABC` (2019) is a legacy-only value the port no longer offers but
+        // still renders for installs carrying it (the 2022/2025 sets and the
+        // rest come from StyleSets).
+        return $styleSet === 'AABC' ? '.' : StyleSets::separator($styleSet);
     }
 
     /** style_convert(group, 1): group category name (brewStyleCategory col). */

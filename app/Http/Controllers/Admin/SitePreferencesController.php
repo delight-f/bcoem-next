@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Mail\MailSettings;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -13,6 +14,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 /**
  * Site preferences (spec §7 P5.4) — port of admin/site_preferences.admin.php
@@ -24,8 +26,8 @@ use Illuminate\Support\Facades\DB;
  * Tab side effects kept from process_prefs.inc.php:
  *  - entries: fee/discount columns live on contest_info (data_entry_fees);
  *    a style-set change rebuilds prefsSelectedStyles from the new set using
- *    the ledger predicates (#5/#6/#7: AABC2025 dual-version + customs,
- *    everything else plain version equality); "by style" limits clear
+ *    StyleSets::activeQuery() (#5/#6/#7: dual-version sets span the
+ *    predecessor version, customs extend every set); "by style" limits clear
  *    at-limit flags unless the by-table method is chosen;
  *  - email: turning SMTP off copies the stored host/from/username/... back
  *    over the posted values and forces confirmations/CC off; the stored
@@ -124,7 +126,12 @@ final class SitePreferencesController extends Controller
             'languages' => self::LANGUAGES,
             'timezones' => self::TIMEZONES,
             'styleSet' => TenantContext::load()->prefsStr('prefsStyleSet'),
+            // Picker source: the six sets from the single definition.
+            'styleSets' => StyleSets::all(),
             'styleLimitRows' => $this->styleLimitRows(TenantContext::load()->prefsStr('prefsStyleSet') ?? ''),
+            // Installation default for the blank Session Timeout placeholder
+            // (legacy $session_expire_after in config.php).
+            'sessionTimeoutDefault' => (int) config('session.lifetime', 120),
         ]);
     }
 
@@ -149,23 +156,9 @@ final class SitePreferencesController extends Controller
     /** Style query matching the rebuildSelectedStyles active-set predicate. */
     private function activeStyleCategoryQuery(string $set): Builder
     {
-        $query = DB::table('styles')
+        return StyleSets::activeQuery($set)
             ->select('brewStyleGroup', 'brewStyleCategory', 'brewStyle')
             ->orderBy('brewStyleGroup');
-
-        if ($set === 'AABC2025') {
-            $query->where(function ($q): void {
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2022')->where('brewStyleType', '!=', '2');
-                })->orWhere('brewStyleOwn', 'custom');
-            });
-        } else {
-            $query->where('brewStyleVersion', $set);
-        }
-
-        return $query;
     }
 
     public function update(Request $request, string $go = 'default'): RedirectResponse
@@ -222,6 +215,12 @@ final class SitePreferencesController extends Controller
             'prefsTimeZone' => ['required', 'string', 'max:10'],
             'prefsSponsors' => ['required', 'in:Y,N'],
             'prefsSponsorLogos' => ['required', 'in:Y,N'],
+            // Session (auto-logout) timeout, upstream 3.1.0. Blank or
+            // zero-or-less stores NULL ("use the installation default"); a
+            // value below the 3-minute floor is clamped up in sessionTimeout().
+            // Only non-numeric input is rejected outright (legacy silently
+            // blanked it) — the form's type="number" already prevents it.
+            'prefsSessionTimeout' => ['nullable', 'integer'],
         ]);
         $data = $this->validateDates($request, $data, ['prefsWinnerDelay'], $tz);
 
@@ -264,7 +263,28 @@ final class SitePreferencesController extends Controller
             'prefsTimeFormat' => (string) $data['prefsTimeFormat'],
             'prefsSponsors' => (string) $data['prefsSponsors'],
             'prefsSponsorLogos' => (string) $data['prefsSponsorLogos'],
+            'prefsSessionTimeout' => $this->sessionTimeout($data['prefsSessionTimeout'] ?? null),
         ];
+    }
+
+    /**
+     * process_prefs.inc.php session-timeout semantics: blank/non-numeric/
+     * zero-or-less stored as NULL, which the runtime treats as "use the
+     * installation default" (TenantContext::sessionTimeoutMinutes()). A value
+     * that's too low is clamped up to a 3-minute floor — the auto-logout
+     * warning modals fire at 2:00 and 0:30 remaining, so anything at or below
+     * that leaves no room for a normal countdown and traps the user.
+     * (Validation rejects non-integers outright; legacy silently blanked them.)
+     */
+    private function sessionTimeout(mixed $value): ?int
+    {
+        $minutes = is_numeric($value) ? (int) $value : 0;
+
+        if ($minutes < 1) {
+            return null;
+        }
+
+        return max(3, $minutes);
     }
 
     /** @return array<string, mixed> */
@@ -279,7 +299,7 @@ final class SitePreferencesController extends Controller
             'contestEntryFeePassword' => ['nullable', 'string', 'max:255'],
             'contestEntryFeePasswordNum' => ['nullable', 'integer', 'min:1'],
             'contestEntryCap' => ['nullable', 'integer', 'min:1'],
-            'prefsStyleSet' => ['required', 'string', 'max:20'],
+            'prefsStyleSet' => ['required', Rule::in(StyleSets::names())],
             'prefsEntryForm' => ['required', 'integer'],
             'prefsSpecific' => ['required', 'in:0,1'],
             'prefsSpecialCharLimit' => ['required', 'integer', 'min:25', 'max:255'],
@@ -390,22 +410,10 @@ final class SitePreferencesController extends Controller
         return $limits === [] ? null : json_encode($limits, JSON_THROW_ON_ERROR);
     }
 
-    /** Ledger pins #5/#6/#7: AABC2025 dual-version OR-closure + customs. */
+    /** Ledger pins #5/#6/#7: dual-version OR-closure + customs, all sets. */
     private function rebuildSelectedStyles(string $set): void
     {
-        $query = DB::table('styles');
-
-        if ($set === 'AABC2025') {
-            $query->where(function ($q): void {
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2022')->where('brewStyleType', '!=', '2');
-                })->orWhere('brewStyleOwn', 'custom');
-            });
-        } else {
-            $query->where('brewStyleVersion', $set);
-        }
+        $query = StyleSets::activeQuery($set);
 
         $selected = [];
         foreach ($query->get(['id', 'brewStyle', 'brewStyleGroup', 'brewStyleNum', 'brewStyleVersion']) as $row) {

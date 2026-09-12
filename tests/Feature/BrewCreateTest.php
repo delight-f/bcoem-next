@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\BrewController;
+use App\Support\Tenant\TenantContext;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -247,5 +249,81 @@ final class BrewCreateTest extends PublicSurfaceTestCase
             ->assertSessionHasErrors(['brewName', 'brewStyle']);
 
         self::assertNull(DB::table('brewing')->where('brewBrewerID', 1)->first());
+    }
+
+    /**
+     * AABC2025 spans AABC2022 (beer) + AABC2025 (cider/mead, type 2). A beer
+     * code that lives only under AABC2022 must still resolve — the old
+     * single-version guess looked in AABC2025 and found nothing.
+     */
+    public function test_aabc2025_beer_style_resolves_from_aabc2022(): void
+    {
+        $this->setPrefs(['prefsStyleSet' => 'AABC2025']);
+        $this->login();
+
+        // Real code path: POST /brew resolves the code through
+        // BrewController::styleFlags() → StyleSets::findStyle().
+        $this->post('/brew', ['brewName' => 'AABC Beer', 'brewStyle' => '01-04', 'brewConfirmed' => '1'])
+            ->assertRedirect('/list?msg=1');
+
+        $entry = $this->lastEntry();
+        self::assertNotNull($entry);
+        // Resolved to the AABC2022 row instead of a null style.
+        self::assertSame('American Light Lager [BJCP 1A]', $entry['brewStyle']);
+        self::assertSame('01', (string) $entry['brewCategorySort']);
+        self::assertSame('04', $entry['brewSubCategory']);
+        self::assertSame(1, (int) $entry['brewStyleType']);
+
+        // The flag lookup the entry form uses is non-null under AABC2025.
+        $flags = BrewController::styleFlags('01-04', TenantContext::load());
+        self::assertNotNull($flags);
+        self::assertSame('AABC2022', (string) $flags->brewStyleVersion);
+    }
+
+    /**
+     * BJCP2025 spans BJCP2021. Resolution is newest-first: a cider code
+     * present in BOTH versions must win the BJCP2025 row, while a beer code
+     * (only in BJCP2021) falls through to the predecessor.
+     */
+    public function test_bjcp2025_resolves_newest_first_then_falls_back(): void
+    {
+        $this->setPrefs(['prefsStyleSet' => 'BJCP2025']);
+        $ctx = TenantContext::load();
+
+        // C1-A exists in BJCP2025 (Common Cider) and BJCP2021 (New World
+        // Cider) — newest wins.
+        $cider = BrewController::styleFlags('C1-A', $ctx);
+        self::assertNotNull($cider);
+        self::assertSame('BJCP2025', (string) $cider->brewStyleVersion);
+        self::assertSame('Common Cider', (string) $cider->brewStyle);
+
+        // 01-A exists only in BJCP2021 (American Light Lager) — fallback.
+        $beer = BrewController::styleFlags('01-A', $ctx);
+        self::assertNotNull($beer);
+        self::assertSame('BJCP2021', (string) $beer->brewStyleVersion);
+        self::assertSame('American Light Lager', (string) $beer->brewStyle);
+    }
+
+    /** Custom styles extend every version and must still resolve. */
+    public function test_custom_style_still_resolves(): void
+    {
+        $this->setPrefs(['prefsStyleSet' => 'AABC2025']);
+        $id = DB::table('styles')->insertGetId([
+            'brewStyleGroup' => '77',
+            'brewStyleNum' => 'ZZ',
+            'brewStyle' => 'Custom One-Off',
+            'brewStyleVersion' => 'ZZCUSTOM',
+            'brewStyleType' => '1',
+            'brewStyleOwn' => 'custom',
+        ]);
+
+        try {
+            $flags = BrewController::styleFlags('77-ZZ', TenantContext::load());
+            self::assertNotNull($flags);
+            self::assertSame('custom', (string) $flags->brewStyleOwn);
+            self::assertSame('Custom One-Off', (string) $flags->brewStyle);
+        } finally {
+            DB::table('styles')->where('id', $id)->delete();
+        }
     }
 }

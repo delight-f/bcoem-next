@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Entries\EntryLimits;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
@@ -172,32 +173,12 @@ final class StylesAdminController extends Controller
 
     /**
      * Ledger pins #5/#6/#7 — the exact set lookup predicate from
-     * styles.db.php. Dual-version sets coexist: "other" rows (type=2) live
-     * in the NEW version, everything else stays under the previous one.
+     * styles.db.php. Lives in StyleSets::activeQuery() (single source of
+     * truth); repointed here so every caller shares one definition.
      */
     private static function setQuery(string $set): Builder
     {
-        $query = DB::table('styles');
-
-        return match ($set) {
-            'BJCP2025' => $query->where(function ($q): void {
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2021')->where('brewStyleType', '!=', '2');
-                })->orWhere('brewStyleOwn', 'custom');
-            }),
-            'AABC2025' => $query->where(function ($q): void {
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2022')->where('brewStyleType', '!=', '2');
-                })->orWhere('brewStyleOwn', 'custom');
-            }),
-            default => $query->where(function ($q) use ($set): void {
-                $q->where('brewStyleVersion', $set)->orWhere('brewStyleOwn', 'custom');
-            }),
-        };
+        return StyleSets::activeQuery($set);
     }
 
     /** @return array<int, mixed> decoded prefsSelectedStyles map */

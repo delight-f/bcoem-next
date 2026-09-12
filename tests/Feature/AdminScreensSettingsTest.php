@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Mail\TestEmailMail;
+use App\Support\Payments\FeeCalculator;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
+use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -329,6 +332,116 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame(['en-US'], json_decode((string) $p['prefsLanguageOptions'], true));
     }
 
+    /**
+     * Full default-tab payload (the tab validates ~21 required columns), with
+     * the session timeout left blank — i.e. "use the installation default".
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function defaultTabPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'prefsProEdition' => '0',
+            'prefsMHPDisplay' => '1',
+            'prefsDisplayWinners' => 'Y',
+            'prefsWinnerDelay' => '',
+            'prefsWinnerMethod' => '0',
+            'prefsTheme' => 'default',
+            'prefsSEF' => 'N',
+            'prefsUseMods' => '0',
+            'prefsCAPTCHA' => '0',
+            'prefsGoogleAccount' => '',
+            'prefsDropOff' => 'N',
+            'prefsShipping' => 'N',
+            'prefsAutoPurge' => '0',
+            'prefsLanguage' => 'en-US',
+            'prefsLanguageToggle' => 'N',
+            'prefsDateFormat' => '1',
+            'prefsTimeFormat' => '0',
+            'prefsTimeZone' => '-7',
+            'prefsSponsors' => 'Y',
+            'prefsSponsorLogos' => 'Y',
+            'prefsSessionTimeout' => '',
+        ], $overrides);
+    }
+
+    /**
+     * Upstream 3.1.0 session (auto-logout) timeout: the preference column,
+     * both countdown boot sites and the resync heartbeat all agree on it, and
+     * a blank submit falls back to the installation default.
+     */
+    public function test_site_preferences_session_timeout_persists_and_blank_falls_back(): void
+    {
+        $this->remember('preferences');
+        $default = (int) config('session.lifetime', 120);
+
+        DB::table('preferences')->where('id', 1)->update(['prefsSessionTimeout' => 45]);
+
+        // Field prefill comes from the preference.
+        $this->get('/admin/site-preferences/default')
+            ->assertOk()
+            ->assertSee('name="prefsSessionTimeout"', false)
+            ->assertSee('value="45"', false);
+
+        // Both boot sites read the preference, not the raw config: the public
+        // nav countdown (#session-end, rendered on the public side only)…
+        $this->get('/')->assertSee('data-session-end-seconds="2700"', false);
+
+        // …and the admin expiry-modal boot (admin side).
+        $this->get('/admin/site-preferences/default')
+            ->assertOk()
+            ->assertSee('lifetimeMin: 45', false)
+            ->assertSee('ajax/heartbeat', false);
+
+        // Resync endpoint hands back the remaining lifetime.
+        $before = time();
+        $json = $this->get('/ajax/heartbeat')->assertOk()->json();
+        self::assertSame('1', (string) $json['status']);
+        self::assertSame(45, (int) $json['session_expire_after_minutes']);
+        self::assertGreaterThanOrEqual($before + 2700, (int) $json['session_end_seconds']);
+        self::assertLessThanOrEqual(time() + 2700, (int) $json['session_end_seconds']);
+
+        // Real endpoint round trip: persist a new value, then blank it.
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsSessionTimeout' => '90']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        self::assertSame(90, (int) DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
+        self::assertSame(90, (int) $this->get('/ajax/heartbeat')->json('session_expire_after_minutes'));
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsSessionTimeout' => '']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        self::assertNull(DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
+
+        // Blank → installation default in the boot sites and the heartbeat.
+        $this->get('/')->assertSee('data-session-end-seconds="'.($default * 60).'"', false);
+        $this->get('/admin/site-preferences/default')
+            ->assertSee('lifetimeMin: '.$default, false);
+        self::assertSame($default, (int) $this->get('/ajax/heartbeat')->json('session_expire_after_minutes'));
+    }
+
+    public function test_site_preferences_session_timeout_rejects_invalid_and_clamps_low(): void
+    {
+        $this->remember('preferences');
+
+        DB::table('preferences')->where('id', 1)->update(['prefsSessionTimeout' => 45]);
+
+        // Non-numeric input is rejected; the stored value is left alone.
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsSessionTimeout' => 'soon']))
+            ->assertSessionHasErrors('prefsSessionTimeout');
+        self::assertSame(45, (int) DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
+
+        // Zero or less stores NULL (blank fallback), like legacy.
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsSessionTimeout' => '0']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        self::assertNull(DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
+
+        // Below the 3-minute floor clamps up (the 2:00/0:30 warning modals
+        // need the room) — process_prefs.inc.php semantics.
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsSessionTimeout' => '2']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        self::assertSame(3, (int) DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
+    }
+
     public function test_site_preferences_entries_tab_moves_fees_and_keeps_discount_flag(): void
     {
         $this->remember('preferences');
@@ -512,6 +625,278 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             ->assertOk()
             ->assertSee('Message could not be sent')
             ->assertSee('SMTP connect failed');
+    }
+
+    /**
+     * The entries-tab picker is driven by StyleSets — all six sets, and only
+     * those six (BA/AABC 2019/BJCP2008/BJCP2015 stay out).
+     */
+    public function test_entries_tab_style_set_picker_lists_exactly_the_six_sets(): void
+    {
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('name="prefsStyleSet"', false)
+            ->assertSee('value="BJCP2025"', false)
+            ->assertSee('value="BJCP2021"', false)
+            ->assertSee('value="BA2026"', false)
+            ->assertSee('value="AABC2022"', false)
+            ->assertSee('value="AABC2025"', false)
+            ->assertSee('value="NWCiderCup"', false)
+            // Option labels are the definitions' short names.
+            ->assertSee('BJCP 2021 / 2025')
+            ->assertSee('BJCP 2015 / 2021')
+            ->assertSee('BA 2026')
+            ->assertSee('AABC 2022')
+            ->assertSee('AABC 2025')
+            ->assertSee('NW Cider Cup')
+            // Deliberately excluded values are not offered.
+            ->assertDontSee('value="BJCP2008"', false)
+            ->assertDontSee('value="BJCP2015"', false)
+            ->assertDontSee('value="AABC"', false)
+            ->assertDontSee('value="BA"', false);
+    }
+
+    /**
+     * The reported bug: BJCP2025 must rebuild the dual-version union (~159
+     * seeded rows), not the 16 BJCP2025-only rows.
+     */
+    public function test_style_set_change_to_bjcp2025_rebuilds_the_dual_version_union(): void
+    {
+        $this->remember('preferences');
+        $this->rememberStyleLimits();
+
+        // A different starting set so the rebuild branch actually runs.
+        DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'BJCP2021']);
+
+        $this->put('/admin/site-preferences/entries', [
+            'prefsStyleSet' => 'BJCP2025',
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '1',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
+        self::assertIsArray($selected);
+
+        $expected = DB::table('styles')->where(function ($q): void {
+            $q->where(function ($qq): void {
+                $qq->where('brewStyleVersion', 'BJCP2025')->where('brewStyleType', '2');
+            })->orWhere(function ($qq): void {
+                $qq->where('brewStyleVersion', 'BJCP2021')->where('brewStyleType', '!=', '2');
+            })->orWhere('brewStyleOwn', 'custom');
+        })->count();
+        $plain = DB::table('styles')->where('brewStyleVersion', 'BJCP2025')->count();
+
+        self::assertGreaterThan(140, $expected, 'seeded dual-version union is ~159 rows');
+        self::assertCount($expected, $selected);
+        // Plain version equality selects only the 16 BJCP2025 "other" rows.
+        self::assertNotSame($plain, count($selected));
+    }
+
+    /**
+     * BA2026 is offered by the picker but carried no `styles` rows, so
+     * selecting it rebuilt an empty accepted-styles list. The seed migration
+     * ships the upstream 2026 Brewers Association guidelines (169 rows,
+     * groups 01-09 + 11) — the rebuild must pick them up.
+     */
+    public function test_style_set_change_to_ba2026_rebuilds_the_imported_rows(): void
+    {
+        $this->remember('preferences');
+        $this->rememberStyleLimits();
+
+        $imported = DB::table('styles')->where('brewStyleVersion', 'BA2026')->count();
+        self::assertSame(169, $imported, 'seed migration ships the upstream BA 2026 guidelines');
+
+        // A different starting set so the rebuild branch actually runs.
+        DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'BJCP2021']);
+
+        $this->put('/admin/site-preferences/entries', [
+            'prefsStyleSet' => 'BA2026',
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '1',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
+        self::assertIsArray($selected);
+        self::assertNotEmpty($selected, 'BA2026 rebuild must not be empty');
+
+        // Single-version set: version equality plus customs (StyleSets::activeQuery).
+        $expected = DB::table('styles')->where(function ($q): void {
+            $q->where('brewStyleVersion', 'BA2026')->orWhere('brewStyleOwn', 'custom');
+        })->count();
+        self::assertCount($expected, $selected);
+
+        // BA sets carry no group/sub style code in displays
+        // (StyleSets::noNumbering — honoured by AwardDeckBuilder, pullsheets,
+        // labels and the brew form).
+        self::assertTrue(StyleSets::noNumbering('BA2026'));
+    }
+
+    /** AABC2022 (single-version) still rebuilds from its own rows (~147). */
+    public function test_style_set_change_to_aabc2022_rebuilds_its_own_version_rows(): void
+    {
+        $this->remember('preferences');
+        $this->rememberStyleLimits();
+
+        DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'BJCP2021']);
+
+        $this->put('/admin/site-preferences/entries', [
+            'prefsStyleSet' => 'AABC2022',
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '1',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
+        self::assertIsArray($selected);
+
+        $expected = DB::table('styles')->where(function ($q): void {
+            $q->where('brewStyleVersion', 'AABC2022')->orWhere('brewStyleOwn', 'custom');
+        })->count();
+
+        self::assertGreaterThan(100, $expected);
+        self::assertCount($expected, $selected);
+    }
+
+    /** Validation is pinned to StyleSets::names() — legacy values rejected. */
+    public function test_entries_tab_rejects_a_set_outside_the_definition(): void
+    {
+        $this->remember('preferences');
+        $this->rememberStyleLimits();
+
+        $before = DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
+
+        $this->put('/admin/site-preferences/entries', [
+            'prefsStyleSet' => 'BJCP2008',
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '1',
+        ])->assertSessionHasErrors('prefsStyleSet');
+
+        self::assertSame($before, DB::table('preferences')->where('id', 1)->value('prefsStyleSet'));
+    }
+
+    /**
+     * Upstream 3.1.0 "Entry fee amounts now support more foreign currency
+     * formats without being cut off" (update/run_update.php:4960-4972)
+     * widened exactly these three contest_info columns from float(6,2) to
+     * DECIMAL(9,2).
+     */
+    public function test_entry_fee_columns_are_decimal_9_2(): void
+    {
+        foreach (['contestEntryFee', 'contestEntryFee2', 'contestEntryFeePasswordNum'] as $column) {
+            $type = (string) DB::selectOne(
+                'SHOW COLUMNS FROM `'.DB::getTablePrefix().'contest_info` WHERE Field = ?',
+                [$column],
+            )->Type;
+
+            self::assertSame('decimal(9,2)', $type, $column);
+        }
+    }
+
+    /**
+     * Real write path (admin entries tab) + read back: 123456.78 needs six
+     * integer digits, so float(6,2) — which held at most 9999.99 — cut it
+     * off. DECIMAL(9,2) holds it, and every fee display shows it whole.
+     */
+    public function test_wide_entry_fee_persists_without_clipping(): void
+    {
+        $this->remember('preferences');
+        $this->remember('contest_info');
+        $this->rememberStyleLimits();
+
+        $set = (string) DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
+
+        $this->put('/admin/site-preferences/entries', [
+            'contestEntryFee' => '123456.78',
+            'contestEntryFee2' => '5000.50',
+            'contestEntryFeeDiscountNum' => '5',
+            'prefsStyleSet' => $set,
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '0',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        $contest = (array) DB::table('contest_info')->where('id', 1)->first();
+        self::assertSame('123456.78', (string) $contest['contestEntryFee']);
+        self::assertSame('5000.50', (string) $contest['contestEntryFee2']);
+
+        // The top of the new range round-trips too (decimal(9,2) ceiling).
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFee' => '9999999.99']);
+        self::assertSame('9999999.99', (string) DB::table('contest_info')->where('id', 1)->value('contestEntryFee'));
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFee' => '123456.78']);
+
+        // Admin fee screen renders the stored amount verbatim — no cast,
+        // no number_format truncation.
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('value="123456.78"', false);
+
+        // Fee math takes the whole amount (BCMath at 2dp, no clipping).
+        $params = FeeCalculator::params(TenantContext::load());
+        self::assertSame('123456.78', FeeCalculator::total(1, false, $params));
+        self::assertSame('246913.56', FeeCalculator::total(2, false, $params));
+
+        // Nothing left over from a clipped write.
+        self::assertStringNotContainsString('9999.99', (string) DB::table('contest_info')->where('id', 1)->value('contestEntryFee'));
+    }
+
+    /**
+     * Upstream 3.1.0 added Korean Won (lib/common.lib.php: switch
+     * `case 'krw': '&#8361;^KRW'` = ₩ + code KRW; method-2 dropdown row
+     * `krw^&#8361; Won^KRW`). Selectable on the Payment tab, and the symbol
+     * the port renders is ₩ (U+20A9).
+     */
+    public function test_krw_currency_is_selectable_and_maps_to_won(): void
+    {
+        $this->remember('preferences');
+
+        $this->put('/admin/site-preferences/payment', [
+            'prefsCurrency' => 'krw',
+            'prefsPayToPrint' => '0',
+            'prefsCash' => '1',
+            'prefsCheck' => '0',
+            'prefsTransFee' => 'N',
+        ])->assertRedirect('/admin/site-preferences/payment?msg=2');
+
+        self::assertSame('krw', (string) DB::table('preferences')->where('id', 1)->value('prefsCurrency'));
+        self::assertSame('₩', "\u{20A9}");
+        self::assertSame('₩', TenantContext::load()->currencySymbol());
+
+        $this->get('/admin/site-preferences/payment')
+            ->assertOk()
+            ->assertSee('value="krw"', false);
+    }
+
+    /** Every pre-3.1.0 currency keeps its legacy symbol (switch side of "^"). */
+    public function test_currency_symbol_map_matches_legacy_and_keeps_existing_entries(): void
+    {
+        $this->remember('preferences');
+
+        $expected = [
+            '$' => '$', 'R$' => 'R$', 'pound' => '£', 'czkoruna' => 'Kč', 'euro' => '€',
+            'A$' => '$', 'C$' => '$', 'H$' => '$', 'N$' => '$', 'S$' => '$', 'T$' => '$',
+            'Ft' => 'Ft', 'shekel' => '₪', 'yen' => '¥',
+            'nkr' => 'kr', 'kr' => 'kr', 'skr' => 'kr',
+            'RM' => 'RM', 'M$' => '$', 'phpeso' => '₱', 'pol' => 'zł', 'p.' => 'p.',
+            'sfranc' => '₣', 'baht' => '฿', 'tlira' => '₺', 'R' => 'R', 'rupee' => '₹',
+            'krw' => '₩',
+        ];
+
+        foreach ($expected as $pref => $symbol) {
+            DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => $pref]);
+            self::assertSame($symbol, TenantContext::load()->currencySymbol(), 'prefsCurrency='.$pref);
+        }
+
+        // Unknown / blank prefs fall through to the raw value (legacy default).
+        DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'XYZ']);
+        self::assertSame('XYZ', TenantContext::load()->currencySymbol());
     }
 
     /** Snapshot every non-null at-limit flag for restore. */

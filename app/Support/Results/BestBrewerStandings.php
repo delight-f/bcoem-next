@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Results;
 
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
 
@@ -168,21 +169,11 @@ final class BestBrewerStandings
 
         // Category pool (methods 1 and 2): per enabled/selected group in the
         // active style set, count received entries (winners_category.db.php).
-        $groups = DB::table('styles as s')
-            ->where('s.brewStyleActive', 'Y')
-            ->where(function ($q) use ($ctx): void {
-                $set = (string) ($ctx->prefs['prefsStyleSet'] ?? 'BJCP2025');
-                if ($set === 'BJCP2025') {
-                    $q->where(function ($qq): void {
-                        $qq->where('brewStyleVersion', 'BJCP2025')->where('brewStyleType', '2');
-                    })->orWhere(function ($qq): void {
-                        $qq->where('brewStyleVersion', 'BJCP2021')->where('brewStyleType', '!=', '2');
-                    });
-                } else {
-                    $q->where('brewStyleVersion', $set);
-                }
-                $q->orWhere('brewStyleOwn', 'custom');
-            })
+        // Active-set predicate from the single definition (StyleSets) —
+        // dual-version sets span their predecessor, customs extend every set.
+        $set = (string) ($ctx->prefs['prefsStyleSet'] ?? 'BJCP2025');
+        $groups = StyleSets::activeQuery($set)
+            ->where('brewStyleActive', 'Y')
             ->distinct()
             ->pluck('brewStyleGroup');
 

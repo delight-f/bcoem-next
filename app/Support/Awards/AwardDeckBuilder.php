@@ -7,6 +7,7 @@ namespace App\Support\Awards;
 use App\Http\Controllers\BrewController;
 use App\Support\Results\BestBrewerStandings;
 use App\Support\Results\Place;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,8 @@ use Illuminate\Support\Facades\DB;
  * - display_place(place,1): 1..4 ordinals, 5/HM → "HM", else "N/A".
  * - truncate_string(s, limit, ' '): break at the next space after limit,
  *   append "..."; if no breakpoint or already short, unchanged.
- * - Style display: AABC "1.A" (ltrim zeros, dot), BA style name only,
+ * - Style display: AABC "1.A" (ltrim zeros, dot), no-numbering sets
+ *   (StyleSets::noNumbering — the BA sets) show the style name only,
  *   otherwise "cat.sub: name" (legacy :181-186 / :420-425).
  * - Pro edition: name = brewerBreweryName, club line suppressed.
  * - Club: '' when "Other" or empty; truncated to 25.
@@ -396,7 +398,7 @@ final class AwardDeckBuilder
             return $style.': '.$brewStyle;
         }
 
-        if ($styleSet === 'BA') {
+        if (StyleSets::noNumbering($styleSet)) {
             return $brewStyle;
         }
 
@@ -405,7 +407,7 @@ final class AwardDeckBuilder
 
     private function categoryTitle(TenantContext $ctx, object $first, string $cat, ?string $sub): string
     {
-        if ((string) ($ctx->prefsStr('prefsStyleSet')) === 'BA') {
+        if (StyleSets::noNumbering((string) $ctx->prefsStr('prefsStyleSet'))) {
             return (string) ($first->brewStyleCategory ?? '');
         }
 
@@ -416,7 +418,7 @@ final class AwardDeckBuilder
 
     private function subcategoryTitle(TenantContext $ctx, string $brewStyle, string $group, string $num): string
     {
-        if ((string) ($ctx->prefsStr('prefsStyleSet')) === 'BA') {
+        if (StyleSets::noNumbering((string) $ctx->prefsStr('prefsStyleSet'))) {
             return $brewStyle;
         }
 

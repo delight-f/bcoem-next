@@ -6,7 +6,7 @@
     // dateFormat ('Y-m-d H:i' 24h / 'Y-m-d h:i K' 12h).
     $tf24 = ((int) $tf) === 1;
     $go = $go ?? 'default';
-    $tabs = ['default' => 'Display', 'entries' => 'Entries', 'email' => 'Email', 'payment' => 'Payment', 'best' => 'Best Brewer/Club'];
+    $tabs = ['default' => 'General', 'entries' => 'Entries', 'email' => 'Email & Contact', 'payment' => 'Currency and payments', 'best' => 'Best Brewer and/or Club'];
     $langOptions = json_decode((string) $ctx->prefsStr('prefsLanguageOptions'), true);
     if (! is_array($langOptions)) {
         $langOptions = array_keys($languages);
@@ -39,16 +39,18 @@
                 @csrf
                 @method('put')
                 <div class="mb-4 row">
-                    <label class="col-md-4 col-form-label">Pro Edition</label>
+                    <label class="col-md-4 col-form-label">Competition type: Amateur or Professional</label>
+                    <span class="form-text">Indicate whether the participants in the competition will be individual amateur brewers or licensed breweries with designated points of contact.</span>
                     <div class="col-md-9">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsProEdition" value="1" id="proYes" @checked($p('prefsProEdition') === '1')><label class="form-check-label" for="proYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsProEdition" value="0" id="proNo" @checked($p('prefsProEdition') !== '1')><label class="form-check-label" for="proNo">Amateur</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsProEdition" value="0" id="proNo" @checked($p('prefsProEdition') !== '1')><label class="form-check-label" for="proNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsProEdition" value="1" id="proYes" @checked($p('prefsProEdition') === '1')><label class="form-check-label" for="proYes">Professional</label></div>
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label class="col-md-4 col-form-label">Show Homebrew Club Points Page</label>
+                    <label class="col-md-4 col-form-label">Master Homebrewer Program (MHP) Fields and Display</label>
+                    <span class="form-text">Enable or disable the ability for entrants to enter their Master Homebrewer Program (MHP) number when adding or editing their account information. When they do so, if this function is enabled, a tag will display beside their name if one or more of their entries place. This will also enable the Winners: Master Homebrewer Program Member Data CSV download available from the Data Exports section of the Administration Dashboard.</span>
                     <div class="col-md-9">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsMHPDisplay" value="1" id="mhpYes" @checked($p('prefsMHPDisplay') === '1')><label class="form-check-label" for="mhpYes">Yes</label></div>
@@ -58,6 +60,7 @@
                 </div>
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Display Winners</label>
+                    <span class ="form-text">Indicate if the results of the competition for each category and Best of Show Style Type will be displayed</span>
                     <div class="col-md-9">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsDisplayWinners" value="Y" id="dwY" @checked($p('prefsDisplayWinners') === 'Y')><label class="form-check-label" for="dwY">Yes</label></div>
@@ -170,6 +173,14 @@
                     <div class="col-md-9">
                         <input class="form-control" id="prefsRecordPaging" name="prefsRecordPaging" type="text" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
                         <span class="form-text">The number of records displayed per page when viewing lists.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsSessionTimeout" class="col-md-4 col-form-label">Session Timeout (Minutes)</label>
+                    <div class="col-md-9">
+                        <input class="form-control" id="prefsSessionTimeout" name="prefsSessionTimeout" type="number" min="3" step="1" style="width:auto;" placeholder="{{ $sessionTimeoutDefault }}" value="{{ $p('prefsSessionTimeout') }}">
+                        <span class="form-text">How many minutes of inactivity before an admin or participant is automatically logged out. Leave blank to use the installation default ({{ $sessionTimeoutDefault }} minutes).</span>
+                        <span class="form-text">Must be a whole number of 3 or more minutes &ndash; the logout warning popups need that much time or more to show normally.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -288,8 +299,8 @@
                     <label for="prefsStyleSet" class="col-md-4 col-form-label">Style Set</label>
                     <div class="col-md-9">
                         <select class="form-select" id="prefsStyleSet" name="prefsStyleSet" style="width:auto;">
-                            @foreach (['BJCP2021', 'BJCP2025', 'AABC2025', 'NWCiderCup'] as $set)
-                                <option value="{{ $set }}" @selected($p('prefsStyleSet') === $set)>{{ $set }}</option>
+                            @foreach ($styleSets as $setValue => $set)
+                                <option value="{{ $setValue }}" @selected($p('prefsStyleSet') === $setValue)>{{ $set['short'] }}</option>
                             @endforeach
                         </select>
                         <span class="form-text">Changing the set rebuilds the accepted-styles list.</span>
@@ -590,7 +601,7 @@
                     <label for="prefsCurrency" class="col-md-4 col-form-label">Currency</label>
                     <div class="col-md-9">
                         <select class="form-select" id="prefsCurrency" name="prefsCurrency" style="width:auto;">
-                            @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc'] as $curr)
+                            @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc', 'krw'] as $curr)
                                 <option value="{{ $curr }}" @selected($p('prefsCurrency') === $curr)>{{ $curr }}</option>
                             @endforeach
                         </select>

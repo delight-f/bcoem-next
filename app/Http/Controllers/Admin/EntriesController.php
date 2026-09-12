@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\BrewController;
 use App\Http\Controllers\Controller;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -352,9 +353,11 @@ final class EntriesController extends Controller
 
         // Canonicalize the posted code FIRST (pin-4 choice: '001-C' →
         // '01-C'), then resolve the styles row against the CANONICAL
-        // values. BrewController::styleFlags() is deliberately NOT used
-        // here: it re-pads its input, so an already-canonical '01-C'
-        // would be looked up as '001-C' and never match (pin 4).
+        // values. Group/sub are handed to StyleSets::findStyle() in their
+        // canonical form — it does NO re-padding, so an already-canonical
+        // '01-C' resolves directly (pin 4). findStyle() walks the active
+        // set's versions newest-first, so AABC beer styles (AABC2022) and
+        // BJCP cider (BJCP2025) both resolve without a group heuristic.
         [$cat, $sub] = explode('-', $data['brewStyle'], 2);
         // Pin 1: subcategory cannot contain '-' (legacy explode semantics
         // would silently truncate; the port rejects instead).
@@ -362,17 +365,7 @@ final class EntriesController extends Controller
             return back()->withErrors(['brewStyle' => 'Style code must be <category>-<subcategory>.']);
         }
         $sort = self::categorySort($cat);
-        $set = $ctx->prefsStr('prefsStyleSet');
-        $version = $set === 'BJCP2025' && mb_substr($sort, 0, 1) === 'C'
-            ? 'BJCP2025'
-            : $set;
-        $styleRow = DB::table('styles')
-            ->where('brewStyleGroup', $sort)
-            ->where('brewStyleNum', $sub)
-            ->where(function ($q) use ($version): void {
-                $q->where('brewStyleVersion', $version)->orWhere('brewStyleOwn', 'custom');
-            })
-            ->first();
+        $styleRow = StyleSets::findStyle($ctx->prefsStr('prefsStyleSet') ?? '', $sort, $sub);
         if ($styleRow === null) {
             return back()->withErrors(['brewStyle' => 'Choose a style from the active style set.']);
         }

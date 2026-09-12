@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Output;
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\OutputFormat;
 use App\Support\Outputs\StreamPdf;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -1174,8 +1175,12 @@ final class LabelsController extends Controller
     /** style_number_const(method 0, common.lib.php:4494) for a style set. */
     private static function styleNumberConst(string $group, string $sub, string $styleSet): string
     {
+        // No-numbering sets (the BA sets) print no group/sub style code.
+        if (StyleSets::noNumbering($styleSet)) {
+            return '';
+        }
+
         return match ($styleSet) {
-            'BA' => '',
             'BJCP2021', 'BJCP2025' => ltrim($group, '0').self::styleSeparator($styleSet).ltrim($sub, '0'),
             default => $group.self::styleSeparator($styleSet).$sub,
         };
@@ -1184,11 +1189,8 @@ final class LabelsController extends Controller
     /** style_set_display_separator (mirrors PullsheetsController::styleSeparator). */
     private static function styleSeparator(string $styleSet): string
     {
-        return match ($styleSet) {
-            'AABC', 'AABC2022', 'AABC2025' => '.',
-            'NWCiderCup' => '-',
-            default => '',
-        };
+        // `AABC` (2019) is legacy-only; the rest come from StyleSets.
+        return $styleSet === 'AABC' ? '.' : StyleSets::separator($styleSet);
     }
 
     /** bjcp_rank($rank, 2) (common.lib.php:2373). */
