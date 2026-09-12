@@ -1005,6 +1005,17 @@ html {
 .admin-page-title .lead,
 .admin-page-title p { margin-bottom: 0; }
 .bcoem-admin-element { padding: 0 0 15px 0; }
+/* Issue 29: small banner preview beside each hero-image filename, so the
+   admin can see which image they are toggling instead of reading filenames. */
+.hero-image-thumb {
+    height: 2rem;
+    width: auto;
+    margin-right: 0.35rem;
+    vertical-align: middle;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius-sm);
+    background-color: var(--bs-tertiary-bg);
+}
 .date-time-picker-system { cursor: pointer; }
 .hide-loader { cursor: pointer; }
 

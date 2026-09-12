@@ -62,7 +62,10 @@
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="checkbox" id="{{ $field }}" name="{{ $field }}" value="1"
                                 @checked($prefs[$image] ?? true)>
-                            <label class="form-check-label" for="{{ $field }}">{{ $image }}</label>
+                            <label class="form-check-label" for="{{ $field }}">
+                                <img src="{{ asset('images/'.$image) }}" alt="" class="hero-image-thumb">
+                                <span>{{ $image }}</span>
+                            </label>
                         </div>
                     @empty
                         <p class="text-muted mb-0">No images in this category.</p>
