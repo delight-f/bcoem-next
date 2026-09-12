@@ -307,18 +307,19 @@ fresh_install() {
     (shopt -s dotglob nullglob && mv "${app}"/* "${TARGET}/")
 
     log "Running the installer…"
-    # Credentials are passed on the command line because app:install's flags are
-    # the supported non-interactive interface; run this on a host you trust.
-    run_artisan "${TARGET}" app:install --no-interaction \
-        --db-host="${DB_HOST}" \
-        --db-port="${DB_PORT}" \
-        --db-name="${DB_NAME}" \
-        --db-username="${DB_USERNAME}" \
-        --db-password="${DB_PASSWORD}" \
-        --app-url="${APP_URL}" \
-        --admin-name="${ADMIN_NAME}" \
-        --admin-email="${ADMIN_EMAIL}" \
-        --admin-password="${ADMIN_PASSWORD}"
+    # Secrets go in on stdin, one line each, so they never appear in the process
+    # list; the non-secret values stay as app:install flags.
+    printf '%s\n%s\n' "${DB_PASSWORD}" "${ADMIN_PASSWORD}" |
+        run_artisan "${TARGET}" app:install --no-interaction \
+            --db-host="${DB_HOST}" \
+            --db-port="${DB_PORT}" \
+            --db-name="${DB_NAME}" \
+            --db-username="${DB_USERNAME}" \
+            --db-password-stdin \
+            --app-url="${APP_URL}" \
+            --admin-name="${ADMIN_NAME}" \
+            --admin-email="${ADMIN_EMAIL}" \
+            --admin-password-stdin
 
     install_cron
 

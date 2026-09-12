@@ -9,6 +9,7 @@ use App\Services\Installation\Data\InstallInput;
 use App\Services\Installation\Exceptions\InstallationException;
 use App\Services\Installation\InstallationService;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Input\StreamableInputInterface;
 
 /**
  * `php artisan app:install` — thin caller of InstallationService.
@@ -24,12 +25,47 @@ final class InstallCommand extends Command
         {--db-name= : Database name}
         {--db-username= : Database username}
         {--db-password= : Database password}
+        {--db-password-stdin : Read the database password from one line of STDIN}
         {--app-url= : Public site URL}
         {--admin-name= : Administrator name}
         {--admin-email= : Administrator email}
-        {--admin-password= : Administrator password}';
+        {--admin-password= : Administrator password}
+        {--admin-password-stdin : Read the administrator password from one line of STDIN}';
 
     protected $description = 'Install BCOEM on a fresh database.';
+
+    /**
+     * Resolve a secret without putting it on the command line. An explicit flag
+     * wins, then one STDIN line, then the environment, then the interactive
+     * prompt. Returns '' when genuinely absent so the caller's missing-value
+     * guard still fires.
+     */
+    private function secretValue(string $flag, string $stdinFlag, string $envKey, string $prompt, bool $interactive): string
+    {
+        $value = $this->option($flag);
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        if ((bool) $this->option($stdinFlag)) {
+            return $this->readStdinLine();
+        }
+
+        $env = getenv($envKey);
+        if (is_string($env) && $env !== '') {
+            return $env;
+        }
+
+        return $interactive ? (string) $this->secret($prompt) : '';
+    }
+
+    private function readStdinLine(): string
+    {
+        $stream = $this->input instanceof StreamableInputInterface ? $this->input->getStream() : null;
+        $line = fgets($stream ?? STDIN);
+
+        return $line === false ? '' : rtrim($line, "\r\n");
+    }
 
     public function handle(InstallationService $service): int
     {
@@ -40,11 +76,11 @@ final class InstallCommand extends Command
             'db-port' => (string) ($this->option('db-port') ?: ($interactive ? $this->ask('Database port', '3306') : '')),
             'db-name' => (string) ($this->option('db-name') ?: ($interactive ? $this->ask('Database name') : '')),
             'db-username' => (string) ($this->option('db-username') ?: ($interactive ? $this->ask('Database username') : '')),
-            'db-password' => (string) ($this->option('db-password') ?: ($interactive ? (string) $this->secret('Database password') : '')),
+            'db-password' => $this->secretValue('db-password', 'db-password-stdin', 'BCOEM_INSTALL_DB_PASSWORD', 'Database password', $interactive),
             'app-url' => (string) ($this->option('app-url') ?: ($interactive ? $this->ask('Site URL', 'http://localhost') : '')),
             'admin-name' => (string) ($this->option('admin-name') ?: ($interactive ? $this->ask('Administrator name') : '')),
             'admin-email' => (string) ($this->option('admin-email') ?: ($interactive ? $this->ask('Administrator email') : '')),
-            'admin-password' => (string) ($this->option('admin-password') ?: ($interactive ? (string) $this->secret('Administrator password') : '')),
+            'admin-password' => $this->secretValue('admin-password', 'admin-password-stdin', 'BCOEM_INSTALL_ADMIN_PASSWORD', 'Administrator password', $interactive),
         ];
 
         $missing = array_keys(array_filter($values, static fn (string $v): bool => $v === ''));

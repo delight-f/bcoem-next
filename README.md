@@ -213,6 +213,21 @@ php artisan app:install \
   --admin-name="Club Admin" --admin-email=admin@example.com --admin-password=secret
 ```
 
+The two secrets can stay out of the process list entirely. The explicit
+`--db-password` / `--admin-password` flags remain (that is the documented
+non-interactive interface), but you can instead pipe one line each to
+`--db-password-stdin` / `--admin-password-stdin`, or set
+`BCOEM_INSTALL_DB_PASSWORD` / `BCOEM_INSTALL_ADMIN_PASSWORD`. Precedence is
+explicit flag, then stdin, then environment, then the interactive prompt:
+
+```bash
+printf '%s\n%s\n' "$DB_PASSWORD" "$ADMIN_PASSWORD" |
+  php artisan app:install --no-interaction \
+    --db-host=127.0.0.1 --db-port=3306 --db-name=bcoem --db-username=bcoem \
+    --db-password-stdin --app-url=https://beer.example.com \
+    --admin-name="Club Admin" --admin-email=admin@example.com --admin-password-stdin
+```
+
 It checks the preconditions, tests the database connection, and only then
 installs — a bad password stops before anything is written.
 
@@ -230,9 +245,11 @@ curl -sSL https://get.yourapp.com/install.sh | bash
 
 `scripts/install.sh` checks PHP, the required extensions and `unzip`, downloads
 the release zip (or takes a local `--zip-file`), and then drives `php artisan
-app:install` with the collected values. It adds the Laravel scheduler cron entry
-if one is not already present. The hosting of that short URL is separate
-infrastructure, decided elsewhere.
+app:install` with the collected values. The database and admin passwords are
+piped to that command on stdin rather than passed as flags, so they never
+appear in the process list. It adds the Laravel scheduler cron entry if one is
+not already present. The hosting of that short URL is separate infrastructure,
+decided elsewhere.
 
 ### Upgrading
 
