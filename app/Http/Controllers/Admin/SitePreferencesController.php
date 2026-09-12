@@ -585,7 +585,10 @@ final class SitePreferencesController extends Controller
     private function updatePayment(Request $request): array
     {
         $data = $request->validate([
-            'prefsCurrency' => ['required', 'string', 'max:5'],
+            // The column is varchar(20) and the legacy list carries values
+            // longer than 5 (czkoruna, phpeso, sfranc, shekel), so a max:5
+            // here made four of the offered currencies unsaveable.
+            'prefsCurrency' => ['required', 'string', 'max:20'],
             'prefsPayToPrint' => ['required', 'in:0,1'],
             'prefsCash' => ['required', 'in:0,1'],
             'prefsCheck' => ['required', 'in:0,1'],

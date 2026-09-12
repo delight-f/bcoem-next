@@ -402,6 +402,36 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('name="prefsLanguageOptions[]"', false);
     }
 
+    /**
+     * The payment tab's own dropdown offered currencies that its validation
+     * rejected: prefsCurrency was capped at max:5, so czkoruna/phpeso/sfranc/
+     * shekel (all in the legacy list; the column is varchar(20)) could never
+     * be saved.
+     */
+    public function test_payment_tab_accepts_every_offered_currency(): void
+    {
+        $this->login();
+
+        // Scrape the offered option values so the test can't drift from the view.
+        $html = (string) $this->get('/admin/site-preferences/payment')->assertOk()->getContent();
+        self::assertSame(1, preg_match('/<select[^>]*name="prefsCurrency"[^>]*>(.*?)<\/select>/s', $html, $m));
+        preg_match_all('/<option value="([^"]*)"/', $m[1], $opts);
+        $currencies = $opts[1];
+        self::assertNotEmpty($currencies);
+
+        foreach ($currencies as $curr) {
+            $this->put('/admin/site-preferences/payment', [
+                'prefsCurrency' => $curr,
+                'prefsPayToPrint' => '0',
+                'prefsCash' => '1',
+                'prefsCheck' => '0',
+                'prefsTransFee' => 'N',
+            ])->assertSessionHasNoErrors();
+
+            self::assertSame($curr, (string) DB::table('preferences')->where('id', 1)->value('prefsCurrency'), $curr);
+        }
+    }
+
     public function test_email_tab_renders_contact_options_and_smtp_test_section(): void
     {
         $this->login();
