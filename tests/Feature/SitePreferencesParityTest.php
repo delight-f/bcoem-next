@@ -175,6 +175,45 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         }
     }
 
+    public function test_entries_bulky_lists_collapse_and_exceptions_are_filterable(): void
+    {
+        $this->login();
+
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            // The ~150-row per-style grid starts collapsed behind a toggle.
+            ->assertSee('data-bs-target="#style-limits-list"', false)
+            ->assertSee('class="collapse" id="style-limits-list"', false)
+            // The exception picker is filterable/grouped, not a bare wall.
+            ->assertSee('id="usclExFilter"', false)
+            ->assertSee('id="usclExAll"', false)
+            ->assertSee('id="usclExNone"', false)
+            ->assertSee('id="usclExCount"', false)
+            ->assertSee('class="uscl-ex-group"', false);
+    }
+
+    public function test_entries_per_participant_dropdowns_are_capped(): void
+    {
+        $this->login();
+
+        $html = (string) $this->get('/admin/site-preferences/entries')->assertOk()->getContent();
+
+        // Deliberate divergence from legacy (which reached 25/25/100/25/60):
+        // the per-participant dropdowns stop at 10, the incremental days at 30.
+        foreach ([
+            'prefsUserEntryLimit' => 10,
+            'prefsUserSubCatLimit' => 10,
+            'prefsUSCLExLimit' => 10,
+            'user-entry-limit-number-1' => 10,
+            'user-entry-limit-expire-days-1' => 30,
+        ] as $name => $max) {
+            preg_match('/name="'.preg_quote($name, '/').'".*?<\/select>/s', $html, $m);
+            self::assertNotEmpty($m, $name.' select not found');
+            self::assertStringContainsString('<option value="'.$max.'"', $m[0], $name.' should offer '.$max);
+            self::assertStringNotContainsString('<option value="'.($max + 1).'"', $m[0], $name.' should not exceed '.$max);
+        }
+    }
+
     public function test_entries_style_type_limits_round_trip(): void
     {
         $this->login();

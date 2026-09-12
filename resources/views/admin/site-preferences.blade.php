@@ -479,8 +479,9 @@
                     </div>
                     <input type="hidden" name="style_type_entry_limits" value="{{ $styleTypesBos->pluck('id')->implode(',') }}">
                 @endif
+                <h4>Entry Limits by Style or Table/Medal Group</h4>
                 <div class="mb-4 row">
-                    <label for="choose-style-entry-limits" class="col-md-4 col-form-label">Entry Limits by Style or Table/Medal Group</label>
+                    <label for="choose-style-entry-limits" class="col-md-4 col-form-label">Entry Limit Method</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="choose-style-entry-limits" value="0" id="csel_0" @checked($p('prefsStyleLimits') === '')><label class="form-check-label" for="csel_0">Disable</label></div>
@@ -497,23 +498,30 @@
                     <div class="mb-4 row">
                         <label for="styleLimitsEdit" class="col-md-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
                         <div class="col-md-8">
-                            @foreach ($styleLimitRows as $row)
-                                <div class="row mb-1 small">
-                                    <div class="col-md-2">{{ $row['label'] }}</div>
-                                    <div class="col-md-5">
-                                        <input type="number" min="0" class="form-control" name="styleEntryLimit-{{ $styleSet }}-{{ $row['key'] }}" value="{{ $row['value'] }}">
-                                    </div>
+                            <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list" aria-expanded="false" aria-controls="style-limits-list">Expand/Collapse the {{ $styleSet }} Style List ({{ count($styleLimitRows) }} styles)</button>
+                            <div class="collapse" id="style-limits-list">
+                                <div class="border rounded p-2 mt-2" style="max-height:24rem; overflow:auto;">
+                                    @foreach ($styleLimitRows as $row)
+                                        <div class="row mb-1 small">
+                                            <div class="col-md-2">{{ $row['label'] }}</div>
+                                            <div class="col-md-5">
+                                                <input type="number" min="0" class="form-control" name="styleEntryLimit-{{ $styleSet }}-{{ $row['key'] }}" value="{{ $row['value'] }}">
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @endforeach
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                <h4>Per Participant Limits</h4>
                 <div class="mb-4 row">
                     <label for="prefsUserEntryLimit" class="col-md-4 col-form-label">Overall Entry Limit per Participant</label>
                     <div class="col-md-8">
                         <select class="form-select" name="prefsUserEntryLimit" id="prefsUserEntryLimit" style="width:auto;">
                             <option value="" @selected($p('prefsUserEntryLimit') === '')></option>
-                            @foreach (range(1, 25) as $i)
+                            @foreach (range(1, 10) as $i)
                                 <option value="{{ $i }}" @selected($p('prefsUserEntryLimit') === (string) $i)>{{ $i }}</option>
                             @endforeach
                         </select>
@@ -527,7 +535,7 @@
                             <div class="col-md-8">
                                 <select class="form-select" name="user-entry-limit-number-{{ $i }}" id="user-entry-limit-number-{{ $i }}" style="width:auto;">
                                     <option value=""></option>
-                                    @foreach (range(1, 25) as $a)
+                                    @foreach (range(1, 10) as $a)
                                         <option value="{{ $a }}" @selected((string) ($incrementalLimits[$i]['limit-number'] ?? '') === (string) $a)>{{ $a }}</option>
                                     @endforeach
                                 </select>
@@ -539,7 +547,7 @@
                             <div class="col-md-8">
                                 <select class="form-select" id="user-entry-limit-expire-days-{{ $i }}" name="user-entry-limit-expire-days-{{ $i }}" style="width:auto;">
                                     <option value=""></option>
-                                    @foreach (range(1, 60) as $b)
+                                    @foreach (range(1, 30) as $b)
                                         <option value="{{ $b }}" @selected((string) ($incrementalLimits[$i]['limit-days'] ?? '') === (string) $b)>{{ $b }}@if ($entryOpenEpoch > 0) - {{ \App\Support\Tenant\DateFmt::dateTime($entryOpenEpoch + $b * 86400, $tz, $ctx->prefsStr('prefsDateFormat'), $tf) }}@endif</option>
                                     @endforeach
                                 </select>
@@ -554,7 +562,7 @@
                     <div class="col-md-8">
                         <select class="form-select" name="prefsUserSubCatLimit" id="prefsUserSubCatLimit" style="width:auto;">
                             <option value="" @selected($p('prefsUserSubCatLimit') === '')></option>
-                            @foreach (range(1, 25) as $i)
+                            @foreach (range(1, 10) as $i)
                                 <option value="{{ $i }}" @selected($p('prefsUserSubCatLimit') === (string) $i)>{{ $i }}</option>
                             @endforeach
                         </select>
@@ -566,7 +574,7 @@
                     <div class="col-md-8">
                         <select class="form-select" id="prefsUSCLExLimit" name="prefsUSCLExLimit" style="width:auto;">
                             <option value="" @selected($p('prefsUSCLExLimit') === '')></option>
-                            @foreach (range(1, 100) as $i)
+                            @foreach (range(1, 10) as $i)
                                 <option value="{{ $i }}" @selected($p('prefsUSCLExLimit') === (string) $i)>{{ $i }}</option>
                             @endforeach
                         </select>
@@ -578,19 +586,68 @@
                 <div class="mb-4 row" id="subStyleExeptionsEdit">
                     <label for="prefsUSCLEx" class="col-md-4 col-form-label">Exceptions to Per Participant Sub-Style Entry Limit</label>
                     <div class="col-md-8">
-                        <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List</button>
+                        <button class="btn btn-sm btn-default" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List ({{ count($styleExceptions) }} styles)</button>
                         <div class="collapse" id="sub-style-list">
-                            <div class="input-group">
-                                @foreach ($styleExceptions as $ex)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="prefsUSCLEx[]" value="{{ $ex['id'] }}" id="usclEx-{{ $ex['id'] }}" @checked(in_array((string) $ex['id'], $usclChecked, true))>
-                                        <label class="form-check-label" for="usclEx-{{ $ex['id'] }}">{{ $ex['label'] }}</label>
+                            <div class="d-flex flex-wrap gap-2 align-items-center my-2">
+                                <input type="search" class="form-control form-control-sm" id="usclExFilter" placeholder="Filter sub-styles&hellip;" style="max-width:18rem;" autocomplete="off">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="usclExAll">Select all shown</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="usclExNone">Clear all</button>
+                                <span class="text-muted small"><span id="usclExCount">0</span> selected</span>
+                            </div>
+                            <div class="border rounded p-2" id="usclExList" style="max-height:22rem; overflow:auto;">
+                                @foreach (collect($styleExceptions)->groupBy('group') as $group => $rows)
+                                    <div class="uscl-ex-group">
+                                        <div class="text-uppercase text-muted small fw-bold mt-2">Group {{ $group }}</div>
+                                        @foreach ($rows as $ex)
+                                            <div class="form-check uscl-ex-row">
+                                                <input class="form-check-input" type="checkbox" name="prefsUSCLEx[]" value="{{ $ex['id'] }}" id="usclEx-{{ $ex['id'] }}" @checked(in_array((string) $ex['id'], $usclChecked, true))>
+                                                <label class="form-check-label" for="usclEx-{{ $ex['id'] }}">{{ $ex['label'] }}</label>
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endforeach
                             </div>
                         </div>
                     </div>
                 </div>
+                <script>
+                    // The exception list runs to ~150 styles; a flat wall of
+                    // checkboxes is unusable. Filter + group + bulk actions.
+                    (function () {
+                        var list = document.getElementById('usclExList');
+                        if (!list) { return; }
+                        var filter = document.getElementById('usclExFilter');
+                        var count = document.getElementById('usclExCount');
+                        var rows = function () { return Array.prototype.slice.call(list.querySelectorAll('.uscl-ex-row')); };
+                        var refreshCount = function () {
+                            count.textContent = list.querySelectorAll('input[type=checkbox]:checked').length;
+                        };
+                        filter.addEventListener('input', function () {
+                            var q = (filter.value || '').trim().toLowerCase();
+                            list.querySelectorAll('.uscl-ex-group').forEach(function (group) {
+                                var any = false;
+                                group.querySelectorAll('.uscl-ex-row').forEach(function (row) {
+                                    var hit = q === '' || row.textContent.toLowerCase().indexOf(q) !== -1;
+                                    row.style.display = hit ? '' : 'none';
+                                    if (hit) { any = true; }
+                                });
+                                group.style.display = any ? '' : 'none';
+                            });
+                        });
+                        document.getElementById('usclExAll').addEventListener('click', function () {
+                            rows().forEach(function (row) {
+                                if (row.style.display !== 'none') { row.querySelector('input').checked = true; }
+                            });
+                            refreshCount();
+                        });
+                        document.getElementById('usclExNone').addEventListener('click', function () {
+                            list.querySelectorAll('input[type=checkbox]').forEach(function (b) { b.checked = false; });
+                            refreshCount();
+                        });
+                        list.addEventListener('change', refreshCount);
+                        refreshCount();
+                    })();
+                </script>
 
                 {{-- Modals (legacy entryFormModal / prefsSpecificModal / charLimitModal / entryLimitPaidModal / exceptdSubstylesModal). --}}
                 <div class="modal fade" id="entryFormModal" tabindex="-1" aria-labelledby="entryFormModalLabel" aria-hidden="true">

@@ -182,7 +182,7 @@ final class SitePreferencesController extends Controller
      * active set is listed — the port rebuilds prefsSelectedStyles on a set
      * change, so the other sets' lists would be dead weight.
      *
-     * @return list<array{id: int, label: string}>
+     * @return list<array{id: int, group: string, label: string}>
      */
     private function styleExceptions(string $set): array
     {
@@ -199,6 +199,7 @@ final class SitePreferencesController extends Controller
 
                 return [
                     'id' => (int) $s->id,
+                    'group' => $group,
                     'label' => $noNumbering ? (string) $s->brewStyle : trim($number.' '.(string) $s->brewStyle),
                 ];
             })
