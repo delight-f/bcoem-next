@@ -20,6 +20,8 @@ rsync -a \
   --exclude=storage/framework/sessions/* \
   --exclude=bootstrap/cache/*.php \
   --exclude=public/hot \
+  --exclude=.scratch \
+  --exclude=.slop-scan.cache.json \
   --exclude=build \
   ./ "$BUILD_DIR/"
 
