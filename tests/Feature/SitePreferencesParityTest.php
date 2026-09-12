@@ -214,6 +214,21 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         }
     }
 
+    public function test_entries_incremental_tiers_reveal_progressively_without_blue_days(): void
+    {
+        $this->login();
+
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            // Tiers are addressable for the legacy progressive-reveal script.
+            ->assertSee('id="user-entry-limit-increment-1"', false)
+            ->assertSee('id="user-entry-limit-increment-4"', false)
+            ->assertSee('var tiers = [1, 2, 3, 4].map', false)
+            // Legacy's blue "Days" emphasis is dropped.
+            ->assertDontSee('<span class="text-primary">Days</span>', false)
+            ->assertSee('#1 Incremental Entry Limit per Participant Days', false);
+    }
+
     public function test_entries_style_type_limits_round_trip(): void
     {
         $this->login();

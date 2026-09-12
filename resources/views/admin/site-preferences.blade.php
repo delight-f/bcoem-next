@@ -543,7 +543,7 @@
                             </div>
                         </div>
                         <div class="mb-4 row">
-                            <label for="user-entry-limit-expire-days-{{ $i }}" class="col-md-4 col-form-label">#{{ $i }} Incremental Entry Limit per Participant <span class="text-primary">Days</span></label>
+                            <label for="user-entry-limit-expire-days-{{ $i }}" class="col-md-4 col-form-label">#{{ $i }} Incremental Entry Limit per Participant Days</label>
                             <div class="col-md-8">
                                 <select class="form-select" id="user-entry-limit-expire-days-{{ $i }}" name="user-entry-limit-expire-days-{{ $i }}" style="width:auto;">
                                     <option value=""></option>
@@ -557,6 +557,41 @@
                         @if ($i < 4)<hr>@endif
                     </section>
                 @endforeach
+                <script>
+                    // Legacy reveals the incremental tiers one at a time: #2 only
+                    // appears once #1 has both a count and a day span, #3 after
+                    // #2, and so on (site_preferences.admin.php:507-521). A tier
+                    // that gets hidden is cleared so stale values never submit.
+                    (function () {
+                        var tiers = [1, 2, 3, 4].map(function (i) {
+                            var section = document.getElementById('user-entry-limit-increment-' + i);
+                            return section ? {
+                                section: section,
+                                number: section.querySelector('[name="user-entry-limit-number-' + i + '"]'),
+                                days: section.querySelector('[name="user-entry-limit-expire-days-' + i + '"]'),
+                            } : null;
+                        }).filter(Boolean);
+                        if (!tiers.length) { return; }
+                        var filled = function (t) {
+                            return t.number.value !== '' && t.days.value !== '';
+                        };
+                        var sync = function () {
+                            for (var i = 1; i < tiers.length; i++) {
+                                var show = filled(tiers[i - 1]);
+                                tiers[i].section.style.display = show ? '' : 'none';
+                                if (!show) {
+                                    tiers[i].number.value = '';
+                                    tiers[i].days.value = '';
+                                }
+                            }
+                        };
+                        tiers.forEach(function (t) {
+                            t.number.addEventListener('change', sync);
+                            t.days.addEventListener('change', sync);
+                        });
+                        sync();
+                    })();
+                </script>
                 <div class="mb-4 row">
                     <label for="prefsUserSubCatLimit" class="col-md-4 col-form-label">Per Participant Sub-Style Entry Limit</label>
                     <div class="col-md-8">
