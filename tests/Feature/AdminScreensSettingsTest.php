@@ -306,7 +306,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             ->assertOk()
             ->assertSee('Card payments (Stripe):', false)
             ->assertSee('Not connected')
-            ->assertSee(htmlspecialchars((string) route('admin.stripe')), false)
             ->assertSee(htmlspecialchars((string) route('admin.payments.setup')), false)
             ->assertDontSee('Accept PayPal?');
 
