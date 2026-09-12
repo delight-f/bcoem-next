@@ -372,6 +372,88 @@ final class ExportCsvTest extends PublicSurfaceTestCase
         $this->assertStringEndsWith('_'.$today.'.csv"', $disposition);
     }
 
+    /**
+     * Best-of-Show guard — upstream v3.1.0 output/export.output.php:3300-3311
+     * ("BJCP Reporting Adjustments", commit ec5360214). The export's BOS entry
+     * counts (BOSBeer/BOSCider/BOSMead/BOSMeadCider) were derived from
+     * judging_scores medal winners, which exist for ANY scored competition, so
+     * the release gates them on a Best-of-Show panel having actually run (a
+     * judging_scores_bos row exists).
+     *
+     * The port carries no BJCP XML org report (ExportController is the CSV
+     * surface: output/export.output.php's export-entries/export-staff sections
+     * are the only export ports), so the guard's observable invariant is pinned
+     * where the port DOES report BOS entries: a placed entry reports NO Best of
+     * Show place while no BOS row exists, and reports it once the panel scored.
+     */
+    public function test_medal_winner_without_a_bos_panel_is_not_reported_as_bos(): void
+    {
+        DB::table('brewing')->insert($this->entryRow(530001, ['brewJudgingNumber' => 'C101']));
+        DB::table('judging_flights')->insert([
+            'flightTable' => self::TABLE_ID,
+            'flightNumber' => 4,
+            'flightEntryID' => '530001',
+            'flightRound' => 1,
+        ]);
+        // Category medal winner — regular judging only, no BOS panel row.
+        DB::table('judging_scores')->insert([
+            'eid' => 530001,
+            'bid' => self::BREWER_IDS[0],
+            'scoreTable' => self::TABLE_ID,
+            'scoreEntry' => 5,
+            'scorePlace' => 1,
+            'scoreType' => 3,
+        ]);
+
+        $fields = $this->exportedEntryFields(530001);
+        $this->assertSame('1', $fields['Place'], 'the entry is a medal winner in regular judging');
+        $this->assertSame('', $fields['Best of Show Place'], 'no BOS panel → the medal winner is not a BOS entry');
+
+        // Panel held: one BOS score/place for that same entry.
+        DB::table('judging_scores_bos')->insert(['eid' => 530001, 'scorePlace' => '1']);
+
+        $withPanel = $this->exportedEntryFields(530001);
+        $this->assertSame('1', $withPanel['Best of Show Place'], 'BOS panel held → the BOS place is reported');
+    }
+
+    /**
+     * Fields of the exported CSV row for one entry, keyed by the canonical
+     * header, so assertions read by label rather than by offset.
+     *
+     * @return array<string, string>
+     */
+    private function exportedEntryFields(int $id): array
+    {
+        $body = (string) $this->get('/admin/output/export?go=csv&action=all&tb=all')
+            ->assertOk()
+            ->streamedContent();
+
+        $lines = explode("\n", $body);
+        $header = array_map(
+            static fn (?string $v): string => (string) $v,
+            str_getcsv((string) array_shift($lines), ',', '"', '\\'),
+        );
+        $header[0] = ltrim($header[0], "\xEF\xBB\xBF");
+        $entryNumberColumn = array_search('Entry Number', $header, true);
+
+        foreach ($lines as $line) {
+            if ($line === '') {
+                continue;
+            }
+
+            $values = array_map(
+                static fn (?string $v): string => (string) $v,
+                str_getcsv($line, ',', '"', '\\'),
+            );
+
+            if (($values[$entryNumberColumn] ?? null) === (string) $id) {
+                return array_combine($header, $values);
+            }
+        }
+
+        self::fail("entry $id not found in the exported CSV");
+    }
+
     public function test_non_admin_is_redirected(): void
     {
         DB::table('users')->insert([

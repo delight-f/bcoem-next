@@ -48,7 +48,7 @@ final class StaffPointsController extends Controller
 
         $ctx = TenantContext::load();
 
-        $entries = $this->bjcpEntryCount();
+        $entries = self::bjcpEntryCount();
 
         // Style-type tallies over the active set (styles ledger #5-#7
         // predicates); legacy compares brewStyleType against both names
@@ -264,10 +264,18 @@ final class StaffPointsController extends Controller
     }
 
     /**
-     * get_bjcp_entry_count() (common.lib.php:2548): judged beats received
-     * beats paid beats everything on record.
+     * get_bjcp_entry_count() (upstream v3.1.0 lib/common.lib.php:2733, added
+     * by "BJCP Reporting Adjustments", commit ec5360214): judged entries take
+     * precedence whenever any exist, else received, else paid, else every
+     * entry on record. Replaces 3.0.3's received-first rule
+     * (`if ($total_entries_scored > $total_entries_received)`, which reported
+     * received whenever it exceeded the judged count).
+     *
+     * Public so the precedence is testable at its root; both consumers in this
+     * controller (the printed "Entries:" figure and the 30-entry BOS gate) read
+     * this single seam.
      */
-    private function bjcpEntryCount(): int
+    public static function bjcpEntryCount(): int
     {
         return DB::table('judging_scores')->count()
             ?: DB::table('brewing')->where('brewReceived', '1')->count()

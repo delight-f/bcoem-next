@@ -204,12 +204,13 @@
                                                             {{-- Mode sentence first, its switch button on the next
                                                                  line: inline they read as one run-on control. --}}
                                                             <div>
-                                                                <strong><span id="tables-mode-indicator-{{ $loop->index }}" class="{{ $modePlanning ? 'text-success' : 'text-primary' }}">{{ $modePlanning ? '*** Tables Planning Mode ***' : '*** Tables Competition Mode ***' }}</span></strong>
+                                                                <strong><span id="tables-mode-indicator-{{ $loop->index }}" class="{{ $modePlanning ? 'text-success' : 'text-primary' }}">{{ $modePlanning ? '*** Tables Planning Mode ***' : '*** Tables Competition Mode ***'  }}</span></strong>
+ <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
                                                                 @if ($modePlanning)
                                                                     <button type="button" id="tables-competition-button" class="btn btn-success btn-sm d-block mt-2" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
                                                                         Switch to Tables <strong>Competition</strong> Mode
                                                                     </button>
-                                                                    <span class="fa fa-question-circle text-secondary" style="cursor:help" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-custom-class="admin-mode-tooltip" title="When the Tables Competition Mode function is enabled by an admin, it indicates to the system that the planning stage is over and all applicable entries have been marked as received. Table configurations and assignments can still be changed as necessary while in Competition Mode. Pullsheets will be available."></span>
+
                                                                 @else
                                                                     <button type="button" id="table-planning-button" class="btn btn-primary btn-sm d-block mt-2" data-bs-toggle="modal" data-bs-target="#tables-planning-mode-modal">
                                                                         Switch to Tables <strong>Planning</strong> Mode
@@ -577,7 +578,7 @@
                 <p><strong>If this competition is BJCP sanctioned</strong>, send or complete the BJCP Organizer's Report within 21 days of the conclusion of judging. You have two options when submitting your competition support to the BJCP:</p>
                 <ul>
                     <li><strong>Manual Data Entry</strong> &ndash; go to the BJCP's <a href="https://app.bjcp.org/competitions/report" target="_blank" rel="noopener">Reporting Portal</a> to submit your competition report via their website's form.</li>
-                    <li><strong>XML Document Upload</strong> &ndash; download the BJCP XML Points Report and upload the file to the <a href="https://app.bjcp.org/competitions/report" target="_blank" rel="noopener">BJCP Reporting Portal</a>. You can generate the report by expanding the Reports header on the Administration Dashboard and selecting the BJCP Points &gt; XML link.</li>
+                    <li><strong>XML Document Upload</strong> &ndash; this installation does not generate the BJCP XML Points Report, so the upload option is unavailable. Use the manual data entry option above.</li>
                 </ul>
                 <p><strong>If this competition has entrants that are members of the Master Homebrewer Program</strong>, download the <a href="{{ url('/admin/output/export?go=csv&action=all&tb=circuit&filter=mhp') }}">MHP Member Results report</a> and send to the MHP Secretary at <a href="mailto:mhpsecretary@gmail.com">mhpsecretary@gmail.com</a>. You can find this report under the Data Exports header on the Administration Dashboard.</p>
                 <p><strong>If this competition is part of a regional circuit</strong>, download the <a href="{{ url('/admin/output/export?go=csv&tb=circuit') }}">Winners: Circuit Data</a> report. You can find this report under the Data Exports header on the Administration Dashboard.</p>

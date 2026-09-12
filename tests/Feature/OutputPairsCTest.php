@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Output\StaffPointsController;
 use App\Support\Outputs\OutputFormat;
 use Illuminate\Support\Facades\DB;
 
@@ -116,6 +117,72 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
         $this->assertSame('2nd', OutputFormat::ordinal('2'));
         $this->assertSame('11th', OutputFormat::ordinal('11'));
         $this->assertSame('21st', OutputFormat::ordinal(21));
+    }
+
+    /**
+     * BJCP entry-count precedence — upstream v3.1.0 lib/common.lib.php:2733
+     * (get_bjcp_entry_count(), "BJCP Reporting Adjustments", commit
+     * ec5360214), consumed by output/staff_points.output.php:86 for both the
+     * printed entry figure and the 30-entry BOS gate.
+     *
+     * The four tiers are crafted to DIFFER (2 judged < 5 received < 7 paid
+     * < 9 total), which is what makes the rule observable: 3.0.3 used the
+     * judged count only when it EXCEEDED received
+     * (`if ($total_entries_scored > $total_entries_received)`), so the
+     * pre-fix code answered 5 at the judged tier instead of 2.
+     */
+    public function test_bjcp_entry_count_follows_judged_received_paid_total_precedence(): void
+    {
+        // The helper counts whole tables, so own their state and hand it back.
+        $brewingRows = DB::table('brewing')->get()->map(fn ($r): array => (array) $r)->all();
+        $scoreRows = DB::table('judging_scores')->get()->map(fn ($r): array => (array) $r)->all();
+
+        try {
+            DB::table('judging_scores')->delete();
+            DB::table('brewing')->delete();
+
+            $brewIds = [];
+            // 9 entries: 2 unreceived+unpaid, 2 paid but unreceived,
+            // 5 received+paid → received 5, paid 7, total 9.
+            foreach ([[0, 0], [0, 0], [1, 0], [1, 0], [1, 1], [1, 1], [1, 1], [1, 1], [1, 1]] as [$paid, $received]) {
+                $brewIds[] = (int) DB::table('brewing')->insertGetId([
+                    'brewName' => 'P52c BJCP Count Entry',
+                    'brewPaid' => $paid,
+                    'brewReceived' => $received,
+                ]);
+            }
+
+            $this->assertSame(5, DB::table('brewing')->where('brewReceived', 1)->count());
+            $this->assertSame(7, DB::table('brewing')->where('brewPaid', 1)->count());
+            $this->assertSame(9, DB::table('brewing')->count());
+
+            // Tier 1 — two scored entries, so "judged" wins despite received
+            // (5), paid (7) and total (9) all being larger.
+            DB::table('judging_scores')->insert(['eid' => $brewIds[0], 'scorePlace' => '1']);
+            DB::table('judging_scores')->insert(['eid' => $brewIds[1], 'scorePlace' => '2']);
+            $this->assertSame(2, StaffPointsController::bjcpEntryCount(), 'judged must beat larger received/paid/total counts');
+
+            // Tier 2 — no judged entries left → received.
+            DB::table('judging_scores')->delete();
+            $this->assertSame(5, StaffPointsController::bjcpEntryCount(), 'nothing judged → received');
+
+            // Tier 3 — nothing received → paid.
+            DB::table('brewing')->whereIn('id', $brewIds)->update(['brewReceived' => 0]);
+            $this->assertSame(7, StaffPointsController::bjcpEntryCount(), 'nothing received → paid');
+
+            // Tier 4 — nothing paid either → everything on record.
+            DB::table('brewing')->whereIn('id', $brewIds)->update(['brewPaid' => 0]);
+            $this->assertSame(9, StaffPointsController::bjcpEntryCount(), 'nothing paid → total');
+        } finally {
+            DB::table('judging_scores')->delete();
+            DB::table('brewing')->delete();
+            foreach (array_chunk($brewingRows, 100) as $chunk) {
+                DB::table('brewing')->insert($chunk);
+            }
+            foreach (array_chunk($scoreRows, 100) as $chunk) {
+                DB::table('judging_scores')->insert($chunk);
+            }
+        }
     }
 
     public function test_guest_is_redirected_to_login(): void
