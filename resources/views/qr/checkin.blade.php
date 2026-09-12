@@ -24,7 +24,7 @@
 <div class="container">
     <div class="container-signin">
         @php($msg = (string) $msg)
-        @if ($msg !== 'default')
+        @if ($msg !== 'default' && $msg !== '8')
             <div class="alert {{ in_array($msg, ['2', '3', '6'], true) ? 'alert-success' : 'alert-danger' }} alert-dismissible fade in" role="alert">
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 @if ($msg === '1')
@@ -52,19 +52,27 @@
 
         @if (! session('qrPasswordOK'))
             <div align="center" class="text-primary"><span class="fa fa-qrcode fa-5x"></span></div>
-            <p class="lead"><small><strong class="text-danger">QR Code scanning is available natively on most modern mobile operating systems. Simply point your camera to the QR Code on a bottle label and follow the prompts. For older mobile operating systems, a QR Code scanning app is required to utilize this feature.</strong></small></p>
-            <p>Scan a QR Code located on a bottle label, enter the required password, and check in the entry.</p>
-            <p style="margin-bottom: 15px;" class="container-signin-heading">To check in entries via QR code, please provide the correct password. You will only need to provide the password once per session - be sure to keep the QR Code scanning app open.</p>
-
-            <form name="form1" action="{{ url('/qr/password-check'.($id !== null ? '?id='.$id : '')) }}" method="post">
-                @csrf
-                <div class="mb-3">
-                    <label for="inputPassword" class="visually-hidden">Password</label>
-                    <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" autofocus required>
+            @if (! $passwordSet)
+                <div class="alert alert-danger" role="alert">
+                    <span class="fa fa-exclamation-circle"></span> <strong>QR Code check-in is not available.</strong>
+                    No QR Code Log On Password has been configured for this competition yet. Please contact the competition organizer.
                 </div>
-                <button class="btn btn-lg btn-primary btn-block" type="submit">Log In</button>
-            </form>
-            <p style="margin-top: 15px;" class="well"><small>Need a QR Code scanning app? Search <a href="https://play.google.com/store/search?q=qr%20code%20scanner&c=apps&hl=en" target="_blank" rel="noopener">Google Play</a> (Android) or <a href="https://itunes.apple.com/store/" target="_blank" rel="noopener">iTunes</a> (iOS).</small></p>
+            @else
+                <p class="lead"><small><strong class="text-danger">QR Code scanning is available natively on most modern mobile operating systems. Simply point your camera to the QR Code on a bottle label and follow the prompts. For older mobile operating systems, a QR Code scanning app is required to utilize this feature.</strong></small></p>
+                <p>Scan a QR Code located on a bottle label, enter the required password, and check in the entry.</p>
+                <p style="margin-bottom: 15px;" class="container-signin-heading">To check in entries via QR code, please provide the correct password. You will only need to provide the password once per session - be sure to keep the QR Code scanning app open.</p>
+                <p><small><strong>This password is set by the competition organizer</strong> &mdash; it is not your account password, and it is not shown on this page. Ask the organizer running the check-in table if you do not have it.</small></p>
+
+                <form name="form1" action="{{ url('/qr/password-check'.($id !== null ? '?id='.$id : '')) }}" method="post">
+                    @csrf
+                    <div class="mb-3">
+                        <label for="inputPassword" class="visually-hidden">Password</label>
+                        <input type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" autofocus required>
+                    </div>
+                    <button class="btn btn-lg btn-primary btn-block" type="submit">Log In</button>
+                </form>
+                <p style="margin-top: 15px;" class="well"><small>Need a QR Code scanning app? Search <a href="https://play.google.com/store/search?q=qr%20code%20scanner&c=apps&hl=en" target="_blank" rel="noopener">Google Play</a> (Android) or <a href="https://itunes.apple.com/store/" target="_blank" rel="noopener">iTunes</a> (iOS).</small></p>
+            @endif
         @else
             @if ($id === null)
                 <p class="lead text-primary"><span class="fa fa-spinner fa-spin"></span> <strong>Waiting for scanned QR code input.</strong></p>

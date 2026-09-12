@@ -130,9 +130,9 @@
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#QRModal">Add, Update, or Change QR Code Log On Password</button>
                     @if ($hasQrPassword)
-                        <span class="form-text d-block">A check-in password is set. Leave the modal field blank to clear it.</span>
+                        <span class="form-text d-block">A check-in password is set &mdash; this is the shared password volunteers enter at the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> page. Leave the modal field blank to clear it, which disables QR check-in.</span>
                     @else
-                        <span id="helpBlock" class="form-text">For use with the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function.</span>
+                        <span id="helpBlock" class="form-text">For use with the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function. No password is set yet, so QR check-in is unavailable until you set one here and share it with the volunteers scanning bottles. Passwords are stored hashed and cannot be viewed later &mdash; if it is forgotten, set a new one.</span>
                     @endif
                 </div>
             </div>
@@ -458,9 +458,9 @@
                                 <label for="contestCheckInPassword" class="form-label">QR Code Log On Password</label>
                                 <input class="form-control" id="contestCheckInPassword" name="contestCheckInPassword" type="password" value="" placeholder="">
                                 @if ($hasQrPassword)
-                                    <div class="form-text">Leave blank and save to clear the current password.</div>
+                                    <div class="form-text">Leave blank and save to clear the current password (this disables QR check-in).</div>
                                 @else
-                                    <div class="form-text">Provide a password for QR Code entry check-in.</div>
+                                    <div class="form-text">Provide the shared password volunteers will enter at the QR Code Entry Check-In page. It is stored hashed and cannot be viewed later, so if it is forgotten, set a new one.</div>
                                 @endif
                             </div>
                             <button name="submit" type="submit" class="btn btn-primary">Update Password</button>

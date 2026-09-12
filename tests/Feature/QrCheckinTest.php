@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * QR mobile check-in (legacy qr.php, PARITY-002). Public surface gated by
- * contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy.
+ * contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy, msg=8
+ * is the port's no-password-configured state (issue #30).
  */
 final class QrCheckinTest extends AdminScreensTestCase
 {
@@ -40,13 +41,35 @@ final class QrCheckinTest extends AdminScreensTestCase
     public function test_anon_sees_password_form(): void
     {
         $this->get('/qr')->assertOk()->assertSee('QR Code Entry Check-In', false)
-            ->assertSee('inputPassword', false);
+            ->assertSee('inputPassword', false)
+            ->assertSee('set by the competition organizer');
+    }
+
+    public function test_no_password_configured_shows_not_available_notice(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update(['contestCheckInPassword' => null]);
+
+        $this->get('/qr')->assertOk()
+            ->assertSee('QR Code check-in is not available')
+            ->assertSee('contact the competition organizer')
+            ->assertDontSee('inputPassword', false);
     }
 
     public function test_wrong_password_rejected(): void
     {
         $this->post('/qr/password-check', ['inputPassword' => 'wrong'])
             ->assertRedirect('/qr?action=default&msg=1');
+    }
+
+    public function test_password_check_when_none_configured_reports_msg_8(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update(['contestCheckInPassword' => null]);
+
+        $this->post('/qr/password-check', ['inputPassword' => 'anything'])
+            ->assertRedirect('/qr?action=default&msg=8');
+
+        $this->get('/qr?action=default&msg=8')->assertOk()
+            ->assertSee('QR Code check-in is not available');
     }
 
     public function test_correct_password_accepted_then_checkin_with_judging_number(): void

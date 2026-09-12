@@ -25,7 +25,8 @@ final class QrLinkResidualsTest extends AdminScreensTestCase
             ->assertOk()
             ->assertSee('For use with the', false)
             ->assertSee('href="'.url('/qr').'"', false)
-            ->assertSee('QR Code Entry Check-In');
+            ->assertSee('QR Code Entry Check-In')
+            ->assertSee('share it with the volunteers');
     }
 
     public function test_site_preferences_entries_tab_links_qr_check_in(): void

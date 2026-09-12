@@ -102,7 +102,8 @@ Route::post('/admin/results/publish', [PublishResultsController::class, 'store']
     ->name('admin.results.publish')->middleware('auth');
 
 // QR mobile check-in (legacy qr.php, PARITY-002). Public, password-gated
-// via contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy.
+// via contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy,
+// msg=8 is the port's no-password-configured state (issue #30).
 Route::get('/qr', [QrCheckinController::class, 'show'])->name('qr.show');
 Route::post('/qr/password-check', [QrCheckinController::class, 'authenticate'])->name('qr.authenticate');
 Route::post('/qr/checkin', [QrCheckinController::class, 'store'])->name('qr.checkin');

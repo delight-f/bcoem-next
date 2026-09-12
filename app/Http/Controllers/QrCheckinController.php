@@ -20,16 +20,22 @@ use Illuminate\Support\Facades\DB;
  *
  * Port shape: /qr (GET show + POST authenticate) and /qr/checkin (POST),
  * keeping legacy query/msg semantics (msg codes 1-7) so a scan flow's
- * redirects match legacy behavior.
+ * redirects match legacy behavior. msg=8 is a port addition: the
+ * unconfigured-password case (contestCheckInPassword NULL) reports "not
+ * available" instead of legacy's misleading "password incorrect" for a page
+ * nobody can get past (issue #30).
  */
 final class QrCheckinController extends Controller
 {
     public function show(Request $request): View
     {
+        $ctx = TenantContext::load();
+
         return view('qr.checkin', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'id' => $this->entryId($request),
             'msg' => (string) $request->query('msg', 'default'),
+            'passwordSet' => self::passwordSet($ctx->contestStr('contestCheckInPassword')),
             'checkedIn' => $this->checkedInNumbers($request),
         ]);
     }
@@ -41,13 +47,19 @@ final class QrCheckinController extends Controller
 
         $redirect = '/qr?action=default'.($id !== null ? '&id='.$id : '');
 
+        $stored = DB::table('contest_info')->where('id', 1)->value('contestCheckInPassword');
+
+        // No password configured: report it distinctly rather than echoing
+        // legacy's "password incorrect" for a page nobody can get past.
+        if (! self::passwordSet($stored)) {
+            return redirect($redirect.'&msg=8');
+        }
+
         if (mb_strlen($password) < 1 || mb_strlen($password) > 72) {
             return redirect($redirect.'&msg=1');
         }
 
-        $stored = DB::table('contest_info')->where('id', 1)->value('contestCheckInPassword');
-
-        if ($stored === null || ! password_verify($password, (string) $stored)) {
+        if (! password_verify($password, (string) $stored)) {
             $request->session()->invalidate();
 
             return redirect($redirect.'&msg=1');
@@ -118,6 +130,12 @@ final class QrCheckinController extends Controller
         }
 
         return (int) $raw;
+    }
+
+    /** A check-in password is usable when the column holds a non-empty hash. */
+    private static function passwordSet(mixed $stored): bool
+    {
+        return is_string($stored) && $stored !== '';
     }
 
     /**
