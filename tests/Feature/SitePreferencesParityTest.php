@@ -432,6 +432,42 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         }
     }
 
+    public function test_best_tab_points_cap_unused_label_and_club_gating(): void
+    {
+        $this->login();
+
+        $response = $this->get('/admin/site-preferences/best')->assertOk();
+
+        // Per-place help text (legacy has it; the port had dropped it).
+        $response->assertSee('Enter the number of points awarded for each first place that an entrant receives.', false)
+            ->assertSee('Enter the number of points awarded for each Honorable Mention that an entrant receives.', false);
+
+        // Point dropdowns stop at 9 (legacy offered 0-25).
+        $html = (string) $response->getContent();
+        foreach (['prefsFirstPlacePts', 'prefsSecondPlacePts', 'prefsThirdPlacePts', 'prefsFourthPlacePts', 'prefsHMPts'] as $field) {
+            preg_match('/name="'.preg_quote($field, '/').'".*?<\/select>/s', $html, $m);
+            self::assertNotEmpty($m, $field.' select not found');
+            self::assertStringContainsString('<option value="9"', $m[0], $field.' should offer 9');
+            self::assertStringNotContainsString('<option value="10"', $m[0], $field.' should stop at 9');
+        }
+
+        // "Unused" — legacy's en-US string carries a stray period.
+        $response->assertSee('>Unused</option>', false)
+            ->assertDontSee('>Unused.</option>', false);
+
+        // Amateur edition: clubs are shown and the heading says so.
+        $response->assertSee('<h3>Best Brewer and/or Club</h3>', false)
+            ->assertSee('id="bestClub"', false);
+
+        // Professional edition: legacy hides the club block and drops the
+        // "and/or Club" suffix.
+        DB::table('preferences')->where('id', 1)->update(['prefsProEdition' => 1]);
+        $this->get('/admin/site-preferences/best')
+            ->assertOk()
+            ->assertSee('<h3>Best Brewer</h3>', false)
+            ->assertSee('id="bestClub" style="display:none;"', false);
+    }
+
     public function test_email_tab_renders_contact_options_and_smtp_test_section(): void
     {
         $this->login();

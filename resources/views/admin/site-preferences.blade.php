@@ -1069,7 +1069,7 @@
                     .'</option>')
                 ->implode("\n"))
             @php($tieBreakRules = [
-                '' => 'Unused.',
+                '' => 'Unused',
                 'TBTotalPlaces' => 'The highest total number of first, second, and third places.',
                 'TBTotalExtendedPlaces' => 'The highest total number of first, second, third, fourth (if applicable), and honorable mention places.',
                 'TBFirstPlaces' => 'The highest number of first places.',
@@ -1078,7 +1078,7 @@
                 'TBMaxScore' => 'The highest maximum score.',
                 'TBAvgScore' => 'The highest average score.',
             ])
-            <h3>Best Brewer and/or Club</h3>
+            <h3>Best Brewer{{ $p('prefsProEdition') === '0' ? ' and/or Club' : '' }}</h3>
             <form method="post" action="{{ url('/admin/site-preferences/best') }}">
                 @csrf
                 @method('put')
@@ -1096,18 +1096,23 @@
                         <p class="form-text">Enter the title for the Best Brewer award (e.g., Heavy Medal, Ninkasi Award).</p>
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label for="prefsShowBestClub" class="col-md-4 col-form-label">Best Club Display? Up to which Position?</label>
-                    <div class="col-md-8">
-                        <select class="form-select" name="prefsShowBestClub" id="prefsShowBestClub">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
-                        <p class="form-text">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
+                {{-- Clubs are amateur-only: legacy hides #bestClub when the
+                     competition is set to Professional (prefsProEdition = 1).
+                     Kept in the DOM (display:none) so the values still submit. --}}
+                <div id="bestClub"{!! $p('prefsProEdition') === '1' ? ' style="display:none;"' : '' !!}>
+                    <div class="mb-4 row">
+                        <label for="prefsShowBestClub" class="col-md-4 col-form-label">Best Club Display? Up to which Position?</label>
+                        <div class="col-md-8">
+                            <select class="form-select" name="prefsShowBestClub" id="prefsShowBestClub" style="width:auto;">{!! $positionOptions($p('prefsShowBestClub')) !!}</select>
+                            <p class="form-text">Indicate whether you want to display the list of best clubs according to the points and tie break rules defined below and, if so, up to which position. They will be showed at the same time indicated above for the Winners Display. Applies ONLY to the amateur edition.</p>
+                        </div>
                     </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="prefsBestClubTitle" class="col-md-4 col-form-label">Best Club Title</label>
-                    <div class="col-md-8">
-                        <input class="form-control" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
-                        <p class="form-text">Enter the title for the Best Club award.</p>
+                    <div class="mb-4 row">
+                        <label for="prefsBestClubTitle" class="col-md-4 col-form-label">Best Club Title</label>
+                        <div class="col-md-8">
+                            <input class="form-control" id="prefsBestClubTitle" name="prefsBestClubTitle" type="text" value="{{ $p('prefsBestClubTitle') }}">
+                            <p class="form-text">Enter the title for the Best Club award.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -1133,20 +1138,31 @@
                 </div>
                 <section id="non-COA-scoring" @if ($p('prefsScoringCOA') === '1') hidden @endif>
                     @foreach ([
-                        'prefsFirstPlacePts' => 'Points for First Place',
-                        'prefsSecondPlacePts' => 'Points for Second Place',
-                        'prefsThirdPlacePts' => 'Points for Third Place',
-                        'prefsFourthPlacePts' => 'Points for Fourth Place',
-                        'prefsHMPts' => 'Points for Honorable Mention',
-                    ] as $field => $label)
+                        'prefsFirstPlacePts' => ['Points for First Place', 'Enter the number of points awarded for each first place that an entrant receives.'],
+                        'prefsSecondPlacePts' => ['Points for Second Place', 'Enter the number of points awarded for each second place that an entrant receives.'],
+                        'prefsThirdPlacePts' => ['Points for Third Place', 'Enter the number of points awarded for each third place that an entrant receives.'],
+                        'prefsFourthPlacePts' => ['Points for Fourth Place', 'Enter the number of points awarded for each fourth place that an entrant receives.'],
+                        'prefsHMPts' => ['Points for Honorable Mention', 'Enter the number of points awarded for each Honorable Mention that an entrant receives.'],
+                    ] as $field => [$label, $help])
+                        {{-- Legacy offered 0-25; the port trims to 0-9. If an
+                             existing install holds a higher value, keep it
+                             selectable rather than silently resetting it.
+                             NB: use one-liner @php() calls only here — a bare
+                             PHP directive would pair with the @php() calls
+                             above and swallow the whole tab (Blade's
+                             storePhpBlocks pairs the first open with the
+                             first close). --}}
+                        @php($storedPts = (int) $p($field))
+                        @php($points = $storedPts > 9 ? [...range(0, 9), $storedPts] : range(0, 9))
                         <div class="mb-4 row">
-                            <label for="{{ $field }}" class="col-md-4 col-form-label">{!! $label !!}</label>
+                            <label for="{{ $field }}" class="col-md-4 col-form-label">{{ $label }}</label>
                             <div class="col-md-8">
-                                <select class="form-select" name="{{ $field }}" id="{{ $field }}">
-                                    @foreach (range(0, 25) as $i)
+                                <select class="form-select" name="{{ $field }}" id="{{ $field }}" style="width:auto;">
+                                    @foreach ($points as $i)
                                         <option value="{{ $i }}" @selected((string) $i === (string) $p($field))>{{ $i }}</option>
                                     @endforeach
                                 </select>
+                                <span class="form-text">{{ $help }}</span>
                             </div>
                         </div>
                     @endforeach
