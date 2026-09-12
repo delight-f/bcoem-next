@@ -8,6 +8,7 @@ use App\Services\Installation\Data\BackupResult;
 use App\Services\Installation\Data\PreconditionCheck;
 use App\Services\Installation\Data\PreconditionResult;
 use App\Services\Installation\Exceptions\BackupFailedException;
+use App\Services\Installation\Exceptions\InstallationException;
 use App\Services\Installation\Exceptions\NotInstalledException;
 use App\Services\Installation\Exceptions\UpgradeException;
 use Illuminate\Foundation\Application;
@@ -157,62 +158,144 @@ class UpgradeService
      */
     public function upgrade(?callable $onStep = null): void
     {
-        if (! $this->installation->isAlreadyInstalled()) {
-            throw new NotInstalledException(
-                'Refusing to upgrade: bcoem_sys.setup is not 1.',
-                'This site isn\'t installed yet, so there\'s nothing to update.',
-            );
-        }
+        $state = [];
 
-        $this->step($onStep, 'Backing up your data…');
-        $backup = $this->takeBackup();
+        foreach ($this->steps() as $step) {
+            $this->step($onStep, $step['label']);
 
-        if (! $this->verifyBackup($backup)) {
-            throw new BackupFailedException(
-                'Backup verification failed for '.$backup->path.'.',
-                'We couldn\'t finish the backup, so nothing has been changed. Your site is exactly as it was — please try again.',
-            );
-        }
+            try {
+                ($step['run'])($state);
+            } catch (\Throwable $e) {
+                $failure = $this->describeFailure($state, $e);
 
-        $this->step($onStep, 'Backup complete ('.$this->formatBytes($backup->sizeBytes).').', $backup);
+                // Typed failures (not installed, backup failed) travel as they
+                // are; anything else after maintenance started is wrapped so
+                // the backup path reaches the operator.
+                if ($e instanceof InstallationException) {
+                    throw $e;
+                }
 
-        $from = $this->getCurrentVersion();
-        $to = $this->getIncomingVersion();
-
-        $this->step($onStep, 'Entering maintenance mode…');
-        $this->enterMaintenance();
-
-        try {
-            $this->step($onStep, 'Applying updates…');
-            $this->runMigrations();
-
-            foreach ($this->fixups->for($from, $to) as $fixup) {
-                $fixup->run();
+                throw new UpgradeException(
+                    $failure['technical'],
+                    $failure['plain'],
+                    (int) $e->getCode(),
+                    $e,
+                    $failure['backup_path'],
+                );
             }
+        }
+    }
 
-            $this->step($onStep, 'Tidying up…');
-            $this->clearCaches();
+    /**
+     * The upgrade sequence as individually runnable units. `upgrade()` loops
+     * this same list, so the CLI and the resumable wizard share one order.
+     *
+     * Order is the contract: backup → verify → maintenance → migrate → fixups
+     * → caches → marker → exit maintenance.
+     *
+     * @return list<array{label: string, run: \Closure(array<string, mixed> &$state): void}>
+     */
+    public function steps(): array
+    {
+        return [
+            [
+                'label' => 'Backing up your data…',
+                'run' => function (array &$state): void {
+                    if (! $this->installation->isAlreadyInstalled()) {
+                        throw new NotInstalledException(
+                            'Refusing to upgrade: bcoem_sys.setup is not 1.',
+                            'This site isn\'t installed yet, so there\'s nothing to update.',
+                        );
+                    }
 
-            $this->writeVersionMarker($to);
-        } catch (\Throwable $e) {
+                    $backup = $this->takeBackup();
+
+                    if (! $this->verifyBackup($backup)) {
+                        throw new BackupFailedException(
+                            'Backup verification failed for '.$backup->path.'.',
+                            'We couldn\'t finish the backup, so nothing has been changed. Your site is exactly as it was — please try again.',
+                        );
+                    }
+
+                    $state['backup_path'] = $backup->path;
+                    $state['backup_size'] = $backup->sizeBytes;
+                },
+            ],
+            [
+                'label' => 'Entering maintenance mode…',
+                'run' => function (array &$state): void {
+                    $this->enterMaintenance();
+                    $state['maintenance'] = true;
+                },
+            ],
+            [
+                'label' => 'Applying updates…',
+                'run' => function (array &$state): void {
+                    $this->runMigrations();
+
+                    foreach ($this->fixups->for($this->getCurrentVersion(), $this->getIncomingVersion()) as $fixup) {
+                        $fixup->run();
+                    }
+                },
+            ],
+            [
+                'label' => 'Tidying up…',
+                'run' => function (array &$state): void {
+                    $this->clearCaches();
+                },
+            ],
+            [
+                'label' => 'Your site is back online.',
+                'run' => function (array &$state): void {
+                    $this->writeVersionMarker($this->getIncomingVersion());
+                    $this->exitMaintenance();
+                    $state['maintenance'] = false;
+                },
+            ],
+        ];
+    }
+
+    /**
+     * Plain + technical pair for the marker, and the one place that decides
+     * whether a failure must leave maintenance mode.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array{plain: string, technical: string, backup_path: ?string}
+     */
+    public function describeFailure(array $state, \Throwable $e): array
+    {
+        $backupPath = isset($state['backup_path']) && is_string($state['backup_path']) ? $state['backup_path'] : null;
+
+        if (($state['maintenance'] ?? false) === true) {
             try {
                 $this->exitMaintenance();
             } catch (\Throwable) {
                 // Leaving the site down is the safe failure: a human resolves it.
             }
-
-            throw new UpgradeException(
-                'Upgrade failed: '.$e->getMessage(),
-                'Something went wrong while applying the update, so the site may be in maintenance mode. '
-                    .'Your data was backed up to '.$backup->path.'. Contact support with this message before trying again.',
-                (int) $e->getCode(),
-                $e,
-                $backup->path,
-            );
         }
 
-        $this->exitMaintenance();
-        $this->step($onStep, 'Your site is back online.');
+        if ($e instanceof UpgradeException) {
+            return [
+                'plain' => $e->plainMessage,
+                'technical' => $e->getMessage(),
+                'backup_path' => $e->backupPath ?? $backupPath,
+            ];
+        }
+
+        if ($e instanceof InstallationException) {
+            return [
+                'plain' => $e->plainMessage,
+                'technical' => $e->getMessage(),
+                'backup_path' => $backupPath,
+            ];
+        }
+
+        return [
+            'plain' => 'Something went wrong while applying the update, so the site may be in maintenance mode. '
+                .'Your data was backed up to '.($backupPath ?? 'the backup file').'. Contact support with this message before trying again.',
+            'technical' => 'Upgrade failed: '.$e->getMessage(),
+            'backup_path' => $backupPath,
+        ];
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Jobs\RunUpgradeJob;
 use App\Services\Installation\UpgradeService;
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Contracts\View\View;
+use Illuminate\Foundation\Application;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -68,13 +69,16 @@ final class UpgradeWizardController extends Controller
             return response()->json(['error' => 'There is no update to apply.'], 409);
         }
 
+        // ponytail: an abandoned run holds the upgrade lock for 900s; a shorter
+        // TTL risks releasing a genuinely slow step.
         $tracker = new ProgressTracker;
         if (! $tracker->acquire('upgrade')) {
             return response()->json(['error' => 'An update is already running. Please wait for it to finish.'], 409);
         }
 
+        // Bookkeeping only: no upgrade work runs here. The steps run from
+        // progress(), one per request.
         $tracker->pending($token);
-        RunUpgradeJob::dispatch($token);
 
         return response()->json(['token' => $token]);
     }
@@ -82,13 +86,55 @@ final class UpgradeWizardController extends Controller
     public function progress(Request $request): JsonResponse
     {
         $token = $this->validToken($request);
-        $marker = $token !== null ? (new ProgressTracker)->get($token) : null;
-
-        if ($marker === null) {
+        if ($token === null) {
             return response()->json(['status' => 'unknown'], 404);
         }
 
-        return response()->json($marker);
+        $tracker = new ProgressTracker;
+        $raw = $tracker->raw($token);
+        if ($raw === null) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        // ponytail: this GET mutates. It is gated by the 48-hex token and a
+        // live marker; also requiring the session is impossible because the
+        // key step rotates APP_KEY mid-upgrade and invalidates the cookie.
+        $marker = $tracker->get($token);
+        if ($marker === null || in_array($marker['status'], ['complete', 'failed'], true)) {
+            return response()->json($marker ?? ['status' => 'unknown']);
+        }
+
+        if (! $tracker->acquire('step-'.$token, 60)) {
+            return response()->json($marker);
+        }
+
+        try {
+            // ponytail: one step is one request, but PreventRequestsDuringMaintenance
+            // 503s every request once the maintenance step has run. The steps
+            // that run while the site is down (migrate, fixups, caches, marker,
+            // exit) must therefore finish in the same request, or the next poll
+            // could never reach them and the site would stay down.
+            @set_time_limit(0);
+
+            $guard = 0;
+            do {
+                $running = $tracker->raw($token) ?? $raw;
+                $cursor = (int) ($running['cursor'] ?? 0);
+
+                RunUpgradeJob::dispatch($token, $cursor);
+
+                $marker = $tracker->get($token) ?? $marker;
+            } while ($guard++ < 10
+                && ! in_array($marker['status'], ['complete', 'failed'], true)
+                && app(Application::class)->isDownForMaintenance());
+        } finally {
+            $tracker->release('step-'.$token);
+        }
+
+        // The request that ran the last step returns the terminal marker in
+        // band: EnsureInstalled 404s /upgrade/* once the version marker is
+        // current, so a following poll could never observe completion.
+        return response()->json($tracker->get($token) ?? $marker);
     }
 
     private function validToken(Request $request): ?string

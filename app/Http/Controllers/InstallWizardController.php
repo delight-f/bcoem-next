@@ -165,12 +165,12 @@ final class InstallWizardController extends Controller
             return response()->json(['error' => 'Your details expired. Please start again.'], 422);
         }
 
+        // ponytail: an abandoned run holds the install lock for 900s; a shorter
+        // TTL risks releasing a genuinely slow step.
         $tracker = new ProgressTracker;
         if (! $tracker->acquire('install')) {
             return response()->json(['error' => 'An installation is already running. Please wait for it to finish.'], 409);
         }
-
-        $tracker->pending($token);
 
         $input = new InstallInput(
             new DbCredentials($db['host'], $db['port'], $db['database'], $db['username'], $db['password']),
@@ -180,15 +180,14 @@ final class InstallWizardController extends Controller
             $adminPassword,
         );
 
-        try {
-            RunInstallationJob::dispatch($input, $token);
-        } finally {
-            // The password has been consumed; do not leave the ciphertext (or
-            // the rest of the account details) in the session store. This runs
-            // on the job's failure path too — the job swallows its own
-            // exceptions, so the finally always sees the settled outcome.
-            $request->session()->forget('wizard.install.site');
-        }
+        // Bookkeeping only: no install work runs here. The input (including the
+        // admin password) is encrypted into the marker, so it survives across
+        // the per-step polling requests.
+        $tracker->pending($token);
+        $tracker->put($token, ['payload' => $this->encodeInput($input)]);
+
+        // The password now lives in the cache payload, not the session store.
+        $request->session()->forget('wizard.install.site');
 
         return response()->json(['token' => $token]);
     }
@@ -196,13 +195,104 @@ final class InstallWizardController extends Controller
     public function progress(Request $request): JsonResponse
     {
         $token = $this->validToken($request);
-        $marker = $token !== null ? (new ProgressTracker)->get($token) : null;
-
-        if ($marker === null) {
+        if ($token === null) {
             return response()->json(['status' => 'unknown'], 404);
         }
 
-        return response()->json($marker);
+        $tracker = new ProgressTracker;
+        $raw = $tracker->raw($token);
+        if ($raw === null) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        // ponytail: this GET mutates. It is gated by the 48-hex token and a
+        // live marker; also requiring the session is impossible because the
+        // final step rotates APP_KEY and invalidates the cookie.
+        $marker = $tracker->get($token);
+        if ($marker === null || in_array($marker['status'], ['complete', 'failed'], true)) {
+            return response()->json($marker ?? ['status' => 'unknown']);
+        }
+
+        // One step per request, and a retried poll must not run the same step
+        // twice, so the step is serialised by its own short lock.
+        if (! $tracker->acquire('step-'.$token, 60)) {
+            return response()->json($marker);
+        }
+
+        try {
+            $payload = $raw['payload'] ?? null;
+
+            if (! is_string($payload) || $payload === '') {
+                // The payload is written before run() returns; this is the
+                // browser polling ahead of the POST, so let it poll again.
+                return response()->json($marker);
+            }
+
+            $input = $this->decodeInput($payload);
+            if ($input === null) {
+                // The payload exists but will not decrypt — e.g. APP_KEY was
+                // rotated between steps. Fail loudly: the old behaviour looped
+                // on a `running` marker forever and the install hung.
+                $tracker->fail(
+                    $token,
+                    'We couldn\'t continue the installation. Please start again.',
+                    'The stored install details could not be decrypted; the application key changed mid-install.',
+                );
+                $tracker->release('install');
+
+                return response()->json($tracker->get($token) ?? $marker);
+            }
+
+            // ponytail: one step is one request, so a host's max_execution_time
+            // still caps a single unit. set_time_limit(0) covers hosts where
+            // that is allowed; otherwise importBaseSchema() is the ceiling.
+            @set_time_limit(0);
+
+            RunInstallationJob::dispatch($input, $token, $marker['cursor']);
+        } finally {
+            $tracker->release('step-'.$token);
+        }
+
+        // The request that ran the last step returns the terminal marker in
+        // band: EnsureInstalled 404s /install/* once the install is marked done,
+        // so a following poll could never observe completion.
+        return response()->json($tracker->get($token) ?? $marker);
+    }
+
+    /**
+     * The input as a single encrypted string. The `wizard` cache store has
+     * `serializable_classes => false`, so an object cannot be stored — a string
+     * is mandatory.
+     */
+    private function encodeInput(InstallInput $input): string
+    {
+        return Crypt::encryptString((string) json_encode($input, JSON_THROW_ON_ERROR));
+    }
+
+    private function decodeInput(string $payload): ?InstallInput
+    {
+        try {
+            /** @var array<string, mixed> $data */
+            $data = json_decode(Crypt::decryptString($payload), true, flags: JSON_THROW_ON_ERROR);
+            /** @var array<string, mixed> $db */
+            $db = $data['db'];
+
+            return new InstallInput(
+                new DbCredentials(
+                    (string) $db['host'],
+                    (string) $db['port'],
+                    (string) $db['database'],
+                    (string) $db['username'],
+                    (string) $db['password'],
+                ),
+                (string) $data['appUrl'],
+                (string) $data['adminName'],
+                (string) $data['adminEmail'],
+                (string) $data['adminPassword'],
+            );
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function validToken(Request $request): ?string

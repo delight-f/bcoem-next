@@ -28,6 +28,9 @@ final class ProgressTracker
     private const DEFAULT_MARKER = [
         'status' => 'pending',
         'current_step_label' => 'Waiting to start…',
+        'cursor' => 0,
+        'payload' => null,
+        'state' => [],
         'error' => null,
     ];
 
@@ -70,13 +73,16 @@ final class ProgressTracker
     }
 
     /**
-     * @return array{status: string, current_step_label: string, error: array{plain: string, technical: string, backup_path: string|null}|null}|null
+     * Public shape the browser polls. Never exposes the encrypted payload or
+     * the internal step state.
+     *
+     * @return array{status: string, current_step_label: string, cursor: int, error: array{plain: string, technical: string, backup_path: string|null}|null}|null
      */
     public function get(string $token): ?array
     {
-        $marker = $this->store->get($this->key($token));
+        $marker = $this->raw($token);
 
-        if (! is_array($marker) || ! isset($marker['status'])) {
+        if ($marker === null) {
             return null;
         }
 
@@ -85,12 +91,37 @@ final class ProgressTracker
         return [
             'status' => (string) $marker['status'],
             'current_step_label' => (string) ($marker['current_step_label'] ?? ''),
+            'cursor' => (int) ($marker['cursor'] ?? 0),
             'error' => is_array($error) ? [
                 'plain' => (string) ($error['plain'] ?? ''),
                 'technical' => (string) ($error['technical'] ?? ''),
                 'backup_path' => isset($error['backup_path']) ? (string) $error['backup_path'] : null,
             ] : null,
         ];
+    }
+
+    /**
+     * The full marker, for the step runner only. Callers outside the runner
+     * must use `get()` so the payload/state do not leave the tracker.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function raw(string $token): ?array
+    {
+        $marker = $this->store->get($this->key($token));
+
+        return is_array($marker) && isset($marker['status']) ? $marker : null;
+    }
+
+    /**
+     * Merge arbitrary keys onto the raw marker (cursor, state). Public because
+     * both wizard controllers advance the cursor from their progress handler.
+     *
+     * @param  array<string, mixed>  $values
+     */
+    public function put(string $token, array $values): void
+    {
+        $this->merge($token, $values);
     }
 
     public function forget(string $token): void
@@ -117,7 +148,9 @@ final class ProgressTracker
      */
     private function merge(string $token, array $values): void
     {
-        $marker = $this->get($token) ?? self::DEFAULT_MARKER;
+        // Base on the raw marker: get() strips cursor/payload/state, so merging
+        // onto it would silently drop the step runner's progress.
+        $marker = $this->raw($token) ?? self::DEFAULT_MARKER;
 
         $this->store->put($this->key($token), array_merge($marker, $values), self::TTL_SECONDS);
     }

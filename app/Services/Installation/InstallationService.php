@@ -13,6 +13,7 @@ use App\Services\Installation\Data\PreconditionCheck;
 use App\Services\Installation\Data\PreconditionResult;
 use App\Services\Installation\Exceptions\AlreadyInstalledException;
 use App\Services\Installation\Exceptions\DatabaseConnectionException;
+use App\Services\Installation\Exceptions\InstallationException;
 use App\Services\Installation\Exceptions\WritePermissionException;
 use Composer\Semver\Semver;
 use Illuminate\Support\Facades\Artisan;
@@ -90,85 +91,159 @@ class InstallationService
      */
     public function install(InstallInput $input, ?callable $onStep = null): void
     {
-        $ambientMysql = (array) config('database.connections.mysql');
-        $ambientDefault = config('database.default');
+        $state = [];
 
-        // Point the connection at the credentials the caller named before the
-        // "already installed" probe. Probing first reads whatever the ambient
-        // config points at (a stale .env, exported DB_*), which can throw
-        // against a perfectly valid input. The probe must mean "is the
-        // database I was asked to install into already installed".
-        $this->applyDatabaseConfig($input->db, '');
-
-        try {
-            if ($this->isAlreadyInstalled()) {
-                throw new AlreadyInstalledException(
-                    'Refusing to install: bcoem_sys.setup is already 1.',
-                    'This site is already installed. Use the upgrade process to update it instead.',
-                );
-            }
-
-            // Fail before writing anything: a bad password must leave the site untouched.
-            $connection = $this->testDatabaseConnection($input->db);
-            if (! $connection->success) {
-                throw new DatabaseConnectionException(
-                    'Database connection failed for '.$input->db->host.':'.$input->db->port.'/'.$input->db->database.'.',
-                    $connection->message,
-                );
-            }
-        } catch (\Throwable $e) {
-            // A failed pre-flight must not strand the rest of the request on
-            // the credentials it just rejected (the wizard tears down its own
-            // connection after a pollable failure); put the ambient one back.
-            config()->set('database.connections.mysql', $ambientMysql);
-            config()->set('database.default', $ambientDefault);
-            DB::purge('mysql');
-            DB::setDefaultConnection(is_string($ambientDefault) ? $ambientDefault : 'mysql');
-
-            throw $e;
+        foreach ($this->steps($input) as $step) {
+            $this->step($onStep, $step['label']);
+            ($step['run'])($state);
         }
+    }
 
-        $this->step($onStep, 'Writing your configuration…');
-        $this->writeEnvValues([
-            'APP_ENV' => 'production',
-            'APP_DEBUG' => 'false',
-            'APP_URL' => $input->appUrl,
-            'DB_CONNECTION' => 'mysql',
-            'DB_HOST' => $input->db->host,
-            'DB_PORT' => $input->db->port,
-            'DB_DATABASE' => $input->db->database,
-            'DB_USERNAME' => $input->db->username,
-            'DB_PASSWORD' => $input->db->password,
-            'DB_TABLE_PREFIX' => '',
-            // A fresh install has no `cache` table (it lives in the skipped
-            // framework 0001 migration), so the shipped default would break
-            // the site the moment caching is used. File cache needs only the
-            // already-checked storage/ directory.
-            'CACHE_STORE' => 'file',
-            // Same reason: the `sessions` table is skipped with the framework
-            // migrations too, so the shipped database driver would break the
-            // first request after an otherwise successful install.
-            'SESSION_DRIVER' => 'file',
-            // And the `jobs` table is skipped with them, so the shipped
-            // database driver would stall every queued job. The wizard never
-            // runs a worker: sync is the only queue that works on a fresh host.
-            'QUEUE_CONNECTION' => 'sync',
-        ]);
+    /**
+     * The install sequence as individually runnable units. `install()` loops
+     * this same list, so the CLI (one process) and the resumable wizard (one
+     * unit per request) can never diverge.
+     *
+     * Every step re-applies the caller's database credentials: a later request
+     * must never rely on the ambient connection still pointing at the target.
+     *
+     * @return list<array{label: string, run: \Closure(array<string, mixed> &$state): void}>
+     */
+    public function steps(InstallInput $input): array
+    {
+        return [
+            [
+                'label' => 'Writing your configuration…',
+                'run' => function (array &$state) use ($input): void {
+                    $ambientMysql = (array) config('database.connections.mysql');
+                    $ambientDefault = config('database.default');
 
-        $this->step($onStep, 'Generating a new application key…');
-        $key = 'base64:'.base64_encode(random_bytes(32));
-        $this->writeEnvValues(['APP_KEY' => $key]);
-        config()->set('app.key', $key);
+                    // Point the connection at the credentials the caller named
+                    // before the "already installed" probe. Probing first reads
+                    // whatever the ambient config points at (a stale .env,
+                    // exported DB_*), which can throw against a valid input.
+                    $this->applyDatabaseConfig($input->db, '');
 
-        $this->step($onStep, 'Setting up your database…');
-        $this->importBaseSchema();
-        $this->runPendingMigrations();
+                    try {
+                        if ($this->isAlreadyInstalled()) {
+                            throw new AlreadyInstalledException(
+                                'Refusing to install: bcoem_sys.setup is already 1.',
+                                'This site is already installed. Use the upgrade process to update it instead.',
+                            );
+                        }
 
-        $this->step($onStep, 'Creating your admin account…');
-        $this->createAdmin($input->admin());
+                        // Fail before writing anything: a bad password must leave the site untouched.
+                        $connection = $this->testDatabaseConnection($input->db);
+                        if (! $connection->success) {
+                            throw new DatabaseConnectionException(
+                                'Database connection failed for '.$input->db->host.':'.$input->db->port.'/'.$input->db->database.'.',
+                                $connection->message,
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        // A failed pre-flight must not strand the rest of the
+                        // request on the credentials it just rejected; put the
+                        // ambient connection back before marking the failure.
+                        config()->set('database.connections.mysql', $ambientMysql);
+                        config()->set('database.default', $ambientDefault);
+                        DB::purge('mysql');
+                        DB::setDefaultConnection(is_string($ambientDefault) ? $ambientDefault : 'mysql');
 
-        $this->step($onStep, 'Finishing up…');
-        $this->writeInstalledMarker(self::SHIPPED_VERSION);
+                        throw $e;
+                    }
+
+                    $this->writeEnvValues([
+                        'APP_ENV' => 'production',
+                        'APP_DEBUG' => 'false',
+                        'APP_URL' => $input->appUrl,
+                        'DB_CONNECTION' => 'mysql',
+                        'DB_HOST' => $input->db->host,
+                        'DB_PORT' => $input->db->port,
+                        'DB_DATABASE' => $input->db->database,
+                        'DB_USERNAME' => $input->db->username,
+                        'DB_PASSWORD' => $input->db->password,
+                        'DB_TABLE_PREFIX' => '',
+                        // A fresh install has no `cache` table (it lives in the
+                        // skipped framework 0001 migration), so the shipped
+                        // default would break the site the moment caching is
+                        // used. File cache needs only storage/.
+                        'CACHE_STORE' => 'file',
+                        // Same reason: the `sessions` table is skipped too, so
+                        // the shipped database driver would break the first
+                        // request after an otherwise successful install.
+                        'SESSION_DRIVER' => 'file',
+                        // And the `jobs` table is skipped with them, so the
+                        // shipped database driver would stall every queued job.
+                        // The wizard never runs a worker: sync is the only queue
+                        // that works on a fresh host.
+                        'QUEUE_CONNECTION' => 'sync',
+                    ]);
+                },
+            ],
+            // ponytail: one step is one request, but importBaseSchema() is a
+            // single exec of the whole baseline dump, so a very large baseline
+            // can still outlast the host's limit. set_time_limit(0) in the
+            // runner covers the common case; chunking the dump is a further,
+            // larger change.
+            [
+                'label' => 'Setting up your database…',
+                'run' => function (array &$state) use ($input): void {
+                    $this->applyDatabaseConfig($input->db, '');
+                    $this->importBaseSchema();
+                },
+            ],
+            [
+                'label' => 'Applying database updates…',
+                'run' => function (array &$state) use ($input): void {
+                    $this->applyDatabaseConfig($input->db, '');
+                    $this->runPendingMigrations();
+                },
+            ],
+            [
+                'label' => 'Creating your admin account…',
+                'run' => function (array &$state) use ($input): void {
+                    $this->applyDatabaseConfig($input->db, '');
+                    $this->createAdmin($input->admin());
+                },
+            ],
+            [
+                'label' => 'Finishing up…',
+                'run' => function (array &$state) use ($input): void {
+                    $this->applyDatabaseConfig($input->db, '');
+
+                    // The key is generated in the FINAL step, not its own. The
+                    // wizard's payload is Crypt-encrypted with APP_KEY, so
+                    // rotating it earlier would leave every later progress
+                    // request unable to decrypt the input — production boots a
+                    // fresh process from the rotated .env per request, and the
+                    // install would hang. Nothing before this point encrypts:
+                    // the baseline import and migrations use no Crypt, and
+                    // createAdmin() is bcrypt only.
+                    $key = 'base64:'.base64_encode(random_bytes(32));
+                    $this->writeEnvValues(['APP_KEY' => $key]);
+                    config()->set('app.key', $key);
+
+                    $this->writeInstalledMarker(self::SHIPPED_VERSION);
+                },
+            ],
+        ];
+    }
+
+    /**
+     * The plain + technical pair for the marker. The one place that knows how
+     * an install failure should read, so the CLI and the wizard agree.
+     *
+     * @return array{plain: string, technical: string, backup_path: null}
+     */
+    public function describeFailure(\Throwable $e): array
+    {
+        return [
+            'plain' => $e instanceof InstallationException
+                ? $e->plainMessage
+                : 'Something went wrong while installing your site.',
+            'technical' => $e->getMessage(),
+            'backup_path' => null,
+        ];
     }
 
     /**

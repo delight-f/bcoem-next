@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Drives the sync-queue job that wraps InstallationService::install().
+ * Drives the sync-queue job that runs one install step per invocation.
  */
 final class InstallWizardJobTest extends InstallationTestCase
 {
@@ -28,10 +28,17 @@ final class InstallWizardJobTest extends InstallationTestCase
         return new InstallInput($credentials, 'http://example.test', 'Jane Admin', 'jane@example.test', 's3cret-pass');
     }
 
+    private function runAllSteps(InstallInput $input, string $token): void
+    {
+        foreach (array_keys(app(InstallationService::class)->steps($input)) as $cursor) {
+            RunInstallationJob::dispatch($input, $token, $cursor);
+        }
+    }
+
     /**
-     * The required cache-store reproduction: install() rewrites .env including
-     * CACHE_STORE while the job owns the marker, and the marker still finishes
-     * `complete` because the store was pinned before the run.
+     * The required cache-store reproduction: step 0 rewrites .env including
+     * CACHE_STORE while the runner owns the marker, and the marker still
+     * finishes `complete` because the store was pinned before the run.
      */
     public function test_install_job_finishes_complete_after_the_cache_store_is_rewritten(): void
     {
@@ -41,7 +48,7 @@ final class InstallWizardJobTest extends InstallationTestCase
         $tracker = new ProgressTracker;
         $tracker->pending($token);
 
-        RunInstallationJob::dispatch($this->input($this->credentials()), $token);
+        $this->runAllSteps($this->input($this->credentials()), $token);
 
         $marker = $tracker->get($token) ?? [];
         $this->assertSame('complete', $marker['status'] ?? null);
@@ -57,8 +64,8 @@ final class InstallWizardJobTest extends InstallationTestCase
 
     /**
      * The full wizard HTTP path, safe here because the service is bound to the
-     * test's throwaway root: run() must decrypt the session password, install
-     * with it, and clear the session on the success path.
+     * test's throwaway root: run() persists the input, then each progress poll
+     * runs one step. The password must be decrypted and the session cleared.
      */
     public function test_http_run_installs_with_the_decrypted_password_and_clears_the_session(): void
     {
@@ -82,9 +89,18 @@ final class InstallWizardJobTest extends InstallationTestCase
             ],
         ])->postJson('/install/run', ['token' => $token])->assertOk();
 
-        $marker = (new ProgressTracker)->get($token) ?? [];
-        $this->assertSame('complete', $marker['status'] ?? null);
-        $this->assertNull(session('wizard.install.site'), 'the success path must clear the stored password');
+        $this->assertNull(session('wizard.install.site'), 'run() must clear the stored password');
+
+        $terminal = [];
+        for ($i = 0; $i < 12; $i++) {
+            $terminal = (array) $this->getJson('/install/progress?token='.$token)->json();
+            if (in_array($terminal['status'] ?? null, ['complete', 'failed'], true)) {
+                break;
+            }
+        }
+
+        $error = is_array($terminal['error'] ?? null) ? $terminal['error'] : [];
+        $this->assertSame('complete', $terminal['status'] ?? null, (string) ($error['technical'] ?? ''));
 
         $hash = (string) DB::table('users')->where('user_name', 'jane@example.test')->value('password');
         $this->assertTrue(Hash::check('s3cret-pass', $hash), 'the install must use the decrypted password');
@@ -101,7 +117,7 @@ final class InstallWizardJobTest extends InstallationTestCase
         $tracker = new ProgressTracker;
         $tracker->pending($token);
 
-        RunInstallationJob::dispatch($this->input($bad), $token);
+        RunInstallationJob::dispatch($this->input($bad), $token, 0);
 
         $marker = $tracker->get($token) ?? [];
         $error = $marker['error'] ?? [];
