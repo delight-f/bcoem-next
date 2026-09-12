@@ -122,6 +122,51 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('name="styleEntryLimit-'.$set.'-'.$group.'" value="5"', false);
     }
 
+    public function test_default_tab_general_values_round_trip_with_legacy_encodings(): void
+    {
+        $this->login();
+
+        $this->put('/admin/site-preferences/default', [
+            'prefsProEdition' => '0',
+            'prefsDisplayWinners' => 'Y',
+            'prefsWinnerDelay' => '',
+            'prefsWinnerMethod' => '1',
+            'prefsTheme' => 'default',
+            'prefsSEF' => 'N',
+            'prefsUseMods' => 'Y',
+            'prefsDropOff' => '1',
+            'prefsShipping' => '0',
+            'prefsAutoPurge' => '0',
+            'prefsLanguage' => 'en-US',
+            'prefsLanguageToggle' => 'N',
+            'prefsDateFormat' => '1',
+            'prefsTimeZone' => '-7.000',
+            'prefsTimeFormat' => '0',
+            'prefsSponsors' => 'Y',
+            'prefsSponsorLogos' => 'Y',
+            'prefsRecordPaging' => '25',
+        ])->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        // Legacy encodings: Custom Modules is a char(1) Y/N column (the
+        // dashboard and mods gate both test for 'Y'), and drop-off / shipping
+        // are tinyint 1/0 despite the radios looking like switches.
+        $this->assertSame('Y', $this->pref('prefsUseMods'));
+        $this->assertSame('25', $this->pref('prefsRecordPaging'));
+        $this->assertSame('1', (string) $this->pref('prefsDropOff'));
+        $this->assertSame('0', (string) $this->pref('prefsShipping'));
+
+        // And the controls re-render the stored state (the old Drop-Off /
+        // Shipping selects compared a tinyint against 'Y', so an enabled
+        // drop-off always came back "Disabled").
+        $this->get('/admin/site-preferences')
+            ->assertOk()
+            ->assertSee('placeholder="12" value="25"', false)
+            ->assertSee('value="-7.000" selected', false)
+            ->assertSee('id="dropYes" checked', false)
+            ->assertSee('id="shipNo" checked', false)
+            ->assertSee('value="1" id="prefsWinnerMethod_1" checked', false);
+    }
+
     public function test_default_tab_renders_winner_language_timezone_and_available_languages(): void
     {
         $this->login();

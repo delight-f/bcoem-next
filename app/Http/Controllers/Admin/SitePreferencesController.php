@@ -204,9 +204,12 @@ final class SitePreferencesController extends Controller
             // Bootswatch names no longer exist, so reject anything else.
             'prefsTheme' => ['required', Rule::in(['default', 'bcoem-brux'])],
             'prefsSEF' => ['required', 'in:Y,N'],
-            'prefsUseMods' => ['required', 'in:0,1'],
+            // Custom Modules: legacy stores Y/N in a char(1) column and both
+            // the dashboard and the public mods gate test for 'Y'.
+            'prefsUseMods' => ['required', 'in:Y,N'],
             'prefsCAPTCHA' => ['nullable', 'in:0,1'],
             'prefsGoogleAccount' => ['nullable', 'string', 'max:255'],
+            'prefsRecordPaging' => ['nullable', 'integer'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
             'prefsAutoPurge' => ['required', 'in:0,1'],
@@ -278,6 +281,7 @@ final class SitePreferencesController extends Controller
             'prefsSponsors' => (string) $data['prefsSponsors'],
             'prefsSponsorLogos' => (string) $data['prefsSponsorLogos'],
             'prefsSessionTimeout' => $this->sessionTimeout($data['prefsSessionTimeout'] ?? null),
+            'prefsRecordPaging' => self::blankToNull((string) ($data['prefsRecordPaging'] ?? '')),
         ];
     }
 

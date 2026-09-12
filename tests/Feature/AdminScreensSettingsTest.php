@@ -330,7 +330,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsWinnerMethod' => '1',
             'prefsTheme' => 'default',
             'prefsSEF' => 'N',
-            'prefsUseMods' => '0',
+            'prefsUseMods' => 'N',
             'prefsCAPTCHA' => '0',
             'prefsGoogleAccount' => 'site|6LeKEY|secret',
             'prefsDropOff' => 'Y',
@@ -355,6 +355,23 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame(1, (int) $p['prefsDropOff']);
         self::assertSame(0, (int) $p['prefsShipping']);
         self::assertSame(['en-US'], json_decode((string) $p['prefsLanguageOptions'], true));
+    }
+
+    /**
+     * Issue 23: the General tab stored prefsUseMods as 0/1, but the column is
+     * char(1) and both the dashboard and the public mods gate test for 'Y' —
+     * so enabling Custom Modules never surfaced the Manage/Add row.
+     */
+    public function test_general_tab_custom_modules_saves_legacy_yn_and_unlocks_dashboard(): void
+    {
+        $this->remember('preferences');
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsUseMods' => 'Y']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        self::assertSame('Y', (string) $this->prefs()['prefsUseMods']);
+
+        $this->get('/admin')->assertOk()->assertSee('Custom Modules');
     }
 
     /**
@@ -393,7 +410,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsWinnerMethod' => '0',
             'prefsTheme' => 'default',
             'prefsSEF' => 'N',
-            'prefsUseMods' => '0',
+            'prefsUseMods' => 'N',
             'prefsCAPTCHA' => '0',
             'prefsGoogleAccount' => '',
             'prefsDropOff' => 'N',
@@ -406,6 +423,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsTimeZone' => '-7',
             'prefsSponsors' => 'Y',
             'prefsSponsorLogos' => 'Y',
+            'prefsRecordPaging' => '150',
             'prefsSessionTimeout' => '',
         ], $overrides);
     }
