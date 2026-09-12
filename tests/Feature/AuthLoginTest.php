@@ -129,12 +129,23 @@ final class AuthLoginTest extends PublicSurfaceTestCase
 
     public function test_entrant_user_redirects_to_list(): void
     {
-        DB::table('users')->update(['userLevel' => '2']);
+        // Scope the demotion to the fixture account. This was previously an
+        // unscoped DB::table('users')->update(['userLevel' => '2']), which
+        // demoted EVERY user — and because the suite shares a database with the
+        // local install, it took the developer's own admin account with it.
+        // Restore afterwards so the change cannot leak into sibling suites.
+        $original = DB::table('users')->where('id', 1)->value('userLevel');
 
-        $this->post('/login', [
-            'loginUsername' => 'user.baseline@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ])->assertRedirect('/list');
+        try {
+            DB::table('users')->where('id', 1)->update(['userLevel' => '2']);
+
+            $this->post('/login', [
+                'loginUsername' => 'user.baseline@brewingcompetitions.com',
+                'loginPassword' => 'bcoem',
+            ])->assertRedirect('/list');
+        } finally {
+            DB::table('users')->where('id', 1)->update(['userLevel' => $original ?? '2']);
+        }
     }
 
     public function test_logout_clears_session_and_redirects_home(): void
