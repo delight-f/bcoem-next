@@ -14,7 +14,22 @@
 @endphp
 
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="landing-page-section mt-6 mb-4">
+    <section class="landing-page-section site-preferences mt-6 mb-4">
+        <style>
+            /* These forms stack many controls per row. Bootstrap's .form-text
+               only carries margin-top: .25rem (and is inline, so consecutive
+               help fragments run together), which leaves help copy and the
+               info buttons touching the control above. Loosen the rhythm. */
+            .site-preferences h3 { margin-bottom: 1.25rem; }
+            .site-preferences h4 { margin-top: 2.25rem; margin-bottom: 1rem; }
+            .site-preferences .form-text { display: block; margin-top: .5rem; }
+            .site-preferences .form-text + .form-text { margin-top: .4rem; }
+            .site-preferences .form-text .btn { margin-top: .5rem; }
+            .site-preferences .form-text p:first-child { margin-top: 0; }
+            .site-preferences .form-text p:last-child { margin-bottom: 0; }
+            .site-preferences .btn[data-bs-toggle="collapse"] { margin-bottom: .25rem; }
+        </style>
+
         <h1>{{ $ctx->contestStr('contestName') }}: Preferences</h1>
 
         <ul class="nav nav-tabs mb-4">
@@ -546,7 +561,7 @@
                     </div>
                 </div>
                 @foreach (range(1, 4) as $i)
-                    <section id="user-entry-limit-increment-{{ $i }}">
+                    <section id="user-entry-limit-increment-{{ $i }}" @class(['border-top pt-3' => $i > 1])>
                         <div class="mb-4 row">
                             <label for="user-entry-limit-number-{{ $i }}" class="col-md-4 col-form-label">#{{ $i }} Incremental Entry Limit per Participant</label>
                             <div class="col-md-8">
@@ -571,7 +586,6 @@
                                 <span class="form-text">Number of days AFTER the entry window opening date that the #{{ $i }} per participant limit will EXPIRE.</span>
                             </div>
                         </div>
-                        @if ($i < 4)<hr>@endif
                     </section>
                 @endforeach
                 <script>
@@ -1053,7 +1067,7 @@
                 ->map(fn ($i) => '<option value="'.$i.'"'.((string) $i === (string) $current ? ' selected' : '').'>'
                     .($i === -1 ? 'Display all' : ($i === 0 ? 'Do not display' : 'Up to '.$i.$ordinal($i).' position'))
                     .'</option>')
-                ->implode('\n'))
+                ->implode("\n"))
             @php($tieBreakRules = [
                 '' => 'Unused.',
                 'TBTotalPlaces' => 'The highest total number of first, second, and third places.',

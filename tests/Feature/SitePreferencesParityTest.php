@@ -252,6 +252,25 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('changing the method deletes any limits set under the previous one', false);
     }
 
+    public function test_preferences_forms_use_the_roomier_form_text_rhythm(): void
+    {
+        $this->login();
+
+        // The blade scopes a spacing block to .site-preferences; without it
+        // Bootstrap's .form-text sits .25rem under its control (and is inline,
+        // so consecutive help fragments run together).
+        $this->get('/admin/site-preferences')
+            ->assertOk()
+            ->assertSee('landing-page-section site-preferences', false)
+            ->assertSee('.site-preferences .form-text { display: block; margin-top: .5rem; }', false)
+            ->assertSee('.site-preferences .form-text .btn { margin-top: .5rem; }', false);
+
+        // Incremental tiers are separated by a rule, not crammed together.
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('class="border-top pt-3">', false);
+    }
+
     public function test_entries_style_type_limits_round_trip(): void
     {
         $this->login();
