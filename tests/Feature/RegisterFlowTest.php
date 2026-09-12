@@ -35,9 +35,9 @@ final class RegisterFlowTest extends PublicSurfaceTestCase
         // Ensure a users row exists for the duplicate-email check target and
         // that windows are OPEN for the positive-path tests. The baseline
         // dates may be closed depending on load time, so force them open.
-        +        // The baseline also has judging sessions in the past, which force
-        +// registration/entry closed (Windows::derive override) — clear them.
-        +DB::table('judging_locations')->delete();
+        // The baseline also has judging sessions in the past, which force
+        // registration/entry closed (Windows::derive override) — clear them.
+        DB::table('judging_locations')->delete();
         DB::table('contest_info')->where('id', 1)->update([
             // Windows are epoch integers in this schema; 2000-01-01 /
             // 2999-01-01 in the past/future around any realistic test clock.
