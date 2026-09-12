@@ -449,7 +449,11 @@ final class PublicController extends Controller
             'glance' => $this->listGlanceCards($ctx, $windows, $langLong, $brewer),
             'rows' => $rows,
             'addEntryShow' => $entryWindowOpen && ! $windows->compEntryLimitReached && ! $windows->compPaidEntryLimitReached,
-            'payDisabled' => $unpaidCount === 0,
+            // pub/list.pub.php button stack: the pay button goes inert when
+            // there is nothing to collect — no unpaid confirmed entries, or a
+            // free competition (per-entry fee 0). The partial explains why on
+            // hover.
+            'payDisabled' => $unpaidCount === 0 || $fee <= 0,
             'entryInfo' => [
                 'bottles' => $ctx->judgingStr('jPrefsBottleNum'),
                 'editDeadline' => DateFmt::dateTime(

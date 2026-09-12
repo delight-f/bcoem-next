@@ -28,7 +28,12 @@
                 @if ($addEntryShow)
                     <a class="btn btn-primary" href="{{ url('/brew') }}"><i class="fa fa-plus-circle me-2"></i>{{ __('site.add_entry') }}</a>
                 @endif
-                <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}"><i class="fa fa-lg fa-money-bill me-2"></i>{{ __('site.pay') }}</a>
+                {{-- Disabled when nothing is payable. The tooltip lives on a
+                     wrapper: .btn.disabled sets pointer-events:none, so the
+                     disabled anchor itself can never fire a hover. --}}
+                <span class="d-grid" @if ($payDisabled) data-toggle="tooltip" data-bs-placement="top" title="No fees are payable." @endif>
+                    <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>{{ __('site.pay') }}</a>
+                </span>
                 <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>{{ __('site.edit_account') }}</a>
                 <a class="btn btn-dark" href="{{ url('/user/username') }}"><i class="fa fa-envelope me-2"></i>{{ __('site.change_email') }}</a>
                 <a class="btn btn-dark" href="{{ url('/user/password') }}"><i class="fa fa-key me-2"></i>{{ __('site.change_password') }}</a>
@@ -57,7 +62,9 @@
     <section class="mb-3 d-block d-sm-block d-md-none">
         <div class="d-grid gap-2 mb-5 d-print-none">
             <a class="btn btn-primary {{ $windows->entry === App\Support\Tenant\WindowState::Before ? 'disabled' : '' }}" href="{{ url('/brew?filter='.$info['brewer']->id) }}"><i class="fa fa-plus-circle me-2"></i>Add Entry</a>
-            <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees"><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
+            <span class="d-grid" @if ($payDisabled) data-toggle="tooltip" data-bs-placement="top" title="No fees are payable." @endif>
+                <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
+            </span>
             <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>Edit Account</a>
         </div>
     </section>
