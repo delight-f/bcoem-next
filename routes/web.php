@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\PaymentSetupController;
 use App\Http\Controllers\Admin\PublishResultsController;
 use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\Auth\ChangePasswordController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\EntriesController;
 use App\Http\Controllers\LegacyRedirectController;
 use App\Http\Controllers\ManualPaymentController;
 use App\Http\Controllers\PayController;
+use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\QrCheckinController;
 use App\Http\Controllers\StripeConnectController;
@@ -176,6 +178,11 @@ Route::get('/pay/callback', [PayController::class, 'callback'])->name('pay.callb
 // invalid signatures get 4xx so Stripe retries.
 Route::post('/webhooks/stripe', StripeWebhookController::class)->name('webhooks.stripe');
 
+// PayPal webhook (issue #24 P5). Same contract as the Stripe endpoint: no auth
+// middleware — authenticity is the locally verified signature inside
+// PayPalGateway; 2xx acks verified deliveries, invalid signatures get 4xx.
+Route::post('/webhooks/paypal', PayPalWebhookController::class)->name('webhooks.paypal');
+
 // Stripe Connect onboarding (P3.5b). Admin-only: settings page, OAuth
 // start/callback against the organizer's own Stripe account, and pasting
 // the webhook endpoint's signing secret. Stored per competition in
@@ -197,6 +204,16 @@ Route::get('/admin/payments/mark', [ManualPaymentController::class, 'show'])
     ->name('admin.payments')->middleware('auth');
 Route::post('/admin/payments/mark', [ManualPaymentController::class, 'markPaid'])
     ->name('admin.payments.mark')->middleware('auth');
+
+// Payment provider setup (issue #24 follow-up). One plain-language screen
+// where the organizer switches on Stripe and/or PayPal; PayPal credentials
+// are stored encrypted (PayPalSettings). Admin-gated in-controller.
+Route::get('/admin/payments/setup', [PaymentSetupController::class, 'show'])
+    ->name('admin.payments.setup')->middleware('auth');
+Route::post('/admin/payments/setup/paypal', [PaymentSetupController::class, 'savePayPal'])
+    ->name('admin.payments.setup.paypal')->middleware('auth');
+Route::post('/admin/payments/setup/paypal/remove', [PaymentSetupController::class, 'removePayPal'])
+    ->name('admin.payments.setup.paypal.remove')->middleware('auth');
 
 // AJAX endpoints (P3.7). Port the legacy ajax/*.ajax.php files; response
 // envelopes carry the legacy HTML fragments verbatim (see AjaxController).

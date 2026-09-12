@@ -296,16 +296,18 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         }
     }
 
-    public function test_payment_tab_shows_stripe_connection_status_and_manage_link(): void
+    public function test_payment_tab_shows_provider_status_summary_and_setup_link(): void
     {
-        // Payments plan W3/W6: the Payment tab surfaces online-payment state
-        // (prefsStripe connection) with a Manage link — PayPal rows retired.
+        // Issue #24: the Payment tab is a read-only summary of both providers
+        // with one CTA to the setup screen; credentials are edited there.
         $this->remember('preferences');
 
         $this->get('/admin/site-preferences/payment')
             ->assertOk()
-            ->assertSee('Stripe — Not connected.')
+            ->assertSee('Card payments (Stripe):', false)
+            ->assertSee('Not connected')
             ->assertSee(htmlspecialchars((string) route('admin.stripe')), false)
+            ->assertSee(htmlspecialchars((string) route('admin.payments.setup')), false)
             ->assertDontSee('Accept PayPal?');
 
         DB::table('preferences')->where('id', 1)->update([
@@ -314,7 +316,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
         $this->get('/admin/site-preferences/payment')
             ->assertOk()
-            ->assertSee('Stripe — Connected.')
+            ->assertSee('Connected')
             ->assertDontSee('Accept PayPal?');
     }
 

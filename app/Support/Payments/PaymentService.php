@@ -31,6 +31,8 @@ final class PaymentService
 {
     public const METHOD_STRIPE = 'stripe';
 
+    public const METHOD_PAYPAL = 'paypal';
+
     public const METHOD_MANUAL = 'manual';
 
     /**

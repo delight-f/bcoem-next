@@ -6,8 +6,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Payments\PaymentEvent;
+use App\Support\Payments\PaymentProviderRegistry;
 use App\Support\Payments\PaymentService;
-use App\Support\Payments\StripeGateway;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
@@ -77,11 +77,26 @@ final class PaymentsController extends Controller
 
         $row = DB::table('payments')->where('id', $id)->first();
 
-        if ($row === null || $row->status !== 'paid' || $row->method !== 'stripe' || (string) $row->provider_ref === '') {
+        if ($row === null
+            || $row->status !== 'paid'
+            || ! in_array((string) $row->method, [PaymentService::METHOD_STRIPE, PaymentService::METHOD_PAYPAL], true)
+            || (string) $row->provider_ref === '') {
             return redirect('/admin/payments?msg=refund-invalid');
         }
 
-        $result = StripeGateway::forTenant()->refund((string) $row->provider_ref);
+        // Dispatch the refund through the provider that collected it (#24 P6).
+        // get() returns null for a provider this install no longer has enabled.
+        $adapter = app(PaymentProviderRegistry::class)->get((string) $row->method);
+
+        if ($adapter === null) {
+            return redirect('/admin/payments?msg=refund-invalid');
+        }
+
+        try {
+            $result = $adapter->refund((string) $row->provider_ref);
+        } catch (\Throwable) {
+            return redirect('/admin/payments?msg=refund-invalid');
+        }
 
         $applied = $result->event === PaymentEvent::Refunded
             ? app(PaymentService::class)->markRefunded(

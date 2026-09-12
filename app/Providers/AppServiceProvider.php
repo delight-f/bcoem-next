@@ -3,12 +3,12 @@
 namespace App\Providers;
 
 use App\Support\Payments\GatewayAdapter;
-use App\Support\Payments\StripeGateway;
+use App\Support\Payments\PaymentProviderRegistry;
+use App\Support\Payments\PayPalGateway;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,23 +18,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Live wiring (payments plan W1): the tenant's connected Stripe
-        // account (preferences.prefsStripe) is the only online gateway.
-        // Bound ONLY when connected — PayController's app()->bound() gate
-        // then renders the legacy "payment unavailable" state otherwise;
-        // manual marking stays admin-side. One tenant per request/database,
-        // so a registration-time read is safe (classic FPM lifecycle).
+        $this->app->singleton(PaymentProviderRegistry::class);
+
+        // Live wiring (payments plan W1 + issue #24): the tenant's connected
+        // Stripe account (preferences.prefsStripe) and/or this install's PayPal
+        // env config. Bound ONLY when at least one is available — PayController's
+        // app()->bound() gate then renders the legacy "payment unavailable"
+        // state otherwise; manual marking stays admin-side. One tenant per
+        // request/database, so a registration-time read is safe (classic FPM
+        // lifecycle).
         try {
             $cfg = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsStripe'), true) ?: [];
+            $stripeConnected = ($cfg['account_id'] ?? '') !== '';
         } catch (\Throwable) {
-            $cfg = []; // console/no-DB contexts: no online gateway
+            $stripeConnected = false; // console/no-DB contexts: no tenant gateway
         }
 
-        if (($cfg['account_id'] ?? '') !== '') {
+        if ($stripeConnected || PayPalGateway::configured()) {
             $this->app->bind(GatewayAdapter::class, function () {
-                $success = URL::route('pay.callback').'?session_id={CHECKOUT_SESSION_ID}';
-
-                return StripeGateway::forTenant($success, URL::route('pay.cancel'));
+                return app(PaymentProviderRegistry::class)->default()
+                    ?? throw new \RuntimeException('No payment provider is configured.');
             });
         }
     }

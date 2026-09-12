@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Mail\MailSettings;
+use App\Support\Payments\PayPalSettings;
 use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
@@ -126,6 +127,9 @@ final class SitePreferencesController extends Controller
         return view('admin.site-preferences', [
             'ctx' => $ctx,
             'go' => $go,
+            // Online-payments summary (issue #24): Stripe state is read from
+            // prefs in the blade; PayPal state comes from the settings store.
+            'paypalConfigured' => PayPalSettings::configured(),
             'styleTypes' => DB::table('style_types')->orderBy('id')->get(),
             // Per-style-type entry limits: only the BOS style types carry one
             // (site_preferences.admin.php:2048-2065).

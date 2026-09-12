@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Payments\FeeCalculator;
+use App\Support\Payments\PayPalGateway;
 use App\Support\Results\BestBrewerStandings;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
@@ -219,9 +220,15 @@ final class DashboardController extends Controller
 
         $entriesItems = [];
         $entriesItems[] = ['Entries', [$l('/backoffice/entries', 'Manage')]];
-        if ($prefs['stripeConnected']) {
-            $entriesItems[] = ['Payments', [$l('/admin/payments', 'Manage')]];
+        // Payments row: the ledger is reachable once any online provider is set
+        // up; the setup screen is always reachable so it can be switched on
+        // (issue #24 follow-up).
+        $paymentLinks = [];
+        if ($prefs['stripeConnected'] || PayPalGateway::configured()) {
+            $paymentLinks[] = $l('/admin/payments', 'Manage');
         }
+        $paymentLinks[] = $l('/admin/payments/setup', 'Set Up');
+        $entriesItems[] = ['Payments', $paymentLinks];
         $participantManage = [$l('/backoffice/participants', 'Manage')];
         $participantAssign = [
             $l('/backoffice/participants?filter=judges', 'Assign/Unassign Judges'),

@@ -20,6 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // before any token check. Downstream port forms stay protected.
         $middleware->validateCsrfTokens(except: [
             'includes/process.inc.php',
+            // Provider webhooks are server-to-server: no CSRF token is (or can
+            // be) sent. Authenticity is the signature check inside each webhook
+            // controller (issue #24, B1 — without this both endpoints 419 in
+            // production while tests pass).
+            'webhooks/stripe',
+            'webhooks/paypal',
         ]);
 
         // Upstream 3.1.0 custom session timeout. PREPENDED, not appended:

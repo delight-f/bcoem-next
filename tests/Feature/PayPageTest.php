@@ -25,9 +25,18 @@ final class PayPageTest extends PublicSurfaceTestCase
     /** @var array<string, mixed> */
     private array $origContest = [];
 
+    /** Snapshot of the PayPal DB settings (issue #24) so provider enablement is hermetic. */
+    private ?string $origPaypalConfig = null;
+
     protected function setUp(): void
     {
         parent::setUp();
+
+        // Provider enablement must not depend on settings left in the shared DB
+        // by another suite or a manual setup run.
+        $paypal = DB::table('preferences')->where('id', 1)->value('prefsPaypalConfig');
+        $this->origPaypalConfig = $paypal === null ? null : (string) $paypal;
+        DB::table('preferences')->where('id', 1)->update(['prefsPaypalConfig' => null]);
 
         if (! DB::table('users')->where('id', 1)->exists()) {
             DB::table('users')->insert([
@@ -57,6 +66,8 @@ final class PayPageTest extends PublicSurfaceTestCase
         DB::table('brewing')->where('brewBrewerID', 1)->delete();
         DB::table('payments')->where('entrant_uid', 1)->delete();
         DB::table('judging_locations')->where('judgingLocName', 'paytest')->delete();
+
+        DB::table('preferences')->where('id', 1)->update(['prefsPaypalConfig' => $this->origPaypalConfig]);
 
         if ($this->origContest !== []) {
             DB::table('contest_info')->where('id', 1)->update($this->origContest);
@@ -483,6 +494,45 @@ final class PayPageTest extends PublicSurfaceTestCase
         $this->login();
 
         $this->post('/pay/checkout')->assertRedirect('/pay');
+    }
+
+    public function test_provider_buttons_render_for_each_enabled_provider(): void
+    {
+        // issue #24 P4: with PayPal configured the page offers a button per
+        // enabled provider instead of the single legacy pay button.
+        $this->setFee('8');
+        $this->login();
+        $this->makeEntry(['brewName' => 'Provider Entry']);
+
+        config(['services.paypal' => [
+            'mode' => 'sandbox',
+            'client_id' => 'cid',
+            'client_secret' => 'csec',
+            'webhook_id' => 'whid',
+            'currency' => 'USD',
+            'app_id' => '',
+        ]]);
+
+        $html = $this->html();
+
+        self::assertStringContainsString('PayPal', $html);
+        self::assertStringContainsString('name="provider" value="paypal"', $html);
+    }
+
+    public function test_checkout_rejects_a_disabled_provider_server_side(): void
+    {
+        // A crafted provider= for an unconfigured provider must be rejected,
+        // never fall through to the default adapter.
+        $this->setFee('8');
+        $this->bindFakeGateway();
+        $this->login();
+        $this->makeEntry(['brewName' => 'Reject Me']);
+
+        FakeAdapterProbe::$checkoutArgs = null;
+
+        $this->post('/pay/checkout', ['provider' => 'paypal'])->assertRedirect('/pay?msg=14');
+
+        self::assertNull(FakeAdapterProbe::$checkoutArgs, 'createCheckout must not run for a disabled provider');
     }
 
     public function test_session_checkout_success_return_confirms_server_side(): void

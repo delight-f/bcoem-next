@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Payments\CapturableOnReturn;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\GatewayAdapter;
+use App\Support\Payments\PaymentProviderRegistry;
 use App\Support\Payments\SessionCheckout;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
@@ -44,6 +46,7 @@ final class PayController extends Controller
 
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
+        $providers = $this->providerKeys();
 
         $state = 'settled';
 
@@ -64,11 +67,12 @@ final class PayController extends Controller
                 $total = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($unpaid));
 
                 return view('public.pay', array_merge(app(PublicController::class)->accountData(), [
-                    'state' => app()->bound(GatewayAdapter::class) ? 'payable' : 'unavailable',
+                    'state' => $this->payable($providers) ? 'payable' : 'unavailable',
                     'firstName' => self::firstName(),
                     'unpaid' => $unpaid,
                     'fee' => $fee,
                     'total' => $total,
+                    'providers' => $providers,
                 ]));
             }
         }
@@ -79,6 +83,7 @@ final class PayController extends Controller
             'fee' => '0',
             'firstName' => self::firstName(),
             'total' => '0.00',
+            'providers' => $providers,
         ]));
     }
 
@@ -86,10 +91,19 @@ final class PayController extends Controller
      * Starts a checkout for the whole unpaid batch and redirects to the
      * gateway's hosted page. Re-entry safe: nothing owed → back to /pay.
      */
-    public function checkout(): RedirectResponse
+    public function checkout(Request $request): RedirectResponse
     {
-        if (! Auth::check() || ! app()->bound(GatewayAdapter::class)) {
+        if (! Auth::check()) {
             return redirect('/pay');
+        }
+
+        $requested = $request->input('provider');
+        $adapter = $this->resolveAdapter(is_string($requested) ? $requested : null);
+
+        if ($adapter === null) {
+            // No online gateway, or a crafted/disabled provider: fail safe,
+            // nothing charged.
+            return $this->payable($this->providerKeys()) ? redirect('/pay?msg=14') : redirect('/pay');
         }
 
         $ctx = TenantContext::load();
@@ -103,7 +117,7 @@ final class PayController extends Controller
         $feeTotal = FeeCalculator::forEntrant($ctx, (int) Auth::id(), count($ids));
 
         try {
-            $checkout = app(GatewayAdapter::class)->createCheckout($ids, (int) Auth::id(), $feeTotal);
+            $checkout = $adapter->createCheckout($ids, (int) Auth::id(), $feeTotal);
         } catch (\Throwable) {
             // Gateway unavailable (misconfiguration/connectivity): fail safe —
             // nothing charged, entrant stays on the pay page.
@@ -127,19 +141,21 @@ final class PayController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
-        if (! Auth::check() || ! app()->bound(GatewayAdapter::class)) {
+        if (! Auth::check()) {
             return redirect('/pay');
         }
 
-        $ctx = TenantContext::load();
+        $requested = $request->query('provider');
+        $adapter = $this->resolveAdapter(is_string($requested) ? $requested : null);
 
-        $adapter = app(GatewayAdapter::class);
+        if ($adapter === null) {
+            return redirect('/pay');
+        }
 
-        // Success return (payments plan W2, review 2c): the gateway's
+        // Stripe success return (payments plan W2, review 2c): the gateway's
         // redirect is only a UX hint — the session is confirmed server-side
         // and flags are NOT flipped here; the signed webhook is the single
-        // writer (dedup makes overlap harmless). Gateways without hosted
-        // sessions have no return state to confirm.
+        // writer (dedup makes overlap harmless).
         if ($adapter instanceof SessionCheckout && (string) $request->query('session_id') !== '') {
             $session = $adapter->retrieveCheckoutSession((string) $request->query('session_id'));
 
@@ -148,7 +164,51 @@ final class PayController extends Controller
             return redirect('/pay?msg='.($paid ? '13' : '14'));
         }
 
+        // PayPal return (issue #24 P4): PayPal needs an explicit capture, which
+        // is a provider-side side effect only — local flags still flip solely
+        // in the signed webhook.
+        if ($adapter instanceof CapturableOnReturn && (string) $request->query('token') !== '') {
+            $settled = $adapter->captureOnReturn((string) $request->query('token'));
+
+            return redirect('/pay?msg='.($settled ? '13' : '14'));
+        }
+
         return redirect('/pay');
+    }
+
+    /**
+     * The adapter a request should use: the named provider when the client sent
+     * one (resolved through the registry, so a disabled provider is rejected
+     * server-side), else the container-bound default. Null means no online
+     * gateway is available for this request.
+     */
+    private function resolveAdapter(?string $provider): ?GatewayAdapter
+    {
+        if ($provider !== null && $provider !== '') {
+            return app(PaymentProviderRegistry::class)->get($provider);
+        }
+
+        return app()->bound(GatewayAdapter::class) ? app(GatewayAdapter::class) : null;
+    }
+
+    /**
+     * Enabled provider keys for the pay UI (issue #24 P3). Empty when this
+     * install has no configured provider; the view then renders the legacy
+     * single button for the container-bound adapter.
+     *
+     * @return list<string>
+     */
+    private function providerKeys(): array
+    {
+        return array_keys(app(PaymentProviderRegistry::class)->enabled());
+    }
+
+    /**
+     * @param  list<string>  $providers
+     */
+    private function payable(array $providers): bool
+    {
+        return $providers !== [] || app()->bound(GatewayAdapter::class);
     }
 
     /**

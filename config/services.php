@@ -48,6 +48,25 @@ return [
     ],
 
     /*
+| PayPal (issue #24). Per-install env configuration (D3): the provider is
+| enabled only when client id, secret and webhook id are all present. PayPal
+| needs no OAuth onboarding, unlike Stripe Connect.
+|
+| The mode selects the srmklive/paypal credential block (sandbox|live).
+| PayPalGateway builds the SDK config array from these values directly, so the
+| package's own config/paypal.php and its mode-specific env keys are
+| deliberately not used.
+*/
+    'paypal' => [
+        'mode' => env('PAYPAL_MODE', 'sandbox'),
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'webhook_id' => env('PAYPAL_WEBHOOK_ID'),
+        'currency' => env('PAYPAL_CURRENCY'),
+        'app_id' => env('PAYPAL_APP_ID', ''),
+    ],
+
+    /*
 | Cloudflare Turnstile (signup bot protection). The explicit `enabled`
 | flag is deliberate: if it is on but the keys are blank/bad, that is a
 | configuration mistake to surface (signups fail loudly), never a state

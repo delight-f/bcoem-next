@@ -51,11 +51,26 @@
 
             @if ($state === 'unavailable')
                 <p>{{ __('site.pay_unavailable') }} <a href="#contact">{{ __('site.contact_officials') }}</a></p>
-            @else
+            @elseif (($providers ?? []) === [])
                 <form method="post" action="{{ route('pay.checkout') }}" class="d-print-none">
                     @csrf
                     <button type="submit" class="btn btn-primary">{{ __('site.pay_pay_button') }}</button>
                 </form>
+            @else
+                {{-- One full-page handoff per enabled provider (issue #24 P4).
+                     Stripe and PayPal both block being framed, so this is a
+                     plain POST + redirect, never an iframe. --}}
+                <div class="d-flex flex-wrap gap-2 d-print-none">
+                    @foreach ($providers as $provider)
+                        <form method="post" action="{{ route('pay.checkout') }}">
+                            @csrf
+                            <input type="hidden" name="provider" value="{{ $provider }}">
+                            <button type="submit" class="btn btn-primary">
+                                {{ $provider === 'paypal' ? 'PayPal' : 'Stripe' }}
+                            </button>
+                        </form>
+                    @endforeach
+                </div>
             @endif
         @endif
     </section>

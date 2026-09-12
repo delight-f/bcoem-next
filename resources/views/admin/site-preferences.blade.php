@@ -1046,17 +1046,34 @@
                     <label for="prefsCheckPayee" class="col-md-4 col-form-label">Checks Payable To</label>
                     <div class="col-md-8"><input class="form-control" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}"></div>
                 </div>
-                {{-- PayPal retired (payments plan W3): online payments are
-                     Stripe Connect — status + manage link below. --}}
+                {{-- Online payments (issue #24): read-only status summary for
+                     both providers, with a single CTA to the setup screen.
+                     Credentials are edited only on /admin/payments/setup. --}}
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Online payments</label>
-                    <div class="col-md-8 col-form-label">
-                        @if (str_contains($p('prefsStripe'), 'account_id'))
-                            <span class="text-success-emphasis">Stripe — Connected.</span>
-                        @else
-                            <span class="text-danger-emphasis">Stripe — Not connected.</span>
-                        @endif
-                        <a href="{{ route('admin.stripe') }}">Manage</a>
+                    <div class="col-md-8">
+                        <div class="form-check mb-2">
+                            <span class="form-check-label">
+                                Card payments (Stripe):
+                                @if (str_contains($p('prefsStripe'), 'account_id'))
+                                    <span class="text-success-emphasis">Connected</span>
+                                @else
+                                    <span class="text-danger-emphasis">Not connected</span>
+                                @endif
+                                <a class="ms-2" href="{{ route('admin.stripe') }}">Manage Stripe</a>
+                            </span>
+                        </div>
+                        <div class="form-check mb-3">
+                            <span class="form-check-label">
+                                PayPal:
+                                @if ($paypalConfigured)
+                                    <span class="text-success-emphasis">Enabled</span>
+                                @else
+                                    <span class="text-danger-emphasis">Not set up</span>
+                                @endif
+                            </span>
+                        </div>
+                        <a class="btn btn-secondary btn-sm" href="{{ route('admin.payments.setup') }}">Set up payment providers</a>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
