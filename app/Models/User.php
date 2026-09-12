@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 /**
- * Legacy `users` table (D2: verbatim schema, zero migrations).
+ * Legacy `users` table (D2: verbatim legacy schema; the only addition is the
+ * nullable `email_verified_at` column for the opt-in verification feature).
  *
  * @property int $id
  * @property string|null $user_name
@@ -23,10 +25,14 @@ use Illuminate\Notifications\Notifiable;
  * @property string|null $userFailedLoginTime
  * @property int|null $userAdminObfuscate
  *
- * The legacy table has no `email`/`remember_token`/`email_verified_at`
- * columns: credentials are `user_name` (email address), passwords are
- * bcrypt (`$2y$`, or legacy `$2a$` over md5(plaintext)), and `userLevel`
- * is a char: '1' admin / '2' entrant / '3' participant.
+ * The legacy table has no `email`/`remember_token` columns: credentials are
+ * `user_name` (email address), passwords are bcrypt (`$2y$`, or legacy `$2a$`
+ * over md5(plaintext)), and `userLevel` is a char: '1' admin / '2' entrant /
+ * '3' participant.
+ *
+ * Email verification (opt-in via EMAIL_VERIFICATION_ENABLED) uses the
+ * `email_verified_at` column added by migration 2026_09_12_100000; the
+ * address itself is `user_name`, exposed through getEmailForVerification().
  *
  * Login by `user_name` is achieved through the credentials array passed to
  * `Auth::attempt(['user_name' => ..., 'password' => ...])` —
@@ -34,7 +40,7 @@ use Illuminate\Notifications\Notifiable;
  * `getAuthIdentifierName()` stays `id` (the PK) so `retrieveById()`
  * (loginUsingId, session guards) queries the right column.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use Notifiable;
 
@@ -81,5 +87,13 @@ class User extends Authenticatable
     public function isParticipant(): bool
     {
         return (int) $this->userLevel === 3;
+    }
+
+    /**
+     * The verifiable address is the legacy `user_name` column, not `email`.
+     */
+    public function getEmailForVerification(): string
+    {
+        return (string) $this->user_name;
     }
 }

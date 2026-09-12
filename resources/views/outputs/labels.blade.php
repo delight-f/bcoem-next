@@ -17,6 +17,7 @@
 </head>
 <body>
 @php $perSheet = $perSheet ?? 30; @endphp
+@if (empty($labels)) @include('outputs.partials.no-data') @endif
 @foreach (array_chunk($labels, $perSheet) as $sheet)
     <table>
         @foreach (array_chunk($sheet, 3) as $row)

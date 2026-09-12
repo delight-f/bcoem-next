@@ -65,6 +65,31 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame($this->epoch('2030-06-30 05:00 PM'), (int) $row['contestEntryDeadline']);
     }
 
+    /**
+     * Issue 20: the competition-info form's subsections render collapsed so
+     * the page is not one very tall wall of fields.
+     */
+    public function test_competition_info_sections_render_collapsed(): void
+    {
+        $response = $this->get('/admin/competition-info')->assertOk();
+
+        $response->assertSee('bcoem-comp-info-section', false);
+        $response->assertDontSee('<details class="bcoem-comp-info-section" open', false);
+
+        foreach (['General', 'Entry Window', 'Awards Ceremony'] as $title) {
+            $response->assertSee('<summary><h3>'.$title.'</h3></summary>', false);
+        }
+    }
+
+    public function test_competition_info_club_search_wires_add_button_state(): void
+    {
+        // Issue 21: the Add/Clear buttons are disabled until the input has a
+        // value, so the input event must be bound to the state refresher.
+        $this->get('/admin/competition-info')
+            ->assertOk()
+            ->assertSee("input.addEventListener('input', refreshMatchState);", false);
+    }
+
     public function test_competition_info_checkin_password_bcrypts_and_clears(): void
     {
         $this->remember('contest_info');
@@ -330,6 +355,25 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame(1, (int) $p['prefsDropOff']);
         self::assertSame(0, (int) $p['prefsShipping']);
         self::assertSame(['en-US'], json_decode((string) $p['prefsLanguageOptions'], true));
+    }
+
+    /**
+     * Issue 17: the Theme picker used to be a dead control (prefsTheme was
+     * saved but never consumed). It now selects between the two palettes the
+     * port actually ships, and the legacy Bootswatch names are rejected.
+     */
+    public function test_theme_preference_applies_and_rejects_legacy_names(): void
+    {
+        $this->remember('preferences');
+
+        DB::table('preferences')->where('id', 1)->update(['prefsTheme' => 'bcoem-brux']);
+        $this->get('/')->assertOk()->assertSee('data-bs-theme="bcoem-brux"', false);
+
+        DB::table('preferences')->where('id', 1)->update(['prefsTheme' => 'default']);
+        $this->get('/')->assertOk()->assertDontSee('data-bs-theme="bcoem-brux"', false);
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsTheme' => 'cerulean']))
+            ->assertSessionHasErrors('prefsTheme');
     }
 
     /**
@@ -897,6 +941,45 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         // Unknown / blank prefs fall through to the raw value (legacy default).
         DB::table('preferences')->where('id', 1)->update(['prefsCurrency' => 'XYZ']);
         self::assertSame('XYZ', TenantContext::load()->currencySymbol());
+    }
+
+    /**
+     * Issue 26: contestEntryFeePasswordNum is decimal(9,2) but was validated
+     * as an integer, so a decimal member fee was rejected/truncated.
+     */
+    public function test_member_discount_fee_accepts_decimals(): void
+    {
+        $this->remember('preferences');
+        $this->remember('contest_info');
+        $set = (string) DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
+
+        $this->put('/admin/site-preferences/entries', [
+            'contestEntryFee' => '10.00',
+            'contestEntryFee2' => '10.00',
+            'contestEntryFeeDiscountNum' => '5',
+            'contestEntryFeePasswordNum' => '12.50',
+            'prefsStyleSet' => $set,
+            'prefsEntryForm' => '7',
+            'prefsSpecific' => '0',
+            'prefsSpecialCharLimit' => '150',
+            'choose-style-entry-limits' => '0',
+        ])->assertRedirect('/admin/site-preferences/entries?msg=2');
+
+        self::assertSame('12.50', (string) DB::table('contest_info')->where('id', 1)->value('contestEntryFeePasswordNum'));
+    }
+
+    /**
+     * Issue 26: the Payment-tab currency dropdown had lost four options that
+     * the symbol map (and legacy) still carry.
+     */
+    public function test_payment_currency_dropdown_offers_all_legacy_currencies(): void
+    {
+        $html = (string) $this->get('/admin/site-preferences/payment')->assertOk()->getContent();
+
+        self::assertMatchesRegularExpression('/<option value="R"[\s>]/', $html, 'R (South African Rand) missing');
+        foreach (['baht', 'tlira', 'rupee'] as $curr) {
+            self::assertStringContainsString('value="'.$curr.'"', $html, $curr.' missing');
+        }
     }
 
     /** Snapshot every non-null at-limit flag for restore. */

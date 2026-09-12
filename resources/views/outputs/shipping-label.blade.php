@@ -1,5 +1,6 @@
 {{-- Shipping labels — two identical half-sheet blocks per participant
      (legacy prints the same label twice on one sheet). --}}
+@if (empty($brewers)) @include('outputs.partials.no-data') @endif
 @foreach ($brewers as $brewer)
 <div style="height: 400px;">
     <table width="100%" cellspacing="0" cellpadding="0"><tr>

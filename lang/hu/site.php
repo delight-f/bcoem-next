@@ -353,4 +353,8 @@ return [
     'dropoff_window' => 'Entry bottles accepted at',
     'shipping_window' => 'Entry bottles accepted at',
     'view' => 'Megtekintés',
+    'verify_email' => 'E-mail cím megerősítése',
+    'verify_email_sent' => 'Elküldtük a megerősítő linket az e-mail címére. Kattintson a linkre a fiókja aktiválásához.',
+    'verify_email_resent' => 'Új megerősítő link elküldve.',
+    'verify_email_resend' => 'Megerősítő e-mail újraküldése',
 ];

@@ -26,13 +26,17 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <section class="landing-page-section mt-6 mb-4 bcoem-comp-info">
         <style>
-            /* This form is long. Give each section heading a visible break so
-               it reads as a series of groups instead of one wall of fields. */
-            .bcoem-comp-info h3 {
-                margin-top: 1.75rem;
-                padding-bottom: .5rem;
-                border-bottom: 1px solid var(--bs-border-color);
+            /* This form is long. Each section is a <details> collapsed by
+               default so the page opens compact; the heading stays visible as
+               the toggle. */
+            .bcoem-comp-info details.bcoem-comp-info-section {
+                margin-top: 1.25rem;
+                border-top: 1px solid var(--bs-border-color);
+                padding-top: .5rem;
             }
+            .bcoem-comp-info summary { cursor: pointer; }
+            .bcoem-comp-info h3 { margin-top: 1.75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--bs-border-color); }
+            .bcoem-comp-info summary h3 { margin: 0; }
             .bcoem-comp-info h3:first-of-type { margin-top: .5rem; }
         </style>
         <p class="lead">{{ $ctx->contestStr('contestName') }}: Update Competition Information</p>
@@ -50,7 +54,8 @@
             @method('put')
 
             {{-- ============================ General ============================ --}}
-            <h3>General</h3>
+            <details class="bcoem-comp-info-section">
+                <summary><h3>General</h3></summary>
             <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->
                 <label for="contestName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Name</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -162,7 +167,10 @@
             </div>
 
             {{-- ============================ Entry Window ============================ --}}
-            <h3>Entry Window</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Entry Window</h3></summary>
             <div class="row mb-3">
                 <label for="contestEntryOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -184,7 +192,10 @@
             </div>
 
             {{-- ============================ Entry Editing ============================ --}}
-            <h3>Entry Editing</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Entry Editing</h3></summary>
             <div class="row mb-3">
                 <label for="contestEntryEditDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -196,7 +207,10 @@
             </div>
 
             {{-- ============================ Drop-Off Window ============================ --}}
-            <h3>Drop-Off Window</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Drop-Off Window</h3></summary>
             <div class="row mb-3">
                 <label for="contestDropoffOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -211,7 +225,10 @@
             </div>
 
             {{-- ============================ Shipping Location ============================ --}}
-            <h3>Shipping Location</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Shipping Location</h3></summary>
             <div class="row mb-3">
                 <label for="contestShippingName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Name</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -226,7 +243,10 @@
             </div>
 
             {{-- ============================ Shipping Window ============================ --}}
-            <h3>Shipping Window</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Shipping Window</h3></summary>
             <div class="row mb-3">
                 <label for="contestShippingOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -242,7 +262,10 @@
             </div>
 
             {{-- ============================ Account Registration ============================ --}}
-            <h3>Account Registration</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Account Registration</h3></summary>
             <div class="row mb-3">
                 <label for="contestRegistrationOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -263,7 +286,10 @@
             </div>
 
             {{-- ============================ Judge or Steward Account Registration ============================ --}}
-            <h3>Judge or Steward Account Registration</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Judge or Steward Account Registration</h3></summary>
             <div class="row mb-3">
                 <label for="contestJudgeOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -284,7 +310,10 @@
             </div>
 
             {{-- ============================ Rules and Other Information ============================ --}}
-            <h3>Rules and Other Information</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Rules and Other Information</h3></summary>
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
                 <label for="competition_rules" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -317,11 +346,17 @@
                 </div>
             </div>
 
-            <h3>Entry Information</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Entry Information</h3></summary>
             <p>Entry-related information has moved to <a href="{{ url('/admin/site-preferences/entries') }}">Entry Preferences</a>.</p>
 
             {{-- ============================ Awards Ceremony ============================ --}}
-            <h3>Awards Ceremony</h3>
+            </details>
+
+            <details class="bcoem-comp-info-section">
+                <summary><h3>Awards Ceremony</h3></summary>
             <div class="row mb-3">
                 <label for="contestAwardsLocDate" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Date</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -376,6 +411,8 @@
                         help="Optional extra competition-info block shown on the landing page (adds an &ldquo;Other Info&rdquo; nav link)." />
                 </div>
             </div>
+
+            </details>
 
             <div class="bcoem-admin-element d-print-none">
                 <div class="row mb-3">
@@ -454,6 +491,10 @@
                     addBtn.disabled = term === '';
                     clearSearchBtn.disabled = term === '';
                 }
+                // Without this the Add/Clear buttons start disabled and are
+                // never re-enabled as the user types (issue 21).
+                input.addEventListener('input', refreshMatchState);
+                refreshMatchState();
                 function escapeHtml(s) {
                     return String(s).replace(/[&<>"]/g, function (c) {
                         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];

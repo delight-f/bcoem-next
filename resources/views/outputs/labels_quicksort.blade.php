@@ -18,6 +18,7 @@
 </style>
 </head>
 <body>
+@if (empty($cells)) @include('outputs.partials.no-data') @endif
 @foreach (array_chunk($cells, 80) as $sheet)
     <table>
         @foreach (array_chunk($sheet, 4) as $row)

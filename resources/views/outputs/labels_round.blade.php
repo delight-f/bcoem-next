@@ -17,6 +17,7 @@
 </style>
 </head>
 <body>
+@if (empty($cells)) @include('outputs.partials.no-data') @endif
 @php
     // Round bottle sheets (OL32 / OL5275WR) plus the medal-round sheets
     // (5293, OL3012, EU30095 / OL5375 default) from pdf_label.php.

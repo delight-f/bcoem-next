@@ -17,6 +17,7 @@
 </style>
 </head>
 <body>
+@if (empty($participants)) @include('outputs.partials.no-data') @endif
 @foreach ($participants as $i => $participant)
     <h1>{{ $contestName }} Summary for {{ $participant['name'] }}</h1>
     <p class="lead">Thank you for participating our competition, {{ strtok($participant['name'], ' ') }}. A summary of your entries, scores, and places is below.</p>

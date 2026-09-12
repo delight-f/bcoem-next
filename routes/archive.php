@@ -23,9 +23,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->whereIn('flow', [
             'unpaid',
             'unconfirmed',
+            'confirmed',
+            'cleanup',
             'entries',
             'participants',
             'scores',
+            'scoresheets',
             'tables',
             'custom',
             'judge-assignments',
@@ -33,5 +36,6 @@ Route::middleware(['web', 'auth'])->group(function () {
             'availability',
             'evaluation',
             'payments',
+            'purge-all',
         ]);
 });

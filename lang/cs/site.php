@@ -353,4 +353,8 @@ return [
     'dropoff_window' => 'Entry bottles accepted at',
     'shipping_window' => 'Entry bottles accepted at',
     'view' => 'Zobrazit',
+    'verify_email' => 'Ověření e-mailu',
+    'verify_email_sent' => 'Poslali jsme ověřovací odkaz na vaši e-mailovou adresu. Kliknutím na odkaz aktivujete svůj účet.',
+    'verify_email_resent' => 'Nový ověřovací odkaz byl odeslán.',
+    'verify_email_resend' => 'Znovu odeslat ověřovací e-mail',
 ];

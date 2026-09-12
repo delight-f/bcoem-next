@@ -71,6 +71,9 @@
 
             <form method="post" action="{{ url('/register/'.$go) }}" class="needs-validation" novalidate>
                 @csrf
+                {{-- Honeypot + time trap (spatie/laravel-honeypot). Renders
+                     nothing when HONEYPOT_ENABLED=false. --}}
+                <x-honeypot />
                 <input type="hidden" name="userLevel" value="2">
                 <input type="hidden" name="brewerJudge" value="{{ $go === 'judge' ? 'Y' : 'N' }}">
                 <input type="hidden" name="brewerSteward" value="{{ $go === 'steward' ? 'Y' : 'N' }}">
@@ -232,6 +235,17 @@
                             <input class="form-check-input" type="checkbox" id="brewerJudgeWaiver" name="brewerJudgeWaiver"
                                    value="Y" checked required>
                             <label class="form-check-label" for="brewerJudgeWaiver">{{ __('site.waiver_accept') }}</label>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($turnstileEnabled ?? false)
+                    <div class="mb-4 row">
+                        <div class="col-md-9 offset-md-3">
+                            <x-turnstile-widget theme="auto" />
+                            @error('cf-turnstile-response')
+                                <p class="text-danger">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
                 @endif

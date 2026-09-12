@@ -6,11 +6,11 @@ namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\StreamPdf;
+use App\Support\Styles\StyleSets;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Style reference sheet for the active style set (legacy
@@ -30,26 +30,9 @@ final class StylesController extends Controller
         $ctx = TenantContext::load();
         $set = $ctx->prefsStr('prefsStyleSet') ?? 'BJCP2021';
 
-        $query = DB::table('styles')->where('brewStyleActive', 'Y')->where(function ($q) use ($set): void {
-            if ($set === 'BJCP2025') {
-                // First char of group 'C' → BJCP2025 rows; rest BJCP2021 (#6).
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'BJCP2021')->where('brewStyleType', '!=', '2');
-                });
-            } elseif ($set === 'AABC2025') {
-                $q->where(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2025')->where('brewStyleType', '2');
-                })->orWhere(function ($qq): void {
-                    $qq->where('brewStyleVersion', 'AABC2022')->where('brewStyleType', '!=', '2');
-                });
-            } else {
-                $q->where('brewStyleVersion', $set);
-            }
-            // Customs extend every set (#5).
-            $q->orWhere('brewStyleOwn', 'custom');
-        });
+        // Active-set predicate lives in StyleSets (#5-#7) rather than being
+        // inlined here, so the dual-version/custom rules have one definition.
+        $query = StyleSets::activeQuery($set)->where('brewStyleActive', 'Y');
 
         $styles = [];
 

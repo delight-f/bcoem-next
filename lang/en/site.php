@@ -369,4 +369,8 @@ return [
     'shipping_window' => 'Entry bottles accepted at',
     'view' => 'View',
     'launch_presentation' => 'Launch Awards Presentation',
+    'verify_email' => 'Verify Your Email',
+    'verify_email_sent' => 'We sent a verification link to your email address. Click the link to activate your account, then continue.',
+    'verify_email_resent' => 'A new verification link has been sent.',
+    'verify_email_resend' => 'Resend Verification Email',
 ];

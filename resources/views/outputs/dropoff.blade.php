@@ -19,6 +19,7 @@
 </head>
 <body>
 
+@if (empty($locations)) @include('outputs.partials.no-data') @endif
 @if ($mode === 'default')
     <h1>By Location</h1>
     <table>

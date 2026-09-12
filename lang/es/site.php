@@ -353,4 +353,8 @@ return [
     'dropoff_window' => 'Entry bottles accepted at',
     'shipping_window' => 'Entry bottles accepted at',
     'view' => 'Ver',
+    'verify_email' => 'Verifica tu correo electrónico',
+    'verify_email_sent' => 'Enviamos un enlace de verificación a tu dirección de correo. Haz clic en el enlace para activar tu cuenta.',
+    'verify_email_resent' => 'Se ha enviado un nuevo enlace de verificación.',
+    'verify_email_resend' => 'Reenviar correo de verificación',
 ];

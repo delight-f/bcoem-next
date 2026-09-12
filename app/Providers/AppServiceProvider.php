@@ -4,7 +4,10 @@ namespace App\Providers;
 
 use App\Support\Payments\GatewayAdapter;
 use App\Support\Payments\StripeGateway;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Signup throttle: 5 attempts per 10 minutes per IP. Generous enough
+        // for a person fixing a validation error, tight enough to slow
+        // scripted abuse. Named (not an inline throttle:6,1) so the value is
+        // documented in one place; applied only to the register route.
+        RateLimiter::for('signup', fn (Request $request) => Limit::perMinutes(10, 5)->by($request->ip()));
     }
 }

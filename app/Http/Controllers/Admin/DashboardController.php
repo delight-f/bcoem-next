@@ -77,6 +77,7 @@ final class DashboardController extends Controller
             'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],
+            'purgeConfirm' => $sections['purgeConfirm'] ?? [],
             'status' => $this->status($ctx, $windows, $now),
             'firstName' => DB::table('brewer')->where('uid', (int) $user->id)->value('brewerFirstName') ?? '',
         ]);
@@ -812,13 +813,33 @@ final class DashboardController extends Controller
 
         if ($level0) {
             // Data Management (default.admin.php:2267-2395). Each purge item
-            // deep-links to its confirmation card on the purge page
-            // (POST /admin/purge/{flow}, confirm-gated; see PurgeController).
+            // opens a per-flow confirmation modal that POSTs to
+            // /admin/purge/{flow} with confirm=yes (see PurgeController).
             $inline2 = static fn (array $items): array => ['inline' => $items];
             $block2 = static fn (array $items): array => ['block' => $items];
+            // Each purge item opens its own confirmation modal (Cancel / Yes)
+            // instead of dropping the admin on the all-flows purge page. The
+            // modal posts the flow to admin.purge.run with confirm=yes, which
+            // the controller still re-checks server-side.
+            $purgeConfirm = [
+                'cleanup' => ['Clean-Up Data', 'Repairs orphaned or inconsistent rows.'],
+                'confirmed' => ['Confirm All Unconfirmed', 'Marks every unconfirmed entry as confirmed.'],
+                'unconfirmed' => ['Purge All Unconfirmed', 'Deletes every unconfirmed / incomplete entry.'],
+                'unpaid' => ['Purge All Unpaid', 'Deletes every unpaid entry.'],
+                'entries' => ['Purge All Entries', 'Deletes every entry and its associated data.'],
+                'payments' => ['Purge Payments', 'Deletes all payment records.'],
+                'participants' => ['Purge Participants', 'Deletes all non-admin participants and their entries.'],
+                'tables' => ['Purge Judging Tables', 'Deletes all judging tables and assignments.'],
+                'scores' => ['Purge Scores', 'Deletes all entered scores.'],
+                'custom' => ['Purge Custom Categories', 'Deletes all custom categories and associated data.'],
+                'availability' => ['Purge Entrant Availability', 'Clears every entrant availability selection.'],
+                'evaluation' => ['Purge Entry Evaluations', 'Deletes all entry evaluation responses.'],
+                'scoresheets' => ['Purge Uploaded Scoresheets', 'Deletes all uploaded scoresheets and documents.'],
+                'purge-all' => ['Purge ALL Data', 'Deletes ALL competition data.'],
+            ];
             $purge = static fn (string $flow, string $label): array => [
                 'label' => $label,
-                'href' => '/admin/purge#flow-'.$flow,
+                'modal' => 'purge-'.$flow,
             ];
             $hasPayments = Schema::hasTable('payments');
 
@@ -948,7 +969,7 @@ final class DashboardController extends Controller
             $helpItems,
         ];
 
-        return ['left' => $left, 'right' => $right];
+        return ['left' => $left, 'right' => $right, 'purgeConfirm' => $purgeConfirm ?? []];
     }
 
     /** Legacy $results_method (constants.inc.php:594). */

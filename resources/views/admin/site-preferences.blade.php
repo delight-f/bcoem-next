@@ -86,10 +86,11 @@
                     <label for="prefsTheme" class="col-md-4 col-form-label">Theme</label>
                     <div class="col-md-9">
                         <select class="form-select" id="prefsTheme" name="prefsTheme" style="width:auto;">
-                            @foreach (['default', 'cerulean', 'superhero', 'slate', 'darkly'] as $theme)
-                                <option value="{{ $theme }}" @selected($p('prefsTheme') === $theme)>{{ ucfirst($theme) }}</option>
+                            @foreach (['default' => 'Default', 'bcoem-brux' => 'Bruxellensis (dark)'] as $theme => $label)
+                                <option value="{{ $theme }}" @selected($p('prefsTheme') === $theme)>{{ $label }}</option>
                             @endforeach
                         </select>
+                        <span class="form-text">Palette for the public site. Admin pages always use the Bruxellensis palette.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -160,12 +161,13 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsCAPTCHA" class="col-md-4 col-form-label">Enable CAPTCHA</label>
+                    <label for="prefsCAPTCHA" class="col-md-4 col-form-label">Enable Bot Protection</label>
                     <div class="col-md-9">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsCAPTCHA" value="1" id="capY" @checked($p('prefsCAPTCHA') === '1')><label class="form-check-label" for="capY">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsCAPTCHA" value="0" id="capN" @checked($p('prefsCAPTCHA') !== '1')><label class="form-check-label" for="capN">No</label></div>
+                        <span class="form-text">Uses Cloudflare Turnstile on the registration form. Requires both keys below.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -184,10 +186,19 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsGoogleAccount" class="col-md-4 col-form-label">reCAPTCHA Account(s)</label>
+                    <label for="prefsGoogleAccount" class="col-md-4 col-form-label">Turnstile Keys</label>
                     <div class="col-md-9">
-                        <input class="form-control" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
-                        <span class="form-text">reCAPTCHA site key|secret key (pipe-separated) if CAPTCHA is enabled.</span>
+                        <input class="form-control @error('prefsGoogleAccount') is-invalid @enderror" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
+                        @error('prefsGoogleAccount')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                        <span class="form-text">Turnstile site key|secret key (pipe-separated), required when bot protection is enabled. Get free keys at <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener">Cloudflare Turnstile</a>.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label class="col-md-4 col-form-label">Email Verification</label>
+                    <div class="col-md-9">
+                        <span class="form-text">New signups must confirm their email before adding entries or paying. Set <code>EMAIL_VERIFICATION_ENABLED=true</code> in <code>.env</code> to turn it on (default off) &mdash; requires working outbound email on your server, so test your email settings first.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -291,7 +302,7 @@
                 </div>
                 <div class="mb-4 row">
                     <label for="contestEntryFeePasswordNum" class="col-md-4 col-form-label">Member Discount Fee</label>
-                    <div class="col-md-9"><input class="form-control" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="1" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
+                    <div class="col-md-9"><input class="form-control" id="contestEntryFeePasswordNum" name="contestEntryFeePasswordNum" type="number" min="0" step="0.01" style="width:auto;" value="{{ $c('contestEntryFeePasswordNum') }}"></div>
                 </div>
 
                 <h3>Limits</h3>
@@ -601,7 +612,7 @@
                     <label for="prefsCurrency" class="col-md-4 col-form-label">Currency</label>
                     <div class="col-md-9">
                         <select class="form-select" id="prefsCurrency" name="prefsCurrency" style="width:auto;">
-                            @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc', 'krw'] as $curr)
+                            @foreach (['$', 'R$', 'pound', 'czkoruna', 'euro', 'A$', 'C$', 'H$', 'N$', 'S$', 'T$', 'Ft', 'shekel', 'yen', 'nkr', 'kr', 'RM', 'M$', 'phpeso', 'pol', 'p.', 'skr', 'sfranc', 'baht', 'tlira', 'R', 'rupee', 'krw'] as $curr)
                                 <option value="{{ $curr }}" @selected($p('prefsCurrency') === $curr)>{{ $curr }}</option>
                             @endforeach
                         </select>

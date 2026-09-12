@@ -24,6 +24,7 @@
 </style>
 </head>
 <body>
+@if (empty($categories)) @include('outputs.partials.no-data') @endif
 @foreach ($categories as $cat)
     <h2>{{ $cat['title'] }}</h2>
 

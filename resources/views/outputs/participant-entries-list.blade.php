@@ -18,6 +18,9 @@
 <h1>Participant Entries</h1>
 <p class="lead">The following lists each participant's entries and associated judging number as assigned in the system. <small>For instance, this list could be useful for distributing scoresheets sorted by number after an awards ceremony.</small></p>
 
+@if (empty($rows))
+    @include('outputs.partials.no-data')
+@else
 <table>
     <thead>
     <tr>
@@ -36,5 +39,6 @@
     @endforeach
     </tbody>
 </table>
+@endif
 </body>
 </html>

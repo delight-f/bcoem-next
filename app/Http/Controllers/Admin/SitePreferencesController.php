@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Site preferences (spec §7 P5.4) — port of admin/site_preferences.admin.php
@@ -199,7 +200,9 @@ final class SitePreferencesController extends Controller
             'prefsDisplayWinners' => ['required', 'in:Y,N'],
             'prefsWinnerDelay' => ['nullable', 'string'],
             'prefsWinnerMethod' => ['required', 'in:0,1,2'],
-            'prefsTheme' => ['required', 'string', 'max:50'],
+            // The port ships two palettes (default public + brux); the legacy
+            // Bootswatch names no longer exist, so reject anything else.
+            'prefsTheme' => ['required', Rule::in(['default', 'bcoem-brux'])],
             'prefsSEF' => ['required', 'in:Y,N'],
             'prefsUseMods' => ['required', 'in:0,1'],
             'prefsCAPTCHA' => ['nullable', 'in:0,1'],
@@ -223,6 +226,17 @@ final class SitePreferencesController extends Controller
             'prefsSessionTimeout' => ['nullable', 'integer'],
         ]);
         $data = $this->validateDates($request, $data, ['prefsWinnerDelay'], $tz);
+
+        // Turnstile: catch "enabled but no keys" at save time, not later as a
+        // mystery failed signup. Keys are stored combined as "site|secret".
+        if (($data['prefsCAPTCHA'] ?? '0') === '1') {
+            $parts = array_map('trim', explode('|', (string) ($data['prefsGoogleAccount'] ?? ''), 2));
+            if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+                throw ValidationException::withMessages([
+                    'prefsGoogleAccount' => 'Enter both the Turnstile site key and secret key (site|secret) to enable bot protection, or turn it off.',
+                ]);
+            }
+        }
 
         // Pro edition suppresses the MHP display (legacy quirk).
         $mhp = $data['prefsProEdition'] == 1 ? '0' : (string) ($data['prefsMHPDisplay'] ?? '0');
@@ -297,7 +311,7 @@ final class SitePreferencesController extends Controller
             'contestEntryFee2' => ['nullable', 'numeric'],
             'contestEntryFeeDiscountNum' => ['nullable', 'integer', 'min:1'],
             'contestEntryFeePassword' => ['nullable', 'string', 'max:255'],
-            'contestEntryFeePasswordNum' => ['nullable', 'integer', 'min:1'],
+            'contestEntryFeePasswordNum' => ['nullable', 'numeric', 'min:0'],
             'contestEntryCap' => ['nullable', 'integer', 'min:1'],
             'prefsStyleSet' => ['required', Rule::in(StyleSets::names())],
             'prefsEntryForm' => ['required', 'integer'],

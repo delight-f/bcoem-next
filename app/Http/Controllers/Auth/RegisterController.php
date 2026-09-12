@@ -6,17 +6,22 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\RegistrationConfirmMail;
+use App\Models\User;
 use App\Support\Auth\CredentialNormalizer;
 use App\Support\Brewer\Clubs;
+use App\Support\Security\TurnstileGate;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
 use App\Support\Tenant\WindowState;
+use Coderflex\LaravelTurnstile\Rules\TurnstileCheck;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Public registration (P3.1b) — port of `pub/register.pub.php` +
@@ -34,10 +39,12 @@ use Illuminate\Support\Facades\Mail;
  *
  * Window gating: entrant registration requires registration_open == 1;
  * judge/steward requires judge_window_open == 1. Closed states render the
- * legacy "registration closed" message. CAPTCHA (prefsCAPTCHA) is a
- * client-side widget + server verify in legacy; the port skips the widget
- * and treats prefsCAPTCHA==0 as always-passing (documented deviation —
- * the reCAPTCHA/hCaptcha SDK is out of scope per spec §9 native-replace).
+ * legacy "registration closed" message.
+ *
+ * Bot protection: Cloudflare Turnstile (replacing the legacy reCAPTCHA
+ * widget) when enabled via TurnstileGate, plus the honeypot/time-trap
+ * middleware on the route and the named `signup` rate limiter. All three
+ * are off or invisible on a default install.
  */
 final class RegisterController extends Controller
 {
@@ -55,6 +62,10 @@ final class RegisterController extends Controller
         $ctx = TenantContext::load();
         $windows = Windows::derive($ctx, time());
 
+        // Copy the effective Turnstile keys onto the package config before the
+        // widget renders (it reads config('turnstile.turnstile_site_key')).
+        TurnstileGate::syncConfig();
+        $turnstileEnabled = TurnstileGate::enabled();
         $registrationOpen = $adminRegister || $windows->registration === WindowState::Open;
         $judgeOpen = $adminRegister || $windows->judge === WindowState::Open;
 
@@ -67,6 +78,7 @@ final class RegisterController extends Controller
             'ctx' => $ctx,
             'go' => $go,
             'allowed' => $allowed,
+            'turnstileEnabled' => $turnstileEnabled,
             'adminRegister' => $adminRegister,
             'quickView' => $request->query('view') === 'quick',
             'registrationOpen' => $registrationOpen,
@@ -100,7 +112,18 @@ final class RegisterController extends Controller
             }
         }
 
-        $data = $request->validate([
+        $turnstileEnabled = TurnstileGate::enabled();
+        TurnstileGate::syncConfig();
+        if ($turnstileEnabled && ! TurnstileGate::hasSecret()) {
+            // Enabled-but-unconfigured must fail closed and be loud: a silent
+            // bypass is exactly the bug class an explicit toggle prevents.
+            Log::error('Turnstile is enabled but the secret key is missing; rejecting signup.');
+            throw ValidationException::withMessages([
+                'cf-turnstile-response' => 'Bot protection is enabled but not configured. Ask the site administrator to set the Turnstile secret key.',
+            ]);
+        }
+
+        $rules = [
             'user_name' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'max:72', 'confirmed'],
             'userQuestion' => ['required', 'string'],
@@ -138,7 +161,26 @@ final class RegisterController extends Controller
             'brewerBreweryInfo' => ['nullable', 'string'],
             'brewerAssignment' => ['nullable', 'array'],
             'brewerAssignmentOther' => ['nullable', 'string'],
-        ]);
+        ];
+        if ($turnstileEnabled) {
+            // Present whenever the gate is on, regardless of key validity:
+            // "on but broken" must reject, not skip.
+            $rules['cf-turnstile-response'] = ['required', new TurnstileCheck];
+        }
+
+        try {
+            $data = $request->validate($rules);
+        } catch (ValidationException $e) {
+            if ($turnstileEnabled && $e->validator->errors()->has('cf-turnstile-response')) {
+                // Distinct from an ordinary validation failure: points at a
+                // config problem or a bot, not a mistyped field.
+                Log::error('Turnstile verification failed for a signup attempt.', [
+                    'ip' => $request->ip(),
+                    'reasons' => $e->validator->errors()->get('cf-turnstile-response'),
+                ]);
+            }
+            throw $e;
+        }
 
         $username = CredentialNormalizer::username($data['user_name']);
 
@@ -232,6 +274,13 @@ final class RegisterController extends Controller
                 'staff_organizer' => 0,
                 'staff_staff' => $staffStaff,
             ]);
+        }
+
+        // Email verification (Task 4): off by default. When on, the new user
+        // gets the signed verification link; entry/payment routes are gated
+        // by the `verified` middleware (see routes/web.php).
+        if ((bool) config('services.email_verification.enabled', false)) {
+            User::findOrFail($userId)->sendEmailVerificationNotification();
         }
 
         // Registration confirmation (P3.6): legacy sent it only when

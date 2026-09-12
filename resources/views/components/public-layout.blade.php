@@ -125,8 +125,14 @@
     // Payments plan W3: "Payments" nav presence keys off the tenant's Stripe
     // connection, not the retired prefsPaypalIPN.
     $stripeConnected = str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id');
+    // Theme (prefsTheme): the port ships exactly two palettes — the default
+    // public palette and the brux palette. Only those are offered in Site
+    // Preferences; admin chrome is always brux (the BS5 frame gate keys on
+    // data-bs-theme="bcoem-brux"), so the public side is the only place the
+    // preference can differ. Anything unsupported falls back to default.
+    $htmlTheme = ($isAdminSide || $ctx->prefsStr('prefsTheme') === 'bcoem-brux') ? 'bcoem-brux' : null;
 @endphp
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($isAdminSide) data-bs-theme="bcoem-brux" @endif>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @if ($htmlTheme !== null) data-bs-theme="{{ $htmlTheme }}" @endif>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8">
@@ -508,7 +514,7 @@
              rather than a warning. --}}
         @if (! empty($fyiAlerts))
             <div class="fyi-alert d-print-none" role="status" aria-live="polite">
-                <div class="container-xxl d-flex align-items-start gap-3">
+                <div class="container-fluid d-flex align-items-start gap-3">
                     <i class="fa fa-circle-info fyi-alert-icon" aria-hidden="true"></i>
                     <div class="flex-grow-1">
                         <span class="fyi-alert-title">{{ __('site.fyi') }}</span>
@@ -704,7 +710,7 @@
               <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Stay Here</button>
                 <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.bcoemLogout('{{ route('logout') }}')">Log Out</button>
               </div>
             </div>
           </div>
@@ -722,7 +728,7 @@
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="window.location.reload()">Refresh This Page</button>
-                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.location.replace('{{ route('logout') }}')">Log Out</button>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="window.bcoemLogout('{{ route('logout') }}')">Log Out</button>
               </div>
             </div>
           </div>

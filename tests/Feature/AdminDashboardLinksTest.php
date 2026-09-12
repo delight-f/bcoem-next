@@ -222,6 +222,31 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
         }
     }
 
+    /**
+     * Issue 18: Data Management actions open a per-flow confirmation modal
+     * (Cancel/Yes) instead of dumping the admin on the all-flows purge page.
+     * The previously un-routed flows must now resolve (no 404) and stay
+     * confirm-gated.
+     */
+    public function test_data_management_actions_use_confirmation_modals(): void
+    {
+        $this->primeTables();
+        $response = $this->get('/admin')->assertOk();
+
+        foreach (['cleanup', 'confirmed', 'unconfirmed', 'unpaid', 'entries', 'participants', 'tables', 'scores', 'custom', 'availability', 'evaluation', 'scoresheets', 'purge-all'] as $flow) {
+            $response->assertSee('id="purge-'.$flow.'"', false);
+        }
+
+        $response->assertSee('name="confirm" value="yes"', false);
+        $response->assertSee('data-bs-dismiss="modal">Cancel', false);
+        $response->assertSee('btn-success">Yes', false);
+
+        // Every flow resolves and, without confirm=yes, mutates nothing.
+        foreach (['cleanup', 'confirmed', 'scoresheets', 'purge-all'] as $flow) {
+            $this->post('/admin/purge/'.$flow, [])->assertRedirect('/admin/purge');
+        }
+    }
+
     /** PARITY-015: legacy results matrix labels + hrefs by winner method. */
     public function test_results_matrix_matches_legacy_labels(): void
     {

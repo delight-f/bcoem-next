@@ -150,6 +150,28 @@ final class AuthLoginTest extends PublicSurfaceTestCase
         $this->assertGuest();
     }
 
+    public function test_logout_route_rejects_get_method(): void
+    {
+        // Issue 14: the auto-logout countdown used to navigate via GET, which
+        // the CSRF-protected POST-only route rejects with 405.
+        $this->get('/logout')->assertStatus(405);
+    }
+
+    public function test_admin_session_modal_logs_out_via_post_not_get(): void
+    {
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ])->assertRedirect('/?section=admin');
+
+        $html = (string) $this->get('/admin')->assertOk()->getContent();
+
+        // Session-expiry modals submit a CSRF POST through the shared helper…
+        $this->assertStringContainsString('window.bcoemLogout(', $html);
+        // …and no logout action issues a bare GET.
+        $this->assertStringNotContainsString("location.replace('/logout')", $html);
+    }
+
     public function test_username_normalized_lowercase_and_trimmed(): void
     {
         $this->post('/login', [

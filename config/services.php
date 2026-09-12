@@ -46,4 +46,26 @@ return [
         'client_id' => env('STRIPE_CLIENT_ID'),
         'secret' => env('STRIPE_SECRET'),
     ],
+
+    /*
+| Cloudflare Turnstile (signup bot protection). The explicit `enabled`
+| flag is deliberate: if it is on but the keys are blank/bad, that is a
+| configuration mistake to surface (signups fail loudly), never a state
+| the app silently reinterprets as "off". The keys are also read by the
+| coderflex/laravel-turnstile package from config/turnstile.php.
+*/
+    'turnstile' => [
+        'enabled' => env('TURNSTILE_ENABLED', false),
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
+    /*
+| Email verification of new signups. Only turn on where outbound mail
+| actually works — otherwise the `verified` gate locks users out of entry
+| submission and payment. Off by default.
+*/
+    'email_verification' => [
+        'enabled' => env('EMAIL_VERIFICATION_ENABLED', false),
+    ],
 ];

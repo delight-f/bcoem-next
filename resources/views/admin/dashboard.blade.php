@@ -737,6 +737,35 @@
     </div>
     @endforeach
 
+    {{-- Data Management confirmations (issue 18): one modal per purge flow,
+         opened from the dashboard items. Cancel (red) dismisses; Yes (green)
+         submits the flow with confirm=yes (re-checked server-side). --}}
+    @foreach ($purgeConfirm ?? [] as $flow => [$title, $description])
+        <div class="modal fade" id="purge-{{ $flow }}" tabindex="-1" role="dialog" aria-labelledby="purge-{{ $flow }}-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="purge-{{ $flow }}-title">{{ $title }}</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fw-bold">Please Confirm</p>
+                        <p>{{ $description }}</p>
+                        <p class="text-danger fs-6">This cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" action="{{ route('admin.purge.run', ['flow' => $flow]) }}">
+                            @csrf
+                            <input type="hidden" name="confirm" value="yes">
+                            <button type="submit" class="btn btn-success">Yes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
     {{-- Driver.js guided dashboard tour (legacy default.admin.php:212-213 +
          sidebar.admin.php:39 wires this same library). --}}
     <script src="https://cdn.jsdelivr.net/npm/driver.js@1.8.0/dist/driver.js.iife.js"></script>

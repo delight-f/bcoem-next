@@ -17,6 +17,9 @@
 <body>
 <h1>{{ $contestName }} Post-Judging Entry Inventory</h1>
 
+@if (empty($rows))
+    @include('outputs.partials.no-data')
+@else
 <table>
     <thead>
     <tr>
@@ -39,5 +42,6 @@
     @endforeach
     </tbody>
 </table>
+@endif
 </body>
 </html>

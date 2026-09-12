@@ -10,6 +10,26 @@ document.documentElement.classList.add('js');
 // bootstrap.Modal/.Offcanvas programmatically (session modals, login reopen).
 window.bootstrap = bootstrap.default ?? bootstrap;
 
+// Logout is a POST route (CSRF-protected). window.location.replace() sends a
+// GET, which the router rejects with 405 after an auto-logout. Build and submit
+// a real POST form instead — shared by the countdown fallback and the admin
+// session modals.
+window.bcoemLogout = (url) => {
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = url || '/logout';
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (token) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_token';
+        input.value = token;
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+};
+
 // Mobile navbar: BS5 collapse toggles #nav-menu; close on link click.
 const navMenu = document.getElementById('nav-menu');
 if (navMenu) {
@@ -127,7 +147,7 @@ const sessionHeartbeat = (url) => {
             if (btn) {
                 btn.click();
             } else {
-                window.location.replace('/logout');
+                window.bcoemLogout('/logout');
             }
         }
     };
@@ -245,7 +265,7 @@ if (window.bcoemAdminSession) {
     const tick = () => {
         const remaining = window.bcoemAdminSession.endSeconds - Math.floor(Date.now() / 1000);
         if (remaining <= 0) {
-            window.location.replace(redirect);
+            window.bcoemLogout(redirect);
             return;
         }
         if (remaining <= 30 && expiryShown !== 30) {

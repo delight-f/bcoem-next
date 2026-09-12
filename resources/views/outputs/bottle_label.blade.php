@@ -49,6 +49,7 @@
 </style>
 </head>
 <body>
+@if (empty($cells)) @include('outputs.partials.no-data') @endif
 @if ($info !== '')
     <p>{{ $info }}</p>
 @endif
