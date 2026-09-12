@@ -42,6 +42,10 @@ stack: PHP 8.4+, Laravel 13, Bootstrap 5, Vite and Stripe.
 - **Public site** — landing with live competition status, volunteers,
   contact, sponsors, results, anonymous sidebar, authenticated user chrome —
   plus a redirect map so every legacy `.php` URL still resolves.
+- **Central clubs list** — the maintained homebrew-clubs list the legacy app
+  fetched from a remote corpus is mirrored into the local database on a
+  schedule and feeds the entrant picker. A bad upstream fetch is a no-op, and
+  clubs are never removed silently.
 
 ## Why a rewrite, and what improved
 
@@ -95,6 +99,63 @@ against proof that survives in the repository:
    byte-for-byte compatible with the legacy export (same BOM, header, column
    order and quoting), and the PDFs are generated from deterministic Blade
    templates.
+
+## Central clubs list
+
+Entrants pick their club from a dropdown. Those names come from three places:
+what the organizer has added, what entrants have already typed, and a
+maintained central list of homebrew clubs that the site mirrors locally and
+refreshes on a schedule.
+
+Mirroring is deliberately two-stage, so a bad day upstream can never break a
+running competition:
+
+1. **Upstream JavaScript is converted to JSON.** `tools/clubs-sync/convert.js`
+   evaluates
+   [`geoffhumphrey/homebrew-clubs-list`](https://github.com/geoffhumphrey/homebrew-clubs-list)'s
+   `clubs.js` in an isolated VM, trims and de-duplicates the entries, and
+   writes a versioned `clubs.json`. A scheduled workflow
+   (`.github/workflows/sync-clubs-list.yml`) publishes it to the public
+   [`delight-f/clubs-list`](https://github.com/delight-f/clubs-list) repo and
+   commits only when the content-derived version changes.
+2. **The app syncs that JSON into its local `clubs` table.** The Laravel side
+   never parses JavaScript — it depends on the published JSON shape alone, so
+   every upstream edit is contained behind a pipeline that is tested on its own.
+
+Failures are contained by design: a timeout, non-2xx response or malformed
+payload is a **no-op** — nothing is written, a warning is logged, and the site
+keeps using the last good list. Clubs that drop off the central list are
+**never deleted**, because historical entries reference them; they are surfaced
+in an admin review list instead. Where a synced club collides with a local name,
+the local spelling wins.
+
+### Setup
+
+The sync is inert until it is pointed at a published `clubs.json`, and the
+default already targets the upstream-published file. To enable it:
+
+1. Apply the migration that adds the clubs tables:
+   ```bash
+   php artisan migrate --force
+   ```
+2. Override the source only if you mirror the artifact yourself:
+   ```dotenv
+   CLUBS_LIST_URL=https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json
+   ```
+3. Run the first sync and check the counts:
+   ```bash
+   php artisan clubs:sync
+   ```
+
+`clubs:sync` is scheduled daily and needs no queue worker. The same actions are
+available under **Admin → Clubs List**, which shows the last-synced version, a
+**Sync now** button, and any clubs that have dropped off the central list.
+
+Running your own publishing pipeline (the optional half) needs a public repo for
+the artifact plus a **write deploy key** stored as the `CLUBS_LIST_DEPLOY_KEY`
+Actions secret — the workflow checks out the publishing repo over SSH with it. A
+deploy key is used rather than a personal access token because it can be created
+non-interactively and grants write access to that one repository only.
 
 ## Repository layout
 
