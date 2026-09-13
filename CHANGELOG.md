@@ -8,6 +8,40 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.5] - 2026-09-13
+
+### Added
+
+- **Update from the install wizard.** A site attached to an older database can
+  now run the update from the screen that follows the adoption, instead of being
+  pointed at an upgrade it cannot reach: the upgrade wizard needs a signed-in
+  administrator, and the site cannot start until the adoption has written its
+  database details. It drives the same steps as the upgrade wizard, so the
+  backup, the maintenance window and the progress reporting are identical.
+
+### Fixed
+
+- **The dashboard's "new release published" notice compared the wrong version.**
+  It measured the latest published release against the version recorded in the
+  database, so a site that had uploaded a new release but not yet run its upgrade
+  was told to go and download the release it was already running.
+- **The footer reported a version frozen at fork time.** It said `3.1.0` on every
+  release and never moved when a site was upgraded.
+- **The admin footer sat on top of the last row of a long page.** That row's own
+  buttons ended up underneath the footer text, so clicking the footer reached
+  them. Admin content now clears the fixed footer.
+- **The at-a-glance deck left a stray card.** A four-card deck on the fixed
+  3-wide grid wrapped to 3 + 1 and centred the orphan; a count that divides by
+  four now fills a row of four, and the card header wraps so a long title cannot
+  clip its status pill off the card's right edge.
+- **Several admin pages were centred instead of left-aligned.** Twenty-six blades
+  wrapped their body in Bootstrap's `.container` — a centred max-width box —
+  inside the admin frame's already full-width container. They now use the same
+  wrapper as the pages beside them. (`participants-print` keeps its narrow
+  column: that width looks deliberate for a print sheet.)
+- The upgrade banner said "(you are running 3.1.0.0)" about a site whose files
+  were 4.1.0-alpha.4. It is the database that lags, so it now says so.
+
 ## [4.1.0-alpha.4] - 2026-09-13
 
 ### Added
