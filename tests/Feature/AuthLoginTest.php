@@ -70,6 +70,27 @@ final class AuthLoginTest extends PublicSurfaceTestCase
         $this->get('/login')->assertOk()->assertSee('Log In');
     }
 
+    public function test_login_page_offers_a_way_to_sign_in(): void
+    {
+        // Every authenticated-only screen redirects here, so this page has to
+        // carry a control that opens the form. It used to render the heading and
+        // the password-reset option only, because legacy keeps the form in the
+        // shell's modal and expects the nav button to be found.
+        //
+        // Scoped to the #login section on purpose: the shell carries the modal
+        // and its fields on every page, so a whole-page assertion would pass
+        // whatever this page did.
+        $html = (string) $this->get('/login')->assertOk()->getContent();
+
+        $start = strpos($html, '<section id="login"');
+        $this->assertNotFalse($start, 'the login section should render');
+
+        $end = strpos($html, '</section>', (int) $start);
+        $section = substr($html, (int) $start, (int) $end - (int) $start);
+
+        $this->assertStringContainsString('data-bs-target="#login-modal"', $section);
+    }
+
     public function test_legacy_login_query_shape_renders(): void
     {
         // Legacy query shape redirects to the clean login URL.
