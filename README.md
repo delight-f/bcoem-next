@@ -88,19 +88,54 @@ classes of defect.
 
 ## Getting started
 
-A release zip needs only PHP and a web server. Three interfaces drive the same
-install code:
+A release publishes two zips. Pick by how you reach the server:
 
-| Interface | For | Command / URL |
-|---|---|---|
-| Web wizard | hosts with only FTP | `/install` |
-| CLI | developers, unattended installs | `php artisan app:install` |
-| SSH script | VPS operators | `scripts/install.sh` |
+| File | Use it for |
+|---|---|
+| `bcoem-<version>-webroot.zip` | Any host you upload into a web root — (S)FTP / shared hosting. |
+| `bcoem-<version>.zip` | The flat application tree for the CLI and the SSH script. Not for dropping into a web root as-is. |
 
-**CLI** prompts for the database and site details, or takes every value as a
-flag for unattended use:
+Every method runs the same install code and the same upgrade order. You need
+PHP 8.4+ (`gd`, `intl`, `mbstring`, `mysqli`) and MySQL 8.
+
+### (S)FTP / shared hosting
+
+1. Download `bcoem-<version>-webroot.zip` from the release page.
+2. Extract it locally, then upload the **contents** into your web root
+   (`public_html`, `htdocs` or `www`): `index.php`, `.htaccess`, `build/`,
+   `images/`, `user_images/`, `vendor/`.
+3. Leave `app-data/` beside them. Make it writable: the installer rewrites
+   `app-data/.env` and needs `app-data/storage` and `app-data/bootstrap/cache`
+   writable.
+4. Visit `https://your-site/install` and finish the six-screen wizard.
+5. Sign in at `/login` with the administrator account you chose.
+
+`app-data/.htaccess` blocks web access to that folder (it holds `.env`,
+`storage/` and the source). The guard needs Apache or LiteSpeed; on a host
+running nginx alone, put `app-data` outside the web root instead.
+
+### SSH script (VPS)
+
+`scripts/install.sh` downloads the latest release (or `--version` /
+`--zip-file`), unpacks it, and drives `app:install`:
 
 ```bash
+bash scripts/install.sh --target=/var/www/bcoem \
+  --db-name=bcoem --db-username=bcoem --db-password=secret \
+  --app-url=https://beer.example.com \
+  --admin-name="Club Admin" --admin-email=admin@example.com --admin-password=secret
+```
+
+Omit the values to be prompted instead. `--yes` runs unattended, `--no-cron`
+skips the scheduler entry; `bash scripts/install.sh --help` lists everything.
+
+### CLI
+
+From a checkout (or the flat `bcoem-<version>.zip`):
+
+```bash
+composer install --no-dev --optimize-autoloader   # skip if using the zip
+cp .env.example .env && php artisan key:generate
 php artisan app:install \
   --db-host=127.0.0.1 --db-port=3306 --db-name=bcoem \
   --db-username=bcoem --db-password=secret \
@@ -108,14 +143,16 @@ php artisan app:install \
   --admin-name="Club Admin" --admin-email=admin@example.com --admin-password=secret
 ```
 
-Both secrets can stay off the process list via `--db-password-stdin` /
-`--admin-password-stdin`, or `BCOEM_INSTALL_DB_PASSWORD` /
-`BCOEM_INSTALL_ADMIN_PASSWORD`.
+With no flags it prompts. Keep secrets off the process list with
+`--db-password-stdin` / `--admin-password-stdin`, or
+`BCOEM_INSTALL_DB_PASSWORD` / `BCOEM_INSTALL_ADMIN_PASSWORD`.
 
-**Web wizard** — `/install` runs six screens (welcome, system check, database,
-site details, confirm, progress) with no terminal. The install runs inline on
-the sync queue, so a fresh upload needs no queue worker, and a resubmitted
-confirmation cannot install twice.
+### Web wizard
+
+`/install` runs the six screens (welcome, system check, database, site details,
+confirm, progress) with no terminal. Install runs inline on the sync queue, so
+a fresh upload needs no queue worker, and a resubmitted confirmation cannot
+install twice.
 
 ### Upgrading
 
@@ -125,28 +162,6 @@ confirmation cannot install twice.
 - **SSH** — `scripts/install.sh` stages the new version beside the live one,
   carries `.env` and `storage/` across, swaps while keeping a
   `.bak-<timestamp>`, then runs `app:upgrade`.
-
-### Shared hosting (FTP)
-
-For a host where you only have FTP and the account is rooted at the web root (a
-folder such as `public_html`, `htdocs` or `www`), download
-`bcoem-<version>-webroot.zip` and upload its **contents** into the web root:
-
-- `index.php` and the compiled assets (`.htaccess`, `build/`, `images/`,
-  `user_images/`, …) become the document root.
-- everything else lives one level down in `app-data/`, including `.env`,
-  `storage/` and `vendor/`.
-
-Then browse to `/install`.
-
-`app-data/` must be writable: the installer rewrites `.env`, and `storage/` and
-`bootstrap/cache` must be writable too. `app-data/` ships a deny-all `.htaccess`
-so it is never served — that guard needs Apache or LiteSpeed (common on shared
-hosts); a host running nginx alone ignores it.
-
-The other zip, `bcoem-<version>.zip`, is the flat application tree that
-`scripts/install.sh` and CLI installs use; it is not meant to be dropped into a
-web root as-is.
 
 Every path runs the same order: back up → verify → maintenance mode → migrate →
 version fixups → clear caches → version marker. The backup uses `mysqldump`,

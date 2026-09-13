@@ -8,6 +8,17 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.2] - 2026-09-13
+
+### Fixed
+
+- **Deployable release artifact for shared hosting.** A release now also ships
+  `bcoem-<version>-webroot.zip`, which unpacks with the front controller and
+  compiled assets at the web root and the application in `app-data/` beside
+  them, so an (S)FTP upload serves the site instead of failing on the nested
+  `public/`. The packaged `index.php` sets the public path explicitly; the
+  existing flat zip is unchanged.
+
 ## [4.1.0-alpha.1] - 2026-09-13
 
 First alpha of the 4.1 line, cut for production trials. It builds on 4.0.0 with
