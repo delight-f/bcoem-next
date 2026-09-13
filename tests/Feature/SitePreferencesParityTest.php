@@ -213,9 +213,10 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             'user-entry-limit-expire-days-1' => 30,
         ] as $name => $max) {
             preg_match('/name="'.preg_quote($name, '/').'".*?<\/select>/s', $html, $m);
-            self::assertNotEmpty($m, $name.' select not found');
-            self::assertStringContainsString('<option value="'.$max.'"', $m[0], $name.' should offer '.$max);
-            self::assertStringNotContainsString('<option value="'.($max + 1).'"', $m[0], $name.' should not exceed '.$max);
+            $select = $m[0] ?? null;
+            self::assertNotNull($select, $name.' select not found');
+            self::assertStringContainsString('<option value="'.$max.'"', $select, $name.' should offer '.$max);
+            self::assertStringNotContainsString('<option value="'.($max + 1).'"', $select, $name.' should not exceed '.$max);
         }
     }
 
@@ -277,6 +278,7 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
 
         $bos = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
         $first = $bos->first();
+        self::assertNotNull($first, 'a BOS style type must exist');
         $original = DB::table('style_types')->pluck('styleTypeEntryLimit', 'id')->all();
 
         try {
@@ -415,7 +417,9 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         // Scrape the offered option values so the test can't drift from the view.
         $html = (string) $this->get('/admin/site-preferences/payment')->assertOk()->getContent();
         self::assertSame(1, preg_match('/<select[^>]*name="prefsCurrency"[^>]*>(.*?)<\/select>/s', $html, $m));
-        preg_match_all('/<option value="([^"]*)"/', $m[1], $opts);
+        $options = $m[1] ?? null;
+        self::assertNotNull($options, 'prefsCurrency select not found');
+        preg_match_all('/<option value="([^"]*)"/', $options, $opts);
         $currencies = $opts[1];
         self::assertNotEmpty($currencies);
 
@@ -446,9 +450,10 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         $html = (string) $response->getContent();
         foreach (['prefsFirstPlacePts', 'prefsSecondPlacePts', 'prefsThirdPlacePts', 'prefsFourthPlacePts', 'prefsHMPts'] as $field) {
             preg_match('/name="'.preg_quote($field, '/').'".*?<\/select>/s', $html, $m);
-            self::assertNotEmpty($m, $field.' select not found');
-            self::assertStringContainsString('<option value="9"', $m[0], $field.' should offer 9');
-            self::assertStringNotContainsString('<option value="10"', $m[0], $field.' should stop at 9');
+            $select = $m[0] ?? null;
+            self::assertNotNull($select, $field.' select not found');
+            self::assertStringContainsString('<option value="9"', $select, $field.' should offer 9');
+            self::assertStringNotContainsString('<option value="10"', $select, $field.' should stop at 9');
         }
 
         // "Unused" — legacy's en-US string carries a stray period.
