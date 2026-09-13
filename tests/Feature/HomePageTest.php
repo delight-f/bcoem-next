@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Services\Installation\InstallationService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -25,6 +26,19 @@ final class HomePageTest extends PublicSurfaceTestCase
         if ($this->futureJudgingSessions() > 0) {
             $response->assertSee('Competition Rules');
         }
+    }
+
+    public function test_footer_reports_the_shipped_version_rather_than_a_frozen_string(): void
+    {
+        $response = $this->get('/');
+        $response->assertOk();
+        $html = (string) $response->getContent();
+
+        // The footer used to carry the literal "3.1.0" frozen at fork time, so a
+        // 4.x release still announced 3.1.0 and the string never moved when the
+        // site was upgraded.
+        self::assertStringContainsString('BCOE&amp;M '.InstallationService::versionIn(base_path()), $html);
+        self::assertStringNotContainsString('BCOE&amp;M 3.1.0', $html);
     }
 
     public function test_window_sections_render_dates_or_not_set(): void

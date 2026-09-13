@@ -519,7 +519,7 @@
                     <i class="fa fa-arrow-circle-up fa-lg" aria-hidden="true"></i>
                     <div class="flex-grow-1">
                         <strong>Version {{ $upgradeBanner['version'] }} is available</strong>
-                        (you are running {{ $upgradeBanner['current'] }}).
+                        (your database is at {{ $upgradeBanner['current'] }}).
                         <a class="alert-link" href="{{ $upgradeBanner['url'] }}">Update your site</a>.
                     </div>
                     <form method="post" action="{{ $upgradeBanner['dismiss'] }}">
@@ -663,7 +663,13 @@
             @endforeach
         </section>
     @endif
-<div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}">
+{{-- The admin frame pins a dark footer to the bottom of the viewport, so the
+     admin content needs clearance for it. Without it the last row of a long
+     table sat behind the footer, which put that row's buttons directly under
+     the footer text — clicking the footer reached them (a participant row's
+     label icon, in the case that surfaced this). --}}
+<div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}"
+     @if ($isAdminSide) style="padding-bottom: 5rem;" @endif>
     @if ($adminPageTitle !== null)
         {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
              chrome (Administration: <label>) around the blade's own <p class="lead">. --}}
@@ -703,7 +709,10 @@
      heights. The admin frame keeps its fixed dark footer (its layout expects a
      fixed bottom bar under the fixed topbar). --}}
 <footer class="site-footer text-white container-fluid {{ $isAdminSide ? 'fixed-bottom' : 'mt-5' }} pt-4 d-print-none">
-    <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M 3.1.0 &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
+    {{-- The version this copy of the code ships. It used to be the literal
+         "3.1.0" frozen at fork time, so a 4.x release still announced 3.1.0
+         in the footer and never changed when the site was upgraded. --}}
+    <p class="text-center">{{ $ctx->contestStr('contestName') }} &ndash; BCOE&amp;M {{ \App\Services\Installation\InstallationService::versionIn(base_path()) }} &ndash; {{ (int) $ctx->prefsStr('prefsProEdition') === 1 ? __('site.edition_pro') : __('site.edition_amateur') }} 2009-{{ now()->format('Y') }}</p>
 </footer>
 
 @if ($isAdminSide)
