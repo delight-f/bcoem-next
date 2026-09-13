@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $type->styleTypeName }} — BOS Places</h1>
 
         <p><a href="{{ route('admin.judging.bos.index') }}">&larr; All BOS Entries and Places</a></p>

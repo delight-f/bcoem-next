@@ -7,7 +7,7 @@
         $j = $judging;
         $tf24 = ((int) $ctx->prefsStr('prefsTimeFormat')) === 1;
     @endphp
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Set Preferences</h1>
         {{-- Sibling preference-tab buttons (judging_preferences.admin.php:187-198).
              The Judging tab is the current page, so it is rendered disabled. --}}

@@ -1,6 +1,6 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <p class="lead">{{ $ctx->contestStr('contestName') }} Judging Tables</p>
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
 
         {{-- Tables Competition/Planning Mode (judging_tables.admin.php:744-752).
              Legacy ships both lead texts + both buttons, then JS shows one

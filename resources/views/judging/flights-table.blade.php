@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $planning ? 'Planning Mode' : 'Define Flights' }} for Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}</h1>
 
         <p><a href="{{ route('admin.judging.flights.index') }}">&larr; All Tables</a></p>

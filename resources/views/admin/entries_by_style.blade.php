@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }} entry count broken down by style.</h1>
 
         <a class="btn btn-outline-primary mb-4" href="{{ url('/backoffice/count-by-substyle') }}">View Entry Count by Sub-Style</a>

@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Custom Style Entries</h1>
 
         <div class="bcoem-admin-element d-print-none mb-3">

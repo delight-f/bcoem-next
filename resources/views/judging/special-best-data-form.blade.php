@@ -1,5 +1,5 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $category->sbi_name }} — Custom Category Entries</h1>
 
         @if ($errors->any() || request('msg') === '24')

@@ -13,7 +13,7 @@
             'bos' => 'BOS judge',
         };
     @endphp
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <p class="lead">{{ $ctx->contestStr('contestName') }}: Assign or Unassign Participants as {{ $filterLabel }}</p>
 
         {{-- Legacy judges/stewards registration notice

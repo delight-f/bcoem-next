@@ -25,7 +25,7 @@
                 .' ('.$rounds.' '.$noun.' <a href="'.e($locEdit).'" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit the '.e($location->judgingLocName).' location">defined for this location</a>)';
         };
     @endphp
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Define/Edit Flights</h1>
 
         {{-- Legacy control row (judging_flights.admin.php:102-119). --}}

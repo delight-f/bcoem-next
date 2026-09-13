@@ -1,7 +1,7 @@
 @php($isEdit = $table !== null)
 @php($selectedStyles = $isEdit ? array_filter(explode(',', (string) $table->tableStyles), fn ($v) => $v !== '') : old('tableStyles', []))
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Judging Tables: {{ $isEdit ? 'Edit' : 'Add' }} a Table</h1>
 
         {{-- Legacy control set (judging_tables.admin.php:778-792): View...

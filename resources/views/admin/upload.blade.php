@@ -6,7 +6,7 @@
             31 => 'File(s) deleted successfully.',
         ];
     @endphp
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Upload Sponsor Logo Images</h1>
 
         @if (in_array((int) request('msg'), array_keys($msgTexts), true))
