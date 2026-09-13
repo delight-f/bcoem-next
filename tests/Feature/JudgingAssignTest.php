@@ -249,4 +249,78 @@ final class JudgingAssignTest extends PublicSurfaceTestCase
 
         DB::table('judging_assignments')->where('bid', $busy)->delete();
     }
+
+    // -----------------------------------------------------------------
+    // Issue #1752 — ineligible-but-assigned visibility and scoped deletes
+    // -----------------------------------------------------------------
+
+    public function test_issue_1752_ineligible_but_assigned_is_listed_and_unassignable(): void
+    {
+        $this->seedTable();
+        $uid = $this->judgeUids[0];
+
+        // No longer flagged as a judge, but still holds a row for this table.
+        DB::table('brewer')->where('uid', $uid)->update(['brewerJudge' => 'N']);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => $this->tableId,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        $response = $this->get('/admin/judging/flights/'.$this->tableId.'/assign/judges');
+        $response->assertOk();
+        $body = (string) $response->getContent();
+        self::assertStringContainsString('Judge Preferred', $body);
+        self::assertStringContainsString('No longer available', $body);
+
+        // The enabled control still unassigns them.
+        $this->post('/admin/judging/flights/'.$this->tableId.'/assign/judges', [
+            'assign' => [$uid => ['1' => '0']],
+        ])->assertRedirect('/admin/judging/flights/'.$this->tableId.'/assign/judges');
+
+        self::assertTrue(DB::table('judging_assignments')->where('bid', $uid)->doesntExist());
+    }
+
+    public function test_issue_1752_judges_save_leaves_steward_row_intact(): void
+    {
+        $this->seedTable();
+        $uid = $this->judgeUids[0];
+
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => $this->tableId,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'S', 'assignTable' => $this->tableId,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        $this->post('/admin/judging/flights/'.$this->tableId.'/assign/judges', [
+            'assign' => [$uid => ['1' => '0']],
+        ])->assertRedirect('/admin/judging/flights/'.$this->tableId.'/assign/judges');
+
+        self::assertSame(0, DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'J')->count());
+        self::assertSame(1, DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'S')->count());
+    }
+
+    public function test_issue_1752_conflict_render_delete_is_role_scoped(): void
+    {
+        $this->seedTable();
+        $conflicted = $this->judgeUids[0];
+
+        DB::table('judging_assignments')->insert([
+            'bid' => $conflicted, 'assignment' => 'J', 'assignTable' => $this->tableId,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $conflicted, 'assignment' => 'S', 'assignTable' => $this->tableId,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+        $this->seedConflictedEntry($conflicted);
+
+        // The judges screen deletes only the conflicted J row, not the S row.
+        $this->get('/admin/judging/flights/'.$this->tableId.'/assign/judges')->assertOk();
+
+        self::assertTrue(DB::table('judging_assignments')->where('bid', $conflicted)->where('assignment', 'J')->doesntExist());
+        self::assertTrue(DB::table('judging_assignments')->where('bid', $conflicted)->where('assignment', 'S')->exists());
+    }
 }

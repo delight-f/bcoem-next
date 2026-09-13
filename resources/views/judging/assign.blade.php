@@ -2,6 +2,16 @@
     <section class="container mt-6 mb-4">
         <h1>Assign {{ ucfirst($role) }} to Table {{ $table->tableNumber }} &ndash; {{ $table->tableName }}</h1>
 
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <p>
             <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'judges']) }}">Judges</a> |
             <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}">Stewards</a>
@@ -35,6 +45,9 @@
                                 <td>{{ $row['name'] }}
                                     @if ($row['conflict'])
                                         <span class="text-info">Has an entry at this table &mdash; assignment disabled.</span>
+                                    @endif
+                                    @if ($row['ineligible'] ?? false)
+                                        <span class="text-info">No longer available &mdash; unassign here.</span>
                                     @endif
                                 </td>
                                 @foreach ($row['flights'] as $cell)

@@ -285,6 +285,7 @@ final class BrewerForm2Test extends PublicSurfaceTestCase
             ->post('/list/edit-judging', $this->payload([
                 'brewerJudge' => 'N',
                 'brewerJudgeRank' => ['National'],
+                'confirmDeregisterJudgeAll' => 'Y',
             ]));
 
         $row = DB::table('brewer')->where('uid', $uid)->first();
@@ -318,5 +319,172 @@ final class BrewerForm2Test extends PublicSurfaceTestCase
     {
         $this->get('/list/edit-judging')->assertRedirect('/login');
         $this->post('/list/edit-judging', $this->payload())->assertRedirect('/login');
+    }
+
+    // -----------------------------------------------------------------
+    // Issue #1752 — a profile save must never silently wipe assignments
+    // -----------------------------------------------------------------
+
+    public function test_issue_1752_absent_judge_fields_do_not_delete_when_window_closed(): void
+    {
+        $this->closeJudgeWindow();
+
+        // brewer.id deliberately differs from brewer.uid (issue check 1).
+        $uid = $this->seedUser('issue1752.closed@example.com', [
+            'id' => 990001,
+            'brewerJudge' => 'N',
+            'brewerSteward' => 'N',
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        // Judge/steward fields omitted entirely from the save.
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', ['brewerStaff' => 'N'])
+            ->assertRedirect('/list?msg=2');
+
+        self::assertSame(
+            1,
+            DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'J')->count(),
+        );
+    }
+
+    public function test_issue_1752_absent_judge_fields_do_not_delete_when_window_open(): void
+    {
+        $uid = $this->seedUser('issue1752.open@example.com', [
+            'brewerJudge' => 'N',
+            'brewerSteward' => 'N',
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', ['brewerStaff' => 'N'])
+            ->assertRedirect('/list?msg=2');
+
+        self::assertSame(
+            1,
+            DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'J')->count(),
+        );
+    }
+
+    public function test_issue_1752_availability_no_removes_only_that_location(): void
+    {
+        $uid = $this->seedUser('issue1752.loc@example.com', [
+            'brewerJudge' => 'Y',
+            'brewerJudgeWaiver' => 'Y',
+            'brewerJudgeLocation' => 'Y-1,Y-2',
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9002,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 2,
+        ]);
+
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', [
+                'brewerJudge' => 'Y',
+                'brewerJudgeWaiver' => 'Y',
+                'brewerJudgeLocation' => ['N-1', 'Y-2'],
+                'brewerStaff' => 'N',
+            ])
+            ->assertRedirect('/list?msg=2');
+
+        self::assertSame(0, DB::table('judging_assignments')->where('bid', $uid)->where('assignLocation', 1)->count());
+        self::assertSame(1, DB::table('judging_assignments')->where('bid', $uid)->where('assignLocation', 2)->count());
+        self::assertSame('N-1,Y-2', DB::table('brewer')->where('uid', $uid)->value('brewerJudgeLocation'));
+    }
+
+    public function test_issue_1752_location_never_marked_available_is_not_wiped(): void
+    {
+        // Judge flag on but availability never set; an admin assigned them.
+        // The form renders every unset location as "N-<id>", so a plain save
+        // must not be read as withdrawing from that location.
+        $uid = $this->seedUser('issue1752.noavail@example.com', [
+            'brewerJudge' => 'Y',
+            'brewerJudgeWaiver' => 'Y',
+            'brewerJudgeLocation' => null,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', [
+                'brewerJudge' => 'Y',
+                'brewerJudgeWaiver' => 'Y',
+                'brewerJudgeLocation' => ['N-1'],
+                'brewerStaff' => 'N',
+            ])
+            ->assertRedirect('/list?msg=2');
+
+        self::assertSame(1, DB::table('judging_assignments')->where('bid', $uid)->where('assignLocation', 1)->count());
+    }
+
+    public function test_issue_1752_withdrawing_assigned_judge_requires_confirmation(): void
+    {
+        $this->closeJudgeWindow();
+        $uid = $this->seedUser('issue1752.block@example.com', [
+            'brewerJudge' => 'Y',
+            'brewerJudgeRank' => 'Recognized',
+            'brewerJudgeWaiver' => 'Y',
+        ]);
+        DB::table('staff')->where('uid', $uid)->update(['staff_judge' => 1]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+
+        // Withdrawal without the explicit confirmation: blocked, nothing wiped.
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', [
+                'brewerJudge' => 'N',
+                'brewerJudgeWaiver' => 'Y',
+                'brewerStaff' => 'N',
+            ])
+            ->assertSessionHasErrors('brewerJudge');
+
+        self::assertSame(1, DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'J')->count());
+        self::assertSame('Y', DB::table('brewer')->where('uid', $uid)->value('brewerJudge'));
+        self::assertSame(1, (int) DB::table('staff')->where('uid', $uid)->value('staff_judge'));
+    }
+
+    public function test_issue_1752_confirmed_withdrawal_removes_role_rows(): void
+    {
+        $uid = $this->seedUser('issue1752.confirm@example.com', [
+            'brewerJudge' => 'Y',
+            'brewerJudgeRank' => 'Recognized',
+            'brewerJudgeWaiver' => 'Y',
+        ]);
+        DB::table('staff')->where('uid', $uid)->update(['staff_judge' => 1]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9001,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 1,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => $uid, 'assignment' => 'J', 'assignTable' => 9002,
+            'assignFlight' => 1, 'assignRound' => 1, 'assignLocation' => 2,
+        ]);
+
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', [
+                'brewerJudge' => 'N',
+                'brewerJudgeWaiver' => 'Y',
+                'brewerStaff' => 'N',
+                'confirmDeregisterJudgeAll' => 'Y',
+            ])
+            ->assertRedirect('/list?msg=2');
+
+        self::assertSame(0, DB::table('judging_assignments')->where('bid', $uid)->where('assignment', 'J')->count());
+        self::assertSame(0, (int) DB::table('staff')->where('uid', $uid)->value('staff_judge'));
+        self::assertSame('N', DB::table('brewer')->where('uid', $uid)->value('brewerJudge'));
     }
 }

@@ -65,8 +65,20 @@ final class AssignController extends Controller
             ->selectRaw('flightNumber, MAX(flightRound) as flightRound')
             ->get();
 
+        $roleColumn = $role === 'judges' ? 'brewerJudge' : 'brewerSteward';
+        $assignmentCode = $role === 'judges' ? 'J' : 'S';
+
         $participants = DB::table('brewer')
-            ->where($role === 'judges' ? 'brewerJudge' : 'brewerSteward', 'Y')
+            ->where(function ($q) use ($roleColumn, $id, $assignmentCode): void {
+                $q->where($roleColumn, 'Y')
+                    ->orWhereExists(function ($sub) use ($id, $assignmentCode): void {
+                        $sub->selectRaw('1')
+                            ->from('judging_assignments')
+                            ->whereColumn('judging_assignments.bid', 'brewer.uid')
+                            ->where('assignTable', $id)
+                            ->where('assignment', $assignmentCode);
+                    });
+            })
             ->orderBy('brewerLastName')->orderBy('brewerFirstName')
             ->get();
 
@@ -80,7 +92,8 @@ final class AssignController extends Controller
             // screen; the port performs the identical cleanup here.
             if ($conflict) {
                 DB::table('judging_assignments')
-                    ->where('bid', $bid)->where('assignTable', $id)->delete();
+                    ->where('bid', $bid)->where('assignTable', $id)
+                    ->where('assignment', $assignmentCode)->delete();
             }
 
             $assignments = DB::table('judging_assignments')->where('bid', $bid)->get();
@@ -121,6 +134,7 @@ final class AssignController extends Controller
                 'name' => trim((string) $participant->brewerFirstName.' '.(string) $participant->brewerLastName),
                 'flights' => $perFlight,
                 'conflict' => $conflict,
+                'ineligible' => (string) $participant->{$roleColumn} !== 'Y',
             ];
         }
 
@@ -174,6 +188,7 @@ final class AssignController extends Controller
                     ->where('bid', $bid)
                     ->where('assignTable', $id)
                     ->where('assignRound', $round)
+                    ->where('assignment', $assignment)
                     ->delete();
 
                 if ((int) $flight > 0) {

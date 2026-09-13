@@ -374,4 +374,38 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         $response->assertJsonPath('error_type', '3');
         self::assertTrue(DB::table('staff')->where('uid', 9530)->doesntExist());
     }
+
+    public function test_issue_1752_absent_flag_column_is_not_a_state_change(): void
+    {
+        $this->seedBrewer(9530, 'Alpha', 'Amy', 'alpha.pool@example.com', 'Y');
+        DB::table('staff')->insert([
+            'uid' => 9530,
+            'staff_judge' => 1,
+            'staff_judge_bos' => 0,
+            'staff_steward' => 0,
+            'staff_organizer' => 0,
+            'staff_staff' => 0,
+        ]);
+        DB::table('judging_assignments')->insert([
+            'bid' => 9530,
+            'assignment' => 'J',
+            'assignTable' => 50,
+            'assignFlight' => 1,
+            'assignRound' => 1,
+            'assignLocation' => 1,
+        ]);
+
+        // The staff_judge column is omitted entirely from the POST.
+        $response = $this->actingAs($this->admin())
+            ->post('/admin/judging/pool-assign/staff', [
+                'action' => 'judging_staff',
+                'go' => 'staff_judge',
+                'id' => 9530,
+            ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('error_type', '3');
+        self::assertSame(1, (int) DB::table('staff')->where('uid', 9530)->value('staff_judge'));
+        self::assertSame(1, DB::table('judging_assignments')->where('bid', 9530)->where('assignment', 'J')->count());
+    }
 }

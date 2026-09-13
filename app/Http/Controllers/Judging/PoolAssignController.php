@@ -258,7 +258,11 @@ final class PoolAssignController extends Controller
             if ($go === 'staff_organizer') {
                 [$status, $errorType] = $this->toggleOrganizer((int) $request->input('staff_organizer', 0));
             } elseif (in_array($go, self::STAFF_COLUMNS, true) && $uid > 0) {
-                [$status, $errorType] = $this->toggleStaffColumn($uid, $go, (string) $request->input($go, ''));
+                if (! $request->has($go)) {
+                    $errorType = 3; // missing flag column is an invalid request, not "off"
+                } else {
+                    [$status, $errorType] = $this->toggleStaffColumn($uid, $go, (string) $request->input($go, ''));
+                }
             } else {
                 $errorType = 3; // unknown column (legacy failed the query)
             }

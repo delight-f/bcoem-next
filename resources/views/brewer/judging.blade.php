@@ -172,6 +172,13 @@
                             @endforeach
                         </fieldset>
                     @endif
+                    @if ($judgeAssigned)
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="confirmDeregisterJudgeAll" value="Y"
+                                   id="confirmDeregisterJudgeAll" @checked(old('confirmDeregisterJudgeAll') === 'Y')>
+                            <label class="form-check-label" for="confirmDeregisterJudgeAll">{{ __('site.deregister_confirm_judge') }}</label>
+                        </div>
+                    @endif
                 </section>
             @endif
 
@@ -210,6 +217,13 @@
                                 </div>
                             @endforeach
                         </fieldset>
+                    @endif
+                    @if ($stewardAssigned)
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" name="confirmDeregisterStewardAll" value="Y"
+                                   id="confirmDeregisterStewardAll" @checked(old('confirmDeregisterStewardAll') === 'Y')>
+                            <label class="form-check-label" for="confirmDeregisterStewardAll">{{ __('site.deregister_confirm_steward') }}</label>
+                        </div>
                     @endif
                 </section>
             @endif

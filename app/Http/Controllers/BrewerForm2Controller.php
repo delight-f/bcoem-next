@@ -84,6 +84,8 @@ final class BrewerForm2Controller extends Controller
             'locations' => DB::table('judging_locations')->orderBy('judgingLocName')->get(),
             'judgeLocations' => $this->explodeIds($brewer->brewerJudgeLocation),
             'stewardLocations' => $this->explodeIds($brewer->brewerStewardLocation),
+            'judgeAssigned' => DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'J')->exists(),
+            'stewardAssigned' => DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'S')->exists(),
             'salutation' => __('site.my_account'),
         ]);
     }
@@ -121,12 +123,19 @@ final class BrewerForm2Controller extends Controller
             'brewerAssignment.*' => ['string', 'max:255'],
             'brewerAssignmentOther' => ['nullable', 'string', 'max:255'],
             'brewerJudgeWaiver' => ['nullable', 'in:Y'],
+            'confirmDeregisterJudgeAll' => ['nullable', 'in:Y'],
+            'confirmDeregisterStewardAll' => ['nullable', 'in:Y'],
         ]);
 
-        // Fields inside a gated block are ignored wholesale — the row keeps
-        // its current values (legacy renders no inputs there at all).
-        $judge = $canEditJudge ? ($data['brewerJudge'] ?? (string) $brewer->brewerJudge) : (string) $brewer->brewerJudge;
-        $steward = $canEditSteward ? ($data['brewerSteward'] ?? (string) $brewer->brewerSteward) : (string) $brewer->brewerSteward;
+        $storedJudge = (string) $brewer->brewerJudge;
+        $storedSteward = (string) $brewer->brewerSteward;
+
+        // Fields inside a gated block are ignored wholesale, and a field absent
+        // from POST is never a state change — keep the stored value. Legacy
+        // defaulted both flags to "N", which wiped assignments on every profile
+        // save (issue #1752 defect B); the port must not.
+        $judge = $this->resolveFlag($canEditJudge, $data['brewerJudge'] ?? null, $storedJudge);
+        $steward = $this->resolveFlag($canEditSteward, $data['brewerSteward'] ?? null, $storedSteward);
 
         // Waiver consent is required whenever the user volunteers as a judge
         // or steward (the legacy checkbox is client-required; the port also
@@ -134,6 +143,36 @@ final class BrewerForm2Controller extends Controller
         if (($judge === 'Y' || $steward === 'Y') && ($data['brewerJudgeWaiver'] ?? null) !== 'Y') {
             return back()->withErrors(['brewerJudgeWaiver' => __('site.waiver_required')])->withInput();
         }
+
+        // Withdrawing a role removes that role's rows — but never silently.
+        // When rows exist, require the explicit confirmation override
+        // (issue #1752 check 3). An unchanged or absent "N" never reaches here.
+        $judgeTurnsOff = $canEditJudge && $judge === 'N' && $storedJudge !== 'N';
+        $stewardTurnsOff = $canEditSteward && $steward === 'N' && $storedSteward !== 'N';
+
+        if ($judgeTurnsOff
+            && ($data['confirmDeregisterJudgeAll'] ?? null) !== 'Y'
+            && DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'J')->exists()) {
+            return back()->withErrors(['brewerJudge' => __('site.deregister_required')])->withInput();
+        }
+        if ($stewardTurnsOff
+            && ($data['confirmDeregisterStewardAll'] ?? null) !== 'Y'
+            && DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'S')->exists()) {
+            return back()->withErrors(['brewerSteward' => __('site.deregister_required')])->withInput();
+        }
+
+        $judgeLocations = $canEditJudge ? ($data['brewerJudgeLocation'] ?? null) : null;
+        $stewardLocations = $canEditSteward ? ($data['brewerStewardLocation'] ?? null) : null;
+
+        // Only a location the user was previously available at, and is now
+        // turning off, may lose its rows — never a location that was never
+        // marked available (issue #1752 defect B).
+        $judgeWithdrawals = $judge === 'Y' && is_array($judgeLocations)
+            ? $this->withdrawnLocationIds($brewer->brewerJudgeLocation, $judgeLocations)
+            : [];
+        $stewardWithdrawals = $steward === 'Y' && is_array($stewardLocations)
+            ? $this->withdrawnLocationIds($brewer->brewerStewardLocation, $stewardLocations)
+            : [];
 
         $rankValues = array_merge(self::RANKS, self::DESIGNATIONS);
 
@@ -151,25 +190,35 @@ final class BrewerForm2Controller extends Controller
                 : $brewer->brewerJudgeRank,
             'brewerJudgeLikes' => $canEditJudge ? $this->commaJoin($data['brewerJudgeLikes'] ?? null) : $brewer->brewerJudgeLikes,
             'brewerJudgeDislikes' => $canEditJudge ? $this->commaJoin($data['brewerJudgeDislikes'] ?? null) : $brewer->brewerJudgeDislikes,
-            'brewerJudgeLocation' => $canEditJudge ? $this->commaJoin($data['brewerJudgeLocation'] ?? null) : $brewer->brewerJudgeLocation,
-            'brewerStewardLocation' => $canEditSteward ? $this->commaJoin($data['brewerStewardLocation'] ?? null) : $brewer->brewerStewardLocation,
+            'brewerJudgeLocation' => $judgeTurnsOff
+                ? null
+                : (is_array($judgeLocations) ? $this->commaJoin($judgeLocations) : $brewer->brewerJudgeLocation),
+            'brewerStewardLocation' => $stewardTurnsOff
+                ? null
+                : (is_array($stewardLocations) ? $this->commaJoin($stewardLocations) : $brewer->brewerStewardLocation),
             'brewerJudgeExp' => $data['brewerJudgeExp'] ?? null,
             'brewerJudgeNotes' => $data['brewerJudgeNotes'] ?? null,
             'brewerJudgeWaiver' => ($data['brewerJudgeWaiver'] ?? null) === 'Y' ? 'Y' : 'N',
             'brewerAssignment' => $this->assignmentJson($data),
         ]);
 
-        // Opting out clears any existing assignment state so a stale judge/
-        // steward flag never survives into P4 scheduling. Legacy deletes the
-        // whole staff row when that was the user's only staff flag; zeroing
-        // the flag keeps the row registration created — equivalent state.
-        if ($judge === 'N') {
+        // Opting out clears the role flag and, once confirmed, that role's
+        // assignment rows. A profile save that does not withdraw a role never
+        // deletes anything (issue #1752 defect B).
+        if ($judgeTurnsOff) {
             DB::table('staff')->where('uid', $brewer->uid)->update(['staff_judge' => 0]);
             DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'J')->delete();
+        } else {
+            // Setting availability to "No" for a location the user was
+            // available at removes only that location's rows (check 1 / 7).
+            $this->deleteAssignmentsAtLocations($brewer->uid, 'J', $judgeWithdrawals);
         }
-        if ($steward === 'N') {
+
+        if ($stewardTurnsOff) {
             DB::table('staff')->where('uid', $brewer->uid)->update(['staff_steward' => 0]);
             DB::table('judging_assignments')->where('bid', $brewer->uid)->where('assignment', 'S')->delete();
+        } else {
+            $this->deleteAssignmentsAtLocations($brewer->uid, 'S', $stewardWithdrawals);
         }
 
         // Wizard completion → legacy post-registration landing
@@ -342,7 +391,63 @@ final class BrewerForm2Controller extends Controller
     }
 
     /**
-     * @param  list<int>|null  $values
+     * A gated block ignores POSTed values outright, and an absent field is not
+     * a state change: both fall back to the stored flag.
+     */
+    private function resolveFlag(bool $editable, ?string $posted, string $stored): string
+    {
+        if (! $editable || $posted === null || $posted === '') {
+            return $stored;
+        }
+
+        return $posted;
+    }
+
+    /**
+     * Location ids the user is withdrawing from: stored "Y-<id>", posted "N-<id>".
+     * Only a real availability change may delete a row (issue #1752 defect B).
+     *
+     * @param  array<mixed, mixed>  $posted
+     * @return list<int>
+     */
+    private function withdrawnLocationIds(?string $storedCsv, array $posted): array
+    {
+        $available = [];
+        foreach (array_filter(explode(',', (string) $storedCsv)) as $item) {
+            if (str_starts_with((string) $item, 'Y-')) {
+                $available[(int) substr((string) $item, 2)] = true;
+            }
+        }
+
+        $ids = [];
+        foreach ($posted as $entry) {
+            $entry = (string) $entry;
+            if (str_starts_with($entry, 'N-') && isset($available[(int) substr($entry, 2)])) {
+                $ids[] = (int) substr($entry, 2);
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param  list<int>  $locationIds
+     */
+    private function deleteAssignmentsAtLocations(int $uid, string $assignment, array $locationIds): void
+    {
+        if ($locationIds === []) {
+            return;
+        }
+
+        DB::table('judging_assignments')
+            ->where('bid', $uid)
+            ->where('assignment', $assignment)
+            ->whereIn('assignLocation', $locationIds)
+            ->delete();
+    }
+
+    /**
+     * @param  array<mixed, mixed>|null  $values
      */
     private function commaJoin(?array $values): ?string
     {
@@ -350,7 +455,7 @@ final class BrewerForm2Controller extends Controller
             return null;
         }
 
-        return implode(',', $values);
+        return implode(',', array_map('strval', $values));
     }
 
     /** @return list<string> */
