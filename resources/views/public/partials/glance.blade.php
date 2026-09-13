@@ -1,9 +1,14 @@
 @php($stacked = $stacked ?? false)
 @php($reveal = $reveal ?? false)
+@php($count = count($cards))
+@php($lgColumns = $count > 0 && $count % 4 === 0 ? 4 : 3)
 {{-- The landing deck (.glance-deck) is width-constrained and centres any
      incomplete final row, so 3, 5 and 7 cards all read well instead of
-     leaving a ragged hole. The stacked sidebar variant keeps full width. --}}
-<div class="row {{ $stacked ? 'row-cols-1 gy-3' : 'row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center glance-deck' }} mt-4 d-print-none">
+     leaving a ragged hole. The stacked sidebar variant keeps full width.
+     A deck whose count divides by four takes four columns: on a fixed 3-wide
+     grid a 4-card deck wrapped to 3 + 1 and the lone card sat centred under
+     the others, which reads as a mistake rather than a layout. --}}
+<div class="row {{ $stacked ? 'row-cols-1 gy-3' : 'row-cols-1 row-cols-md-2 row-cols-lg-'.$lgColumns.' g-4 justify-content-center glance-deck' }} mt-4 d-print-none">
     @foreach ($cards as $card)
         @php($accent = $card['accent'] ?? 'blue')
         @php($icon = $card['icon'] ?? 'circle-info')
