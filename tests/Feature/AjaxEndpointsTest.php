@@ -322,13 +322,18 @@ final class AjaxEndpointsTest extends PublicSurfaceTestCase
 
     public function test_count_records_counts_brewing_rows_by_column_filters(): void
     {
+        // The table may hold rows seeded by other suites; assert the delta this
+        // test adds rather than an absolute count.
+        $paidBefore = (int) DB::table('brewing')->where('brewPaid', 1)->count();
+        $allBefore = (int) DB::table('brewing')->count();
+
         $this->makeEntry(['brewBrewerID' => 999001, 'brewPaid' => 1]);
         $this->makeEntry(['brewBrewerID' => 999001, 'brewPaid' => 0]);
         $this->makeEntry(['brewBrewerID' => 999002, 'brewPaid' => 1]);
 
         $this->post('/ajax/count-records?section=brewing&p1=brewPaid&c1=1')
             ->assertOk()
-            ->assertJsonFragment(['success' => true, 'count' => 2]);
+            ->assertJsonFragment(['success' => true, 'count' => $paidBefore + 2]);
 
         // Compound filter: paid AND received for one brewer.
         $this->makeEntry(['brewBrewerID' => 999001, 'brewPaid' => 1, 'brewReceived' => 1]);
@@ -339,7 +344,7 @@ final class AjaxEndpointsTest extends PublicSurfaceTestCase
         // Unfiltered count.
         $this->post('/ajax/count-records?section=brewing')
             ->assertOk()
-            ->assertJsonFragment(['success' => true, 'count' => 4]);
+            ->assertJsonFragment(['success' => true, 'count' => $allBefore + 4]);
     }
 
     public function test_count_records_rejects_unknown_sections(): void

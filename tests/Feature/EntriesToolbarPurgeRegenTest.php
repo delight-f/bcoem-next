@@ -17,6 +17,8 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
     protected function tearDown(): void
     {
         DB::table('brewing')->where('brewName', 'like', 'ETP-%')->delete();
+        DB::table('users')->where('id', 9412)->delete();
+        DB::table('brewer')->where('uid', 9412)->delete();
         parent::tearDown();
     }
 
@@ -101,9 +103,6 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
         $this->post('/backoffice/entries/purge', ['go' => 'unpaid'])
             ->assertRedirect('/?msg=99');
         self::assertNotNull(DB::table('brewing')->where('id', $keep)->value('id'));
-
-        DB::table('users')->where('id', 9412)->delete();
-        DB::table('brewer')->where('uid', 9412)->delete();
     }
 
     public function test_regenerate_from_entries_lands_back_on_entries_list(): void
