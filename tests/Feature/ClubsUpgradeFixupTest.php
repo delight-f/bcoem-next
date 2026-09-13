@@ -59,17 +59,19 @@ final class ClubsUpgradeFixupTest extends PublicSurfaceTestCase
         self::assertNull(DB::table('clubs_sync_state')->where('id', 1)->value('version'));
     }
 
-    public function test_it_is_registered_for_the_release_that_ships_the_clubs_tables(): void
+    public function test_it_is_registered_for_each_release_that_ships_the_clubs_tables(): void
     {
         // The registry is process-global static state, so several test boots can
         // leave duplicates: assert membership, never an exact count.
-        $registered = false;
-        foreach ((new UpgradeFixups)->for('4.0.0', '4.1.0') as $fixup) {
-            if ($fixup instanceof SyncCentralClubsList) {
-                $registered = true;
+        foreach (['4.1.0-alpha.1', '4.1.0'] as $incoming) {
+            $registered = false;
+            foreach ((new UpgradeFixups)->for('4.0.0', $incoming) as $fixup) {
+                if ($fixup instanceof SyncCentralClubsList) {
+                    $registered = true;
+                }
             }
+            self::assertTrue($registered, 'the clubs fixup must run on the 4.0.0 -> '.$incoming.' upgrade');
         }
-        self::assertTrue($registered, 'the clubs fixup must run on the 4.0.0 -> 4.1.0 upgrade');
 
         foreach ((new UpgradeFixups)->for('4.1.0', '4.2.0') as $fixup) {
             self::assertNotInstanceOf(SyncCentralClubsList::class, $fixup, 'it must not run on a later jump');
