@@ -40,6 +40,23 @@ final class RemoteVersionNoticeTest extends WizardTestCase
         Http::assertNothingSent();
     }
 
+    public function test_a_pending_upgrade_does_not_raise_the_release_notice(): void
+    {
+        // A site whose database is behind its files — exactly the state after
+        // adopting an older site — used to see this notice and be told to go
+        // download the release it was already running. The notice is about the
+        // code that is deployed, so it must compare against that, not the
+        // version recorded in `bcoem_sys`.
+        $this->setInstalled(true, '3.1.0.0');
+        Http::fake();
+        // The cached release equals the code version this checkout reports.
+        Cache::put('bcoem.remote-version', ['version' => '4.0.0', 'checked_at' => time()], 86400);
+
+        $this->actingAs($this->user('0'))->get('/admin')
+            ->assertOk()
+            ->assertDontSee('Read the release notes and download it');
+    }
+
     public function test_dismissing_the_notice_hides_it_for_the_session(): void
     {
         $this->setInstalled(true, '4.0.0');

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Services\Installation\UpgradeService;
+use App\Services\Installation\InstallationService;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\PayPalGateway;
 use App\Support\Results\BestBrewerStandings;
@@ -53,7 +53,13 @@ final class DashboardController extends Controller
         if (! $request->session()->get('wizard.update-notice.dismissed', false)) {
             $updateNotice = app(RemoteVersionChecker::class)->noticeFor(
                 (int) $user->userLevel,
-                app(UpgradeService::class)->getCurrentVersion(),
+                // The version of the code that is actually deployed, NOT the
+                // version recorded in `bcoem_sys`. Measured against the
+                // database, a site that has uploaded this release but not yet
+                // run its upgrade is told the release it is already running is
+                // "available" to download — a dead end, since the answer is the
+                // local upgrade the banner on the same page already offers.
+                app(InstallationService::class)->incomingVersion(),
             );
         }
 
