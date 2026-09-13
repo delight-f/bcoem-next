@@ -135,6 +135,35 @@ final class ExistingSiteAdoptionTest extends InstallationTestCase
         $this->assertFileDoesNotExist($this->root.'/.env', 'a refused adopt must not leave configuration behind');
     }
 
+    public function test_adopt_reports_the_version_it_found(): void
+    {
+        // The wizard screen that follows an adoption names the version the
+        // database is at, so the caller gets it back rather than inspecting twice.
+        $this->installedDatabase('2.9.1.0');
+
+        $inspection = (new InstallationService($this->root))
+            ->adoptExistingInstallation($this->credentials(), 'https://club.example.test');
+
+        $this->assertSame('2.9.1.0', $inspection->version);
+    }
+
+    public function test_the_attached_screen_states_the_update_is_still_to_run(): void
+    {
+        // Attaching is not upgrading, and a site still on the old database
+        // version looks finished — so the one remaining step is spelled out.
+        $this->withSession(['wizard.install.attached' => ['database' => '3.1.0.0', 'version' => '4.1.0-alpha.4']])
+            ->get('/install/attached')
+            ->assertOk()
+            ->assertSee('3.1.0.0')
+            ->assertSee('4.1.0-alpha.4')
+            ->assertSee('Sign in');
+    }
+
+    public function test_the_attached_screen_without_session_state_goes_to_the_site(): void
+    {
+        $this->get('/install/attached')->assertRedirect('/');
+    }
+
     public function test_privilege_warning_flags_a_server_wide_account_but_not_a_scoped_one(): void
     {
         $service = new InstallationService($this->root);

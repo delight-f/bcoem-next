@@ -229,8 +229,11 @@ class InstallationService
      * version marker. The data stays exactly as it is, the site boots on it, and
      * the ordinary upgrade path carries it forward from the version the database
      * records.
+     *
+     * Returns what was found, so the caller can report the version the database
+     * is at without inspecting it a second time.
      */
-    public function adoptExistingInstallation(DbCredentials $credentials, string $appUrl): void
+    public function adoptExistingInstallation(DbCredentials $credentials, string $appUrl): DatabaseInspection
     {
         $inspection = $this->inspectDatabase($credentials);
 
@@ -253,6 +256,8 @@ class InstallationService
             'DB_PASSWORD' => $credentials->password,
             'DB_TABLE_PREFIX' => '',
         ]);
+
+        return $inspection;
     }
 
     /**

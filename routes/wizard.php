@@ -24,6 +24,8 @@ Route::post('/install/database', [InstallWizardController::class, 'storeDatabase
 // Screen 3's other exit: the database is already a finished site, so attach the
 // code to it instead of installing over it.
 Route::post('/install/adopt', [InstallWizardController::class, 'adopt'])->name('wizard.install.adopt');
+// ...and what follows: attached, with the update still to run.
+Route::get('/install/attached', [InstallWizardController::class, 'attached'])->name('wizard.install.attached');
 Route::get('/install/site', [InstallWizardController::class, 'site'])->name('wizard.install.site');
 Route::post('/install/site', [InstallWizardController::class, 'storeSite'])->name('wizard.install.site.store');
 Route::get('/install/confirm', [InstallWizardController::class, 'confirm'])->name('wizard.install.confirm');

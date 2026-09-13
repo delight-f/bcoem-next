@@ -96,16 +96,47 @@ final class InstallWizardController extends Controller
     public function adopt(Request $request): RedirectResponse
     {
         $credentials = $this->credentials($this->databaseInput($request));
+        $service = app(InstallationService::class);
 
         try {
-            app(InstallationService::class)->adoptExistingInstallation($credentials, $request->getSchemeAndHttpHost());
+            $inspection = $service->adoptExistingInstallation($credentials, $request->getSchemeAndHttpHost());
         } catch (InstallationException $e) {
             return redirect()->route('wizard.install.database')->withErrors(['database' => $e->plainMessage]);
         }
 
-        // Every later request boots as an installed site; an administrator who
-        // signs in is then offered the upgrade to this release's version.
-        return redirect('/');
+        // Attaching is not upgrading. This step only records how to reach the
+        // existing data; the database keeps whatever version it had until an
+        // administrator runs the update. Saying that on a screen of its own
+        // matters, because a site that still runs the old database version looks
+        // finished — the only other clue is the upgrade banner.
+        $request->session()->put('wizard.install.attached', [
+            'database' => $inspection->version,
+            'version' => $service->incomingVersion(),
+        ]);
+
+        return redirect()->route('wizard.install.attached');
+    }
+
+    /**
+     * The screen that follows an adoption: what happened, and the one step left.
+     * Falls through to the site when there is nothing to report (a refreshed or
+     * shared link).
+     */
+    public function attached(Request $request): View|RedirectResponse
+    {
+        $attached = $request->session()->get('wizard.install.attached');
+
+        if (! is_array($attached)) {
+            return redirect('/');
+        }
+
+        $user = $request->user();
+
+        return view('wizard.install.attached', [
+            'databaseVersion' => (string) ($attached['database'] ?? ''),
+            'releaseVersion' => (string) ($attached['version'] ?? ''),
+            'isTopLevelAdmin' => $user !== null && (int) $user->userLevel === 0,
+        ]);
     }
 
     public function storeDatabase(Request $request): RedirectResponse
