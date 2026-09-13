@@ -8,6 +8,29 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Added
+
+- **Attach to an existing site.** The install wizard inspects the database once
+  the connection test succeeds. A database that already holds a finished Brew
+  Competition site is offered for adoption — connection details are saved and
+  the data is left untouched — instead of the wizard installing over it. A
+  half-finished or unrecognised database is refused with an explanation.
+- The wizard warns when the database account supplied can administer the entire
+  server, because those details are stored in plain text inside the web folder.
+
+### Fixed
+
+- **Installing over an existing site destroyed its accounts.** `createAdmin()`
+  deletes every row in `users` and `brewer`, and the guard that prevented this
+  only ran on the final step and only recognised `setup = 1`. Any populated
+  database is now refused before anything is written.
+- **`bcoem_sys.version` was too narrow for a release version.** The legacy
+  column is `varchar(12)`, so upgrading a real 3.1.0.0 tenant to 4.1.0-alpha.3
+  failed with "Data too long for column 'version'" on the last step, leaving the
+  upgrade applied but unmarked. Widened to 32.
+- **A fresh install recorded `4.0.0`** whatever the release was, so a new site
+  immediately advertised an upgrade to the version it was already running.
+
 ## [4.1.0-alpha.3] - 2026-09-13
 
 ### Fixed

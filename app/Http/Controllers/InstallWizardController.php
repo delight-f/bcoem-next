@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Jobs\RunInstallationJob;
 use App\Services\Installation\Data\DbCredentials;
 use App\Services\Installation\Data\InstallInput;
+use App\Services\Installation\Exceptions\InstallationException;
 use App\Services\Installation\InstallationService;
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Contracts\View\View;
@@ -55,26 +56,86 @@ final class InstallWizardController extends Controller
 
     public function testConnection(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'host' => ['required', 'string', 'max:255'],
-            'port' => ['required', 'string', 'max:5'],
-            'database' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255'],
-            'password' => ['nullable', 'string'],
+        $input = $this->databaseInput($request);
+        $service = app(InstallationService::class);
+        $credentials = $this->credentials($input);
+
+        $connection = $service->testDatabaseConnection($credentials);
+        if (! $connection->success) {
+            return response()->json([
+                'success' => false,
+                'state' => 'unreachable',
+                'message' => $connection->message,
+                'canInstall' => false,
+                'canAdopt' => false,
+                'warning' => '',
+            ]);
+        }
+
+        // Connected: the useful question is now what the database already holds.
+        // A visitor who replaced the old files but kept their database must be
+        // offered that site, not an install that would replace its accounts.
+        $inspection = $service->inspectDatabase($credentials);
+
+        return response()->json([
+            'success' => true,
+            'state' => $inspection->state,
+            'version' => $inspection->version,
+            'message' => $inspection->message,
+            'canInstall' => $inspection->canInstall(),
+            'canAdopt' => $inspection->canAdopt(),
+            'warning' => $inspection->privilegeWarning,
         ]);
+    }
 
-        $result = app(InstallationService::class)->testDatabaseConnection(new DbCredentials(
-            $data['host'],
-            $data['port'],
-            $data['database'],
-            $data['username'],
-            (string) ($data['password'] ?? ''),
-        ));
+    /**
+     * Screen 3's other exit: the database is already a finished site, so keep it
+     * and record only how to reach it. No schema import, no accounts created —
+     * the site boots on its existing data and the upgrade path takes it forward.
+     */
+    public function adopt(Request $request): RedirectResponse
+    {
+        $credentials = $this->credentials($this->databaseInput($request));
 
-        return response()->json(['success' => $result->success, 'message' => $result->message]);
+        try {
+            app(InstallationService::class)->adoptExistingInstallation($credentials, $request->getSchemeAndHttpHost());
+        } catch (InstallationException $e) {
+            return redirect()->route('wizard.install.database')->withErrors(['database' => $e->plainMessage]);
+        }
+
+        // Every later request boots as an installed site; an administrator who
+        // signs in is then offered the upgrade to this release's version.
+        return redirect('/');
     }
 
     public function storeDatabase(Request $request): RedirectResponse
+    {
+        $input = $this->databaseInput($request);
+        $service = app(InstallationService::class);
+        $credentials = $this->credentials($input);
+
+        // The button is only offered for an empty database, but the client is
+        // never trusted: reaching screen 4 with a populated database would end in
+        // an install that replaces the club's accounts and results.
+        $connection = $service->testDatabaseConnection($credentials);
+        if (! $connection->success) {
+            return redirect()->route('wizard.install.database')->withErrors(['database' => $connection->message]);
+        }
+
+        $inspection = $service->inspectDatabase($credentials);
+        if (! $inspection->canInstall()) {
+            return redirect()->route('wizard.install.database')->withErrors(['database' => $inspection->message]);
+        }
+
+        $request->session()->put('wizard.install.db', $input);
+
+        return redirect()->route('wizard.install.site');
+    }
+
+    /**
+     * @return array{host: string, port: string, database: string, username: string, password: string}
+     */
+    private function databaseInput(Request $request): array
     {
         $data = $request->validate([
             'host' => ['required', 'string', 'max:255'],
@@ -84,15 +145,21 @@ final class InstallWizardController extends Controller
             'password' => ['nullable', 'string'],
         ]);
 
-        $request->session()->put('wizard.install.db', [
+        return [
             'host' => $data['host'],
             'port' => $data['port'],
             'database' => $data['database'],
             'username' => $data['username'],
             'password' => (string) ($data['password'] ?? ''),
-        ]);
+        ];
+    }
 
-        return redirect()->route('wizard.install.site');
+    /**
+     * @param  array{host: string, port: string, database: string, username: string, password: string}  $input
+     */
+    private function credentials(array $input): DbCredentials
+    {
+        return new DbCredentials($input['host'], $input['port'], $input['database'], $input['username'], $input['password']);
     }
 
     public function site(Request $request): View|RedirectResponse

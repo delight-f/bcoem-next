@@ -9,6 +9,7 @@ use App\Services\Installation\Data\InstallInput;
 use App\Services\Installation\Exceptions\AlreadyInstalledException;
 use App\Services\Installation\Exceptions\DatabaseConnectionException;
 use App\Services\Installation\InstallationService;
+use App\Services\Installation\UpgradeService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -125,6 +126,29 @@ final class InstallationServiceTest extends InstallationTestCase
         ]), 'each failure must read differently');
     }
 
+    public function test_install_records_the_releases_own_version_from_the_version_file(): void
+    {
+        // Two bugs in one assertion. The marker was hard-coded to SHIPPED_VERSION,
+        // so a 4.1.0-alpha.3 release marked itself 4.0.0 and then advertised an
+        // upgrade to the version it was already running; and the legacy column,
+        // varchar(12), could not hold a suffixed version at all — which is what
+        // broke a real 3.1.0.0 upgrade on its final step.
+        $version = '4.1.0-alpha.3';
+        file_put_contents($this->root.'/VERSION', $version."\n");
+
+        (new InstallationService($this->root))->install($this->input($this->credentials()));
+
+        $this->assertSame($version, (string) DB::table('bcoem_sys')->where('id', 1)->value('version'));
+
+        // The symptom the club would see: a freshly installed site offering an
+        // upgrade to the release it is already running.
+        $upgrade = new UpgradeService(new InstallationService($this->root), $this->root);
+        $this->assertFalse(
+            $upgrade->needsUpgrade(),
+            'a fresh install must not immediately report an available upgrade',
+        );
+    }
+
     public function test_install_command_runs_non_interactively(): void
     {
         $this->app->instance(InstallationService::class, new InstallationService($this->root));
@@ -141,7 +165,7 @@ final class InstallationServiceTest extends InstallationTestCase
             '--admin-password' => 'cmd-pass',
         ]);
 
-        $this->assertSame(0, $exit);
+        $this->assertSame(0, $exit, Artisan::output());
         $this->assertTrue(DB::table('users')->where('user_name', 'cmd@example.test')->exists());
     }
 

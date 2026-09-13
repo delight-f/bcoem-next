@@ -61,15 +61,7 @@ class UpgradeService
 
     public function getIncomingVersion(): string
     {
-        $file = $this->rootPath.'/VERSION';
-        if (is_file($file)) {
-            $version = trim((string) file_get_contents($file));
-            if ($version !== '') {
-                return $version;
-            }
-        }
-
-        return InstallationService::SHIPPED_VERSION;
+        return InstallationService::versionIn($this->rootPath);
     }
 
     public function needsUpgrade(): bool

@@ -7,6 +7,7 @@ namespace App\Services\Installation;
 use App\Services\Installation\Data\AdminInput;
 use App\Services\Installation\Data\BackupResult;
 use App\Services\Installation\Data\ConnectionTestResult;
+use App\Services\Installation\Data\DatabaseInspection;
 use App\Services\Installation\Data\DbCredentials;
 use App\Services\Installation\Data\InstallInput;
 use App\Services\Installation\Data\PreconditionCheck;
@@ -14,6 +15,7 @@ use App\Services\Installation\Data\PreconditionResult;
 use App\Services\Installation\Exceptions\AlreadyInstalledException;
 use App\Services\Installation\Exceptions\DatabaseConnectionException;
 use App\Services\Installation\Exceptions\InstallationException;
+use App\Services\Installation\Exceptions\NotInstalledException;
 use App\Services\Installation\Exceptions\WritePermissionException;
 use Composer\Semver\Semver;
 use Illuminate\Support\Facades\Artisan;
@@ -22,6 +24,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use PDO;
 use PDOException;
+use PDOStatement;
 
 /**
  * The one place that knows how to stand up a fresh install.
@@ -54,6 +57,33 @@ class InstallationService
         }
     }
 
+    /**
+     * The version this copy of the application ships: the release's VERSION
+     * file, or SHIPPED_VERSION when there is none (a git checkout).
+     *
+     * The marker written at the end of an install must record this, not the
+     * constant: a release whose VERSION is "4.1.0-alpha.3" that marks itself
+     * "4.0.0" immediately advertises an upgrade to the version it is running.
+     * Static so UpgradeService resolves the same value from its own root.
+     */
+    public static function versionIn(string $rootPath): string
+    {
+        $file = rtrim($rootPath, '/').'/VERSION';
+        if (is_file($file)) {
+            $version = trim((string) file_get_contents($file));
+            if ($version !== '') {
+                return $version;
+            }
+        }
+
+        return self::SHIPPED_VERSION;
+    }
+
+    public function incomingVersion(): string
+    {
+        return self::versionIn($this->rootPath);
+    }
+
     public function checkPreconditions(): PreconditionResult
     {
         return new PreconditionResult([
@@ -67,23 +97,162 @@ class InstallationService
     public function testDatabaseConnection(DbCredentials $credentials): ConnectionTestResult
     {
         try {
-            $pdo = new PDO(
-                sprintf(
-                    'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
-                    $credentials->host,
-                    $credentials->port,
-                    $credentials->database,
-                ),
-                $credentials->username,
-                $credentials->password,
-                [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 5],
-            );
-            $pdo->query('SELECT 1');
+            $this->connect($credentials)->query('SELECT 1');
 
             return new ConnectionTestResult(true, 'Connected to the database successfully.');
         } catch (PDOException $e) {
             return new ConnectionTestResult(false, $this->plainConnectionMessage($e, $credentials));
         }
+    }
+
+    /**
+     * A throwaway connection to the database the credentials name. Deliberately
+     * independent of the ambient `mysql` config: every caller here is looking at
+     * a database the application is not (yet) configured to use.
+     */
+    private function connect(DbCredentials $credentials): PDO
+    {
+        return new PDO(
+            sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                $credentials->host,
+                $credentials->port,
+                $credentials->database,
+            ),
+            $credentials->username,
+            $credentials->password,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_TIMEOUT => 5],
+        );
+    }
+
+    /**
+     * What the target database already holds, read through the credentials the
+     * caller supplied. Read-only, and safe to call before anything is written.
+     *
+     * A caller that has replaced the old application's files but kept its
+     * database has to be told that, and offered the existing site rather than an
+     * install that would replace it. Expects testDatabaseConnection() to have
+     * succeeded already; this throws if the database cannot be reached.
+     */
+    public function inspectDatabase(DbCredentials $credentials): DatabaseInspection
+    {
+        $pdo = $this->connect($credentials);
+
+        $statement = $pdo->query('SHOW TABLES');
+        $tables = $statement === false ? [] : array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN));
+        $count = count($tables);
+        $warning = $this->privilegeWarning($pdo);
+
+        if ($count === 0) {
+            return new DatabaseInspection(
+                DatabaseInspection::STATE_EMPTY,
+                'That database is empty, so it is ready for a new site.',
+                '',
+                0,
+                $warning,
+            );
+        }
+
+        if (! in_array('bcoem_sys', $tables, true)) {
+            return new DatabaseInspection(
+                DatabaseInspection::STATE_UNRECOGNISED,
+                'That database already holds '.$count.' tables, but none of them belong to a Brew Competition site. Check the database name: installing here would overwrite whatever is in it.',
+                '',
+                $count,
+                $warning,
+            );
+        }
+
+        $row = $pdo->query('SELECT setup, version FROM bcoem_sys WHERE id = 1') ?: [];
+        $record = $row instanceof PDOStatement ? ($row->fetch(PDO::FETCH_ASSOC) ?: []) : [];
+        $setup = (int) ($record['setup'] ?? 0);
+        $version = trim((string) ($record['version'] ?? ''));
+
+        if ($setup === 1) {
+            return new DatabaseInspection(
+                DatabaseInspection::STATE_INSTALLED,
+                'This database already holds a Brew Competition site'
+                    .($version !== '' ? ' (version '.$version.')' : '')
+                    .'. Keep its entries, members and results by attaching this installation to it.',
+                $version,
+                $count,
+                $warning,
+            );
+        }
+
+        return new DatabaseInspection(
+            DatabaseInspection::STATE_INCOMPLETE,
+            'This database holds a Brew Competition site that never finished setting up. Installing over it could damage what is there — start from an empty database, or restore a backup first.',
+            $version,
+            $count,
+            $warning,
+        );
+    }
+
+    /**
+     * Advisory note when the account being stored can administer the whole
+     * server. `.env` lives in the served directory, so those credentials sit in
+     * plain text behind the web server; a user scoped to this one database keeps
+     * that leak cheap. Never fatal — plenty of hosts issue only one account.
+     */
+    private function privilegeWarning(PDO $pdo): string
+    {
+        try {
+            $statement = $pdo->query('SHOW GRANTS FOR CURRENT_USER()');
+            if ($statement === false) {
+                return '';
+            }
+
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $grant = trim((string) reset($row));
+
+                // "GRANT USAGE ON *.*" is the empty marker every account carries;
+                // any wider privilege covering the whole server is not.
+                if (preg_match('/\bON\s+\*\.\*/i', $grant) === 1
+                    && preg_match('/^GRANT\s+USAGE\s+ON\s+\*\.\*/i', $grant) !== 1) {
+                    return 'This database account can administer the entire database server. The site keeps these details in plain text inside the web folder, so a dedicated account limited to this one database is safer.';
+                }
+            }
+        } catch (\Throwable) {
+            // Advisory only: a host that hides SHOW GRANTS is not an error.
+        }
+
+        return '';
+    }
+
+    /**
+     * Attach this copy of the application to a database that is already a
+     * finished installation (someone uploaded the new files over the old site
+     * and kept the database).
+     *
+     * Writes connection details only — no schema import, no admin account, no
+     * version marker. The data stays exactly as it is, the site boots on it, and
+     * the ordinary upgrade path carries it forward from the version the database
+     * records.
+     */
+    public function adoptExistingInstallation(DbCredentials $credentials, string $appUrl): void
+    {
+        $inspection = $this->inspectDatabase($credentials);
+
+        if (! $inspection->canAdopt()) {
+            throw new NotInstalledException(
+                'Refusing to adopt: target database is '.$inspection->state.'.',
+                $inspection->message,
+            );
+        }
+
+        $this->writeEnvValues([
+            'APP_ENV' => 'production',
+            'APP_DEBUG' => 'false',
+            'APP_URL' => $appUrl,
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => $credentials->host,
+            'DB_PORT' => $credentials->port,
+            'DB_DATABASE' => $credentials->database,
+            'DB_USERNAME' => $credentials->username,
+            'DB_PASSWORD' => $credentials->password,
+            'DB_TABLE_PREFIX' => '',
+        ]);
     }
 
     /**
@@ -125,19 +294,25 @@ class InstallationService
                     $this->applyDatabaseConfig($input->db, '');
 
                     try {
-                        if ($this->isAlreadyInstalled()) {
-                            throw new AlreadyInstalledException(
-                                'Refusing to install: bcoem_sys.setup is already 1.',
-                                'This site is already installed. Use the upgrade process to update it instead.',
-                            );
-                        }
-
                         // Fail before writing anything: a bad password must leave the site untouched.
                         $connection = $this->testDatabaseConnection($input->db);
                         if (! $connection->success) {
                             throw new DatabaseConnectionException(
                                 'Database connection failed for '.$input->db->host.':'.$input->db->port.'/'.$input->db->database.'.',
                                 $connection->message,
+                            );
+                        }
+
+                        // Refuse a database that already holds anything. install()
+                        // imports the baseline schema and createAdmin() deletes every
+                        // row in `users` and `brewer`, so pointed at an existing site
+                        // it destroys the club's accounts and results rather than
+                        // setting one up. Adopting is the supported path instead.
+                        $inspection = $this->inspectDatabase($input->db);
+                        if (! $inspection->canInstall()) {
+                            throw new AlreadyInstalledException(
+                                'Refusing to install: target database is '.$inspection->state.' ('.$inspection->tableCount.' tables).',
+                                $inspection->message,
                             );
                         }
                     } catch (\Throwable $e) {
@@ -223,7 +398,7 @@ class InstallationService
                     $this->writeEnvValues(['APP_KEY' => $key]);
                     config()->set('app.key', $key);
 
-                    $this->writeInstalledMarker(self::SHIPPED_VERSION);
+                    $this->writeInstalledMarker($this->incomingVersion());
                 },
             ],
         ];

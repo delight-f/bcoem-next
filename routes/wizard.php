@@ -21,6 +21,9 @@ Route::get('/install/checks', [InstallWizardController::class, 'checks'])->name(
 Route::get('/install/database', [InstallWizardController::class, 'database'])->name('wizard.install.database');
 Route::post('/install/database/test', [InstallWizardController::class, 'testConnection'])->name('wizard.install.test');
 Route::post('/install/database', [InstallWizardController::class, 'storeDatabase'])->name('wizard.install.database.store');
+// Screen 3's other exit: the database is already a finished site, so attach the
+// code to it instead of installing over it.
+Route::post('/install/adopt', [InstallWizardController::class, 'adopt'])->name('wizard.install.adopt');
 Route::get('/install/site', [InstallWizardController::class, 'site'])->name('wizard.install.site');
 Route::post('/install/site', [InstallWizardController::class, 'storeSite'])->name('wizard.install.site.store');
 Route::get('/install/confirm', [InstallWizardController::class, 'confirm'])->name('wizard.install.confirm');
