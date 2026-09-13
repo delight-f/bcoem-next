@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\Concerns\InteractsWithViews;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 /**
  * In-site error pages (P3 Slice 5, PARITY-022). Legacy renders HTTP
@@ -37,5 +39,20 @@ final class InSiteErrorPagesTest extends PublicSurfaceTestCase
         // must guard it (previously a 500 on any unknown path).
         $view = view('errors.404', ['status' => 404])->render();
         $this->assertStringContainsString('404 Error.', $view);
+    }
+
+    public function test_404_renders_when_the_database_is_unreachable(): void
+    {
+        // Regression: the view loaded TenantContext eagerly, so a database
+        // outage failed the error render too — a bare 500 where a 404 (or any
+        // error page) was owed. It must degrade to a minimal page instead.
+        Config::set('database.default', 'sqlite');
+        Config::set('database.connections.sqlite.database', '/nonexistent/bcoem.sqlite');
+        DB::purge('sqlite');
+
+        $view = view('errors.404', ['status' => 404])->render();
+
+        $this->assertStringContainsString('404 Error.', $view);
+        $this->assertStringContainsString('Page not found.', $view);
     }
 }
