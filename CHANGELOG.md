@@ -8,6 +8,18 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.3] - 2026-09-13
+
+### Fixed
+
+- **Install wizard 500 on hosts with a vendor-suffixed PHP version.** The
+  system check handed `PHP_VERSION` (for example `8.4.22-nfsn1`) straight to
+  `composer/semver`, which rejects it as an invalid version string and aborted
+  the wizard's second screen. Found on NearlyFreeSpeech's shared hosting.
+- **Error pages now survive an unreachable database.** The in-site 404 view
+  loaded its contest chrome eagerly, so a database outage failed the error
+  render too and returned a bare 500 where an error page was owed.
+
 ## [4.1.0-alpha.2] - 2026-09-13
 
 ### Fixed
