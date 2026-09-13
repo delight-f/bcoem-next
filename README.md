@@ -102,54 +102,56 @@ against proof that survives in the repository:
 
 ## Central clubs list
 
-Entrants pick their club from a dropdown. Those names come from three places:
-what the organizer has added, what entrants have already typed, and a
-maintained central list of homebrew clubs that the site mirrors locally and
-refreshes on a schedule.
+Entrants pick their club from a dropdown fed by three sources: names the
+organizer added, names entrants have already typed, and a maintained central
+list of homebrew clubs mirrored locally.
 
-Mirroring is deliberately two-stage, so a bad day upstream can never break a
-running competition:
+Mirroring is two-stage, so a bad day upstream can never break a running
+competition:
 
-1. **Upstream JavaScript is converted to JSON.** `tools/clubs-sync/convert.js`
-   evaluates
-   [`geoffhumphrey/homebrew-clubs-list`](https://github.com/geoffhumphrey/homebrew-clubs-list)'s
-   `clubs.js` in an isolated VM, trims and de-duplicates the entries, and
-   writes a versioned `clubs.json`. A scheduled workflow
-   (`.github/workflows/sync-clubs-list.yml`) publishes it to the public
-   [`delight-f/clubs-list`](https://github.com/delight-f/clubs-list) repo and
-   commits only when the content-derived version changes.
-2. **The app syncs that JSON into its local `clubs` table.** The Laravel side
-   never parses JavaScript — it depends on the published JSON shape alone, so
-   every upstream edit is contained behind a pipeline that is tested on its own.
+1. `tools/clubs-sync/convert.js` evaluates the upstream
+   [`homebrew-clubs-list`](https://github.com/geoffhumphrey/homebrew-clubs-list)
+   JavaScript in an isolated VM and publishes a versioned `clubs.json` to the
+   public [`delight-f/clubs-list`](https://github.com/delight-f/clubs-list) repo
+   via `.github/workflows/sync-clubs-list.yml`, committing only when the content
+   changes.
+2. The app mirrors that JSON into its local `clubs` table. It never parses
+   JavaScript — it depends on the published JSON shape alone, so every upstream
+   edit stays behind a pipeline tested on its own.
 
-Failures are contained by design: a timeout, non-2xx response or malformed
-payload is a **no-op** — nothing is written, a warning is logged, and the site
-keeps using the last good list. Clubs that drop off the central list are
-**never deleted**, because historical entries reference them; they are surfaced
-in an admin review list instead. Where a synced club collides with a local name,
-the local spelling wins.
+A timeout, non-2xx response or malformed payload is a **no-op**: nothing is
+written, a warning is logged, and the site keeps the last good list. Clubs that
+drop off the central list are **never deleted** — historical entries reference
+them — and surface in an admin review list instead. Where a synced club collides
+with a local name, the local spelling wins.
 
 ### Setup
 
-The sync is inert until it is pointed at a published `clubs.json`, and the
-default already targets the upstream-published file. To enable it:
+Nothing to enable by hand: the default already points at the published file, and
+**the tables and first sync arrive with a normal update.** Copy a new release
+over the site and run the upgrade wizard (the **Upgrade** banner, or `/upgrade`);
+the migration creates the `clubs` tables and the wizard primes the list — no
+shell, `artisan` or cron required. The club picker also repairs the list on first
+use, so a host that skips the version jump self-heals.
 
-1. Apply the migration that adds the clubs tables:
-   ```bash
-   php artisan migrate --force
-   ```
-2. Override the source only if you mirror the artifact yourself:
-   ```dotenv
-   CLUBS_LIST_URL=https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json
-   ```
-3. Run the first sync and check the counts:
-   ```bash
-   php artisan clubs:sync
-   ```
+SSH operators can run the same steps directly. Prefer `app:upgrade` over a bare
+`migrate`, which would also try the framework baseline migrations that collide
+with the legacy schema:
 
-`clubs:sync` is scheduled daily and needs no queue worker. The same actions are
-available under **Admin → Clubs List**, which shows the last-synced version, a
-**Sync now** button, and any clubs that have dropped off the central list.
+```bash
+php artisan app:upgrade   # migrate + first sync, backup first
+php artisan clubs:sync    # re-run the sync on demand
+```
+
+Override the source only if you mirror the artifact yourself:
+
+```dotenv
+CLUBS_LIST_URL=https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json
+```
+
+`clubs:sync` is scheduled daily and needs no queue worker; where the host has no
+cron, the picker's on-demand refresh covers it. **Admin → Clubs List** shows the
+last-synced version, a **Sync now** button, and clubs that have dropped off.
 
 Running your own publishing pipeline (the optional half) needs a public repo for
 the artifact plus a **write deploy key** stored as the `CLUBS_LIST_DEPLOY_KEY`
