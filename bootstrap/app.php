@@ -34,8 +34,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // the site is down: the operator needs it to finish the upgrade that put
         // the site into maintenance. Access stays gated to a Top-Level
         // Administrator by EnsureInstalled, and the wizard exits maintenance on
-        // its last step.
-        $middleware->preventRequestsDuringMaintenance(['upgrade', 'upgrade/*']);
+        // its last step. The install wizard's own update path (offered right
+        // after an adoption, before anyone can sign in) needs the same
+        // exemption, or its progress poll gets a 503 mid-update.
+        $middleware->preventRequestsDuringMaintenance([
+            'upgrade', 'upgrade/*',
+            'install/update', 'install/update/progress',
+        ]);
 
         // Upstream 3.1.0 custom session timeout. PREPENDED, not appended:
         // StartSession resolves the session driver (and its idle window) from

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Jobs\RunInstallationJob;
+use App\Jobs\RunUpgradeJob;
 use App\Services\Installation\Data\DbCredentials;
 use App\Services\Installation\Data\InstallInput;
 use App\Services\Installation\Exceptions\InstallationException;
 use App\Services\Installation\InstallationService;
+use App\Services\Installation\UpgradeService;
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -131,12 +133,112 @@ final class InstallWizardController extends Controller
         }
 
         $user = $request->user();
+        $databaseVersion = (string) ($attached['database'] ?? '');
+        $releaseVersion = (string) ($attached['version'] ?? '');
 
         return view('wizard.install.attached', [
-            'databaseVersion' => (string) ($attached['database'] ?? ''),
-            'releaseVersion' => (string) ($attached['version'] ?? ''),
+            'databaseVersion' => $databaseVersion,
+            'releaseVersion' => $releaseVersion,
+            // Offered on this screen rather than deferred to the upgrade wizard:
+            // nobody can sign in yet, so a prompt they cannot act on is no use.
+            'hasUpdate' => version_compare($databaseVersion, $releaseVersion, '<'),
+            'supportEmail' => (string) config('services.support.email'),
             'isTopLevelAdmin' => $user !== null && (int) $user->userLevel === 0,
         ]);
+    }
+
+    /**
+     * Run the update from the install wizard, straight after an adoption.
+     *
+     * The upgrade wizard needs a signed-in Top-Level Administrator, and there is
+     * no way to be one yet: the site could not start until the adoption wrote
+     * its database details, so nobody could sign in to run it. Handing the
+     * operator a prompt they cannot reach is the dead end this replaces.
+     *
+     * The gate is the adoption itself — this session supplied working credentials
+     * for that database, the same bar the installer asks of anyone setting a site
+     * up from scratch. The marker is dropped when the update finishes, and once
+     * the version is current both wizards 404.
+     */
+    public function update(Request $request, UpgradeService $service): JsonResponse
+    {
+        if (! $request->session()->has('wizard.install.attached')) {
+            return response()->json(['error' => 'Start the setup again to update this site.'], 403);
+        }
+
+        $token = $this->validToken($request);
+        if ($token === null) {
+            return response()->json(['error' => 'This update session is no longer valid. Please start again.'], 422);
+        }
+
+        if (! $service->needsUpgrade()) {
+            return response()->json(['error' => 'There is no update to apply.'], 409);
+        }
+
+        // ponytail: an abandoned run holds the upgrade lock for 900s; a shorter
+        // TTL risks releasing a genuinely slow step.
+        $tracker = new ProgressTracker;
+        if (! $tracker->acquire('upgrade')) {
+            return response()->json(['error' => 'An update is already running. Please wait for it to finish.'], 409);
+        }
+
+        // Bookkeeping only: no upgrade work runs here. The steps run from
+        // updateProgress(), one per request.
+        $tracker->pending($token);
+
+        return response()->json(['token' => $token]);
+    }
+
+    public function updateProgress(Request $request): JsonResponse
+    {
+        if (! $request->session()->has('wizard.install.attached')) {
+            return response()->json(['status' => 'unknown'], 403);
+        }
+
+        $token = $this->validToken($request);
+        if ($token === null) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        $tracker = new ProgressTracker;
+        $raw = $tracker->raw($token);
+        if ($raw === null) {
+            return response()->json(['status' => 'unknown'], 404);
+        }
+
+        // ponytail: this GET mutates. It is gated by the 48-hex token and a live
+        // marker, and it is the only path that can resume a dead update.
+        $marker = $tracker->get($token);
+        if ($marker === null || in_array($marker['status'], ['complete', 'failed'], true)) {
+            if (($marker['status'] ?? null) === 'complete') {
+                // The update is done, so the wizard's authority to run one goes
+                // with it: a later release's update goes through the real upgrade
+                // wizard, as an administrator.
+                $request->session()->forget('wizard.install.attached');
+            }
+
+            return response()->json($marker ?? ['status' => 'unknown']);
+        }
+
+        if (! $tracker->acquire('step-'.$token, 60)) {
+            return response()->json($marker);
+        }
+
+        try {
+            // Reachable while the site is in maintenance (bootstrap/app.php
+            // exempts this route): it is the control plane that has to finish the
+            // update that took the site down. One step per request.
+            @set_time_limit(0);
+
+            RunUpgradeJob::dispatch($token, $marker['cursor']);
+        } finally {
+            $tracker->release('step-'.$token);
+        }
+
+        // The request that ran the last step returns the terminal marker in band:
+        // EnsureInstalled 404s /install/* once the version marker is current, so a
+        // following poll could never observe completion.
+        return response()->json($tracker->get($token) ?? $marker);
     }
 
     public function storeDatabase(Request $request): RedirectResponse

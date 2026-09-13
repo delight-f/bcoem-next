@@ -26,6 +26,10 @@ Route::post('/install/database', [InstallWizardController::class, 'storeDatabase
 Route::post('/install/adopt', [InstallWizardController::class, 'adopt'])->name('wizard.install.adopt');
 // ...and what follows: attached, with the update still to run.
 Route::get('/install/attached', [InstallWizardController::class, 'attached'])->name('wizard.install.attached');
+// The update itself, offered from that screen. The upgrade wizard proper needs a
+// signed-in administrator, which is impossible this early — see the controller.
+Route::post('/install/update', [InstallWizardController::class, 'update'])->name('wizard.install.update');
+Route::get('/install/update/progress', [InstallWizardController::class, 'updateProgress'])->name('wizard.install.update_progress');
 Route::get('/install/site', [InstallWizardController::class, 'site'])->name('wizard.install.site');
 Route::post('/install/site', [InstallWizardController::class, 'storeSite'])->name('wizard.install.site.store');
 Route::get('/install/confirm', [InstallWizardController::class, 'confirm'])->name('wizard.install.confirm');

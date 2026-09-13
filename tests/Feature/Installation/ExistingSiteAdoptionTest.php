@@ -147,16 +147,34 @@ final class ExistingSiteAdoptionTest extends InstallationTestCase
         $this->assertSame('2.9.1.0', $inspection->version);
     }
 
-    public function test_the_attached_screen_states_the_update_is_still_to_run(): void
+    public function test_the_attached_screen_offers_the_update_right_here(): void
     {
-        // Attaching is not upgrading, and a site still on the old database
-        // version looks finished — so the one remaining step is spelled out.
+        // The point of the screen: the dashboard prompt is unreachable this
+        // early (nobody can sign in until the adoption wrote the credentials),
+        // so the wizard has to offer the update itself rather than point at it.
         $this->withSession(['wizard.install.attached' => ['database' => '3.1.0.0', 'version' => '4.1.0-alpha.4']])
             ->get('/install/attached')
             ->assertOk()
             ->assertSee('3.1.0.0')
             ->assertSee('4.1.0-alpha.4')
-            ->assertSee('Sign in');
+            ->assertSee('Update Now');
+    }
+
+    public function test_the_attached_screen_offers_no_update_when_the_versions_match(): void
+    {
+        $this->withSession(['wizard.install.attached' => ['database' => '4.1.0-alpha.4', 'version' => '4.1.0-alpha.4']])
+            ->get('/install/attached')
+            ->assertOk()
+            ->assertDontSee('Update Now');
+    }
+
+    public function test_the_update_endpoint_refuses_a_session_that_never_adopted(): void
+    {
+        // The gate is the adoption: running an update takes the credentials this
+        // session proved by attaching, so an anonymous caller gets nowhere even
+        // though the install surface is open on an uninstalled site.
+        $this->postJson('/install/update', ['token' => 'abcdefgh1234'])->assertStatus(403);
+        $this->getJson('/install/update/progress?token=abcdefgh1234')->assertStatus(403);
     }
 
     public function test_the_attached_screen_without_session_state_goes_to_the_site(): void
