@@ -100,15 +100,36 @@ PHP 8.4+ (`gd`, `intl`, `mbstring`, `mysqli`) and MySQL 8.
 
 ### (S)FTP / shared hosting
 
-1. Download `bcoem-<version>-webroot.zip` from the release page.
-2. Extract it locally, then upload the **contents** into your web root
+1. Set the site's PHP version to **8.4 or newer** first — most shared hosts have a
+   version selector in their control panel. A mismatch shows up as a completely
+   blank 500 page with nothing in it to explain why.
+2. Download `bcoem-<version>-webroot.zip` from the release page.
+3. Extract it locally, then upload the **contents** into your web root
    (`public_html`, `htdocs` or `www`): `index.php`, `.htaccess`, `build/`,
    `images/`, `user_images/`, `vendor/`.
-3. Leave `app-data/` beside them. Make it writable: the installer rewrites
-   `app-data/.env` and needs `app-data/storage` and `app-data/bootstrap/cache`
-   writable.
-4. Visit `https://your-site/install` and finish the six-screen wizard.
-5. Sign in at `/login` with the administrator account you chose.
+4. Make `app-data` writable. The installer rewrites `app-data/.env` and needs
+   `app-data/storage` and `app-data/bootstrap/cache` writable. These are
+   permissions **on the server**, not on your own files, so set them from the
+   FTP client — in FileZilla right-click → *File Permissions*, in WinSCP
+   right-click → *Properties*:
+   - `app-data/storage` and `app-data/bootstrap/cache` → `775`, tick
+     "recurse into subdirectories"
+   - `app-data/.env` → `664`
+
+   If your host runs the site as a **different user** than the account you
+   upload with, the group permissions above do nothing, because the files
+   belong to your own group. NearlyFreeSpeech is one of those hosts. There, use
+   `777` on the two directories and `666` on `.env` instead.
+
+   Nothing else needs to be writable. Never make the whole tree writable —
+   `app-data` holds `.env` and the application source.
+5. Visit `https://your-site/install` and finish the six-screen wizard. If the
+   database you name already holds a finished competition site, the wizard says
+   so and offers **Use this existing site** instead of installing: your entries,
+   members and results are kept exactly as they are. A database it does not
+   recognise is refused rather than written to.
+6. Sign in at `/login` with your existing administrator account. When data was
+   kept from an older version, an administrator is offered an **Upgrade**.
 
 `app-data/.htaccess` blocks web access to that folder (it holds `.env`,
 `storage/` and the source). The guard needs Apache or LiteSpeed; on a host
