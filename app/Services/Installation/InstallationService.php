@@ -280,14 +280,18 @@ class InstallationService
     {
         $constraint = (string) ($this->composerRequire()['php'] ?? '^8.4');
 
-        $satisfied = Semver::satisfies(PHP_VERSION, $constraint);
+        // PHP_VERSION carries vendor suffixes ("8.4.22-nfsn1") that composer/semver
+        // rejects as an invalid version string; the numeric constants never do.
+        $version = PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION.'.'.PHP_RELEASE_VERSION;
+
+        $satisfied = Semver::satisfies($version, $constraint);
 
         return new PreconditionCheck(
             'php_version',
             $satisfied,
             $satisfied
-                ? 'PHP '.PHP_VERSION.' meets the requirement ('.$constraint.').'
-                : 'This site needs PHP '.$constraint.'. This server runs PHP '.PHP_VERSION.'.',
+                ? 'PHP '.$version.' meets the requirement ('.$constraint.').'
+                : 'This site needs PHP '.$constraint.'. This server runs PHP '.$version.'.',
         );
     }
 
