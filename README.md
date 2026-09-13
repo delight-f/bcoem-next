@@ -70,6 +70,11 @@ classes of defect.
   QR check-in.
 - **Public site** — live competition status, volunteers, contact, sponsors,
   results, plus a redirect map so every legacy `.php` URL still resolves.
+- **Signup protection** — a honeypot with time-trap, a per-IP signup rate
+  limiter, Cloudflare Turnstile (replacing the legacy reCAPTCHA), and optional
+  email verification. Turnstile and verification are opt-in via Site
+  Preferences or env and off by default; an enabled-but-unconfigured Turnstile
+  fails closed rather than letting bots through.
 - **Central clubs list** — a maintained homebrew-club list mirrored into the
   database and feeding the entrant picker. See
   [Central clubs list](#central-clubs-list).
