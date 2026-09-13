@@ -1,6 +1,6 @@
 @php($isEdit = $location !== null)
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>Drop-Off Locations: {{ $isEdit ? 'Edit' : 'Add' }} a Drop-Off Location</h1>
 
         @if ($errors->any())

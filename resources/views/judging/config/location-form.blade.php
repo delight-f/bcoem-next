@@ -9,7 +9,7 @@
     $tf24 = ((int) $ctx->prefsStr('prefsTimeFormat')) === 1;
 @endphp
 <x-public-layout :ctx="$ctx" :show-hero="false">
-    <section class="container mt-6 mb-4">
+    <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $nonJudging ? 'Non-Judging Sessions' : 'Judging Sessions' }}: {{ $isEdit ? 'Edit' : 'Add' }} a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</h1>
 
         {{-- Legacy control row (judging_locations.admin.php:229-236):
