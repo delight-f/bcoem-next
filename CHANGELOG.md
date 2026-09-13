@@ -8,6 +8,8 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.4] - 2026-09-13
+
 ### Added
 
 - **Attach to an existing site.** The install wizard inspects the database once
