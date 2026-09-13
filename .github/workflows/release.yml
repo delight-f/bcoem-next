@@ -161,6 +161,30 @@ jobs:
           fi
           echo "VERSION inside the zip matches the tag: ${actual}"
 
+      # The web-root-deployable zip must unpack into something a shared host
+      # can serve directly: the front controller at the top level, the
+      # application one level down under app-data/, and no leftover public/.
+      - name: Assert webroot zip layout
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          root="build/output/bcoem-${version}-webroot"
+          for p in index.php app-data/vendor/autoload.php app-data/.env app-data/.env.example app-data/.htaccess app-data/storage app-data/bootstrap/app.php; do
+            if [ ! -e "${root}/${p}" ]; then
+              echo "::error::webroot zip is missing ${p}"
+              exit 1
+            fi
+          done
+          if [ -e "${root}/app-data/public" ]; then
+            echo "::error::public/ was not lifted to the web root"
+            exit 1
+          fi
+          actual="$(cat "${root}/app-data/VERSION")"
+          if [ "$actual" != "$version" ]; then
+            echo "::error::VERSION inside the webroot zip is '${actual}', expected '${version}'"
+            exit 1
+          fi
+
       # Release notes come from the CHANGELOG.md section for this version.
       - name: Extract release notes from CHANGELOG.md
         run: |

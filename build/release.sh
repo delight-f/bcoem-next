@@ -22,6 +22,8 @@ rsync -a \
   --exclude=public/hot \
   --exclude=.scratch \
   --exclude=.slop-scan.cache.json \
+  --exclude=.phpunit.result.cache \
+  --exclude=.commandcode \
   --exclude=build \
   ./ "$BUILD_DIR/"
 
@@ -60,4 +62,31 @@ cd build/output
 zip -r "bcoem-${VERSION}.zip" "bcoem-${VERSION}" -x "*.DS_Store"
 cd -
 
+# --- Web-root-deployable artifact -------------------------------------------
+# The same built tree, rearranged so its contents can be uploaded straight into
+# a web root: public's contents become the document root and everything else
+# moves under app-data/ (inside the docroot, for hosts that cannot write above
+# it). Derived from the tree already assembled above, so every file is carried
+# over and nothing has to be enumerated by hand.
+WEB_DIR="build/output/bcoem-${VERSION}-webroot"
+WEB_ZIP="build/output/bcoem-${VERSION}-webroot.zip"
+rm -rf "${WEB_DIR}" "${WEB_ZIP}"
+mkdir -p "${WEB_DIR}/app-data"
+
+# dotglob so dotfiles (.env, .htaccess, .env.example) move as well.
+( shopt -s dotglob nullglob && mv "${BUILD_DIR}"/* "${WEB_DIR}/app-data/" )
+( shopt -s dotglob nullglob && mv "${WEB_DIR}/app-data/public"/* "${WEB_DIR}/" )
+rmdir "${WEB_DIR}/app-data/public"
+rm -rf "${BUILD_DIR}"
+
+# The packaged front controller points at app-data/ and sets the public path;
+# the source repo's public/index.php is intentionally left alone.
+cp build/webroot/index.php "${WEB_DIR}/index.php"
+cp build/webroot/app-data.htaccess "${WEB_DIR}/app-data/.htaccess"
+
+cd build/output
+zip -qr "bcoem-${VERSION}-webroot.zip" "bcoem-${VERSION}-webroot" -x "*.DS_Store"
+cd -
+
 echo "Built: $ZIP_PATH"
+echo "Built: $WEB_ZIP"

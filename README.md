@@ -126,6 +126,28 @@ confirmation cannot install twice.
   carries `.env` and `storage/` across, swaps while keeping a
   `.bak-<timestamp>`, then runs `app:upgrade`.
 
+### Shared hosting (FTP)
+
+For a host where you only have FTP and the account is rooted at the web root (a
+folder such as `public_html`, `htdocs` or `www`), download
+`bcoem-<version>-webroot.zip` and upload its **contents** into the web root:
+
+- `index.php` and the compiled assets (`.htaccess`, `build/`, `images/`,
+  `user_images/`, …) become the document root.
+- everything else lives one level down in `app-data/`, including `.env`,
+  `storage/` and `vendor/`.
+
+Then browse to `/install`.
+
+`app-data/` must be writable: the installer rewrites `.env`, and `storage/` and
+`bootstrap/cache` must be writable too. `app-data/` ships a deny-all `.htaccess`
+so it is never served — that guard needs Apache or LiteSpeed (common on shared
+hosts); a host running nginx alone ignores it.
+
+The other zip, `bcoem-<version>.zip`, is the flat application tree that
+`scripts/install.sh` and CLI installs use; it is not meant to be dropped into a
+web root as-is.
+
 Every path runs the same order: back up → verify → maintenance mode → migrate →
 version fixups → clear caches → version marker. The backup uses `mysqldump`,
 falling back to a pure-PHP export when the binary is blocked, so a backup always

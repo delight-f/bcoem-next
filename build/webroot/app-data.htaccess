@@ -1,0 +1,10 @@
+# app-data sits inside the web root on hosts that cannot place the application
+# above the document root. Nothing in here may be served over HTTP: it holds
+# .env, storage/ and the application source. Deny everything.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>
