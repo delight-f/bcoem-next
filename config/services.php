@@ -98,6 +98,11 @@ return [
     'clubs_list' => [
         'source_url' => env('CLUBS_LIST_URL', 'https://raw.githubusercontent.com/delight-f/clubs-list/main/dist/clubs.json'),
         'timeout_seconds' => (int) env('CLUBS_LIST_TIMEOUT', 10),
+        // Repair the mirror from the club picker when the daily schedule
+        // cannot run (a shared/FTP host has no cron) or the list has aged
+        // out. Throttled; a fetch failure stays a no-op. Turn off on hosts
+        // that should only ever sync from the scheduler or the admin button.
+        'lazy_refresh' => env('CLUBS_LIST_LAZY_REFRESH', true),
     ],
 
     /*

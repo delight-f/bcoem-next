@@ -123,6 +123,11 @@ final class Clubs
         // Guarded because this helper also runs during a rolling upgrade,
         // before the clubs migration has applied.
         if (Schema::hasTable('clubs')) {
+            // Repair the mirror on first use when the daily schedule cannot
+            // run (a plain FTP host has no cron), or when the list has aged
+            // out. No-op and throttled once fresh.
+            app(ClubsSyncService::class)->refreshIfStale();
+
             $synced = DB::table('clubs')
                 ->whereNotNull('name')
                 ->where('name', '!=', '')

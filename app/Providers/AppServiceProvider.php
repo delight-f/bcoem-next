@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Installation\Fixups\SyncCentralClubsList;
+use App\Services\Installation\UpgradeFixups;
 use App\Support\Payments\GatewayAdapter;
 use App\Support\Payments\PaymentProviderRegistry;
 use App\Support\Payments\PayPalGateway;
@@ -47,6 +49,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Central clubs list (issue #22). The sync is schedule-driven, but a
+        // shared/FTP host has no cron, so the first sync is also registered as
+        // an upgrade fixup: the wizard the operator already runs populates the
+        // picker on completion. Keyed to the release that ships the clubs
+        // tables; a skipped or renumbered release is covered by the picker's
+        // lazy refresh instead.
+        UpgradeFixups::register('4.0.0', '4.1.0', SyncCentralClubsList::class);
+
         // Signup throttle: 5 attempts per 10 minutes per IP. Generous enough
         // for a person fixing a validation error, tight enough to slow
         // scripted abuse. Named (not an inline throttle:6,1) so the value is

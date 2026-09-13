@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Support\Brewer;
 
 use DateTimeInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
@@ -38,6 +40,14 @@ use Throwable;
  */
 final class ClubsSyncService
 {
+    /** A successful sync stays fresh this long before a lazy refresh retries. */
+    private const REFRESH_TTL_SECONDS = 86400;
+
+    /** Minimum gap between lazy attempts, so an unreachable source is not retried on every page load. */
+    private const REFRESH_ATTEMPT_SECONDS = 3600;
+
+    private const REFRESH_CACHE_KEY = 'clubs-list.refresh-attempt';
+
     public function sync(): SyncResult
     {
         $url = (string) config('services.clubs_list.source_url');
@@ -126,6 +136,46 @@ final class ClubsSyncService
         $this->rememberVersion($version, $now);
 
         return SyncResult::success($version, $added, $updated, 0);
+    }
+
+    /**
+     * Best-effort sync for hosts that never run the scheduler. `clubs:sync` is
+     * scheduled daily, but a plain FTP/shared host has no cron, so the mirror
+     * would stay empty until someone found Admin → Clubs List. Calling this
+     * from the club picker repairs the list on first use instead.
+     *
+     * Skipped while the last successful sync is fresh, and throttled so an
+     * unreachable source is retried at most hourly rather than on every page
+     * load. sync() already turns fetch failures into no-ops; this method never
+     * throws, so a bad day upstream can never break a page.
+     */
+    public function refreshIfStale(): ?SyncResult
+    {
+        if (! (bool) config('services.clubs_list.lazy_refresh', true)) {
+            return null;
+        }
+
+        if (! Schema::hasTable('clubs_sync_state')) {
+            return null;
+        }
+
+        $syncedAt = DB::table('clubs_sync_state')->where('id', 1)->value('synced_at');
+
+        if ($syncedAt !== null && strtotime((string) $syncedAt) > time() - self::REFRESH_TTL_SECONDS) {
+            return null;
+        }
+
+        if (! Cache::add(self::REFRESH_CACHE_KEY, time(), self::REFRESH_ATTEMPT_SECONDS)) {
+            return null;
+        }
+
+        try {
+            return $this->sync();
+        } catch (Throwable $e) {
+            Log::warning('Clubs list lazy refresh failed.', ['exception' => $e->getMessage()]);
+
+            return null;
+        }
     }
 
     /**
