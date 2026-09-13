@@ -17,6 +17,7 @@ final readonly class PaymentResult
         public ?string $providerRef = null,
         public ?string $amount = null,
         public string $note = '',
+        public ?string $currency = null,
     ) {}
 
     public function isPaid(): bool

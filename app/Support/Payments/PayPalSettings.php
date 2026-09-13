@@ -117,8 +117,11 @@ final class PayPalSettings
     private static function existingSecret(): string
     {
         $data = self::column();
+        $stored = is_array($data) ? self::decrypt((string) ($data['client_secret'] ?? '')) : '';
 
-        return is_array($data) ? self::decrypt((string) ($data['client_secret'] ?? '')) : '';
+        // Fall back to the env-configured secret: hasSecret() counts env, so
+        // a blank submit on an env-configured install must not wipe it.
+        return $stored !== '' ? $stored : self::fromEnv()['client_secret'];
     }
 
     /**

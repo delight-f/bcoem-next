@@ -241,7 +241,8 @@ final class SitePreferencesController extends Controller
     /** @return array<string, mixed> */
     private function updateDefault(Request $request): array
     {
-        $tz = TenantContext::load()->prefsStr('prefsTimeZone');
+        $ctx = TenantContext::load();
+        $tz = $ctx->prefsStr('prefsTimeZone');
         $data = $request->validate([
             'prefsProEdition' => ['required', 'in:0,1'],
             'prefsMHPDisplay' => ['nullable', 'in:0,1'],
@@ -278,23 +279,27 @@ final class SitePreferencesController extends Controller
         ]);
         $data = $this->validateDates($request, $data, ['prefsWinnerDelay'], $tz);
 
+        // Turnstile keys are stored combined as "site|secret" and never echoed
+        // back to the form (the secret must not reach the page source), so a
+        // blank submit means "keep", not "clear".
+        $google = trim((string) ($data['prefsGoogleAccount'] ?? ''));
+        if ($google === '') {
+            $google = (string) ($ctx->prefsStr('prefsGoogleAccount') ?? '');
+        }
+
         // Turnstile: catch "enabled but no keys" at save time, not later as a
-        // mystery failed signup. Keys are stored combined as "site|secret".
+        // mystery failed signup.
         if (($data['prefsCAPTCHA'] ?? '0') === '1') {
-            $parts = array_map('trim', explode('|', (string) ($data['prefsGoogleAccount'] ?? ''), 2));
+            $parts = array_map('trim', explode('|', $google, 2));
             if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
                 throw ValidationException::withMessages([
-                    'prefsGoogleAccount' => 'Enter both the Turnstile site key and secret key (site|secret) to enable bot protection, or turn it off.',
+                    'prefsGoogleAccount' => 'Enter both the Turnstile site key and secret key (site|secret) to enable spam protection, or turn it off.',
                 ]);
             }
         }
 
         // Pro edition suppresses the MHP display (legacy quirk).
         $mhp = $data['prefsProEdition'] == 1 ? '0' : (string) ($data['prefsMHPDisplay'] ?? '0');
-
-        // Legacy stores the reCAPTCHA account as pipe-joined parts; the form
-        // posts the combined value directly.
-        $google = (string) ($data['prefsGoogleAccount'] ?? '');
 
         $languageOptions = array_values(array_filter(
             is_array($data['prefsLanguageOptions'] ?? null) ? $data['prefsLanguageOptions'] : [],
@@ -361,6 +366,7 @@ final class SitePreferencesController extends Controller
         $data = $request->validate([
             'contestEntryFee' => ['nullable', 'numeric'],
             'contestEntryFee2' => ['nullable', 'numeric'],
+            'contestEntryFeeDiscount' => ['nullable', 'in:Y,N'],
             'contestEntryFeeDiscountNum' => ['nullable', 'integer', 'min:1'],
             'contestEntryFeePassword' => ['nullable', 'string', 'max:255'],
             'contestEntryFeePasswordNum' => ['nullable', 'numeric', 'min:0'],
@@ -386,9 +392,13 @@ final class SitePreferencesController extends Controller
             'user-entry-limit-expire-days-4' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        // Discount flag derives from BOTH discounted fee and threshold being set.
-        $discount = (($data['contestEntryFee2'] ?? '') !== '' && ($data['contestEntryFeeDiscountNum'] ?? '') !== '')
-            ? 'Y' : 'N';
+        // The Discount Multiple Entries radio is the source of truth; when the
+        // field is absent (older payloads) fall back to deriving it from BOTH
+        // the discounted fee and the threshold being set.
+        $postedDiscount = $data['contestEntryFeeDiscount'] ?? null;
+        $discount = in_array($postedDiscount, ['Y', 'N'], true)
+            ? $postedDiscount
+            : ((($data['contestEntryFee2'] ?? '') !== '' && ($data['contestEntryFeeDiscountNum'] ?? '') !== '') ? 'Y' : 'N');
 
         $incremental = [];
         for ($i = 1; $i <= 4; $i++) {
@@ -544,10 +554,17 @@ final class SitePreferencesController extends Controller
         $transport = strtolower(trim((string) ($data['prefsEmailTransport'] ?? '')));
         $apiKey = trim((string) ($data['prefsEmailApiKey'] ?? ''));
 
+        $storedPassword = (string) ($stored['prefsEmailPassword'] ?? '');
         if ($data['change-email-password-choice'] == 1) {
+            // "Set new password" with the field left blank keeps the stored
+            // password rather than silently wiping it (the same keep-blank
+            // rule the provider API key uses below).
+            if ($password === '') {
+                $password = $storedPassword;
+            }
             // Divergence: stored as-is (see class docblock re simpleEncrypt).
-        } elseif ((string) ($stored['prefsEmailPassword'] ?? '') !== '') {
-            $password = (string) $stored['prefsEmailPassword'];
+        } elseif ($storedPassword !== '') {
+            $password = $storedPassword;
         }
 
         if ($data['prefsEmailSMTP'] == 0) {

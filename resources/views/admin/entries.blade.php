@@ -27,10 +27,6 @@
         <div class="alert alert-success">{{ $msgTexts[(int) request('msg')] }}</div>
     @endif
 
-    <form method="post" action="{{ route('backoffice.entries.update_form') }}">
-        @csrf
-        @method('PUT')
-
         <div class="bcoem-admin-element d-print-none row">
             <div class="col-md-12">
                 @if ($scoped)
@@ -282,6 +278,13 @@
             </div>
         </div>
 
+        {{-- The bulk edit form wraps only the entry table. The Admin Actions
+             and per-row delete forms live outside it: nested <form> elements
+             are invalid HTML and the parser drops the inner start tags. --}}
+        <form method="post" action="{{ route('backoffice.entries.update_form') }}">
+            @csrf
+            @method('PUT')
+
         @if ($entries->isEmpty())
             <p>No entries have been added to the database yet.</p>
         @else
@@ -397,12 +400,7 @@
                             </td>
                             <td class="d-none d-lg-table-cell d-print-none" nowrap>
                                 <a href="{{ route('backoffice.entries.edit', ['id' => $entry->id]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-pencil"></span></a>
-                                <form method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-inline"
-                                      onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entryName }}?&rdquo; This cannot be undone.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-link" style="margin:0; padding:0;" title="Delete &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-trash-o"></span></button>
-                                </form>
+                                <button type="submit" form="entry-delete-{{ $entry->id }}" class="btn btn-link" style="margin:0; padding:0;" title="Delete &ldquo;{{ $entryName }}&rdquo;"><span class="fa fa-lg fa-trash-o"></span></button>
                                 {{-- Legacy admin/entries.admin.php:468 — the icon prints the entry's
      bottle labels (output.inc.php section=entry-form-multi →
      bottle_label.output.php), the QR-bearing label sheet. --}}
@@ -413,6 +411,17 @@
                     @endforeach
                 </tbody>
             </table>
+
+            <button type="submit" class="btn btn-primary">Update Entries</button>
         @endif
     </form>
+
+    {{-- Per-row delete forms, outside the bulk form (see note above). --}}
+    @foreach ($entries as $entry)
+        <form id="entry-delete-{{ $entry->id }}" method="post" action="{{ route('backoffice.entries.destroy', ['id' => $entry->id]) }}" class="d-none"
+              onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entry->brewName }}?&rdquo; This cannot be undone.');">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endforeach
 </x-public-layout>

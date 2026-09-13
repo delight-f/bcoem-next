@@ -7,6 +7,7 @@ namespace App\Support\Payments;
 use App\Mail\PaymentConfirmMail;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -59,6 +60,7 @@ final class PaymentService
                 $result->eventId,
                 $result->note,
                 $adminUid,
+                currency: $result->currency,
             ),
             // A refund event's providerRef identifies the ORIGINAL payment.
             PaymentEvent::Refunded => $this->markRefunded(
@@ -87,13 +89,14 @@ final class PaymentService
         ?int $adminUid = null,
         string $payMethod = '',
         string $reference = '',
+        ?string $currency = null,
     ): bool {
         if ($entries === [] || DB::table('payments')->where('event_id', $eventId)->exists()) {
             return false;
         }
 
         try {
-            DB::transaction(function () use ($entries, $entrantUid, $amount, $method, $providerRef, $eventId, $note, $adminUid, $payMethod, $reference): void {
+            DB::transaction(function () use ($entries, $entrantUid, $amount, $method, $providerRef, $eventId, $note, $adminUid, $payMethod, $reference, $currency): void {
                 DB::table('payments')->insert([
                     'entrant_uid' => $entrantUid,
                     'entry_ids' => json_encode(array_values($entries), JSON_THROW_ON_ERROR),
@@ -106,6 +109,7 @@ final class PaymentService
                     'admin_uid' => $adminUid,
                     ...($payMethod !== '' ? ['pay_method' => $payMethod] : []),
                     ...($reference !== '' ? ['reference' => $reference] : []),
+                    'currency' => strtoupper($currency !== null && $currency !== '' ? $currency : self::tenantCurrency()),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -168,6 +172,30 @@ final class PaymentService
         });
 
         return true;
+    }
+
+    /**
+     * ISO currency code for this competition's payments: provider config
+     * wins, then a connected Stripe account's currency, defaulting to USD.
+     * (prefsCurrency is a legacy display token — '$', 'euro' — not an ISO
+     * code, so it is deliberately not used here.)
+     */
+    public static function tenantCurrency(): string
+    {
+        $code = strtoupper((string) (Config::get('services.stripe.currency') ?? ''));
+        if ($code === '') {
+            $code = strtoupper((string) (Config::get('services.paypal.currency') ?? ''));
+        }
+        if ($code === '') {
+            try {
+                $stripe = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsStripe'), true);
+                $code = is_array($stripe) ? strtoupper((string) ($stripe['currency'] ?? '')) : '';
+            } catch (\Throwable) {
+                $code = '';
+            }
+        }
+
+        return strlen($code) === 3 ? $code : 'USD';
     }
 
     /**

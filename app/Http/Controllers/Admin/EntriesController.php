@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\BrewController;
 use App\Http\Controllers\Controller;
+use App\Support\Payments\FeeCalculator;
 use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
@@ -63,7 +64,7 @@ final class EntriesController extends Controller
         if ($view === 'paid') {
             $query->where('brewing.brewPaid', '1');
         } elseif ($view === 'unpaid') {
-            $query->where('brewing.brewPaid', '!=', 1);
+            $query->where(fn ($w) => $w->where('brewing.brewPaid', '!=', 1)->orWhereNull('brewing.brewPaid'));
         }
         if ($filter !== 'default' && $filter !== '') {
             $query->where('brewing.brewCategorySort', $filter);
@@ -88,7 +89,7 @@ final class EntriesController extends Controller
         if ($view === 'paid') {
             $base->where('brewPaid', '1');
         } elseif ($view === 'unpaid') {
-            $base->where('brewPaid', '!=', 1);
+            $base->where(fn ($w) => $w->where('brewPaid', '!=', 1)->orWhereNull('brewPaid'));
         }
         if ($filter !== 'default' && $filter !== '') {
             $base->where('brewCategorySort', $filter);
@@ -98,8 +99,28 @@ final class EntriesController extends Controller
         }
 
         // Entry Status modal (entries.admin.php:936): counts scoped to the
+        // current view. Fee totals go through FeeCalculator (the single money
+        // model) — a flat count × base fee ignored the volume discount, the
+        // member rate and the fee cap that every other surface applies.
         $clone = fn () => clone $base;
-        $fee = (float) ($ctx->contestStr('contestEntryFee') ?? 0);
+        $feeParams = FeeCalculator::params($ctx);
+        $specialUids = DB::table('brewer')->where('brewerDiscount', 'Y')->pluck('uid')->all();
+        $feesFor = function (Builder $q) use ($feeParams, $specialUids): float {
+            $total = 0.0;
+            $rows = (clone $q)->selectRaw('brewBrewerID, COUNT(*) AS n')->groupBy('brewBrewerID')->get();
+            foreach ($rows as $row) {
+                $total += (float) FeeCalculator::total(
+                    (int) $row->n,
+                    in_array((int) $row->brewBrewerID, $specialUids, true),
+                    $feeParams,
+                );
+            }
+
+            return $total;
+        };
+        // NULL brewPaid is unpaid too (legacy/imported rows default to NULL).
+        $unpaid = static fn (Builder $q): Builder => $q->where(fn ($w) => $w->where('brewPaid', '!=', 1)->orWhereNull('brewPaid'));
+
         $entryStatus = [
             'confirmed' => (clone $base)->where('brewConfirmed', '1')->count(),
             'unconfirmed' => (clone $base)->where('brewConfirmed', '!=', 1)->count(),
@@ -109,14 +130,14 @@ final class EntriesController extends Controller
         $entryStatus['totalCount'] = DB::table('brewing')->count();
         if ($view === 'default' && $filter === 'default' && $bid === 'default') {
             $entryStatus['paidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '1')->count();
-            $entryStatus['unpaidConfirmed'] = DB::table('brewing')->where('brewConfirmed', '1')->where('brewPaid', '!=', 1)->count();
-            $entryStatus['totalFees'] = DB::table('brewing')->where('brewConfirmed', '1')->count() * $fee;
+            $entryStatus['unpaidConfirmed'] = $unpaid(DB::table('brewing')->where('brewConfirmed', '1'))->count();
+            $entryStatus['totalFees'] = $feesFor(DB::table('brewing')->where('brewConfirmed', '1'));
         }
         if ($view !== 'unpaid') {
-            $entryStatus['totalFeesPaid'] = $clone()->where('brewConfirmed', '1')->where('brewPaid', '1')->count() * $fee;
+            $entryStatus['totalFeesPaid'] = $feesFor($clone()->where('brewConfirmed', '1')->where('brewPaid', '1'));
         }
         if ($view !== 'paid') {
-            $entryStatus['totalFeesUnpaid'] = $clone()->where('brewConfirmed', '1')->where('brewPaid', '!=', 1)->count() * $fee;
+            $entryStatus['totalFeesUnpaid'] = $feesFor($unpaid($clone()->where('brewConfirmed', '1')));
         }
 
         // Copy/paste email modals (entries.admin.php:853-933): unique
@@ -127,7 +148,7 @@ final class EntriesController extends Controller
             if ($paid === '1') {
                 $q->where('b.brewPaid', '1');
             } elseif ($paid === '0') {
-                $q->where('b.brewPaid', '!=', 1);
+                $q->where(fn ($w) => $w->where('b.brewPaid', '!=', 1)->orWhereNull('b.brewPaid'));
             }
 
             return $q->select('br.brewerEmail', 'br.brewerLastName')
@@ -209,7 +230,8 @@ final class EntriesController extends Controller
      */
     public function purge(Request $request): RedirectResponse
     {
-        if ((int) $request->user()?->userLevel !== 0) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
         }
 

@@ -240,6 +240,7 @@ class PayPalGateway implements CapturableOnReturn, GatewayAdapter
                 providerRef: (string) ($resource['id'] ?? ''),
                 amount: self::amount($resource),
                 note: $type,
+                currency: self::currency($resource),
             ),
             // A reversed capture is PayPal clawing funds back — treat as refund.
             'PAYMENT.CAPTURE.REFUNDED', 'PAYMENT.CAPTURE.REVERSED' => new PaymentResult(
@@ -248,6 +249,7 @@ class PayPalGateway implements CapturableOnReturn, GatewayAdapter
                 providerRef: self::refundedCaptureRef($resource),
                 amount: self::amount($resource),
                 note: $type,
+                currency: self::currency($resource),
             ),
             default => new PaymentResult(PaymentEvent::Failed, $eventId, note: 'unhandled '.$type),
         };
@@ -355,6 +357,15 @@ class PayPalGateway implements CapturableOnReturn, GatewayAdapter
         $value = $resource['amount']['value'] ?? null;
 
         return is_numeric($value) ? bcadd((string) $value, '0', 2) : null;
+    }
+
+    /** @param array<string, mixed> $resource */
+    private static function currency(array $resource): ?string
+    {
+        $amount = is_array($resource['amount'] ?? null) ? $resource['amount'] : [];
+        $code = (string) ($amount['currency_code'] ?? $resource['currency_code'] ?? '');
+
+        return $code !== '' ? strtoupper($code) : null;
     }
 
     /**

@@ -24,7 +24,8 @@ final class MakeAdminController extends Controller
 {
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
         }
 
@@ -38,7 +39,8 @@ final class MakeAdminController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
         }
 
@@ -47,13 +49,32 @@ final class MakeAdminController extends Controller
             'userAdminObfuscate' => ['nullable', 'in:0,1'],
         ]);
 
+        $target = DB::table('users')->where('id', $id)->first();
+        if ($target === null) {
+            return redirect('/admin/users/'.$id.'/level?msg=not-found');
+        }
+
+        $newLevel = (string) $data['userLevel'];
+
+        // A top admin cannot surrender their own level (the UI hides the
+        // control for self, but a crafted request could).
+        if ($id === (int) $actor->id && $newLevel !== '0') {
+            return back()->withErrors(['userLevel' => 'You cannot change your own top-level administrator level.']);
+        }
+
+        // Demoting the last remaining top admin would lock everyone out.
+        if ((string) $target->userLevel === '0' && $newLevel !== '0'
+            && DB::table('users')->where('userLevel', '0')->count() <= 1) {
+            return back()->withErrors(['userLevel' => 'You cannot demote the only remaining top-level administrator.']);
+        }
+
         // Legacy: unchecked box ⇒ obfuscate only when the target stays a participant.
         $obfuscate = $request->boolean('userAdminObfuscate')
             ? 1
-            : ((int) $data['userLevel'] < 2 ? 0 : 1);
+            : ((int) $newLevel < 2 ? 0 : 1);
 
         DB::table('users')->where('id', $id)->update([
-            'userLevel' => (string) $data['userLevel'],
+            'userLevel' => $newLevel,
             'userCreated' => date('Y-m-d H:i:s'),
             'userAdminObfuscate' => $obfuscate,
         ]);

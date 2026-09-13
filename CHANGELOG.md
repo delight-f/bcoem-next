@@ -8,6 +8,75 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.6] - 2026-09-13
+
+### Added
+
+- **An audit of the back-office screens**, recorded in
+  `docs/BUG-AUDIT-ADMIN-DASHBOARD.md`: 26 verified defects with their triggers,
+  impact and fixes.
+
+### Fixed
+
+- **The sign-in page had no way to sign in.** `/login` — where every
+  authenticated-only screen sends a signed-out visitor — rendered the heading
+  and a "Reset Password" button and nothing else, because the form lives in the
+  shell's login modal. The page now offers a **Log In** button and opens the
+  form on arrival.
+- **Scoresheet uploads and the scoresheet list were open to any signed-in
+  account.** That screen never re-checked for an administrator; it now requires
+  one, like every other back-office screen.
+- **A participant profile failed to save whenever an optional field was left
+  blank** (no phone number, no address), returning a server error instead of
+  saving.
+- **Saving Competition Info silently wiped the QR check-in password.** The
+  password is set in its own modal, but every save of the main form cleared it;
+  it is now preserved unless the modal itself submits blank.
+- **A blank PayPal save erased an environment-configured client secret**,
+  silently disabling online payments. It now keeps the env secret.
+- **Shipped beer styles could be deleted or overwritten.** The list hides
+  Edit/Delete for built-in styles; the endpoints now refuse them too.
+- **Admin user-level and password changes were open to any admin.** Both are
+  now Top-Level-Administrator only, a top admin cannot demote themselves, and
+  the last remaining top admin cannot be demoted.
+- **A NULL `userLevel` counted as an administrator.** Legacy/imported rows
+  default to NULL; only the documented level values are admins now.
+- **The entries screen's Admin Actions and row delete did nothing.** They were
+  nested inside the bulk-edit form, which HTML discards, so they submitted the
+  wrong route; each also submitted with the wrong verb. The forms are no longer
+  nested, and the page gained the missing **Update Entries** button for the
+  inline judging-number / paid / notes columns.
+- **Custom-style delete never worked on the styles screen** (same nested-form
+  problem), and "Update Accepted Styles" sat outside its own form and saved
+  nothing.
+- **Uploaded sponsor logos could not be deleted** — the delete control was a GET
+  link to a POST-only endpoint and sent the wrong field name.
+- **The participants list crashed** with a server error once anyone was assigned
+  to a judging table.
+- **The row icons on that list pointed at the wrong screens:** the key opened
+  the *operator's* own password form, and the lock was a dead link.
+- **The payment ledger recorded USD for every collection** regardless of the
+  competition's currency; it now stores the currency the provider charged.
+- **Entry Status fee totals ignored volume discounts, the member rate and the
+  fee cap.** They now use the same fee model (`FeeCalculator`) as the rest of the
+  application.
+- **A judging-close suggestion rendered as 1970** when no judging session
+  existed, because the fallback branches were swapped.
+- **The sponsors bulk form skipped validation** the add/edit form enforces, so
+  an out-of-range sponsor level or over-long image name could be saved from the
+  list. It now validates identically.
+- **Uploaded SVG sponsor logos never appeared in the logo picker**, although the
+  uploader accepts them.
+- **Unpaid filters ignored entries with a NULL `brewPaid`** (the legacy column
+  default), so those entries were missing from the unpaid list and totals while
+  the purge path still treated them as unpaid.
+- **Deleting a non-existent contact, module, sponsor or style type reported
+  success.** They now report honestly instead of claiming a save that did not
+  happen.
+- **The participants and competition-info screens had unassociated labels**
+  (dangling `for=` on the radio/checkbox groups and the two Markdown textareas),
+  so clicking a label did nothing and screen readers mis-announced the fields.
+
 ## [4.1.0-alpha.5] - 2026-09-13
 
 ### Added

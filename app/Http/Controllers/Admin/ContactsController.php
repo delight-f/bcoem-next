@@ -80,6 +80,10 @@ final class ContactsController extends Controller
             return redirect('/?msg=99');
         }
 
+        if (! DB::table('contacts')->where('id', $id)->exists()) {
+            return redirect('/admin/contacts');
+        }
+
         DB::table('contacts')->delete($id);
 
         return redirect('/admin/contacts?msg=9');

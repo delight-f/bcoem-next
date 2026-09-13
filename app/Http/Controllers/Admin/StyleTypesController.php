@@ -116,9 +116,11 @@ final class StyleTypesController extends Controller
 
         // bcoe system rows are not deletable (legacy hides the control).
         $row = DB::table('style_types')->where('id', $id)->first();
-        if ($row !== null && $row->styleTypeOwn !== 'bcoe') {
-            DB::table('style_types')->delete($id);
+        if ($row === null || $row->styleTypeOwn === 'bcoe') {
+            return redirect('/admin/style-types');
         }
+
+        DB::table('style_types')->delete($id);
 
         return redirect('/admin/style-types?msg=9');
     }

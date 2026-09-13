@@ -33,7 +33,8 @@ final class ChangeUserPasswordController extends Controller
 {
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
         }
 
@@ -47,8 +48,13 @@ final class ChangeUserPasswordController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
+        }
+
+        if (! DB::table('users')->where('id', $id)->exists()) {
+            return redirect('/admin/users/'.$id.'/password?msg=not-found');
         }
 
         $data = $request->validate([

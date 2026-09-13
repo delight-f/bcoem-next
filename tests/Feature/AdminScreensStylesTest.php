@@ -172,7 +172,9 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
 
     public function test_edit_renames_style_and_cascades_into_brewing(): void
     {
-        $styleId = $this->insertStyle(['brewStyleVersion' => 'BJCP2021', 'brewStyleType' => 1]);
+        // Renaming is a custom-style operation; shipped bcoe styles are
+        // read-only (the list hides Edit/Delete and the controller refuses).
+        $styleId = $this->insertStyle(['brewStyleVersion' => 'BJCP2021', 'brewStyleType' => 1, 'brewStyleOwn' => 'custom']);
 
         $entryId = (int) DB::table('brewing')->insertGetId([
             'brewName' => 'P54 entry',

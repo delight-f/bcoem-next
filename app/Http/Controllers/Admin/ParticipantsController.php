@@ -290,7 +290,7 @@ final class ParticipantsController extends Controller
             // Entries + their scores/BOS rows (legacy deletes them one by
             // one in id order — a set-wise delete is equivalent).
             $entryIds = DB::table('brewing')->where('brewBrewerID', $uid)->pluck('id');
-            if ($entryIds !== []) {
+            if ($entryIds->isNotEmpty()) {
                 DB::table('judging_scores')->whereIn('eid', $entryIds)->delete();
                 DB::table('judging_scores_bos')->whereIn('eid', $entryIds)->delete();
             }
@@ -308,9 +308,13 @@ final class ParticipantsController extends Controller
         return redirect('/backoffice/participants?msg=deleted');
     }
 
-    /** Legacy blank_to_null: empty strings are stored NULL. */
-    private static function blankToNull(string $v): ?string
+    /**
+     * Legacy blank_to_null: empty strings are stored NULL. Accepts null too —
+     * ConvertEmptyStringsToNull turns blank optional inputs into null before
+     * they reach the validated array.
+     */
+    private static function blankToNull(?string $v): ?string
     {
-        return $v === '' ? null : $v;
+        return $v === null || $v === '' ? null : $v;
     }
 }

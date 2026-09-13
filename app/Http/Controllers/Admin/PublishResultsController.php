@@ -26,7 +26,8 @@ final class PublishResultsController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
-        if ((int) $request->user()?->userLevel !== 0) {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
         }
 

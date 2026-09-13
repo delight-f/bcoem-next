@@ -99,6 +99,10 @@ final class ModsController extends Controller
             return redirect('/?msg=99');
         }
 
+        if (! DB::table('mods')->where('id', $id)->exists()) {
+            return redirect('/admin/mods');
+        }
+
         DB::table('mods')->delete($id);
 
         return redirect('/admin/mods?msg=9');

@@ -21,7 +21,15 @@
                help fragments run together), which leaves help copy and the
                info buttons touching the control above. Loosen the rhythm. */
             .site-preferences h3 { margin-bottom: 1.25rem; }
-            .site-preferences h4 { margin-top: 2.25rem; margin-bottom: 1rem; }
+            /* Thin rule above each h4 subsection so General/Results/Spam
+               Protection etc. read as separate blocks instead of one wall of
+               text (same divider treatment as the admin dashboard, issue 31). */
+            .site-preferences h4 {
+                margin-top: 2rem;
+                margin-bottom: 1rem;
+                padding-top: 1.25rem;
+                border-top: 1px solid var(--bs-border-color-translucent);
+            }
             .site-preferences .form-text { display: block; margin-top: .5rem; }
             .site-preferences .form-text + .form-text { margin-top: .4rem; }
             .site-preferences .form-text .btn { margin-top: .5rem; }
@@ -54,8 +62,9 @@
             <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/site-preferences/default') }}">
                 @csrf
                 @method('put')
+                <h4>General Settings</h4>
                 <div class="mb-4 row">
-                    <label for="prefsProEdition" class="col-md-4 col-form-label">Competition Type</label>
+                    <label for="proNo" class="col-md-4 col-form-label">Competition Type</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsProEdition" value="0" id="proNo" @checked($p('prefsProEdition') !== '1')><label class="form-check-label" for="proNo">Amateur</label></div>
@@ -65,7 +74,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row" id="mhp-display">
-                    <label for="prefsMHPDisplay" class="col-md-4 col-form-label">Master Homebrewer Program (MHP) Fields and Display</label>
+                    <label for="mhpYes" class="col-md-4 col-form-label">Master Homebrewer Program (MHP) Fields and Display</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsMHPDisplay" value="1" id="mhpYes" @checked($p('prefsMHPDisplay') === '1')><label class="form-check-label" for="mhpYes">Enable</label></div>
@@ -88,7 +97,7 @@
 
                 <h4>Results</h4>
                 <div class="mb-4 row">
-                    <label for="prefsDisplayWinners" class="col-md-4 col-form-label">Results Display</label>
+                    <label for="dwY" class="col-md-4 col-form-label">Results Display</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsDisplayWinners" value="Y" id="dwY" @checked($p('prefsDisplayWinners') === 'Y')><label class="form-check-label" for="dwY">Enable</label></div>
@@ -105,7 +114,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsWinnerMethod" class="col-md-4 col-form-label">Winner Place Distribution Method</label>
+                    <label for="prefsWinnerMethod_0" class="col-md-4 col-form-label">Winner Place Distribution Method</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsWinnerMethod" value="0" id="prefsWinnerMethod_0" @checked($p('prefsWinnerMethod') === '0')><label class="form-check-label" for="prefsWinnerMethod_0">By Table/Medal Group</label></div>
@@ -118,7 +127,7 @@
                 </div>
 
                 <div class="mb-4 row">
-                    <label for="prefsSEF" class="col-md-4 col-form-label">Search Engine Friendly URLs</label>
+                    <label for="sefY" class="col-md-4 col-form-label">Search Engine Friendly URLs</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
@@ -128,7 +137,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsUseMods" class="col-md-4 col-form-label">Custom Modules</label>
+                    <label for="modsYes" class="col-md-4 col-form-label">Custom Modules</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsUseMods" value="Y" id="modsYes" @checked($p('prefsUseMods') === 'Y')><label class="form-check-label" for="modsYes">Enable</label></div>
@@ -138,9 +147,9 @@
                     </div>
                 </div>
 
-                <h4>CAPTCHA</h4>
+                <h4>Spam Protection</h4>
                 <div class="mb-4 row">
-                    <label for="prefsCAPTCHA" class="col-md-4 col-form-label">Enable Bot Protection</label>
+                    <label for="capY" class="col-md-4 col-form-label">Cloudflare Turnstile</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsCAPTCHA" value="1" id="capY" @checked($p('prefsCAPTCHA') === '1')><label class="form-check-label" for="capY">Yes</label></div>
@@ -152,11 +161,11 @@
                 <div class="mb-4 row">
                     <label for="prefsGoogleAccount" class="col-md-4 col-form-label">Turnstile Keys</label>
                     <div class="col-md-8">
-                        <input class="form-control @error('prefsGoogleAccount') is-invalid @enderror" id="prefsGoogleAccount" name="prefsGoogleAccount" type="text" value="{{ $p('prefsGoogleAccount') }}">
+                        <input class="form-control @error('prefsGoogleAccount') is-invalid @enderror" id="prefsGoogleAccount" name="prefsGoogleAccount" type="password" autocomplete="new-password" placeholder="{{ $p('prefsGoogleAccount') !== '' ? 'Saved — leave blank to keep' : 'site key|secret key' }}">
                         @error('prefsGoogleAccount')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <span class="form-text">Turnstile site key|secret key (pipe-separated), required when bot protection is enabled. Get free keys at <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener">Cloudflare Turnstile</a>.</span>
+                        <span class="form-text">Turnstile site key|secret key (pipe-separated), required when spam protection is enabled. Get free keys at <a href="https://dash.cloudflare.com/?to=/:account/turnstile" target="_blank" rel="noopener">Cloudflare Turnstile</a>.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -183,7 +192,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsAutoPurge" class="col-md-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
+                    <label for="apY" class="col-md-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsAutoPurge" value="1" id="apY" @checked($p('prefsAutoPurge') === '1')><label class="form-check-label" for="apY">Enable</label></div>
@@ -206,7 +215,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsLanguageToggle" class="col-md-4 col-form-label">Runtime Language Toggle</label>
+                    <label for="ltY" class="col-md-4 col-form-label">Runtime Language Toggle</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsLanguageToggle" value="Y" id="ltY" @checked($p('prefsLanguageToggle') === 'Y')><label class="form-check-label" for="ltY">Enable</label></div>
@@ -216,8 +225,8 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsLanguageOptions" class="col-md-4 col-form-label">Available Languages</label>
-                    <div class="col-md-8">
+                    <span class="col-md-4 col-form-label" id="prefsLanguageOptionsLabel">Available Languages</span>
+                    <div class="col-md-8" role="group" aria-labelledby="prefsLanguageOptionsLabel">
                         @foreach ($languages as $code => $name)
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="prefsLanguageOptions[]" value="{{ $code }}" id="langOpt-{{ $code }}" @checked(in_array($code, $langOptions, true))>
@@ -280,7 +289,7 @@
 
                 <h4>Drop-Off and Shipping Display</h4>
                 <div class="mb-4 row">
-                    <label for="prefsDropOff" class="col-md-4 col-form-label">Drop-off Location Display</label>
+                    <label for="dropYes" class="col-md-4 col-form-label">Drop-off Location Display</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsDropOff" value="1" id="dropYes" @checked((int) $p('prefsDropOff') === 1)><label class="form-check-label" for="dropYes">Enable</label></div>
@@ -290,7 +299,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsShipping" class="col-md-4 col-form-label">Shipping Location Display</label>
+                    <label for="shipYes" class="col-md-4 col-form-label">Shipping Location Display</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsShipping" value="1" id="shipYes" @checked((int) $p('prefsShipping') === 1)><label class="form-check-label" for="shipYes">Enable</label></div>
@@ -368,7 +377,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row" id="prefsHideSpecific">
-                    <label for="prefsSpecific" class="col-md-4 col-form-label">Hide Brewer&rsquo;s Specifics Field</label>
+                    <label for="specY" class="col-md-4 col-form-label">Hide Brewer&rsquo;s Specifics Field</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsSpecific" value="1" id="specY" @checked($p('prefsSpecific') === '1')><label class="form-check-label" for="specY">Yes</label></div>
@@ -416,7 +425,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscount" class="col-md-4 col-form-label">Discount Multiple Entries</label>
+                    <label for="discY" class="col-md-4 col-form-label">Discount Multiple Entries</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="contestEntryFeeDiscount" value="Y" id="discY" @checked($c('contestEntryFeeDiscount') === 'Y')><label class="form-check-label" for="discY">Yes</label></div>
@@ -530,7 +539,7 @@
                     <div class="mb-4 row">
                         <label for="styleLimitsEdit" class="col-md-4 col-form-label">Entry Limits per {{ $styleSet }} Style</label>
                         <div class="col-md-8">
-                            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list" aria-expanded="false" aria-controls="style-limits-list">Expand/Collapse the {{ $styleSet }} Style List ({{ count($styleLimitRows) }} styles)</button>
+                            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#style-limits-list" aria-expanded="false" aria-controls="style-limits-list" id="styleLimitsEdit">Expand/Collapse the {{ $styleSet }} Style List ({{ count($styleLimitRows) }} styles)</button>
                             <div class="collapse" id="style-limits-list">
                                 <div class="border rounded p-2 mt-2" style="max-height:24rem; overflow:auto;">
                                     @foreach ($styleLimitRows as $row)
@@ -650,8 +659,8 @@
                     </div>
                 </div>
                 <div class="mb-4 row" id="subStyleExeptionsEdit">
-                    <label for="prefsUSCLEx" class="col-md-4 col-form-label">Exceptions to Per Participant Sub-Style Entry Limit</label>
-                    <div class="col-md-8">
+                    <span class="col-md-4 col-form-label" id="prefsUSCLExLabel">Exceptions to Per Participant Sub-Style Entry Limit</span>
+                    <div class="col-md-8" role="group" aria-labelledby="prefsUSCLExLabel">
                         <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#sub-style-list" aria-expanded="false" aria-controls="sub-style-list">Expand/Collapse the Sub-Style List ({{ count($styleExceptions) }} styles)</button>
                         <div class="collapse" id="sub-style-list">
                             <div class="d-flex flex-wrap gap-2 align-items-center my-2">
@@ -886,7 +895,7 @@
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsEmailPassword" class="col-md-4 col-form-label">SMTP Password</label>
-                    <div class="col-md-8"><input class="form-control" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password"></div>
+                    <div class="col-md-8"><input class="form-control" id="prefsEmailPassword" name="prefsEmailPassword" type="password" autocomplete="new-password" placeholder="{{ (string) $p('prefsEmailPassword') !== '' ? 'Saved — leave blank to keep' : '' }}"></div>
                 </div>
                 </div>{{-- /mail-group-smtp --}}
                 <div id="mail-group-api">
@@ -947,7 +956,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="send-test-email" class="col-md-4 col-form-label">SMTP Settings Test</label>
+                    <label for="testEmailYes" class="col-md-4 col-form-label">SMTP Settings Test</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
@@ -1007,7 +1016,7 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="prefsTransFee" class="col-md-4 col-form-label">Checkout Fees Paid by Entrant</label>
+                    <label for="tfY" class="col-md-4 col-form-label">Checkout Fees Paid by Entrant</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsTransFee" value="Y" id="tfY" @checked($p('prefsTransFee') === 'Y')><label class="form-check-label" for="tfY">Enable</label></div>

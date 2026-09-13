@@ -315,7 +315,7 @@
             <details class="bcoem-comp-info-section">
                 <summary><h3>Rules and Other Information</h3></summary>
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
-                <label for="competition_rules" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Rules</label>
+                <label for="contestRules" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Competition Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <x-markdown-textarea name="competition_rules" id="contestRules" :value="$rulesText('competition_rules')" :rows="15"
                         help="Edit the provided general rules text as needed. Use the toolbar for headings, lists and emphasis." />
@@ -331,7 +331,7 @@
             </div>
 
             <div class="row mb-3"><!-- Form Group NOT-REQUIRED Text Area -->
-                <label for="competition_packing_shipping" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Packaging and Shipping Rules</label>
+                <label for="competitionPackingShipping" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Packaging and Shipping Rules</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <x-markdown-textarea name="competition_packing_shipping" id="competitionPackingShipping" :value="$rulesText('competition_packing_shipping')" :rows="15"
                         help="Edit the provided general rules text as needed." />

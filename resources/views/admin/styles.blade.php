@@ -60,12 +60,7 @@
                                 <td>
                                     @if ($style->brewStyleOwn !== 'bcoe')
                                         <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/styles/'.$style->id.'/edit') }}">Edit</a>
-                                        <form method="post" action="{{ url('/admin/styles/'.$style->id) }}" class="d-inline"
-                                            onsubmit="return confirm('Delete this custom style? This cannot be undone.');">
-                                            @csrf
-                                            @method('delete')
-                                            <button type="submit" class="btn btn-sm btn-outline btn-danger">Delete</button>
-                                        </form>
+                                        <button type="submit" form="style-delete-{{ $style->id }}" class="btn btn-sm btn-outline btn-danger" onclick="return confirm('Delete this custom style? This cannot be undone.');">Delete</button>
                                     @endif
                                 </td>
                             </tr>
@@ -75,6 +70,18 @@
                 <button type="submit" class="btn btn-primary">Update Accepted Styles</button>
                 <span class="form-text">Select "Update Accepted Styles" <em>before</em> paging through records.</span>
             </form>
+
+            {{-- Custom-style delete forms live outside the bulk form: nested
+                 <form> elements are invalid HTML and the parser drops the
+                 inner start tags (which also closed the bulk form early). --}}
+            @foreach ($styles as $style)
+                @if ($style->brewStyleOwn !== 'bcoe')
+                    <form id="style-delete-{{ $style->id }}" method="post" action="{{ url('/admin/styles/'.$style->id) }}" class="d-none">
+                        @csrf
+                        @method('delete')
+                    </form>
+                @endif
+            @endforeach
 
             <p class="mt-4">
                 <a class="btn btn-primary" href="{{ url('/admin/styles/create') }}">A Custom Style</a>

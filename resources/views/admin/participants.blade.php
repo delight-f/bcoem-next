@@ -387,7 +387,7 @@
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('backoffice.participants.edit', ['uid' => $p->uid]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $displayName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
                                 @if ($viewerLevel === 0)
                                     @if ($p->brewerEmail !== auth()->user()?->user_name)
-                                        <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants?bid='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
+                                        <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('admin.make_admin.edit', ['id' => $p->uid]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s User Level"><span class="fa fa-lg fa-lock"></span></a></span>
                                     @else
                                         <span style="margin-right: .4em"><span class="fa fa-lg fa-lock text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="You cannot change your own user level, {{ auth()->user()?->user_name }}."></span></span>
                                     @endif
@@ -403,11 +403,11 @@
                                         <span style="margin-right: .4em"><span class="fa fa-lg fa-trash-o text-muted" data-bs-toggle="tooltip" data-bs-placement="top" title="Silly, you cannot delete yourself, {{ auth()->user()?->user_name }}!"></span></span>
                                     @endif
                                     <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
-                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/password') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s password"><span class="fa fa-lg fa-key"></span></a></span>
+                                    <span style="margin-right: .4em"><a class="hide-loader" href="{{ route('admin.change_user_password.edit', ['id' => $p->uid]) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $displayName }}'s password"><span class="fa fa-lg fa-key"></span></a></span>
                                 @endif
                                 <span style="margin-right: .4em"><a class="hide-loader" href="mailto:{{ $p->brewerEmail }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Email {{ $displayName }} at {{ $p->brewerEmail }}"><span class="fa fa-lg fa-envelope"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="#" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ $displayName }}'s phone number: {{ $p->brewerPhone1 }}"><span class="fa fa-lg fa-phone"></span></a></span>
-                                @if (str_contains((string) ($tableAssignments[$p->uid.'|J'] ?? ''), 'Judge') || ($staffJudge[$p->uid] ?? false))
+                                @if (($tableAssignments[$p->uid.'|J'] ?? collect())->isNotEmpty() || ($staffJudge[$p->uid] ?? false))
                                     <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=5160') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - Letter (Avery 5160)"><span class="fa fa-lg fa-file"></span></a></span>
                                     <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/admin/output/labels?action=judging_labels&go=participants&id='.$p->uid.'&psort=3422') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Judge Scoresheet Labels for {{ $displayName }} - A4 (Avery 3422)"><span class="fa fa-lg fa-file-text"></span></a></span>
                                 @endif

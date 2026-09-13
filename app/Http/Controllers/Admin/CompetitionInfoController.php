@@ -178,7 +178,7 @@ final class CompetitionInfoController extends Controller
             $clubs = json_encode(explode(';', $rawClubs), JSON_THROW_ON_ERROR);
         }
 
-        return [
+        $row = [
             'contestName' => self::blankToNull((string) $data['contestName']),
             'contestHost' => self::blankToNull((string) ($data['contestHost'] ?? '')),
             'contestHostWebsite' => self::checkHttp((string) ($data['contestHostWebsite'] ?? '')), // null on empty
@@ -207,14 +207,23 @@ final class CompetitionInfoController extends Controller
             'contestCircuit' => self::blankToNull((string) ($data['contestCircuit'] ?? '')),
             'contestVolunteers' => self::blankToNull((string) ($data['contestVolunteers'] ?? '')),
             'contestLogo' => self::blankToNull((string) ($data['contestLogo'] ?? '')),
-            'contestCheckInPassword' => isset($data['contestCheckInPassword']) && $data['contestCheckInPassword'] !== ''
-                ? password_hash((string) $data['contestCheckInPassword'], PASSWORD_BCRYPT)
-                : null,
             'contestID' => self::blankToNull((string) ($data['contestID'] ?? '')),
             'contestClubs' => $clubs,
             'contestWinnerLink' => self::checkHttp((string) ($data['contestWinnerLink'] ?? '')), // null on empty
             'contestInfoExtra' => self::blankToNull((string) ($data['contestInfoExtra'] ?? '')),
         ];
+
+        // The main form never carries the check-in password — only the
+        // dedicated QR modal does. Leave the stored hash untouched when the
+        // key is absent, and clear it only on an explicit blank QR submit.
+        if (array_key_exists('contestCheckInPassword', $data)) {
+            $password = (string) $data['contestCheckInPassword'];
+            $row['contestCheckInPassword'] = $password !== ''
+                ? password_hash($password, PASSWORD_BCRYPT)
+                : null;
+        }
+
+        return $row;
     }
 
     /** Legacy check_http(): prefix http:// when no scheme present, NULL on empty. */

@@ -137,15 +137,17 @@ final class StylesAdminController extends Controller
         }
 
         $current = DB::table('styles')->where('id', $id)->first();
-        if ($current === null) {
+        // Shipped system styles are read-only (the list hides Edit/Delete).
+        if ($current === null || $current->brewStyleOwn === 'bcoe') {
             return redirect('/admin/styles');
         }
 
         $data = self::validatedRow($request);
         DB::table('styles')->where('id', $id)->update($data);
 
-        // Legacy cascade: renaming a style updates brewing.brewStyle copies
-        // matched by the OLD name.
+        // Legacy cascade: renaming a style updates brewing.brewStyle copies,
+        // matched by the OLD name the form posts (the pinned parity test keys
+        // on the posted value, so this is legacy semantics, not a bug).
         $oldName = (string) $request->input('brewStyleOld', '');
         if ($oldName !== '' && (string) $data['brewStyle'] !== $oldName) {
             DB::table('brewing')->where('brewStyle', $oldName)->update([
@@ -164,6 +166,11 @@ final class StylesAdminController extends Controller
     {
         if (! ($request->user()?->isAdmin() ?? false)) {
             return redirect('/?msg=99');
+        }
+
+        $row = DB::table('styles')->where('id', $id)->first();
+        if ($row === null || $row->brewStyleOwn === 'bcoe') {
+            return redirect('/admin/styles');
         }
 
         DB::table('styles')->delete($id);
@@ -209,6 +216,7 @@ final class StylesAdminController extends Controller
             'brewStyleGroup' => (string) $data['brewStyleGroup'],
             'brewStyleNum' => (string) $data['brewStyleNum'],
             'brewStyleVersion' => (string) $data['brewStyleVersion'],
+            'brewStyleType' => (int) $data['brewStyleType'],
         ];
 
         DB::table('preferences')->where('id', 1)->update([
@@ -222,13 +230,20 @@ final class StylesAdminController extends Controller
             return redirect('/?msg=99');
         }
 
+        $editing = $id === null ? null : DB::table('styles')->where('id', $id)->first();
+
+        // Shipped system styles cannot be opened for edit (the list hides it).
+        if ($id !== null && ($editing === null || $editing->brewStyleOwn === 'bcoe')) {
+            return redirect('/admin/styles');
+        }
+
         return view('admin.styles', [
             'ctx' => TenantContext::load(),
             'styles' => self::setQuery((string) TenantContext::load()->prefsStr('prefsStyleSet'))
                 ->orderBy('brewStyleType')->orderBy('brewStyleGroup')->orderBy('brewStyleNum')->get(),
             'styleTypes' => DB::table('style_types')->orderBy('id')->get(),
             'selected' => self::selectedStyles(),
-            'editing' => $id === null ? null : DB::table('styles')->where('id', $id)->first(),
+            'editing' => $editing,
         ]);
     }
 

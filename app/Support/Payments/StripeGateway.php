@@ -126,6 +126,7 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
                 providerRef: isset($object->payment_intent) ? (string) $object->payment_intent : null,
                 amount: self::fromCents($object->amount_total ?? null),
                 note: 'checkout.session.completed',
+                currency: isset($object->currency) ? strtoupper((string) $object->currency) : null,
             ),
             // charge.refunded's payment_intent identifies the ORIGINAL payment.
             'charge.refunded' => new PaymentResult(
@@ -133,6 +134,7 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
                 $eventId,
                 providerRef: isset($object->payment_intent) ? (string) $object->payment_intent : null,
                 note: 'charge.refunded',
+                currency: isset($object->currency) ? strtoupper((string) $object->currency) : null,
             ),
             // Async settlement methods (ACH etc.) confirm days later —
             // Stripe docs list these as must-handle alongside completed.
@@ -142,6 +144,7 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
                 providerRef: isset($object->payment_intent) ? (string) $object->payment_intent : null,
                 amount: self::fromCents($object->amount_total ?? null),
                 note: 'checkout.session.async_payment_succeeded',
+                currency: isset($object->currency) ? strtoupper((string) $object->currency) : null,
             ),
             'checkout.session.async_payment_failed' => new PaymentResult(PaymentEvent::Failed, $eventId, note: 'checkout.session.async_payment_failed'),
             'checkout.session.expired' => new PaymentResult(PaymentEvent::Cancelled, $eventId, note: 'checkout.session.expired'),
@@ -163,6 +166,7 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
             providerRef: isset($refund->payment_intent) ? (string) $refund->payment_intent : $paymentRef,
             amount: self::fromCents($refund->amount ?? null),
             note: 'stripe refund issued',
+            currency: isset($refund->currency) ? strtoupper((string) $refund->currency) : null,
         );
     }
 

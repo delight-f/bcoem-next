@@ -253,7 +253,7 @@ final class AllDatesController extends Controller
                 }
             } else {
                 if ($judgingLatest === '') {
-                    $jClosed = $judgingEarliest === '' ? (int) $judgingEarliest + 86400 : $now + 86400;
+                    $jClosed = $judgingEarliest === '' ? $now + 86400 : $judgingEarliest + 86400;
                 } else {
                     $jClosed = $judgingLatest;
                 }

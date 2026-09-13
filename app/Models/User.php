@@ -76,7 +76,9 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdmin(): bool
     {
-        return (int) $this->userLevel <= 1;
+        // Level is a char column that defaults to NULL; a NULL row is NOT an
+        // admin (the old `(int) null <= 1` cast silently made it one).
+        return in_array((string) $this->userLevel, ['0', '1'], true);
     }
 
     public function isEntrant(): bool

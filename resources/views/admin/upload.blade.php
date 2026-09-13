@@ -54,10 +54,15 @@
                                    href="{{ asset('user_images/'.$f['name']) }}" title="{{ $f['name'] }}">{{ $f['name'] }}</a></td>
                             <td>{{ date('l, F j, Y H:i', $f['mtime']) }}</td>
                             <td>
-                                {{-- Legacy upload.admin.php: delete is a plain
-                                     link to the process image-delete target
-                                     (data-confirm handles the prompt). --}}
-                                <a class="hide-loader" href="{{ url('/admin/upload/delete') }}?action=delete&filter={{ urlencode($f['name']) }}&go=image&view={{ $single ? 'html' : 'default' }}" data-confirm="Are you sure? This will remove the image named {{ $f['name'] }} from the server."><span class="fa fa-lg fa-trash"></span></a>
+                                {{-- Delete route is POST-only and reads `file`; a
+                                     GET link to it only ever 405'd. --}}
+                                <form method="post" action="{{ url('/admin/upload/delete') }}" class="d-inline"
+                                      onsubmit="return confirm('Are you sure? This will remove the image named {{ $f['name'] }} from the server.');">
+                                    @csrf
+                                    <input type="hidden" name="file" value="{{ $f['name'] }}">
+                                    <input type="hidden" name="view" value="{{ $single ? 'html' : 'default' }}">
+                                    <button type="submit" class="btn btn-link p-0" title="Delete {{ $f['name'] }}"><span class="fa fa-lg fa-trash"></span></button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach
