@@ -8,6 +8,47 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.7] - 2026-09-14
+
+### Fixed
+
+- **A wrong username or password returned a 500 instead of the sign-in
+  retry page.** The failed-login hook raised an `E_USER_WARNING`, which
+  Laravel's error handler turns into an uncaught exception in every
+  environment — so the guard meant to keep it out of test runs armed it in
+  production instead. The fail2ban line is now logged without raising a
+  warning (#36).
+- **Switching from Tables Planning Mode to Competition Mode deleted every
+  judging table.** The toggle ran `TRUNCATE` on tables, assignments and
+  flights whenever no flight existed, and otherwise pruned each table to its
+  received styles and cascade-deleted the rest. A mode switch now prunes
+  only derived flight data; table configuration and assignments survive
+  (#39).
+- **Generated judge and steward sign-in sheets came out blank.** An
+  assignment whose session could not be resolved was silently dropped from
+  the sheet. Each assignment now falls back to its table's session, and any
+  still unmatched appear on an "Unassigned" sheet (#38).
+- **`admin/judging/tables` was cramped and mis-labelled.** The mode switch
+  and "Add a Table" no longer touch, the Assign Roles / View / Print
+  dropdowns share one row, the empty state is an alert, and assign judge /
+  assign steward use the gavel and clipboard icons (#37).
+- **`admin/competition-info` sections were hard to tell apart.** Each
+  section now carries a light-blue Bruxellensis accent, expanded fields
+  clear the dividers, the QR check-in help text sits beneath its button, and
+  the page title matches the other admin headers (#40).
+- **The central club picker only searched on a button click.** Typing now
+  updates the match list live, clicking a match selects it, and Enter adds
+  the typed name when nothing matches; duplicate detection compares whole
+  club names (#41).
+
+### Changed
+
+- **Release builds no longer fetch fonts from the network.** The Instrument
+  Sans files now resolve from `node_modules` via `fontsource`, so packaging
+  is offline-deterministic (#34).
+- **`softprops/action-gh-release` moved from v2 to v3,** off GitHub Actions'
+  deprecated Node 20 runtime (#34).
+
 ## [4.1.0-alpha.6] - 2026-09-13
 
 ### Added
