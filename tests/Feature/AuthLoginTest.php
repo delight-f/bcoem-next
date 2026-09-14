@@ -126,6 +126,31 @@ final class AuthLoginTest extends PublicSurfaceTestCase
         $this->assertGuest();
     }
 
+    public function test_wrong_password_redirects_instead_of_erroring_in_production(): void
+    {
+        // The failed-login hook runs only in production. It used to be a
+        // trigger_error(E_USER_WARNING), which Laravel's error handler turns
+        // into an uncaught ErrorException — a 500 instead of the ?msg=11
+        // redirect. The suite runs in `testing`, so this is the only test that
+        // exercises the production branch. CSRF is on outside `testing`, so
+        // carry a token through.
+        $this->withSession(['_token' => 'prod-csrf-token']);
+        $this->app['env'] = 'production';
+
+        try {
+            $response = $this->post('/login', [
+                '_token' => 'prod-csrf-token',
+                'loginUsername' => 'user.baseline@brewingcompetitions.com',
+                'loginPassword' => 'nope-nope-nope',
+            ]);
+
+            $response->assertRedirect('/?msg=11');
+            $this->assertGuest();
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+    }
+
     public function test_unknown_user_redirects_with_msg11(): void
     {
         $response = $this->post('/login', [

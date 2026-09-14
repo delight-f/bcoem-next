@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\DB;
  * `loginPassword`; on success normalize the stored email to lowercase,
  * mirror it into `brewer.brewerEmail`, rotate the CSRF token, and redirect
  * admins (userLevel<=1) to the admin dashboard and everyone else to the
- * entries list. On failure: `?msg=11` (bad credentials) and a
- * `trigger_error('user authentication failure')` that fail2ban keys on —
+ * entries list. On failure: `?msg=11` (bad credentials) and an
+ * `error_log('user authentication failure')` line that fail2ban keys on —
  * there is NO application-level failed-login counter.
  */
 final class LoginController extends Controller
@@ -95,13 +95,16 @@ final class LoginController extends Controller
         }
 
         // Legacy: session destroyed, redirect to ?msg=11, fail2ban hook.
-        // The E_USER_WARNING must never 500 the request in test/CI envs
-        // (Laravel converts warnings to ErrorExceptions there) — the hook is
-        // for Apache fail2ban on production, so suppress in non-production.
+        // The hook is a plain error-log line: Laravel's handler turns any
+        // E_USER_WARNING into an uncaught ErrorException in EVERY environment,
+        // so trigger_error() here 500'd the request instead of redirecting.
+        // error_log() writes the same fail2ban-keyable line to the PHP/Apache
+        // error log without raising a warning. Only emitted where a fail2ban
+        // jail watches (production).
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         if (app()->environment('production')) {
-            trigger_error('user authentication failure', E_USER_WARNING);
+            error_log('user authentication failure');
         }
 
         return redirect('/?msg=11');
