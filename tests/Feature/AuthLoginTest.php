@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Contracts\Hashing\Hasher;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Auth bootstrap (ticket 01): login/logout against the legacy `users`
@@ -262,5 +264,22 @@ final class AuthLoginTest extends PublicSurfaceTestCase
         $this->assertTrue($hasher->needsRehash(self::LEGACY_HASH));
         $this->assertFalse($hasher->needsRehash('$2y$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX'));
         $this->assertTrue($hasher->check('bcoem', self::LEGACY_HASH));
+    }
+
+    public function test_expired_csrf_token_renders_a_recoverable_error_page(): void
+    {
+        // A 419 comes from a form whose token no longer matches the session:
+        // a tab left open past the session lifetime, or a form still carrying
+        // the token from before a failed attempt rotated it (a failed login
+        // rotates the token server-side and redirects, leaving the old form
+        // stale). Laravel's default 419 page is a dead end; the site's own
+        // view renders the public shell with the login modal open, so the
+        // visitor signs in again from the error page itself.
+        Route::get('/_test/token-mismatch', fn () => throw new TokenMismatchException);
+
+        $this->get('/_test/token-mismatch')
+            ->assertStatus(419)
+            ->assertSee('Your session has expired. Sign in again to continue.')
+            ->assertSee('data-bs-target="#login-modal"', false);
     }
 }
