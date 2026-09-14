@@ -8,6 +8,8 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.8] - 2026-09-14
+
 ### Added
 
 - **A manual "Check for updates" on the admin dashboard.** The automatic
