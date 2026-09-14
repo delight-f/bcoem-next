@@ -373,6 +373,84 @@ final class JudgingAjaxTest extends PublicSurfaceTestCase
         $this->assertSame(0, (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsTablePlanning'));
     }
 
+    public function test_competition_round_trip_preserves_table_configuration_and_assignments(): void
+    {
+        $s1 = $this->makeStyle('84', 'A');
+        $s2 = $this->makeStyle('85', 'B');
+        $e1 = $this->makeEntry($this->adminId(), $s1, '1');
+        $this->makeEntry($this->adminId(), $s2, '1');
+
+        $table = $this->makeTable($s1.','.$s2);
+        DB::table('judging_flights')->insert([
+            'flightTable' => $table, 'flightNumber' => 1, 'flightEntryID' => $e1, 'flightRound' => 1,
+        ]);
+        $assignmentId = (int) DB::table('judging_assignments')->insertGetId([
+            'bid' => $this->judgeUid(),
+            'assignment' => 'J',
+            'assignTable' => $table,
+            'assignFlight' => 1,
+            'assignRound' => 1,
+        ]);
+
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 1]);
+
+        $this->login(self::ADMIN);
+
+        // planning → competition: configuration must survive the switch.
+        foreach (['enable-planning', 'enable-competition'] as $section) {
+            $this->post('/admin/judging/tables-mode', ['section' => $section])
+                ->assertOk()
+                ->assertExactJson(['status' => '1', 'error_count' => '0', 'error_type' => '0']);
+        }
+
+        $this->assertSame(0, (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsTablePlanning'));
+        $this->assertSame($s1.','.$s2, (string) DB::table('judging_tables')->where('id', $table)->value('tableStyles'));
+        $this->assertNotNull(DB::table('judging_assignments')->where('id', $assignmentId)->first());
+
+        // competition → planning: and back again.
+        $this->post('/admin/judging/tables-mode', ['section' => 'enable-planning'])
+            ->assertOk()
+            ->assertExactJson(['status' => '1', 'error_count' => '0', 'error_type' => '0']);
+
+        $this->assertSame(1, (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsTablePlanning'));
+        $this->assertSame($s1.','.$s2, (string) DB::table('judging_tables')->where('id', $table)->value('tableStyles'));
+        $this->assertSame(
+            1,
+            (int) DB::table('judging_assignments')->where('id', $assignmentId)->value('assignPlanning'),
+        );
+    }
+
+    public function test_enable_competition_without_flights_keeps_tables_and_assignments(): void
+    {
+        // The previously-destructive case: an organizer who defines tables
+        // and assignments but never holds a flight. No usable flightEntryID
+        // used to TRUNCATE all three tables; the switch must only flip the
+        // preference flag.
+        DB::table('judging_flights')->delete();
+
+        $s1 = $this->makeStyle('86', 'A');
+        $table = $this->makeTable((string) $s1);
+        $assignmentId = (int) DB::table('judging_assignments')->insertGetId([
+            'bid' => $this->judgeUid(),
+            'assignment' => 'J',
+            'assignTable' => $table,
+            'assignFlight' => 1,
+            'assignRound' => 1,
+        ]);
+
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 1]);
+
+        $this->login(self::ADMIN);
+        $this->post('/admin/judging/tables-mode', ['section' => 'enable-competition'])
+            ->assertOk()
+            ->assertExactJson(['status' => '1', 'error_count' => '0', 'error_type' => '0']);
+
+        $this->assertSame(0, (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsTablePlanning'));
+        $this->assertNotNull(DB::table('judging_tables')->where('id', $table)->first());
+        $this->assertSame((string) $s1, (string) DB::table('judging_tables')->where('id', $table)->value('tableStyles'));
+        $this->assertNotNull(DB::table('judging_assignments')->where('id', $assignmentId)->first());
+    }
+
     public function test_tables_mode_rejects_privileged_but_unknown_sections_with_legacy_envelope(): void
     {
         // Logged-in entrant (level 2 passes legacy's <=2 gate): unknown

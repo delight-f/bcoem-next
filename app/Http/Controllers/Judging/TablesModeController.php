@@ -14,23 +14,25 @@ use Illuminate\Support\Facades\Schema;
 /**
  * tables_mode toggle (spec P4.7): ajax/tables_mode.ajax.php — flips the
  * competition between table-planning mode (jPrefsTablePlanning=1, ledger/
- * flight-assignment.md #2) and production mode, restructuring
- * judging_flights / judging_assignments / judging_tables on each switch.
+ * flight-assignment.md #2) and production mode. Persisted judging_tables
+ * configuration is never restructured by a switch; only derived flight
+ * data is pruned on the way into competition mode (issue #39).
  *
- * Legacy behaviors preserved verbatim:
+ * Behaviors preserved verbatim:
  *  - enable-planning: ensures the three planning columns exist (legacy
  *    ALTERed them in on first use), dumps every NOT-received entry of
  *    each table's styles into flight 1 of that table, drops tables whose
  *    styles have no entries at all (cascading assignments + flights),
  *    flags everything planning (1), sets jPrefsTablePlanning=1.
- *  - enable-competition: deletes flights whose entry was never received,
- *    flags remaining flights production (0), prunes each table's styles
- *    to those with >=1 RECEIVED entry (again dropping emptied tables with
- *    cascade), unassigns any judge/steward holding an entry conflict at
- *    their assigned table (conflict check uses jPrefsTablePlanning as it
- *    stood BEFORE this request — legacy read the stale session copy),
- *    truncates all three tables when no flights exist, sets
- *    jPrefsTablePlanning=0.
+ *  - enable-competition: deletes flights whose entry was never received
+ *    and flags the survivors production (0) — derived data only. Table
+ *    configuration is left intact: no table/styles pruning, no cascade
+ *    deletion and no TRUNCATE, so an organizer who defined tables but
+ *    never held a flight keeps every table and assignment (the switch is
+ *    then just the flag flip). Unassigns any judge/steward holding an
+ *    entry conflict at their assigned table (conflict check uses
+ *    jPrefsTablePlanning as it stood BEFORE this request — legacy read the
+ *    stale session copy), sets jPrefsTablePlanning=0.
  *
  * Envelope parity: {"status","error_count","error_type"} stringified; a
  * non-admin hit returns an EMPTY body (legacy echoed nothing outside its
@@ -187,6 +189,8 @@ final class TablesModeController extends Controller
 
         $unassignFlag = 0;
 
+        // Derived flight data only. No flight rows is a valid state (there
+        // is nothing to prune); table configuration is never touched here.
         if ($flightEntries !== []) {
             try {
                 if ($received === []) {
@@ -205,62 +209,19 @@ final class TablesModeController extends Controller
             }
 
             foreach (DB::table('judging_tables')->get(['id', 'tableStyles']) as $table) {
-                $keep = [];
-
-                foreach (array_unique(explode(',', (string) $table->tableStyles)) as $styleId) {
-                    if ($styleId === '') {
-                        continue;
-                    }
-
-                    $style = DB::table('styles')->where('id', $styleId)->first(['brewStyleGroup', 'brewStyleNum']);
-                    if ($style === null) {
-                        continue;
-                    }
-
-                    $hasEntries = DB::table('brewing')
-                        ->where('brewCategorySort', $style->brewStyleGroup)
-                        ->where('brewSubCategory', $style->brewStyleNum)
-                        ->where('brewReceived', 1)
-                        ->exists();
-
-                    if ($hasEntries) {
-                        $keep[] = $styleId;
-                    }
-                }
-
-                if ($keep === []) {
-                    $errorCount += $this->deleteTableCascade((int) $table->id);
-                } else {
-                    $newStyles = implode(',', $keep);
-
-                    try {
-                        DB::table('judging_tables')->where('id', $table->id)
-                            ->update(['tableStyles' => $newStyles]);
-                    } catch (\Throwable) {
-                        $errorCount += 1;
-                    }
-
-                    // Unassign judges/stewards who have their own entry at
-                    // this table's styles.
-                    foreach (DB::table('judging_assignments')->where('assignTable', $table->id)->get(['id', 'bid']) as $assignment) {
-                        if ($this->entryConflict((string) $assignment->bid, $newStyles, $planningFlag)) {
-                            try {
-                                DB::table('judging_assignments')->where('id', $assignment->id)->delete();
-                            } catch (\Throwable) {
-                                $errorCount += 1;
-                            }
-
-                            $unassignFlag += 1;
+                // Unassign judges/stewards holding their own entry in a
+                // style this table covers. The table's styles and every
+                // other assignment survive the switch untouched.
+                foreach (DB::table('judging_assignments')->where('assignTable', $table->id)->get(['id', 'bid']) as $assignment) {
+                    if ($this->entryConflict((string) $assignment->bid, (string) $table->tableStyles, $planningFlag)) {
+                        try {
+                            DB::table('judging_assignments')->where('id', $assignment->id)->delete();
+                        } catch (\Throwable) {
+                            $errorCount += 1;
                         }
+
+                        $unassignFlag += 1;
                     }
-                }
-            }
-        } else {
-            foreach (['judging_assignments', 'judging_flights', 'judging_tables'] as $table) {
-                try {
-                    DB::statement(sprintf('TRUNCATE `%s%s`', $this->prefix(), $table));
-                } catch (\Throwable) {
-                    $errorCount += 1;
                 }
             }
         }
