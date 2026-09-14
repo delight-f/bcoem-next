@@ -106,8 +106,8 @@ jobs:
       # Info/style findings are pre-existing and intentional (e.g. the inline
       # PHP in install.sh is single-quoted on purpose), so gate on the levels
       # that catch real bugs.
-      - name: Shellcheck (install and release scripts)
-        run: shellcheck --severity=warning scripts/install.sh build/release.sh
+      - name: Shellcheck (install, update and release scripts)
+        run: shellcheck --severity=warning scripts/install.sh scripts/update.sh build/release.sh
 
       - name: PHPUnit
         env:

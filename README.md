@@ -183,6 +183,10 @@ install twice.
 - **SSH** — `scripts/install.sh` stages the new version beside the live one,
   carries `.env` and `storage/` across, swaps while keeping a
   `.bak-<timestamp>`, then runs `app:upgrade`.
+- **Web-root installs (shell)** — `bash scripts/update.sh` finds the document
+  root, fetches the latest release, merges it in place, and preserves `.env`
+  and `storage/`. Finish in the browser at `/upgrade`. Run `--help` for
+  `--site` / `--version` / `--zip-file` / `--yes`.
 
 Every path runs the same order: back up → verify → maintenance mode → migrate →
 version fixups → clear caches → version marker. The backup uses `mysqldump`,
