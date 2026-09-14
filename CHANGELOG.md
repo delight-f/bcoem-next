@@ -18,12 +18,14 @@ Release notes for a tag are taken from the matching `## [version]` section below
   environment — so the guard meant to keep it out of test runs armed it in
   production instead. The fail2ban line is now logged without raising a
   warning (#36).
-- **Switching from Tables Planning Mode to Competition Mode deleted every
-  judging table.** The toggle ran `TRUNCATE` on tables, assignments and
-  flights whenever no flight existed, and otherwise pruned each table to its
-  received styles and cascade-deleted the rest. A mode switch now prunes
-  only derived flight data; table configuration and assignments survive
-  (#39).
+- **Switching table mode deleted judging tables.** Both directions
+  destroyed persisted configuration: entering Competition Mode ran
+  `TRUNCATE` on tables, assignments and flights whenever no flight existed
+  (and otherwise pruned each table to its received styles, cascade-deleting
+  the rest), while entering Planning Mode pruned each table to the styles
+  that already had entries — deleting any table set up in advance for a
+  style no one had entered yet. A mode switch now prunes only derived
+  flight data; table configuration and assignments survive (#39).
 - **Generated judge and steward sign-in sheets came out blank.** An
   assignment whose session could not be resolved was silently dropped from
   the sheet. Each assignment now falls back to its table's session, and any
