@@ -154,10 +154,10 @@ log "Current: $(cat "${SITE}/app-data/VERSION" 2>/dev/null || echo 'unknown')"
 # Fetch the release into a staging area beside the site
 # ---------------------------------------------------------------------------
 
-STAGE="$(dirname "${SITE}")/.bcoem-update.$$"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/bcoem-update.XXXXXX")" ||
+    die "Could not create a staging directory under ${TMPDIR:-/tmp}."
 cleanup() { rm -rf "${STAGE}"; }
 trap cleanup EXIT
-mkdir -p "${STAGE}"
 
 if [ -n "${ZIP_FILE}" ]; then
     [ -f "${ZIP_FILE}" ] || die "Local zip not found: ${ZIP_FILE}"
@@ -215,7 +215,14 @@ confirm "Update ${SITE} to ${VERSION}? A file backup is taken first." ||
 # Back up, then merge the new tree over the live one
 # ---------------------------------------------------------------------------
 
-BACKUP="$HOME/bcoem-backup-$(date +%Y%m%d%H%M%S)"
+# Prefer $HOME for the backup; fall back to the staging area's parent when the
+# home directory is not writable.
+BACKUP_DIR="${HOME:-}"
+if [ -z "${BACKUP_DIR}" ] || [ ! -w "${BACKUP_DIR}" ]; then
+    BACKUP_DIR="$(dirname "${STAGE}")"
+    warn "Home directory is not writable; backing up to ${BACKUP_DIR}."
+fi
+BACKUP="${BACKUP_DIR%/}/bcoem-backup-$(date +%Y%m%d%H%M%S)"
 log "Backing up ${SITE} to ${BACKUP}…"
 cp -a "${SITE}" "${BACKUP}" || die "Backup failed; nothing was changed."
 
