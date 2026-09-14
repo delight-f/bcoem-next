@@ -8,6 +8,15 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Added
+
+- **A manual "Check for updates" on the admin dashboard.** The automatic
+  release notice only runs when its 24-hour cache is stale and never blocks a
+  page, so an update could go unnoticed for a day — and a failed check was
+  invisible by design. The Competition Status panel now shows the installed
+  version and, for Top-Level Administrators, a button that checks GitHub on
+  demand and reports the outcome, including when the check could not run.
+
 ## [4.1.0-alpha.7] - 2026-09-14
 
 ### Fixed
