@@ -107,7 +107,10 @@ is_webroot() { [ -f "${1%/}/index.php" ] && [ -d "${1%/}/app-data" ]; }
 
 detect_site() {
     local candidate found
-    for candidate in "$HOME/public" "$HOME/www" "$HOME/htdocs" "$HOME/public_html"; do
+    # The current directory first: running this from the document root (the
+    # usual manual case) needs no guesswork, and on hosts where the web root
+    # is not a child of $HOME it is the only reliable signal.
+    for candidate in "$PWD" "$HOME/public" "$HOME/www" "$HOME/htdocs" "$HOME/public_html"; do
         if is_webroot "${candidate}"; then
             printf '%s' "${candidate}"
             return 0
@@ -132,7 +135,7 @@ detect_site() {
 # ---------------------------------------------------------------------------
 
 if [ -z "${SITE}" ]; then
-    SITE="$(detect_site)" || die "Could not find the site directory. Pass --site=/path/to/docroot."
+    SITE="$(detect_site)" || die "Could not find the site directory (tried ${PWD} and \$HOME=${HOME}). Pass --site=/path/to/docroot."
 fi
 
 SITE="${SITE%/}"
