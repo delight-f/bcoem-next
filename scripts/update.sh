@@ -150,6 +150,14 @@ fi
 log "Site:    ${SITE}"
 log "Current: $(cat "${SITE}/app-data/VERSION" 2>/dev/null || echo 'unknown')"
 
+# Fail here, with a useful message, rather than part-way through a merge. On
+# shared hosting the files are often owned by the web-server user, which the
+# shell account cannot overwrite.
+if ! touch "${SITE}/.bcoem-write-test" 2>/dev/null; then
+    die "No write permission in ${SITE} (you are $(id -un)). The files may be owned by the web-server user — fix ownership or permissions before updating."
+fi
+rm -f "${SITE}/.bcoem-write-test"
+
 # ---------------------------------------------------------------------------
 # Fetch the release into a staging area beside the site
 # ---------------------------------------------------------------------------
@@ -226,36 +234,23 @@ BACKUP="${BACKUP_DIR%/}/bcoem-backup-$(date +%Y%m%d%H%M%S)"
 log "Backing up ${SITE} to ${BACKUP}…"
 cp -a "${SITE}" "${BACKUP}" || die "Backup failed; nothing was changed."
 
-# Hold the live state aside: the release ships a placeholder .env and an empty
-# storage skeleton, and neither may replace what is running.
-LIVE="$(mktemp -d)"
-if [ -f "${SITE}/app-data/.env" ]; then
-    cp -p "${SITE}/app-data/.env" "${LIVE}/env"
-else
+if [ ! -f "${SITE}/app-data/.env" ]; then
     warn "No app-data/.env found; is this a finished install?"
-fi
-if [ -d "${SITE}/app-data/storage" ]; then
-    cp -a "${SITE}/app-data/storage" "${LIVE}/storage"
-else
-    warn "No app-data/storage found; the release skeleton will be used."
 fi
 
 log "Merging files…"
-# Additive: files the release does not contain are left alone, exactly as an
-# FTP upload of the zip contents would leave them.
-if ! ( cd "${NEW}" && tar cf - . ) | ( cd "${SITE}" && tar xpf - ); then
-    die "Copying the new files failed. Your backup is at ${BACKUP}."
+# Additive, and the runtime state is skipped outright: the release's
+# placeholder .env, its empty storage skeleton and its bootstrap/cache must
+# never replace what is running. Those directories are usually owned by the
+# web-server user on shared hosting, which the shell account cannot write
+# anyway — so including them would fail the merge for no benefit.
+if ! ( cd "${NEW}" && tar cf - \
+        --exclude='./app-data/.env' \
+        --exclude='./app-data/storage' \
+        --exclude='./app-data/bootstrap/cache' . ) |
+    ( cd "${SITE}" && tar xpf - ); then
+    die "Copying the new files failed (you are $(id -un)). Your backup is at ${BACKUP}."
 fi
-
-# Put the live state back.
-if [ -f "${LIVE}/env" ]; then
-    cp -p "${LIVE}/env" "${SITE}/app-data/.env"
-fi
-if [ -d "${LIVE}/storage" ]; then
-    rm -rf "${SITE}/app-data/storage"
-    cp -a "${LIVE}/storage" "${SITE}/app-data/storage"
-fi
-rm -rf "${LIVE}"
 
 log ""
 log "Files updated to ${VERSION}."
