@@ -73,14 +73,28 @@ for arg in "$@"; do
     esac
 done
 
-have_tty() { [ "${BCOEM_NO_TTY:-0}" -ne 1 ] && [ -r /dev/tty ]; }
+# A terminal is only "available" if it can actually be opened. `[ -r /dev/tty ]`
+# is not enough: under an asynchronous runner (no controlling terminal) the
+# file exists but opening it fails, and the read below would then abort.
+have_tty() {
+    [ "${BCOEM_NO_TTY:-0}" -ne 1 ] || return 1
+    [ -r /dev/tty ] || return 1
+    { : < /dev/tty; } 2>/dev/null
+}
 
 confirm() {
-    [ "${ASSUME_YES}" -eq 1 ] && return 0
+    if [ "${ASSUME_YES}" -eq 1 ]; then
+        return 0
+    fi
+
     have_tty ||
-        die "Confirmation needed but no terminal is available; re-run with --yes if you are sure."
-    local answer
-    read -r -p "$1 [y/N]: " answer < /dev/tty
+        die "Confirmation needed but no terminal is attached. Re-run with --yes if you are sure."
+
+    local answer=""
+    if ! read -r -p "$1 [y/N]: " answer < /dev/tty; then
+        die "Could not read from the terminal. Re-run with --yes if you are sure."
+    fi
+
     case "${answer}" in
         y | Y | yes | YES) return 0 ;;
         *) return 1 ;;
