@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
@@ -508,11 +509,35 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
         self::assertStringContainsString('Render Table', $tablesHtml);
         self::assertStringContainsString('Your installation is currently in Tables Competition Mode', $tablesHtml);
         self::assertStringContainsString('When the Tables Competition Mode function is enabled', $tablesHtml);
+        // Issue #37: judge assignment control = gavel, steward = clipboard;
+        // the old padlock icon is gone.
+        self::assertStringNotContainsString('fa-lock', $tablesHtml);
+        self::assertMatchesRegularExpression('#/assign/judges[^>]*><span class="fa fa-lg fa-gavel"></span>#', $tablesHtml);
+        self::assertMatchesRegularExpression('#/assign/stewards[^>]*><span class="fa fa-lg fa-clipboard"></span>#', $tablesHtml);
         $this->get('/admin/judging/tables/create')->assertOk();
         $this->get('/admin/judging/tables/'.$tableId.'/edit')->assertOk();
 
         $this->get('/admin/judging/preferences')
             ->assertOk()
             ->assertSeeText('Judging/Competition Organization Preferences');
+    }
+
+    public function test_tables_empty_state_renders_as_an_alert(): void
+    {
+        // Issue #37: the bare "No tables have been defined." paragraph is now
+        // a proper alert. Rendered directly so the assertion does not depend
+        // on whether the shared corpus holds any tables.
+        $html = view('judging.config.tables', [
+            'ctx' => TenantContext::load(),
+            'tables' => collect(),
+            'planning' => false,
+            'sessionCount' => 1,
+            'obfuscate' => false,
+            'unassignedJudges' => collect(),
+            'unassignedStewards' => collect(),
+        ])->render();
+
+        self::assertStringContainsString('alert alert-info', $html);
+        self::assertStringContainsString('No tables have been defined.', $html);
     }
 }

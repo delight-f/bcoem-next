@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div id="tables-planning-mode" class="d-print-none" @if ($planning) hidden @endif>
+        <div id="tables-planning-mode" class="d-print-none mb-3" @if ($planning) hidden @endif>
             <button type="button" id="table-planning-button" class="btn btn-primary">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Planning</strong> Mode
             </button>
@@ -30,7 +30,7 @@
                 data-bs-toggle="tooltip" data-placement="right" data-tooltip="true"
                 title="When the Tables Planning Mode function is enabled, Admins can define tables, flights, rounds, judge/steward assignments, and, if enabled in Entry Preferences, associated entry limits prior to entries being marked as paid and/or received. Any table configurations and associated assignments will not be official until an Admin returns to Tables Competition Mode after entries have been sorted and marked as received."></span>
         </div>
-        <div id="tables-competition-mode" class="d-print-none" @if (! $planning) hidden @endif>
+        <div id="tables-competition-mode" class="d-print-none mb-3" @if (! $planning) hidden @endif>
             <button type="button" id="tables-competition-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tables-competition-mode-modal">
                 <span class="fa fa-exchange"></span> Switch to Tables <strong>Competition</strong> Mode
             </button>
@@ -47,7 +47,7 @@
              515-561): pool-level ?action=assign&filter=X URLs now redirect
              to /admin/judging/pool-assign?filter=X; per-table links use the
              admin.judging.assign.show route directly. --}}
-        <div class="bcoem-admin-element d-print-none mb-3">
+        <div class="bcoem-admin-element d-print-none d-flex flex-wrap gap-2">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-users"></span> Assign Roles...
@@ -63,12 +63,10 @@
                     <li class="small"><a class="dropdown-item" href="{{ url('/backoffice/participants?filter=stewards&view=sessions') }}">Judging Session List</a></li>
                 </ul>
             </div>
-        </div>
-        {{-- Legacy control set: View... + Print... dropdowns
-             (judging_tables.admin.php:777-822). Assignment items map to the
-             existing port outputs; the "Not Assigned to a Table" items open
-             the avail modals below. --}}
-        <div class="bcoem-admin-element d-print-none mb-3">
+            {{-- Legacy control set: View... + Print... dropdowns
+                 (judging_tables.admin.php:777-822). Assignment items map to the
+                 existing port outputs; the "Not Assigned to a Table" items open
+                 the avail modals below. --}}
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <span class="fa fa-eye"></span> View...
@@ -234,7 +232,7 @@
             </div>
         </div>
         @if ($tables->isEmpty())
-            <p>No tables have been defined.</p>
+            <div class="alert alert-info" role="alert">No tables have been defined.</div>
         @else
             <table class="table table-responsive table-bordered">
                 <thead>
@@ -272,8 +270,8 @@
                                 @endif
                                 <a href="{{ route('admin.judging.tables.edit', ['id' => $table->id]) }}" data-bs-toggle="tooltip" data-placement="top" title="Edit Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-pencil"></span></a>
                                 <a href="{{ route('admin.judging.flights.show', ['id' => $table->id]) }}?filter=define" data-bs-toggle="tooltip" data-placement="top" title="Add/edit flights for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-send"></span></a>
-                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'judges']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-lock"></span></a>
-                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
+                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'judges']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign judges to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-gavel"></span></a>
+                                <a href="{{ route('admin.judging.assign.show', ['id' => $table->id, 'role' => 'stewards']) }}" data-bs-toggle="tooltip" data-placement="top" title="Assign stewards to Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-clipboard"></span></a>
                                 <form method="post" action="{{ route('admin.judging.tables.destroy', ['id' => $table->id]) }}" class="d-inline" onsubmit="return confirm('Delete this table? All of its scores and flights are removed. This cannot be undone.')">
                                     @csrf
                                     @method('DELETE')
