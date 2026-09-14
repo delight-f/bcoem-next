@@ -55,6 +55,21 @@ final class RemoteVersionCheckerTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_refresh_refetches_even_when_the_cache_is_fresh(): void
+    {
+        Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v4.1.0'], 200)]);
+
+        $checker = new RemoteVersionChecker('bcoem/bcoem-next');
+        Cache::put('bcoem.remote-version', ['version' => '1.0.0', 'checked_at' => time()], 86400);
+
+        // The normal read serves the fresh cache…
+        $this->assertSame('1.0.0', $checker->latestPublishedVersion());
+
+        // …while the manual refresh ignores it and refetches.
+        $this->assertSame('4.1.0', $checker->refresh());
+        Http::assertSentCount(1);
+    }
+
     public function test_rate_limit_or_error_response_yields_null_and_is_cached(): void
     {
         Http::fake(['api.github.com/*' => Http::response('rate limited', 403)]);

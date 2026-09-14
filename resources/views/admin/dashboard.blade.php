@@ -7,6 +7,17 @@
                 <h1>Administration Dashboard</h1>
             </div>
 
+            {{-- Result of the manual "check for updates" (Competition Status
+                 panel). The automatic notice only appears when a newer release
+                 is already cached, so this is where "you're up to date" and
+                 "the check could not run" are reported. --}}
+            @if (session('status'))
+                <div class="alert alert-success">{{ session('status') }}</div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
+
             {{-- New release published (Task 2.2). Lighter-weight than the
                  upgrade banner: it points at the download, because the upgrade
                  wizard has nothing to do until the files are on the server. --}}
@@ -566,6 +577,10 @@
                             @endif
                         </div>
                     @endforeach
+                    <div class="bcoem-stat-row">
+                        <strong class="text-info">Version</strong>
+                        <span class="float-end">{{ $installedVersion }}</span>
+                    </div>
                     {{-- sidebar.admin.php tail: server environment line --}}
                     <div class="small" style="margin-top: 10px; margin-bottom: 0px;">
                         <em><span class="text-muted">
@@ -576,6 +591,14 @@
                             </ul>
                         </span></em>
                     </div>
+                    @if ($canCheckUpdates)
+                        <form method="post" action="{{ route('admin.update_check') }}" class="mt-2 mb-0">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-info w-100">
+                                <span class="fa fa-refresh"></span> Check for updates
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>

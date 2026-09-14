@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\SitePreferencesController;
 use App\Http\Controllers\Admin\SponsorsController;
 use App\Http\Controllers\Admin\StylesAdminController;
 use App\Http\Controllers\Admin\StyleTypesController;
+use App\Http\Controllers\Admin\UpdateCheckController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UploadScoresheetsController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,12 @@ Route::middleware(['web', 'auth'])->group(function (): void {
     // Admin landing menu (legacy ?section=admin → admin/default.admin.php).
     Route::get('/admin', DashboardController::class)
         ->name('admin.dashboard');
+
+    // Manual "check for updates" from the dashboard's Competition Status panel.
+    // The automatic release notice is cache-gated and never blocks a page, so
+    // this is the on-demand equivalent — Top-Level Administrators only.
+    Route::post('/admin/update-check', UpdateCheckController::class)
+        ->name('admin.update_check');
 
     Route::get('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'show'])
         ->name('admin.upload_scoresheets');

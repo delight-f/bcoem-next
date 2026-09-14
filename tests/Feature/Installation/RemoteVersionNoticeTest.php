@@ -75,4 +75,81 @@ final class RemoteVersionNoticeTest extends WizardTestCase
             ->assertOk()
             ->assertDontSee('Version 4.1.0 is available');
     }
+
+    public function test_manual_check_refreshes_the_cache_and_reports_an_available_update(): void
+    {
+        $this->setInstalled(true, '4.0.0');
+        Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v9.9.9'], 200)]);
+        Cache::forget('bcoem.remote-version');
+
+        $admin = $this->user('0');
+
+        $this->actingAs($admin)
+            ->post('/admin/update-check')
+            ->assertRedirect('/admin')
+            ->assertSessionHas('status', static fn ($message): bool => str_contains((string) $message, 'Version 9.9.9 is available'));
+
+        // The check refreshes the cache the automatic notice reads…
+        $this->assertSame('9.9.9', Cache::get('bcoem.remote-version')['version'] ?? null);
+        Http::assertSentCount(1);
+
+        // …so the notice renders on the redirected-to dashboard.
+        $this->actingAs($admin)
+            ->get('/admin')
+            ->assertOk()
+            ->assertSee('Version 9.9.9 is available');
+    }
+
+    public function test_manual_check_reports_when_the_site_is_already_current(): void
+    {
+        $this->setInstalled(true, '4.0.0');
+        Http::fake(['api.github.com/*' => Http::response(['tag_name' => 'v4.0.0'], 200)]);
+        Cache::forget('bcoem.remote-version');
+
+        $this->actingAs($this->user('0'))
+            ->post('/admin/update-check')
+            ->assertRedirect('/admin')
+            ->assertSessionHas('status', static fn ($message): bool => str_contains((string) $message, 'latest version'));
+    }
+
+    public function test_manual_check_reports_a_failed_check_instead_of_staying_silent(): void
+    {
+        // The automatic check swallows every failure; an explicit check must
+        // not, or the button looks broken.
+        $this->setInstalled(true, '4.0.0');
+        Http::fake(['api.github.com/*' => Http::response('rate limited', 403)]);
+        Cache::forget('bcoem.remote-version');
+
+        $this->actingAs($this->user('0'))
+            ->post('/admin/update-check')
+            ->assertRedirect('/admin')
+            ->assertSessionHas('error');
+    }
+
+    public function test_manual_check_is_top_level_only(): void
+    {
+        $this->setInstalled(true, '4.0.0');
+        Http::fake();
+        Cache::forget('bcoem.remote-version');
+
+        $this->actingAs($this->user('1'))
+            ->post('/admin/update-check')
+            ->assertRedirect('/?msg=99');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_the_check_button_is_offered_to_top_level_admins_only(): void
+    {
+        $this->setInstalled(true, '4.0.0');
+        Http::fake();
+
+        $this->actingAs($this->user('0'))->get('/admin')
+            ->assertOk()
+            ->assertSee('Check for updates');
+
+        $this->actingAs($this->user('1'))->get('/admin')
+            ->assertOk()
+            ->assertDontSee('Check for updates');
+    }
 }

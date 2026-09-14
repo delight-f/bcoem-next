@@ -46,6 +46,15 @@ final class DashboardController extends Controller
         $windows = Windows::derive($ctx, $now);
         $user = $request->user();
 
+        // The version of the code that is actually deployed, NOT the version
+        // recorded in `bcoem_sys`. Used by the release notice below and shown
+        // in the Competition Status panel. Measured against the database, a
+        // site that has uploaded this release but not yet run its upgrade would
+        // be told the release it is already running is "available" to
+        // download — a dead end, since the answer is the local upgrade the
+        // banner on the same page already offers.
+        $installedVersion = app(InstallationService::class)->incomingVersion();
+
         // "New release published" notice (Task 2.2). Top-Level Administrators
         // only: noticeFor() returns null immediately for anyone else, so the
         // check does not even run for mid-level admins or participants.
@@ -53,13 +62,7 @@ final class DashboardController extends Controller
         if (! $request->session()->get('wizard.update-notice.dismissed', false)) {
             $updateNotice = app(RemoteVersionChecker::class)->noticeFor(
                 (int) $user->userLevel,
-                // The version of the code that is actually deployed, NOT the
-                // version recorded in `bcoem_sys`. Measured against the
-                // database, a site that has uploaded this release but not yet
-                // run its upgrade is told the release it is already running is
-                // "available" to download — a dead end, since the answer is the
-                // local upgrade the banner on the same page already offers.
-                app(InstallationService::class)->incomingVersion(),
+                $installedVersion,
             );
         }
 
@@ -95,6 +98,8 @@ final class DashboardController extends Controller
 
         return view('admin.dashboard', [
             'updateNotice' => $updateNotice,
+            'installedVersion' => $installedVersion,
+            'canCheckUpdates' => (int) $user->userLevel === 0,
             'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],

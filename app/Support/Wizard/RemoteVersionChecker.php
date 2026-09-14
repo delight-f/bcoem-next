@@ -38,6 +38,17 @@ final class RemoteVersionChecker
             return $cached['version'];
         }
 
+        return $this->refresh();
+    }
+
+    /**
+     * Fetch the latest release now, ignoring the 24-hour cache, and store it.
+     * Used by the dashboard's manual "check for updates" so the admin does not
+     * have to wait for the cache to go stale. Returns null when the check
+     * cannot be completed, like every other read here.
+     */
+    public function refresh(): ?string
+    {
         $version = $this->fetch();
         $this->write($version);
 
