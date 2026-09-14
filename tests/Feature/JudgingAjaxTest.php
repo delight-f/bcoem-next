@@ -327,6 +327,37 @@ final class JudgingAjaxTest extends PublicSurfaceTestCase
         );
     }
 
+    public function test_enable_planning_keeps_a_tables_styles_that_have_no_entries_yet(): void
+    {
+        // Issue #39, planning direction: a table whose valid styles have no
+        // entries yet is configuration, not garbage. It previously had its
+        // tableStyles pruned and — when nothing had an entry — was cascade
+        // deleted with its assignments, on the way back into Planning Mode.
+        $s1 = $this->makeStyle('87', 'A'); // valid style, zero entries anywhere
+        $table = $this->makeTable((string) $s1);
+        $assignmentId = (int) DB::table('judging_assignments')->insertGetId([
+            'bid' => $this->judgeUid(),
+            'assignment' => 'J',
+            'assignTable' => $table,
+            'assignFlight' => 1,
+            'assignRound' => 1,
+        ]);
+
+        // The per-table pass only runs when a flight already exists.
+        DB::table('judging_flights')->insert([
+            'flightTable' => $table, 'flightNumber' => 1, 'flightEntryID' => '0', 'flightRound' => 1,
+        ]);
+
+        $this->login(self::ADMIN);
+        $this->post('/admin/judging/tables-mode', ['section' => 'enable-planning'])
+            ->assertOk()
+            ->assertExactJson(['status' => '1', 'error_count' => '0', 'error_type' => '0']);
+
+        $this->assertNotNull(DB::table('judging_tables')->where('id', $table)->first());
+        $this->assertSame((string) $s1, (string) DB::table('judging_tables')->where('id', $table)->value('tableStyles'));
+        $this->assertNotNull(DB::table('judging_assignments')->where('id', $assignmentId)->first());
+    }
+
     public function test_enable_competition_prunes_unreceived_flights_and_conflicting_assignments(): void
     {
         $judgeUid = $this->judgeUid();

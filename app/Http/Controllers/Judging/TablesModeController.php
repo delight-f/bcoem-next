@@ -18,12 +18,14 @@ use Illuminate\Support\Facades\Schema;
  * configuration is never restructured by a switch; only derived flight
  * data is pruned on the way into competition mode (issue #39).
  *
- * Behaviors preserved verbatim:
+ * Behaviour:
  *  - enable-planning: ensures the three planning columns exist (legacy
  *    ALTERed them in on first use), dumps every NOT-received entry of
- *    each table's styles into flight 1 of that table, drops tables whose
- *    styles have no entries at all (cascading assignments + flights),
- *    flags everything planning (1), sets jPrefsTablePlanning=1.
+ *    each table's styles into flight 1 of that table, drops a style that
+ *    names a missing styles row (cascading the table away only when every
+ *    style it names is dangling — a valid style with no entries yet is
+ *    kept, issue #39), flags everything planning (1), sets
+ *    jPrefsTablePlanning=1.
  *  - enable-competition: deletes flights whose entry was never received
  *    and flags the survivors production (0) — derived data only. Table
  *    configuration is left intact: no table/styles pruning, no cascade
@@ -111,6 +113,11 @@ final class TablesModeController extends Controller
                         continue; // dangling style reference: no entries can match
                     }
 
+                    // A style that exists is configuration: keep it even before
+                    // any entry has been submitted. Only dangling references
+                    // are dropped, so planning never strips a table's styles.
+                    $keep[] = $styleId;
+
                     $entries = DB::table('brewing')
                         ->where('brewCategorySort', $style->brewStyleGroup)
                         ->where('brewSubCategory', $style->brewStyleNum)
@@ -121,23 +128,19 @@ final class TablesModeController extends Controller
                         ->where('flightNumber', 1)
                         ->value('flightRound');
 
-                    if ($entries->isNotEmpty()) {
-                        foreach ($entries as $entry) {
-                            if ((int) $entry->brewReceived === 0) {
-                                try {
-                                    DB::table('judging_flights')->insert([
-                                        'flightTable' => $table->id,
-                                        'flightNumber' => 1,
-                                        'flightEntryID' => $entry->id,
-                                        'flightRound' => $round,
-                                    ]);
-                                } catch (\Throwable) {
-                                    $errorCount += 1;
-                                }
+                    foreach ($entries as $entry) {
+                        if ((int) $entry->brewReceived === 0) {
+                            try {
+                                DB::table('judging_flights')->insert([
+                                    'flightTable' => $table->id,
+                                    'flightNumber' => 1,
+                                    'flightEntryID' => $entry->id,
+                                    'flightRound' => $round,
+                                ]);
+                            } catch (\Throwable) {
+                                $errorCount += 1;
                             }
                         }
-
-                        $keep[] = $styleId;
                     }
                 }
 
