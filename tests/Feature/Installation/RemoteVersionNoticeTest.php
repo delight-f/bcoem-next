@@ -22,7 +22,11 @@ final class RemoteVersionNoticeTest extends WizardTestCase
 
         $this->actingAs($this->user('0'))->get('/admin')
             ->assertOk()
-            ->assertSee('Version 4.1.0 is available');
+            ->assertSee('Version 4.1.0 is available')
+            // The notice must carry the operator steps: the wizard 404s while
+            // the site's files are still current, so the download link alone
+            // dead-ends anyone who has not yet uploaded the new files.
+            ->assertSee('upload the new files');
 
         Http::assertNothingSent();
     }
