@@ -130,9 +130,29 @@ final class AssignmentsController extends Controller
      */
     private function signInSheets(TenantContext $ctx, string $role): Response
     {
+        $data = self::signInSheetsData($role);
+
+        return StreamPdf::response('outputs.assignments-signin', [
+            'contestName' => $ctx->contestStr('contestName'),
+            'roleLabel' => $role === 'S' ? 'Steward' : 'Judge',
+            'sheets' => $data['sheets'],
+            'blankRows' => $data['blankRows'],
+        ], 'assignments-sign-in.pdf');
+    }
+
+    /**
+     * Data for the sign-in sheets: one sheet per judging session with its
+     * assigned participants (name / BJCP ID / waiver), plus the blank-row
+     * count for walk-ins.
+     *
+     * @return array{sheets: list<array{session: string, members: list<array{name: string, bjcpId: string, waiver: string}>}>, blankRows: int}
+     */
+    public static function signInSheetsData(string $role): array
+    {
         $staffColumn = $role === 'S' ? 'staff_steward' : 'staff_judge';
 
         $assigned = DB::table('judging_assignments')
+            ->leftJoin('judging_tables', 'judging_tables.id', '=', 'judging_assignments.assignTable')
             ->join('brewer', 'brewer.uid', '=', 'judging_assignments.bid')
             ->where('judging_assignments.assignment', $role)
             ->orderBy('brewer.brewerLastName')
@@ -140,36 +160,49 @@ final class AssignmentsController extends Controller
                 'brewer.brewerFirstName', 'brewer.brewerLastName',
                 'brewer.brewerJudgeID', 'brewer.brewerJudgeWaiver',
                 'judging_assignments.assignLocation',
+                'judging_tables.tableLocation',
             ]);
 
-        $sessions = DB::table('judging_locations')->orderBy('id')->get(['id', 'judgingLocName']);
+        $sessions = DB::table('judging_locations')->orderBy('id')->get(['id', 'judgingLocName'])->keyBy('id');
+
+        $bySession = [];
+        $unmatched = [];
+        foreach ($assigned as $a) {
+            $member = [
+                'name' => trim(($a->brewerLastName ?? '').', '.($a->brewerFirstName ?? '')),
+                'bjcpId' => strtoupper((string) $a->brewerJudgeID),
+                'waiver' => $a->brewerJudgeWaiver === 'Y' ? 'Yes' : 'No',
+            ];
+
+            // Prefer the assignment's own location; fall back to the table's
+            // session when assignLocation is unset or dangles, so an
+            // assignment is never silently dropped from the sheet.
+            $sessionId = (int) $a->assignLocation;
+            if (! $sessions->has($sessionId)) {
+                $sessionId = (int) $a->tableLocation;
+            }
+            if ($sessions->has($sessionId)) {
+                $bySession[$sessionId][] = $member;
+            } else {
+                $unmatched[] = $member;
+            }
+        }
 
         $sheets = [];
         foreach ($sessions as $session) {
-            $members = $assigned->filter(
-                fn ($a): bool => (int) $a->assignLocation === (int) $session->id,
-            )->map(static function ($a): array {
-                return [
-                    'name' => trim(($a->brewerLastName ?? '').', '.($a->brewerFirstName ?? '')),
-                    'bjcpId' => strtoupper((string) $a->brewerJudgeID),
-                    'waiver' => $a->brewerJudgeWaiver === 'Y' ? 'Yes' : 'No',
-                ];
-            })->values();
-            if ($members->isNotEmpty()) {
-                $sheets[] = ['session' => (string) $session->judgingLocName, 'members' => $members];
+            if (! empty($bySession[$session->id])) {
+                $sheets[] = ['session' => (string) $session->judgingLocName, 'members' => $bySession[$session->id]];
             }
+        }
+        if ($unmatched !== []) {
+            $sheets[] = ['session' => 'Unassigned', 'members' => $unmatched];
         }
 
         // Blank sheet row count: signed-up count for the role, minimum 1
         // (legacy iterated $count from the role's participant count).
         $blankRows = max(1, DB::table('staff')->where($staffColumn, 1)->count());
 
-        return StreamPdf::response('outputs.assignments-signin', [
-            'contestName' => $ctx->contestStr('contestName'),
-            'roleLabel' => $role === 'S' ? 'Steward' : 'Judge',
-            'sheets' => $sheets,
-            'blankRows' => $blankRows,
-        ], 'assignments-sign-in.pdf');
+        return ['sheets' => $sheets, 'blankRows' => $blankRows];
     }
 
     /** Shared roster row shape for both orderings. */
