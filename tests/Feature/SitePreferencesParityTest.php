@@ -545,4 +545,27 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('search-club-list-input', false)
             ->assertSee('Entry Preferences');
     }
+
+    /**
+     * Issue #40: the QR help text must sit beneath the button rather than
+     * inline beside it, and the page header must be a real <h1> like the
+     * other admin screens (contacts).
+     */
+    public function test_competition_info_qr_help_and_header_layout(): void
+    {
+        $this->login();
+
+        $html = (string) $this->get('/admin/competition-info')->assertOk()->getContent();
+
+        // The help span follows the button and is a block, whether or not a
+        // check-in password is currently set.
+        self::assertMatchesRegularExpression(
+            '/data-bs-target="#QRModal">[^<]*<\/button>\s*<span[^>]*class="form-text d-block[^"]*"/',
+            $html,
+        );
+
+        // The page title uses the same <h1> treatment as admin/contacts.
+        self::assertStringContainsString(': Update Competition Information</h1>', $html);
+        self::assertStringNotContainsString('<p class="lead">', $html);
+    }
 }

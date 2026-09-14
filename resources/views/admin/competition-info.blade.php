@@ -28,18 +28,54 @@
         <style>
             /* This form is long. Each section is a <details> collapsed by
                default so the page opens compact; the heading stays visible as
-               the toggle. */
+               the toggle. Each section is a light-blue Bruxellensis card so
+               adjacent sections read as separate blocks rather than one run of
+               headings (issue #40). */
             .bcoem-comp-info details.bcoem-comp-info-section {
-                margin-top: 1.25rem;
-                border-top: 1px solid var(--bs-border-color);
-                padding-top: .5rem;
+                margin-top: 1rem;
+                border: 1px solid #cfe2ff;
+                border-left: 4px solid #1565C0;
+                border-radius: .5rem;
+                background-color: #f5faff;
+                overflow: hidden;
             }
-            .bcoem-comp-info summary { cursor: pointer; }
+            .bcoem-comp-info details.bcoem-comp-info-section > summary {
+                cursor: pointer;
+                list-style-position: inside;
+                padding: .6rem 1rem;
+                background-color: #eaf3fd;
+                color: #084298;
+            }
+            .bcoem-comp-info details.bcoem-comp-info-section[open] > summary {
+                border-bottom: 1px solid #cfe2ff;
+            }
+            .bcoem-comp-info details.bcoem-comp-info-section > summary h3 {
+                display: inline;
+                margin: 0;
+                padding: 0;
+                border-bottom: 0;
+                font-size: 1.15rem;
+            }
+            /* Expanded content must not touch the section divider or the
+               summary above it (issue #40). */
+            .bcoem-comp-info details.bcoem-comp-info-section > .row,
+            .bcoem-comp-info details.bcoem-comp-info-section > p {
+                margin-left: 1rem;
+                margin-right: 1rem;
+            }
+            .bcoem-comp-info details.bcoem-comp-info-section > .row:first-of-type,
+            .bcoem-comp-info details.bcoem-comp-info-section > p:first-of-type {
+                margin-top: 1rem;
+            }
+            .bcoem-comp-info details.bcoem-comp-info-section[open] {
+                padding-bottom: .5rem;
+            }
             .bcoem-comp-info h3 { margin-top: 1.75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--bs-border-color); }
-            .bcoem-comp-info summary h3 { margin: 0; }
-            .bcoem-comp-info h3:first-of-type { margin-top: .5rem; }
+            /* Live club-search suggestions (issue #41): a scrollable list so a
+               broad search cannot push the rest of the form off-screen. */
+            .bcoem-comp-info .bcoem-club-options { max-height: 14rem; overflow-y: auto; }
         </style>
-        <p class="lead">{{ $ctx->contestStr('contestName') }}: Update Competition Information</p>
+        <h1>{{ $ctx->contestStr('contestName') }}: Update Competition Information</h1>
 
         @if ((int) request('msg') === 2)
             <div class="alert alert-success">Competition info updated.</div>
@@ -130,9 +166,9 @@
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#QRModal">Add, Update, or Change QR Code Log On Password</button>
                     @if ($hasQrPassword)
-                        <span class="form-text d-block">A check-in password is set &mdash; this is the shared password volunteers enter at the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> page. Leave the modal field blank to clear it, which disables QR check-in.</span>
+                        <span class="form-text d-block mt-2">A check-in password is set &mdash; this is the shared password volunteers enter at the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> page. Leave the modal field blank to clear it, which disables QR check-in.</span>
                     @else
-                        <span id="helpBlock" class="form-text">For use with the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function. No password is set yet, so QR check-in is unavailable until you set one here and share it with the volunteers scanning bottles. Passwords are stored hashed and cannot be viewed later &mdash; if it is forgotten, set a new one.</span>
+                        <span id="helpBlock" class="form-text d-block mt-2">For use with the <a href="{{ url('/qr') }}" target="_blank" rel="noopener">QR Code Entry Check-In</a> function. No password is set yet, so QR check-in is unavailable until you set one here and share it with the volunteers scanning bottles. Passwords are stored hashed and cannot be viewed later &mdash; if it is forgotten, set a new one.</span>
                     @endif
                 </div>
             </div>
@@ -142,10 +178,11 @@
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <p class="small text-body-secondary mb-1">
                         Clubs offered to entrants when they register, listed alongside the ones already
-                        stored on participant profiles. Search first &mdash; add a name only if it is missing.
+                        stored on participant profiles. Start typing to see matching clubs &mdash; select
+                        one to add it, or press Enter to add a name that is not in the list.
                     </p>
                     <div class="input-group">
-                        <input id="search-club-list-input" class="form-control" placeholder="Search the clubs database">
+                        <input id="search-club-list-input" class="form-control" type="text" autocomplete="off" placeholder="Search the clubs database">
                         <button type="button" id="clear-search-btn" class="btn btn-outline-secondary" disabled>Clear</button>
                         <button type="button" id="search-club-list-btn" class="btn btn-primary">Search Clubs</button>
                         <button type="button" id="copy-to-club-list-btn" class="btn btn-success" disabled><span class="fa fa-plus"></span> Add</button>
@@ -486,59 +523,123 @@
                 var mainForm = clubField.closest('form');
                 var lastAdded = '';
                 var savedValue = clubField.value;
-                function refreshMatchState() {
-                    var term = (input.value || '').trim();
-                    addBtn.disabled = term === '';
-                    clearSearchBtn.disabled = term === '';
-                }
-                // Without this the Add/Clear buttons start disabled and are
-                // never re-enabled as the user types (issue 21).
-                input.addEventListener('input', refreshMatchState);
-                refreshMatchState();
+                var maxResults = 12;
+                var allMatches = [];
                 function escapeHtml(s) {
                     return String(s).replace(/[&<>"]/g, function (c) {
                         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
                     });
                 }
-                searchBtn.addEventListener('click', function () {
-                    var term = (input.value || '').trim();
-                    if (!term) { return; }
+                // The club database is embedded server-side (bcoem_clubs), so
+                // matching happens here in the browser as the organizer types;
+                // there is no search endpoint to call (issue 41).
+                function matchingClubs(term) {
+                    if (!term) { return []; }
                     // Escape regex metacharacters: a club named e.g.
                     // "Brewers (County)" must search for that text rather
                     // than throw on an invalid pattern.
                     var re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-                    var out = '';
+                    var found = [];
                     for (var i = 0; i < bcoem_clubs.length; i++) {
                         if (bcoem_clubs[i].search(re) !== -1) {
-                            out += '<li>' + escapeHtml(bcoem_clubs[i]) + ';</li>';
+                            found.push(bcoem_clubs[i]);
                         }
                     }
-                    if (out) {
-                        resultsDiv.style.display = 'block';
-                        resultsDiv.innerHTML = '<ul class="d-flex flex-wrap list-unstyled gap-2"><li><strong>Possible matches in the database:</strong></li> ' + out + '</ul>If none match, select the Add button to add the name you searched to the list above.';
+                    return found;
+                }
+                function renderMatches(term) {
+                    allMatches = matchingClubs(term);
+                    if (!term) {
+                        resultsDiv.style.display = 'none';
+                        resultsDiv.innerHTML = '';
+                        return;
+                    }
+                    var shown = allMatches.slice(0, maxResults);
+                    var out = '';
+                    for (var i = 0; i < shown.length; i++) {
+                        out += '<button type="button" class="list-group-item list-group-item-action bcoem-club-option" data-club="'
+                            + escapeHtml(shown[i]) + '">' + escapeHtml(shown[i]) + '</button>';
+                    }
+                    resultsDiv.style.display = 'block';
+                    if (shown.length) {
+                        resultsDiv.innerHTML = '<div class="list-group bcoem-club-options">' + out + '</div>'
+                            + '<div class="form-text">Select a club above to add it, or press Enter to add <strong>'
+                            + escapeHtml(term) + '</strong>.</div>';
                     } else {
-                        resultsDiv.style.display = 'block';
-                        resultsDiv.innerHTML = '<span class="text-danger">No clubs found in the database.</span>';
+                        resultsDiv.innerHTML = '<span class="text-danger">No clubs match &ldquo;'
+                            + escapeHtml(term) + '&rdquo; in the database.</span>'
+                            + '<div class="form-text">Press Enter or choose Add to add <strong>'
+                            + escapeHtml(term) + '</strong> to the list.</div>';
                     }
-                });
-                addBtn.addEventListener('click', function () {
-                    var val = (input.value || '').trim();
-                    if (!val) { return; }
-                    lastAdded = val + ';';
+                }
+                // Add/Clear button state plus the live result list, both driven
+                // from the one input event so they never disagree.
+                function refreshMatchState() {
+                    var term = (input.value || '').trim();
+                    addBtn.disabled = term === '';
+                    clearSearchBtn.disabled = term === '';
+                    renderMatches(term);
+                }
+                // The accumulated list is "Name; Name2; " — membership is a
+                // whole-name comparison, not a substring one.
+                function hasClub(val) {
+                    var lower = val.toLowerCase();
+                    var names = clubField.value.split(';');
+                    for (var i = 0; i < names.length; i++) {
+                        if (names[i].trim().toLowerCase() === lower) { return true; }
+                    }
+                    return false;
+                }
+                function addClub(value) {
+                    var val = (value || '').trim();
+                    if (!val || hasClub(val)) {
+                        input.value = '';
+                        refreshMatchState();
+                        return;
+                    }
                     var current = clubField.value;
-                    if (current.indexOf(val) === -1) {
-                        clubField.value = current ? current + val + '; ' : val + '; ';
-                    }
-                    resultsDiv.style.display = 'none';
+                    clubField.value = current ? current + val + '; ' : val + '; ';
+                    lastAdded = val + ';';
                     input.value = '';
                     refreshMatchState();
                     clearListBtn.disabled = clubField.value === '';
                     restoreListBtn.disabled = false;
                     clearLastBtn.disabled = false;
+                }
+                // Without this the Add/Clear buttons start disabled and are
+                // never re-enabled as the user types (issue 21), and the live
+                // result list never refreshes (issue 41).
+                input.addEventListener('input', refreshMatchState);
+                refreshMatchState();
+                // Clicking a suggestion selects that club (issue 41).
+                resultsDiv.addEventListener('click', function (event) {
+                    var option = event.target.closest ? event.target.closest('.bcoem-club-option') : null;
+                    if (option) { addClub(option.getAttribute('data-club')); }
+                });
+                // Enter would otherwise submit the whole form; instead select
+                // an exact match, or add the typed name when nothing matches
+                // (issue 41).
+                input.addEventListener('keydown', function (event) {
+                    if (event.key !== 'Enter') { return; }
+                    event.preventDefault();
+                    var term = (input.value || '').trim();
+                    if (!term) { return; }
+                    for (var i = 0; i < allMatches.length; i++) {
+                        if (allMatches[i].toLowerCase() === term.toLowerCase()) {
+                            addClub(allMatches[i]);
+                            return;
+                        }
+                    }
+                    if (allMatches.length === 0) { addClub(term); }
+                });
+                searchBtn.addEventListener('click', function () {
+                    refreshMatchState();
+                });
+                addBtn.addEventListener('click', function () {
+                    addClub(input.value);
                 });
                 clearSearchBtn.addEventListener('click', function () {
                     input.value = '';
-                    resultsDiv.style.display = 'none';
                     refreshMatchState();
                 });
                 clearListBtn.addEventListener('click', function () {

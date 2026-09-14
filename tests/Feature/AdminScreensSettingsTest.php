@@ -67,7 +67,9 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
     /**
      * Issue 20: the competition-info form's subsections render collapsed so
-     * the page is not one very tall wall of fields.
+     * the page is not one very tall wall of fields. Issue 40: each section
+     * carries a light-blue Bruxellensis accent so adjacent sections are
+     * visually distinguishable.
      */
     public function test_competition_info_sections_render_collapsed(): void
     {
@@ -79,15 +81,28 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         foreach (['General', 'Entry Window', 'Awards Ceremony'] as $title) {
             $response->assertSee('<summary><h3>'.$title.'</h3></summary>', false);
         }
+
+        // The section styling is inline in the Blade (the shared app.css is
+        // off-limits) and applies the same light-blue accent values the
+        // Bruxellensis palette already uses elsewhere.
+        $response->assertSee('.bcoem-comp-info details.bcoem-comp-info-section {', false);
+        $response->assertSee('background-color: #eaf3fd;', false);
+        $response->assertSee('border-left: 4px solid #1565C0;', false);
     }
 
     public function test_competition_info_club_search_wires_add_button_state(): void
     {
         // Issue 21: the Add/Clear buttons are disabled until the input has a
         // value, so the input event must be bound to the state refresher.
+        // Issue 41: that same input event re-renders the live result list,
+        // clicking a suggestion selects it, and Enter adds the typed name.
         $this->get('/admin/competition-info')
             ->assertOk()
-            ->assertSee("input.addEventListener('input', refreshMatchState);", false);
+            ->assertSee("input.addEventListener('input', refreshMatchState);", false)
+            ->assertSee('renderMatches(term);', false)
+            ->assertSee("resultsDiv.addEventListener('click'", false)
+            ->assertSee("input.addEventListener('keydown'", false)
+            ->assertSee('list-group-item-action bcoem-club-option', false);
     }
 
     public function test_competition_info_checkin_password_bcrypts_and_clears(): void
