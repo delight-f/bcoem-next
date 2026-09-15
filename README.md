@@ -115,14 +115,19 @@ PHP 8.4+ (`gd`, `intl`, `mbstring`, `mysqli`) and MySQL 8.
    - `app-data/storage` and `app-data/bootstrap/cache` → `775`, tick
      "recurse into subdirectories"
    - `app-data/.env` → `664`
+   - `images/` and `user_images/` in the web root → `775`. These hold uploaded
+     sponsor logos and hero images; without write access the upload screens
+     cannot save anything and report a permissions error.
 
    If your host runs the site as a **different user** than the account you
    upload with, the group permissions above do nothing, because the files
    belong to your own group. NearlyFreeSpeech is one of those hosts. There, use
-   `777` on the two directories and `666` on `.env` instead.
+   `777` on those directories and `666` on `.env` instead.
 
-   Nothing else needs to be writable. Never make the whole tree writable —
-   `app-data` holds `.env` and the application source.
+   Nothing else needs to be writable for a fresh install: the web root and
+   `app-data` hold `.env` and the application source, so never make the tree
+   writable wholesale. Browser-based **automatic updates** are the one thing
+   that needs more, and only on the web-root side — see [Upgrading](#upgrading).
 5. Visit `https://your-site/install` and finish the six-screen wizard. If the
    database you name already holds a finished competition site, the wizard says
    so and offers **Use this existing site** instead of installing: your entries,
@@ -190,12 +195,16 @@ install twice.
   carries `.env` and `storage/` across, swaps while keeping a
   `.bak-<timestamp>`, then runs `app:upgrade`.
 
-The automatic path needs the `app-data` layout, PHP able to write the web folder
-and `app-data/` (the same permissions the installer needs), and a way to unpack a
-zip (the `zip` extension or the `unzip` binary); its checks screen verifies all of
-this and falls back to the manual steps when any is missing. It is only ever
-started by an administrator — a detected release is offered, never applied on its
-own.
+The automatic path needs the `app-data` layout, the web folder writable by the
+web server (the updater replaces files there; `app-data` itself is only moved
+aside, never written into), and a way to unpack a zip (the `zip` extension or the
+`unzip` binary). On hosts that run the site as your own user — the usual case —
+that is already true. Where the web server runs as a separate user, make the web
+folder and its sub-folders writable by it (for example, in the web root:
+`chgrp -R <webserver-user> . && chmod -R g+w .`). If that cannot be granted,
+nothing breaks: the checks screen names exactly which folder is blocking, and the
+manual and SSH paths below always work. It is only ever started by an
+administrator — a detected release is offered, never applied on its own.
 
 Every path runs the same order: back up → verify → maintenance mode → migrate →
 version fixups → clear caches → version marker. The backup uses `mysqldump`,

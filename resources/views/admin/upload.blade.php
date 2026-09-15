@@ -4,6 +4,7 @@
             29 => 'The file has been uploaded successfully. Check the list to verify.',
             30 => 'The file that was attempted to be uploaded is not an accepted file type and/or it exceeds the maximum file size.',
             31 => 'File(s) deleted successfully.',
+            32 => 'The image could not be saved: the web server is not allowed to write to the image folder. If you manage the server, make the "user_images" folder writable (see the README); otherwise ask your host.',
         ];
     @endphp
     <section class="landing-page-section mt-6 mb-4">

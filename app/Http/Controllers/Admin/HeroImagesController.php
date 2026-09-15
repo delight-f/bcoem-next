@@ -136,7 +136,16 @@ final class HeroImagesController extends Controller
             $target = $base.'-'.$counter.'.'.$extension;
         }
 
-        $file->move($directory, $target);
+        try {
+            $file->move($directory, $target);
+        } catch (\Throwable) {
+            // The image passed every check and still could not be written: the
+            // folder is not writable by the web server. Say that, rather than
+            // letting the failure surface as a 500.
+            return back()->withErrors([
+                'hero_image_file' => 'The image could not be saved: the web server is not allowed to write to the images folder. If you manage the server, make it writable (see the README); otherwise ask your host.',
+            ]);
+        }
 
         return redirect('/admin/hero-images?msg=uploaded');
     }

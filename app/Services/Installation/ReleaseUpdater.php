@@ -70,12 +70,17 @@ final class ReleaseUpdater
     /**
      * Whether the dashboard may offer the automatic update at all. A false here
      * is not an error: the notice keeps its manual instructions.
+     *
+     * Only the document root has to be writable. The swap renames `app-data`
+     * (a write on its parent) and the overlay replaces files inside the document
+     * root; `app-data` itself is only moved, never written into. Requiring it to
+     * be writable would refuse hosts that keep the site's files owned by
+     * someone other than the web server user.
      */
     public function canSelfUpdate(): bool
     {
         return $this->isWebrootLayout()
             && is_dir($this->docRoot) && is_writable($this->docRoot)
-            && is_dir($this->rootPath) && is_writable($this->rootPath)
             && $this->zipAvailable();
     }
 
@@ -94,20 +99,8 @@ final class ReleaseUpdater
                     ? 'This site uses the app-data layout the automatic update can replace.'
                     : 'This site\'s files are laid out in a way the browser cannot update in place. Use the manual steps or the CLI.',
             ),
-            new PreconditionCheck(
-                'writable:document_root',
-                is_dir($this->docRoot) && is_writable($this->docRoot),
-                is_dir($this->docRoot) && is_writable($this->docRoot)
-                    ? 'The web folder is writable.'
-                    : 'The web folder ('.basename($this->docRoot).') is not writable, so the new files cannot be put in place.',
-            ),
-            new PreconditionCheck(
-                'writable:app_data',
-                is_dir($this->rootPath) && is_writable($this->rootPath),
-                is_dir($this->rootPath) && is_writable($this->rootPath)
-                    ? 'The application folder is writable.'
-                    : 'The application folder (app-data) is not writable, so the new files cannot be put in place.',
-            ),
+            $this->documentRootWritableCheck(),
+            $this->documentRootDirectoriesCheck(),
             new PreconditionCheck(
                 'zip_support',
                 $this->zipAvailable(),
@@ -332,6 +325,9 @@ final class ReleaseUpdater
                 $state['files_backup_dir'] = null;
             }
 
+            // Best effort: the run is over, so do not strand the unpacked tree.
+            $this->deleteTree($stagingRoot);
+
             throw new UpgradeException(
                 'File swap failed: '.$e->getMessage(),
                 'We could not put the new version in place, so your site is still running the version it had. Nothing was changed.',
@@ -477,9 +473,62 @@ final class ReleaseUpdater
             $target = $this->docRoot.'/'.$entry;
 
             if (is_dir($source)) {
-                $this->copyTree($source, $target);
-            } elseif (is_file($source) && ! @copy($source, $target)) {
-                throw new \RuntimeException('Could not write '.$target);
+                $this->moveTree($source, $target);
+            } elseif (is_file($source)) {
+                $this->replaceFile($source, $target);
+            }
+        }
+    }
+
+    /**
+     * Move one file into place, replacing whatever was there.
+     *
+     * Unlink-then-rename deliberately, rather than copy(): copy() writes through
+     * the existing file and so needs write permission on THAT FILE, which a host
+     * running the web server as its own user never grants on files it owns.
+     * Replacing needs write permission only on the containing directory.
+     */
+    private function replaceFile(string $source, string $target): void
+    {
+        if (is_dir($target)) {
+            $this->deleteTree($target);
+        } else {
+            @unlink($target);
+        }
+
+        if (! @rename($source, $target) && ! @copy($source, $target)) {
+            throw new \RuntimeException('Could not write '.$target);
+        }
+    }
+
+    /**
+     * Merge a staged directory over the live one, moving files rather than
+     * copying them, so only directory write access is required. Files the
+     * release does not contain are left alone — an operator's own files in the
+     * web folder survive an update.
+     */
+    private function moveTree(string $source, string $target): void
+    {
+        if (! is_dir($target) && ! @mkdir($target, 0775, true) && ! is_dir($target)) {
+            throw new \RuntimeException('Could not create '.$target);
+        }
+
+        foreach (scandir($source) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+
+            $from = $source.'/'.$entry;
+            $to = $target.'/'.$entry;
+
+            if (is_link($from)) {
+                continue;
+            }
+
+            if (is_dir($from)) {
+                $this->moveTree($from, $to);
+            } else {
+                $this->replaceFile($from, $to);
             }
         }
     }
@@ -541,6 +590,51 @@ final class ReleaseUpdater
         $path = trim((string) @shell_exec('command -v unzip 2>/dev/null'));
 
         return $path !== '' ? $path : null;
+    }
+
+    private function documentRootWritableCheck(): PreconditionCheck
+    {
+        $writable = is_dir($this->docRoot) && is_writable($this->docRoot);
+        $name = basename($this->docRoot);
+
+        return new PreconditionCheck(
+            'writable:document_root',
+            $writable,
+            $writable
+                ? 'The web folder is writable.'
+                : 'The web server cannot write to the web folder ('.$name.'), so the new files cannot be put in place. On most hosts this just works, because the files are yours; where the web server runs as its own user, give that user write access to the web folder (for example, in it: chgrp -R <webserver-user> . && chmod -R g+w .), or use the manual steps.',
+        );
+    }
+
+    /**
+     * Every folder the overlay replaces files into. Checked separately from the
+     * web folder itself: a host can allow writes to the folder while refusing
+     * writes to the folders inside it, and the message has to name which one so
+     * the remedy is a single command rather than a guess.
+     */
+    private function documentRootDirectoriesCheck(): PreconditionCheck
+    {
+        $blocked = [];
+        foreach (scandir($this->docRoot) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'app-data') {
+                continue;
+            }
+
+            $path = $this->docRoot.'/'.$entry;
+            if (is_dir($path) && ! is_writable($path)) {
+                $blocked[] = $entry;
+            }
+        }
+
+        $ok = $blocked === [];
+
+        return new PreconditionCheck(
+            'writable:document_root_directories',
+            $ok,
+            $ok
+                ? 'The web folder\'s sub-folders are writable.'
+                : 'The web server cannot write to these folders: '.implode(', ', $blocked).'. Give it write access to them (for example: chmod -R g+w '.implode(' ', $blocked).'), or use the manual steps.',
+        );
     }
 
     private function checkDiskSpace(): PreconditionCheck

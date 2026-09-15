@@ -58,14 +58,18 @@ final class UploadController extends Controller
             return redirect('/?msg=99');
         }
 
-        /** @var list<UploadedFile> $files */
-        $files = array_values((array) $request->file('file', []));
+        $suffix = $request->query('action') === 'html' ? '?action=html&msg=' : '?msg=';
+
         $dir = self::directory();
-        if (! is_dir($dir)) {
-            mkdir($dir, 0775, true);
+        if (! is_dir($dir) && ! @mkdir($dir, 0775, true) && ! is_dir($dir)) {
+            return redirect('/admin/upload'.$suffix.'32');
         }
 
+        /** @var list<UploadedFile> $files */
+        $files = array_values((array) $request->file('file', []));
+
         $anyAccepted = false;
+        $anyWriteFailed = false;
         foreach ($files as $file) {
             if (! $file->isValid()) {
                 continue;
@@ -98,13 +102,21 @@ final class UploadController extends Controller
                 continue;
             }
 
-            $file->move($dir, $name);
+            try {
+                $file->move($dir, $name);
+            } catch (\Throwable) {
+                // The file passed every check and still could not be written,
+                // which is a folder the web server cannot write to — not a bad
+                // file. Reported as msg=32 rather than blamed on the file type.
+                $anyWriteFailed = true;
+
+                continue;
+            }
+
             $anyAccepted = true;
         }
 
-        $suffix = $request->query('action') === 'html' ? '?action=html&msg=' : '?msg=';
-
-        return redirect('/admin/upload'.($anyAccepted ? $suffix.'29' : $suffix.'30'));
+        return redirect('/admin/upload'.$suffix.($anyAccepted ? '29' : ($anyWriteFailed ? '32' : '30')));
     }
 
     public function destroy(Request $request): RedirectResponse

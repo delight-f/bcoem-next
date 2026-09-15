@@ -198,4 +198,61 @@ final class ReleaseUpdaterTest extends TestCase
             $this->updater()->downloadUrl('4.1.0'),
         );
     }
+
+    /**
+     * The shape a host produces when the web server runs as its own user: a
+     * writable folder holding a file that user cannot write. A copy()-based
+     * overlay fails here, because copy() writes through the destination file;
+     * replacing a file only needs write access to the folder.
+     */
+    public function test_overlay_replaces_a_file_the_web_server_cannot_write(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            $this->markTestSkipped('Permission bits do not bind as root.');
+        }
+
+        $this->write($this->docRoot.'/index.php', 'old index');
+        chmod($this->docRoot.'/index.php', 0444);
+        $this->write($this->root.'/.env', 'APP_KEY=live-key');
+        $this->write($this->root.'/VERSION', '4.0.0');
+
+        $stagingRoot = $this->stagedRelease('4.1.0', 'readonly');
+
+        $state = [];
+        $this->updater()->swapIntoPlace($stagingRoot, $state);
+
+        $this->assertSame('new index', trim((string) file_get_contents($this->docRoot.'/index.php')));
+        $this->assertSame('4.1.0', trim((string) file_get_contents($this->root.'/VERSION')));
+    }
+
+    /**
+     * A host can allow writes to the web folder while refusing them inside it,
+     * so the failure has to name the folder to make the remedy one command.
+     */
+    public function test_preconditions_name_the_docroot_folders_the_web_server_cannot_write(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            $this->markTestSkipped('Permission bits do not bind as root.');
+        }
+
+        mkdir($this->docRoot.'/build', 0775, true);
+        chmod($this->docRoot.'/build', 0555);
+
+        $result = $this->updater()->checkPreconditions();
+
+        $this->assertFalse($result->passed());
+        $this->assertContains(
+            'writable:document_root_directories',
+            array_map(static fn ($check): string => $check->name, $result->failed()),
+        );
+
+        $message = '';
+        foreach ($result->checks as $check) {
+            if ($check->name === 'writable:document_root_directories') {
+                $message = $check->message;
+            }
+        }
+
+        $this->assertStringContainsString('build', $message);
+    }
 }
