@@ -8,27 +8,6 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
-### Fixed
-
-- **The automatic update now works on hosts that run the web server as its own
-  user.** There every file belongs to the shell account, so the updater's
-  copy-based overlay failed on files it was not allowed to write. Document-root
-  files are now replaced by unlinking and renaming, which needs write access
-  only to the folder, and `app-data` no longer has to be writable at all (the
-  swap only renames it). The checks screen reports the web folder and each
-  sub-folder separately and names the one that is blocking, so the remedy is a
-  single command; where it cannot be granted, the manual and SSH paths remain.
-- **Sponsor-logo and hero-image uploads report a permissions message instead of
-  a 500** when the upload folder is not writable by the web server.
-
-### Changed
-
-- **The "Check for updates" result now reads the same as the release notice.**
-  The flash said a new version was "available to download", which stopped being
-  true once the update wizard could install a release in the browser. It now
-  reports the version "is available", leaving the notice below to carry the
-  action (install automatically, or download by hand).
-
 ## [4.1.0-alpha.9] - 2026-09-15
 
 ### Added
@@ -42,6 +21,27 @@ Release notes for a tag are taken from the matching `## [version]` section below
   by an administrator: a detected release is never applied on its own. The
   automatic swap works on the `app-data` (shared-hosting) layout; other layouts
   keep the manual and CLI paths.
+
+### Changed
+
+- **The "Check for updates" result now reads the same as the release notice.**
+  The flash said a new version was "available to download", which stopped being
+  true once the update wizard could install a release in the browser. It now
+  reports the version "is available", leaving the notice below to carry the
+  action (install automatically, or download by hand).
+
+### Fixed
+
+- **The automatic update now works on hosts that run the web server as its own
+  user.** There every file belongs to the shell account, so the updater's
+  copy-based overlay failed on files it was not allowed to write. Document-root
+  files are now replaced by unlinking and renaming, which needs write access
+  only to the folder, and `app-data` no longer has to be writable at all (the
+  swap only renames it). The checks screen reports the web folder and each
+  sub-folder separately and names the one that is blocking, so the remedy is a
+  single command; where it cannot be granted, the manual and SSH paths remain.
+- **Sponsor-logo and hero-image uploads report a permissions message instead of
+  a 500** when the upload folder is not writable by the web server.
 
 ## [4.1.0-alpha.8] - 2026-09-14
 
