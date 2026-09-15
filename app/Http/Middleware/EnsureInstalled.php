@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Services\Installation\InstallationService;
 use App\Services\Installation\UpgradeService;
+use App\Support\Wizard\RemoteVersionChecker;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -57,10 +58,15 @@ final class EnsureInstalled
         $upgrade = app(UpgradeService::class);
         $needsUpgrade = $upgrade->needsUpgrade();
 
+        // A newer release that has not been fetched yet also makes the wizard
+        // worth reaching: the automatic update lives behind these same routes.
+        // Read from the cache only — no HTTP on a page load.
+        $availableRelease = $needsUpgrade ? null : $this->availableRelease($upgrade);
+
         $isInstallPath = $path === 'install' || str_starts_with($path, 'install/');
         $isUpgradePath = $path === 'upgrade' || str_starts_with($path, 'upgrade/');
 
-        if (($isInstallPath || $isUpgradePath) && ! $needsUpgrade) {
+        if (($isInstallPath || $isUpgradePath) && ! $needsUpgrade && $availableRelease === null) {
             abort(404);
         }
 
@@ -73,11 +79,11 @@ final class EnsureInstalled
         // would otherwise outlive its dismissal (visible in long-running
         // workers and across test requests).
         $banner = null;
-        if ($needsUpgrade && $this->isTopLevelAdmin($request)
+        if (($needsUpgrade || $availableRelease !== null) && $this->isTopLevelAdmin($request)
             && ! $request->session()->get('wizard.upgrade.dismissed', false)) {
             $banner = [
                 'current' => $upgrade->getCurrentVersion(),
-                'version' => $upgrade->getIncomingVersion(),
+                'version' => $availableRelease ?? $upgrade->getIncomingVersion(),
                 'url' => route('wizard.upgrade.whats_new'),
                 'dismiss' => route('wizard.upgrade.dismiss'),
             ];
@@ -85,6 +91,25 @@ final class EnsureInstalled
         View::share('upgradeBanner', $banner);
 
         return $next($request);
+    }
+
+    /**
+     * The latest published version when it is newer than the files on disk, or
+     * null. Cache-only, so a page load never waits on GitHub.
+     */
+    private function availableRelease(UpgradeService $upgrade): ?string
+    {
+        try {
+            $latest = app(RemoteVersionChecker::class)->cachedVersion();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $onDisk = $upgrade->getIncomingVersion();
+
+        return $latest !== null && $latest !== '' && $onDisk !== '' && version_compare($latest, $onDisk, '>')
+            ? $latest
+            : null;
     }
 
     /**

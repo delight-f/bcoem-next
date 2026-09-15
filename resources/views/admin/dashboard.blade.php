@@ -18,28 +18,39 @@
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
-            {{-- New release published (Task 2.2). Lighter-weight than the
-                 upgrade banner: it points at the download, because the upgrade
-                 wizard has nothing to do until the files are on the server.
-                 The steps after the download are spelled out here because
-                 nowhere else in the UI says them: an operator who downloads
-                 the zip and then looks for /upgrade hits a 404 (the wizard
-                 404s while the site's files are still current) and has no way
-                 to learn the banner only appears once the files are uploaded. --}}
+            {{-- New release published (Task 2.2). Where the server can replace
+                 its own files (the app-data layout) this is the trigger for the
+                 automatic update wizard, and the manual steps are the
+                 fallback. On any other layout it keeps pointing at the
+                 download, because the wizard has nothing to do until the files
+                 are on the server. --}}
             @if (! empty($updateNotice))
                 <div class="alert alert-info d-flex align-items-start gap-3" role="alert">
                     <i class="fa fa-cloud-download fa-lg" aria-hidden="true"></i>
                     <div class="flex-grow-1">
                         <strong>Version {{ $updateNotice['version'] }} is available.</strong>
-                        <a href="{{ $updateNotice['url'] }}" target="_blank" rel="noopener">Read the release notes and download it</a>.
-                        <div class="small mt-1">
-                            Then upload the new files over the current ones, keeping
-                            <code>.env</code> and <code>storage/</code> &mdash; they hold your
-                            site's configuration and uploads, and the release contains
-                            neither. When the files are in place, the
-                            <strong>Update your site</strong> banner appears and finishes
-                            the update for you: backup, database changes and all.
-                        </div>
+                        @if (! empty($canSelfUpdate))
+                            <a class="alert-link" href="{{ route('wizard.upgrade.whats_new') }}">Update your site now</a>
+                            &mdash; your site will download and install it for you, backing up your data first.
+                            <div class="small mt-1">
+                                <a href="{{ $updateNotice['url'] }}" target="_blank" rel="noopener">Read the release notes</a>.
+                                Prefer to do it yourself? Download the release and upload the new files over the
+                                current ones, keeping <code>.env</code> and <code>storage/</code> &mdash; they hold
+                                your site's configuration and uploads, and the release contains neither. When the
+                                files are in place, the <strong>Update your site</strong> banner finishes the update
+                                for you: backup, database changes and all.
+                            </div>
+                        @else
+                            <a href="{{ $updateNotice['url'] }}" target="_blank" rel="noopener">Read the release notes and download it</a>.
+                            <div class="small mt-1">
+                                Then upload the new files over the current ones, keeping
+                                <code>.env</code> and <code>storage/</code> &mdash; they hold your
+                                site's configuration and uploads, and the release contains
+                                neither. When the files are in place, the
+                                <strong>Update your site</strong> banner appears and finishes
+                                the update for you: backup, database changes and all.
+                            </div>
+                        @endif
                     </div>
                     <form method="post" action="{{ route('wizard.notice.dismiss') }}">
                         @csrf

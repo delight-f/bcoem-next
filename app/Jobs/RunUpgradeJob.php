@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Services\Installation\UpgradeService;
+use App\Services\Installation\UpdateService;
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,6 +15,9 @@ use Illuminate\Foundation\Bus\Dispatchable;
  * RunInstallationJob; the only difference is the backup path that travels on
  * the failure marker so the failure screen can name the file to relay to
  * support.
+ *
+ * The step list comes from UpdateService: manual mode is UpgradeService's
+ * steps unchanged, auto mode prepends the ReleaseUpdater file steps.
  */
 final class RunUpgradeJob implements ShouldQueue
 {
@@ -34,8 +37,12 @@ final class RunUpgradeJob implements ShouldQueue
     public function handle(): void
     {
         $tracker = new ProgressTracker;
-        $service = app(UpgradeService::class);
-        $steps = $service->steps();
+        $service = app(UpdateService::class);
+
+        $raw = $tracker->raw($this->token) ?? [];
+        $state = is_array($raw['state'] ?? null) ? $raw['state'] : [];
+
+        $steps = $service->steps($state);
 
         $step = $steps[$this->cursor] ?? null;
         if ($step === null) {
@@ -48,13 +55,10 @@ final class RunUpgradeJob implements ShouldQueue
 
         $tracker->step($this->token, $step['label']);
 
-        $raw = $tracker->raw($this->token) ?? [];
-        $state = is_array($raw['state'] ?? null) ? $raw['state'] : [];
-
         try {
             ($step['run'])($state);
         } catch (\Throwable $e) {
-            $failure = $service->describeFailure($state, $e);
+            $failure = $service->describeFailure($state, $e, $this->cursor);
             $tracker->fail($this->token, $failure['plain'], $failure['technical'], $failure['backup_path']);
             $tracker->release('upgrade');
 

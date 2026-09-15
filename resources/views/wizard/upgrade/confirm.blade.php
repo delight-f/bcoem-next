@@ -14,6 +14,10 @@
         <ul>
             <li>Your data is backed up automatically before anything is changed.</li>
             <li>The site will be briefly unavailable while the update runs.</li>
+            @if ($mode === 'auto')
+                <li>The new files are downloaded and put in place for you, keeping your
+                    <code>.env</code> and <code>storage/</code>.</li>
+            @endif
             <li>This page will show you each step and tell you when the site is back online.</li>
         </ul>
 
@@ -25,8 +29,9 @@
         </div>
 
         <div class="d-flex gap-2">
-            <a href="{{ route('wizard.upgrade.checks') }}" class="btn btn-outline-secondary">Back</a>
+            <a href="{{ $mode === 'auto' ? route('wizard.upgrade.checks', ['mode' => 'auto']) : route('wizard.upgrade.checks') }}" class="btn btn-outline-secondary">Back</a>
             <button type="button" class="btn btn-primary btn-lg" id="upgrade-now" disabled
+                    data-mode="{{ $mode }}"
                     data-run-endpoint="{{ route('wizard.upgrade.run') }}"
                     data-progress-endpoint="{{ route('wizard.upgrade.progress') }}"
                     data-site-url="{{ url('/') }}"

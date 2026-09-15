@@ -7,7 +7,7 @@
 @section('content')
     <p class="text-muted">This also checks there is enough free space for the automatic backup.</p>
 
-    <ul class="list-unstyled mb-0" id="check-list" data-endpoint="{{ route('wizard.upgrade.checks') }}">
+    <ul class="list-unstyled mb-0" id="check-list" data-endpoint="{{ $mode === 'auto' ? route('wizard.upgrade.checks', ['mode' => 'auto']) : route('wizard.upgrade.checks') }}">
         @foreach ($result->checks as $check)
             <li class="mb-3">
                 <span class="me-2 {{ $check->passed ? 'text-success' : 'text-danger' }}">
@@ -20,7 +20,7 @@
 
     <div class="d-flex gap-2 mt-4">
         <button type="button" class="btn btn-outline-secondary" id="recheck">Recheck</button>
-        <a href="{{ route('wizard.upgrade.confirm') }}"
+        <a href="{{ $mode === 'auto' ? route('wizard.upgrade.confirm', ['mode' => 'auto']) : route('wizard.upgrade.confirm') }}"
            id="next"
            class="btn btn-primary {{ $result->passed() ? '' : 'disabled' }}"
            aria-disabled="{{ $result->passed() ? 'false' : 'true' }}">Next</a>

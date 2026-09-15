@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Installation\InstallationService;
+use App\Services\Installation\ReleaseUpdater;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Payments\PayPalGateway;
 use App\Support\Results\BestBrewerStandings;
@@ -66,6 +67,11 @@ final class DashboardController extends Controller
             );
         }
 
+        // Where the server can replace its own files, the notice offers the
+        // automatic wizard instead of the upload-by-hand instructions. False on
+        // any other layout, and the notice keeps its manual steps.
+        $canSelfUpdate = $updateNotice !== null && app(ReleaseUpdater::class)->canSelfUpdate();
+
         $prefs = [
             'stripeConnected' => str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id'),
             'entryForm' => (int) $ctx->prefsStr('prefsEntryForm'),
@@ -98,6 +104,7 @@ final class DashboardController extends Controller
 
         return view('admin.dashboard', [
             'updateNotice' => $updateNotice,
+            'canSelfUpdate' => $canSelfUpdate,
             'installedVersion' => $installedVersion,
             'canCheckUpdates' => (int) $user->userLevel === 0,
             'helpTopics' => config('dashboard-help'),

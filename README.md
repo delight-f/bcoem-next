@@ -177,12 +177,25 @@ install twice.
 
 ### Upgrading
 
-- **Web** — a Top-Level Administrator sees a dismissable **Upgrade** banner;
-  `/upgrade` is reachable by FTP alone.
+- **Web (automatic)** — on the shared-hosting `app-data` layout a Top-Level
+  Administrator is offered **Update automatically** from the dashboard release
+  notice (and the **Update your site** banner). The site downloads the published
+  release, unpacks it beside the live tree, carries `.env` and `storage/` across,
+  swaps the files and then runs the same database steps below — all from the
+  browser, one step per poll, with no queue worker needed.
+- **Web (manual)** — on any other layout, upload the new files over the current
+  ones (keeping `.env` and `storage/`), then use `/upgrade`.
 - **CLI** — `php artisan app:upgrade` (add `--force` for unattended use).
 - **SSH** — `scripts/install.sh` stages the new version beside the live one,
   carries `.env` and `storage/` across, swaps while keeping a
   `.bak-<timestamp>`, then runs `app:upgrade`.
+
+The automatic path needs the `app-data` layout, PHP able to write the web folder
+and `app-data/` (the same permissions the installer needs), and a way to unpack a
+zip (the `zip` extension or the `unzip` binary); its checks screen verifies all of
+this and falls back to the manual steps when any is missing. It is only ever
+started by an administrator — a detected release is offered, never applied on its
+own.
 
 Every path runs the same order: back up → verify → maintenance mode → migrate →
 version fixups → clear caches → version marker. The backup uses `mysqldump`,
@@ -192,7 +205,8 @@ exists before anything changes.
 > [!IMPORTANT]
 > There is **no automatic database rollback**. If a step fails after the backup,
 > the backup path travels with the error so it can be surfaced, and a person
-> decides whether to restore.
+> decides whether to restore. If the file swap itself fails, the previous files
+> are put back and the site keeps running the version it had.
 
 ### Diagnostics
 

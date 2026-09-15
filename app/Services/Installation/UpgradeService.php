@@ -376,14 +376,30 @@ class UpgradeService
         }
     }
 
-    private function enterMaintenance(): void
+    /**
+     * Turn maintenance mode on. Public so the browser updater can hold it
+     * across the file swap: the swap window must never serve a half-replaced
+     * tree. `upgrade()` reaches the same pair through the private wrappers
+     * below, so there is still one implementation.
+     */
+    public function activateMaintenance(): void
     {
         app(Application::class)->maintenanceMode()->activate([]);
     }
 
-    private function exitMaintenance(): void
+    public function deactivateMaintenance(): void
     {
         app(Application::class)->maintenanceMode()->deactivate();
+    }
+
+    private function enterMaintenance(): void
+    {
+        $this->activateMaintenance();
+    }
+
+    private function exitMaintenance(): void
+    {
+        $this->deactivateMaintenance();
     }
 
     private function clearCaches(): void

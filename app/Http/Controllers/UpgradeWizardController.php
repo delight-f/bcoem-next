@@ -5,35 +5,49 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Jobs\RunUpgradeJob;
+use App\Services\Installation\ReleaseUpdater;
+use App\Services\Installation\UpdateService;
 use App\Services\Installation\UpgradeService;
 use App\Support\Wizard\ProgressTracker;
+use App\Support\Wizard\RemoteVersionChecker;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * The browser upgrade wizard, reachable only by a Top-Level Administrator
+ * The browser update wizard, reachable only by a Top-Level Administrator
  * (EnsureInstalled gates the routes). It contains no upgrade logic: the
- * backup, migration and version-marker work all lives in UpgradeService.
+ * backup, migration and version-marker work all lives in UpgradeService, and
+ * the file download/swap lives in ReleaseUpdater.
+ *
+ * Two modes share these screens. Manual (the default, unchanged): the new
+ * files are already on the server and only the database work remains. Auto:
+ * nothing has been uploaded — ReleaseUpdater fetches and swaps the release
+ * first, then the same database steps run. UpdateService builds the one list
+ * both modes walk.
  */
 final class UpgradeWizardController extends Controller
 {
-    public function whatsNew(UpgradeService $service): View
+    public function whatsNew(UpgradeService $service, ReleaseUpdater $release): View
     {
         $current = $service->getCurrentVersion();
-        $incoming = $service->getIncomingVersion();
+        $target = $this->autoTarget($service, $release);
+        $incoming = $target ?? $service->getIncomingVersion();
 
         return view('wizard.upgrade.whats-new', [
             'current' => $current,
             'incoming' => $incoming,
             'sections' => $this->changelog($current, $incoming),
+            'auto' => $target !== null,
+            'mode' => $target !== null ? 'auto' : 'manual',
         ]);
     }
 
-    public function checks(Request $request, UpgradeService $service): View|JsonResponse
+    public function checks(Request $request, UpgradeService $service, UpdateService $update, ReleaseUpdater $release): View|JsonResponse
     {
-        $result = $service->checkPreconditions();
+        $auto = $request->query('mode') === 'auto' && $this->autoTarget($service, $release) !== null;
+        $result = $update->checkPreconditions($auto);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -45,26 +59,37 @@ final class UpgradeWizardController extends Controller
             ]);
         }
 
-        return view('wizard.upgrade.checks', ['result' => $result]);
+        return view('wizard.upgrade.checks', ['result' => $result, 'mode' => $auto ? 'auto' : 'manual']);
     }
 
-    public function confirm(UpgradeService $service): View
+    public function confirm(UpgradeService $service, ReleaseUpdater $release): View
     {
+        $target = $this->autoTarget($service, $release);
+
         return view('wizard.upgrade.confirm', [
             'current' => $service->getCurrentVersion(),
-            'incoming' => $service->getIncomingVersion(),
+            'incoming' => $target ?? $service->getIncomingVersion(),
             'supportEmail' => (string) config('services.support.email'),
+            'mode' => $target !== null ? 'auto' : 'manual',
         ]);
     }
 
-    public function run(Request $request, UpgradeService $service): JsonResponse
+    public function run(Request $request, UpgradeService $service, ReleaseUpdater $release): JsonResponse
     {
         $token = $this->validToken($request);
         if ($token === null) {
             return response()->json(['error' => 'This update session is no longer valid. Please start again.'], 422);
         }
 
-        if (! $service->needsUpgrade()) {
+        $mode = $request->input('mode') === 'auto' ? 'auto' : 'manual';
+
+        if ($mode === 'auto') {
+            // Auto is only valid while a newer release is genuinely waiting to
+            // be fetched; the files being current is the normal case here.
+            if ($this->autoTarget($service, $release) === null) {
+                return response()->json(['error' => 'There is no update to apply.'], 409);
+            }
+        } elseif (! $service->needsUpgrade()) {
             return response()->json(['error' => 'There is no update to apply.'], 409);
         }
 
@@ -76,10 +101,34 @@ final class UpgradeWizardController extends Controller
         }
 
         // Bookkeeping only: no upgrade work runs here. The steps run from
-        // progress(), one per request.
+        // progress(), one per request. The mode rides on the marker so every
+        // step request builds the same list.
         $tracker->pending($token);
+        $tracker->put($token, ['state' => ['mode' => $mode]]);
 
         return response()->json(['token' => $token]);
+    }
+
+    /**
+     * The published version to fetch automatically, or null when the automatic
+     * path is not the right answer. Null whenever the files already hold a
+     * version the database has not caught up with — that is the manual upgrade,
+     * and re-downloading it would only repeat work.
+     */
+    private function autoTarget(UpgradeService $service, ReleaseUpdater $release): ?string
+    {
+        if ($service->needsUpgrade() || ! $release->canSelfUpdate()) {
+            return null;
+        }
+
+        $latest = app(RemoteVersionChecker::class)->cachedVersion();
+        $onDisk = $service->getIncomingVersion();
+
+        if ($latest === null || $latest === '' || $onDisk === '' || ! version_compare($latest, $onDisk, '>')) {
+            return null;
+        }
+
+        return $latest;
     }
 
     public function progress(Request $request): JsonResponse

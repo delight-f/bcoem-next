@@ -125,7 +125,7 @@
             fetch(button.dataset.runEndpoint, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' },
-                body: new URLSearchParams({ token }),
+                body: new URLSearchParams({ token, mode: button.dataset.mode || 'manual' }),
             }).then(async (response) => {
                 if (!response.ok) {
                     const data = await response.json().catch(() => ({}));
