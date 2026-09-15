@@ -8,6 +8,19 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Fixed
+
+- **The automatic update now works on hosts that run the web server as its own
+  user.** There every file belongs to the shell account, so the updater's
+  copy-based overlay failed on files it was not allowed to write. Document-root
+  files are now replaced by unlinking and renaming, which needs write access
+  only to the folder, and `app-data` no longer has to be writable at all (the
+  swap only renames it). The checks screen reports the web folder and each
+  sub-folder separately and names the one that is blocking, so the remedy is a
+  single command; where it cannot be granted, the manual and SSH paths remain.
+- **Sponsor-logo and hero-image uploads report a permissions message instead of
+  a 500** when the upload folder is not writable by the web server.
+
 ### Changed
 
 - **The "Check for updates" result now reads the same as the release notice.**
