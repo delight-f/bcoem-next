@@ -8,6 +8,20 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.9] - 2026-09-15
+
+### Added
+
+- **An end-to-end update wizard (issue #42).** A Top-Level Administrator can
+  now update the site from the browser: the site downloads the published
+  release, unpacks it beside the live tree, carries `.env` and `storage/`
+  across, swaps the files and then runs the ordinary backup-and-migrate steps —
+  no zip download, upload or SSH required. It is offered from the dashboard
+  release notice and the **Update your site** banner, and is only ever started
+  by an administrator: a detected release is never applied on its own. The
+  automatic swap works on the `app-data` (shared-hosting) layout; other layouts
+  keep the manual and CLI paths.
+
 ## [4.1.0-alpha.8] - 2026-09-14
 
 ### Added
