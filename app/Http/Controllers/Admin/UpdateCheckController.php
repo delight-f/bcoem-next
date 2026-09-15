@@ -47,7 +47,9 @@ final class UpdateCheckController extends Controller
         }
 
         if ($current !== '' && version_compare($latest, $current, '>')) {
-            return redirect('/admin')->with('status', 'Version '.$latest.' is available to download.');
+            // Worded to match the notice the redirect lands on, which offers the
+            // action itself (install in the browser, or download by hand).
+            return redirect('/admin')->with('status', 'Version '.$latest.' is available.');
         }
 
         return redirect('/admin')->with('status', 'You are running the latest version'.($current !== '' ? ' ('.$current.')' : '').'.');

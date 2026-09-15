@@ -8,6 +8,14 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Changed
+
+- **The "Check for updates" result now reads the same as the release notice.**
+  The flash said a new version was "available to download", which stopped being
+  true once the update wizard could install a release in the browser. It now
+  reports the version "is available", leaving the notice below to carry the
+  action (install automatically, or download by hand).
+
 ## [4.1.0-alpha.9] - 2026-09-15
 
 ### Added
