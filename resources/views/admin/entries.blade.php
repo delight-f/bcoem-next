@@ -288,7 +288,7 @@
         @if ($entries->isEmpty())
             <p>No entries have been added to the database yet.</p>
         @else
-            <table class="table table-responsive table-bordered" id="sortable" data-dt data-dt-page="25">
+            <table class="table table-responsive table-bordered" id="sortable" data-dt data-dt-page="{{ (int) $ctx->prefsStr('prefsRecordPaging') ?: 25 }}">
                 <thead>
                     <tr>
                         <th nowrap>Entry</th>

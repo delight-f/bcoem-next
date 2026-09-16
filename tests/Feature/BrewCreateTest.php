@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Http\Controllers\BrewController;
+use App\Support\Payments\FeeCalculator;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Date;
@@ -28,6 +29,8 @@ final class BrewCreateTest extends PublicSurfaceTestCase
 
     /** @var array<string, mixed> */
     private array $origPrefs = [];
+
+    private ?string $origDiscount = null;
 
     protected function setUp(): void
     {
@@ -57,6 +60,9 @@ final class BrewCreateTest extends PublicSurfaceTestCase
         $row = DB::table('contest_info')->where('id', 1)->first();
         $this->origContest = $row === null ? [] : (array) $row;
 
+        $discount = DB::table('brewer')->where('uid', 1)->value('brewerDiscount');
+        $this->origDiscount = $discount === null ? null : (string) $discount;
+
         // Open the entry window: the brew form (brew.pub.php add mode) only
         // renders between the entry-open and deadline timestamps, and the
         // baseline has it closed. Pin the window open for form-listing tests.
@@ -69,6 +75,8 @@ final class BrewCreateTest extends PublicSurfaceTestCase
     protected function tearDown(): void
     {
         DB::table('brewing')->where('brewBrewerID', 1)->delete();
+
+        DB::table('brewer')->where('uid', 1)->update(['brewerDiscount' => $this->origDiscount]);
 
         if ($this->origContest !== []) {
             DB::table('contest_info')->where('id', 1)->update($this->origContest);
@@ -225,6 +233,262 @@ final class BrewCreateTest extends PublicSurfaceTestCase
         $this->post('/brew', ['brewName' => 'First B', 'brewStyle' => '1-B', 'brewConfirmed' => '1'])
             ->assertRedirect('/list?msg=1');
         self::assertSame(3, DB::table('brewing')->where('brewBrewerID', 1)->count());
+    }
+
+    /**
+     * Entries-tab "Enable By Style" grid: prefsStyleLimits JSON keyed by
+     * medal group. A second entry in a full group is rejected with msg=12.
+     */
+    public function test_style_group_limit_rejects_with_msg_12(): void
+    {
+        $this->clearCaps();
+        $this->setPrefs(['prefsStyleLimits' => json_encode(['01' => '1'])]);
+
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+        $this->post('/brew', ['brewName' => 'Group Full', 'brewStyle' => '1-B', 'brewConfirmed' => '1'])
+            ->assertRedirect('/list?msg=12');
+
+        self::assertSame(1, DB::table('brewing')->where('brewBrewerID', 1)->count());
+    }
+
+    /**
+     * Per-style-type limits (style_types.styleTypeEntryLimit) applied to the
+     * resolved style's brewStyleType.
+     */
+    public function test_style_type_limit_rejects_with_msg_12(): void
+    {
+        $style = BrewController::styleFlags('1-A', TenantContext::load());
+        self::assertNotNull($style);
+        $typeId = (int) $style->brewStyleType;
+        $original = DB::table('style_types')->where('id', $typeId)->value('styleTypeEntryLimit');
+        DB::table('style_types')->where('id', $typeId)->update(['styleTypeEntryLimit' => '1']);
+
+        $this->clearCaps();
+
+        try {
+            $this->login();
+            $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+            $this->post('/brew', ['brewName' => 'Type Full', 'brewStyle' => '1-B', 'brewConfirmed' => '1'])
+                ->assertRedirect('/list?msg=12');
+
+            self::assertSame(1, DB::table('brewing')->where('brewBrewerID', 1)->count());
+        } finally {
+            DB::table('style_types')->where('id', $typeId)->update(['styleTypeEntryLimit' => $original]);
+        }
+    }
+
+    /**
+     * Entries-tab "Enable By Table or Medal Group": prefsStyleLimits='2' with
+     * judging_tables.tableEntryLimit counting the participant's entries across
+     * the table's styles.
+     */
+    public function test_per_table_limit_rejects_with_msg_12(): void
+    {
+        $style = BrewController::styleFlags('1-A', TenantContext::load());
+        self::assertNotNull($style);
+
+        $tableId = DB::table('judging_tables')->insertGetId([
+            'tableName' => 'P2 Test Table',
+            'tableStyles' => (string) $style->id,
+            'tableNumber' => 1,
+            'tableEntryLimit' => 1,
+        ]);
+
+        $this->clearCaps();
+        $this->setPrefs(['prefsStyleLimits' => '2']);
+
+        try {
+            $this->login();
+            $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+            $this->post('/brew', ['brewName' => 'Table Full', 'brewStyle' => '1-A', 'brewConfirmed' => '1'])
+                ->assertRedirect('/list?msg=12');
+
+            self::assertSame(1, DB::table('brewing')->where('brewBrewerID', 1)->count());
+        } finally {
+            DB::table('judging_tables')->where('id', $tableId)->delete();
+        }
+    }
+
+    /**
+     * #1-#4 incremental tiers (prefsUserEntryLimitDates): while a tier's
+     * window is open the tier's limit-number caps the participant (msg=8).
+     */
+    public function test_incremental_tier_limit_applies_inside_its_window(): void
+    {
+        $this->clearCaps();
+        $this->setPrefs([
+            'prefsUserEntryLimitDates' => json_encode(['1' => ['limit-number' => '1', 'limit-days' => '30']]),
+        ]);
+
+        // setUp opened the window 2 days ago → tier-1 window (30d) still open.
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+        $this->post('/brew', ['brewName' => 'Incremental Full', 'brewStyle' => '1-B', 'brewConfirmed' => '1'])
+            ->assertRedirect('/list?msg=8');
+
+        self::assertSame(1, DB::table('brewing')->where('brewBrewerID', 1)->count());
+    }
+
+    /** Once the tier's window has passed, the incremental limit no longer applies. */
+    public function test_incremental_tier_expires_after_its_window(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => Date::now()->subDays(40)->getTimestamp(),
+            'contestEntryDeadline' => Date::now()->addDays(7)->getTimestamp(),
+        ]);
+
+        $this->clearCaps();
+        $this->setPrefs([
+            'prefsUserEntryLimitDates' => json_encode(['1' => ['limit-number' => '1', 'limit-days' => '30']]),
+        ]);
+
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+        $this->post('/brew', ['brewName' => 'After Window', 'brewStyle' => '1-B', 'brewConfirmed' => '1'])
+            ->assertRedirect('/list?msg=1');
+
+        self::assertSame(2, DB::table('brewing')->where('brewBrewerID', 1)->count());
+    }
+
+    /**
+     * The edit path now runs the same caps, but excludes the row being edited:
+     * a benign re-save of the entry that already fills the group is allowed,
+     * while moving a different entry into the full group is blocked.
+     */
+    public function test_edit_rechecks_caps_and_excludes_the_edited_row(): void
+    {
+        $this->clearCaps();
+        $this->setPrefs(['prefsStyleLimits' => json_encode(['01' => '1'])]);
+
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+        $first = $this->lastEntry();
+        self::assertNotNull($first);
+
+        // Benign re-save: the only entry in group 01 stays in group 01.
+        $this->post('/brew/'.$first['id'].'/edit', [
+            'brewName' => 'Renamed', 'brewStyle' => '1-A', 'brewConfirmed' => '1',
+        ])->assertRedirect('/list?msg=2');
+
+        // Park an entry in a different group, then try to move it into 01.
+        $this->post('/brew', ['brewName' => 'Other Group', 'brewStyle' => '2-A', 'brewConfirmed' => '1'])
+            ->assertRedirect('/list?msg=1');
+        $second = $this->lastEntry();
+        self::assertNotNull($second);
+
+        $this->post('/brew/'.$second['id'].'/edit', [
+            'brewName' => 'Move Into Full Group', 'brewStyle' => '1-B', 'brewConfirmed' => '1',
+        ])->assertRedirect('/list?msg=12');
+    }
+
+    /** Clear every cap so a single-mechanism test cannot trip another. */
+    private function clearCaps(): void
+    {
+        $this->setPrefs([
+            'prefsUserEntryLimit' => null,
+            'prefsUserSubCatLimit' => null,
+            'prefsUSCLExLimit' => null,
+            'prefsUSCLEx' => null,
+            'prefsStyleLimits' => null,
+            'prefsUserEntryLimitDates' => null,
+            'prefsEntryLimit' => null,
+            'prefsEntryLimitPaid' => null,
+        ]);
+    }
+
+    // ---- member discount password ----
+
+    /** Arm a member rate + password on the contest row (restored in tearDown). */
+    private function setMemberDiscount(string $password = 'memberpw'): void
+    {
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryFee' => '10.00',
+            'contestEntryFeePasswordNum' => '6.00',
+            'contestEntryFeePassword' => $password,
+            'contestEntryFeeDiscount' => 'N',
+        ]);
+    }
+
+    public function test_member_discount_password_grants_the_member_rate(): void
+    {
+        $this->clearCaps();
+        $this->setMemberDiscount();
+
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A', 'contestEntryFeePassword' => 'memberpw'])
+            ->assertRedirect('/list?msg=1');
+
+        self::assertSame('Y', (string) DB::table('brewer')->where('uid', 1)->value('brewerDiscount'));
+        // The cheaper member rate now applies to this entrant…
+        self::assertSame('6.00', FeeCalculator::forEntrant(TenantContext::load(), 1, 1));
+        // …and clears back to the standard fee without the flag.
+        DB::table('brewer')->where('uid', 1)->update(['brewerDiscount' => 'N']);
+        self::assertSame('10.00', FeeCalculator::forEntrant(TenantContext::load(), 1, 1));
+    }
+
+    public function test_member_discount_password_wrong_value_is_rejected_loudly(): void
+    {
+        $this->clearCaps();
+        $this->setMemberDiscount();
+        DB::table('brewer')->where('uid', 1)->update(['brewerDiscount' => 'N']);
+
+        $this->login();
+        $this->from('/brew')->post('/brew', [
+            'brewName' => 'Bad Password', 'brewStyle' => '1-A', 'brewConfirmed' => '1',
+            'contestEntryFeePassword' => 'wrong',
+        ])->assertSessionHasErrors('contestEntryFeePassword');
+
+        // No flag granted and no entry written.
+        self::assertNotSame('Y', (string) DB::table('brewer')->where('uid', 1)->value('brewerDiscount'));
+        self::assertSame(0, DB::table('brewing')->where('brewBrewerID', 1)->count());
+    }
+
+    public function test_member_discount_password_blank_is_a_noop(): void
+    {
+        $this->clearCaps();
+        $this->setMemberDiscount();
+        DB::table('brewer')->where('uid', 1)->update(['brewerDiscount' => 'N']);
+
+        $this->login();
+        $this->postEntry(['brewStyle' => '1-A'])->assertRedirect('/list?msg=1');
+
+        self::assertNotSame('Y', (string) DB::table('brewer')->where('uid', 1)->value('brewerDiscount'));
+    }
+
+    // ---- prefsSpecific hides the Brewer's Specifics field ----
+
+    public function test_prefs_specific_hides_the_comments_field(): void
+    {
+        $this->setPrefs(['prefsSpecific' => '1']);
+        $this->login();
+        $this->get('/brew')->assertOk()->assertDontSee('name="brewComments"', false);
+
+        $this->setPrefs(['prefsSpecific' => '0']);
+        $this->get('/brew')->assertOk()->assertSee('name="brewComments"', false);
+    }
+
+    public function test_hidden_comments_field_preserves_the_stored_value(): void
+    {
+        // Store a value while the field is shown…
+        $this->setPrefs(['prefsSpecific' => '0']);
+        $this->login();
+        $this->postEntry(['brewComments' => 'keepers'])->assertRedirect('/list?msg=1');
+        $entry = $this->lastEntry();
+        self::assertNotNull($entry);
+
+        // …then hide it and re-save: an absent field must not null the column.
+        $this->setPrefs(['prefsSpecific' => '1']);
+        $this->post('/brew/'.$entry['id'].'/edit', [
+            'brewName' => 'Renamed', 'brewStyle' => '1-A', 'brewConfirmed' => '1',
+        ])->assertRedirect('/list?msg=2');
+
+        self::assertSame('keepers', (string) DB::table('brewing')->where('id', $entry['id'])->value('brewComments'));
     }
 
     public function test_form_lists_only_selected_styles_of_the_active_set(): void

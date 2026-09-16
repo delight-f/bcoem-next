@@ -209,6 +209,9 @@
     </div>
 </div>
 
+{{-- prefsSpecific = 1 hides the Brewer's Specifics field (site_preferences
+     General tab); the stored value is preserved on save by BrewController. --}}
+@unless ((int) $ctx->prefsStr('prefsSpecific') === 1)
 <div class="mb-4 row">
     <label for="brewComments" class="col-md-3 col-form-label"><strong>{{ __('site.brewer_specifics') }}</strong></label>
     <div class="col-md-9">
@@ -217,5 +220,24 @@
         <div class="form-text">{{ $charLimit }}{{ __('site.character_limit') }}<span id="countComments">{{ mb_strlen(old('brewComments', $entry->brewComments ?? '')) }}</span></div>
     </div>
 </div>
+@endunless
+
+{{-- Member discount (Entries tab): a matching password marks the brewer
+     discounted so FeeCalculator applies the member rate. Offered only when
+     the competition configures both a password and a member fee. --}}
+@php($showMemberPassword = (string) ($ctx->contestStr('contestEntryFeePassword') ?? '') !== ''
+    && (string) ($ctx->contestStr('contestEntryFeePasswordNum') ?? '') !== '')
+@if ($showMemberPassword)
+<div class="mb-4 row">
+    <label for="contestEntryFeePassword" class="col-md-3 col-form-label">{{ __('site.member_discount_password') }}</label>
+    <div class="col-md-9">
+        <input class="form-control @error('contestEntryFeePassword') is-invalid @enderror"
+               id="contestEntryFeePassword" name="contestEntryFeePassword" type="password"
+               autocomplete="off" value="">
+        @error('contestEntryFeePassword')<div class="text-danger">{{ $message }}</div>@enderror
+        <div class="form-text">{{ __('site.member_discount_password_help') }}</div>
+    </div>
+</div>
+@endif
 
 <input type="hidden" name="brewConfirmed" value="1">

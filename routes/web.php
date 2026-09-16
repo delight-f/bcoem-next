@@ -16,6 +16,7 @@ use App\Http\Controllers\BrewerController;
 use App\Http\Controllers\BrewerForm1Controller;
 use App\Http\Controllers\BrewerForm2Controller;
 use App\Http\Controllers\ChangeEmailController;
+use App\Http\Controllers\EntrantLabelController;
 use App\Http\Controllers\EntriesController;
 use App\Http\Controllers\LegacyRedirectController;
 use App\Http\Controllers\ManualPaymentController;
@@ -162,6 +163,11 @@ Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')
 // missing-required-style-field rejection served back at the edit form).
 Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware(['auth', ...$emailVerified]);
 Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware(['auth', ...$emailVerified]);
+
+// Entrant entry bottle/can labels (Payment tab "Pay to Print?"). Legacy let a
+// brewer print their own labels behind a bid ownership check; the port
+// restores that surface here, session-scoped to the caller's own entries.
+Route::get('/list/labels', EntrantLabelController::class)->name('labels.own')->middleware('auth');
 
 // Public pay page (P3.5d). Legacy served ?section=pay behind a login gate.
 // Success lands back on the page with the legacy confirmation alert

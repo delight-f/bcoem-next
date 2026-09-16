@@ -66,6 +66,10 @@ final class BrewController extends Controller
         'brewPouringNotes' => ['nullable', 'string', 'max:255'],
         'brewPackaging' => ['nullable', 'string', 'max:255'],
         'brewPossAllergens' => ['nullable', 'string', 'max:255'],
+        // Member-discount password (Entries tab). Not a brewing column — it
+        // gates brewer.brewerDiscount, which FeeCalculator keys the member
+        // rate off (see applyMemberDiscount).
+        'contestEntryFeePassword' => ['nullable', 'string', 'max:255'],
     ];
 
     public function showCreate(Request $request): View|RedirectResponse
@@ -131,7 +135,7 @@ final class BrewController extends Controller
             ownsEntry: true,
             entryLimitEnabled: self::compEntryLimitReached($ctx),
             paidLimitEnabled: self::compPaidEntryLimitReached($ctx),
-            userEntryLimit: $ctx->prefsStr('prefsUserEntryLimit'),
+            userEntryLimit: self::effectiveUserLimit($ctx),
             userEntryCount: DB::table('brewing')->where('brewBrewerID', $userId)->count(),
             style: $data['brewStyle'],
             previousStyle: null,
@@ -146,6 +150,27 @@ final class BrewController extends Controller
         if (! $limits->allowed) {
             // '8' user cap / '9' subcat cap — legacy redirect codes.
             return redirect('/list?msg='.$limits->reason);
+        }
+
+        // Style/group, per-style-type and per-table caps (the Entries tab's
+        // previously unenforced limit grid). Same redirect-code family.
+        $capacity = self::capacityCounts($ctx, $userId, $styleRow, null);
+        $capacityCheck = EntryLimits::checkCapacity(
+            userLevel: (int) ($request->user()->userLevel ?? 2),
+            groupLimit: $capacity['groupLimit'],
+            groupCount: $capacity['groupCount'],
+            styleTypeLimit: $capacity['styleTypeLimit'],
+            styleTypeCount: $capacity['styleTypeCount'],
+            tableLimit: $capacity['tableLimit'],
+            tableCount: $capacity['tableCount'],
+        );
+
+        if (! $capacityCheck->allowed) {
+            return redirect('/list?msg='.$capacityCheck->reason);
+        }
+
+        if (($discountError = self::applyMemberDiscount($ctx, $userId, $data)) !== null) {
+            return $discountError;
         }
 
         $mead1 = $mead2 = $mead3 = null;
@@ -320,6 +345,53 @@ final class BrewController extends Controller
         $sub = self::styleSub($code);
         $styleRow = self::styleFlags($code, $ctx);
 
+        // Same cap engine as the add path, now enforced on edit too (ledger
+        // #5: the subcat limit re-checks when the window is open and the
+        // style changed). Counts exclude this row so a re-save never trips a
+        // cap the entry already holds.
+        $previousStyle = ltrim((string) $row->brewCategorySort, '0').'-'.$row->brewSubCategory;
+
+        $limits = EntryLimits::check(
+            action: 'edit',
+            userLevel: (int) ($request->user()->userLevel ?? 2),
+            ownsEntry: true,
+            entryLimitEnabled: self::compEntryLimitReached($ctx),
+            paidLimitEnabled: self::compPaidEntryLimitReached($ctx),
+            userEntryLimit: self::effectiveUserLimit($ctx),
+            userEntryCount: DB::table('brewing')->where('brewBrewerID', $userId)->count(),
+            style: $code,
+            previousStyle: $previousStyle,
+            editWindowOpen: $windowOpen,
+            subCatLimit: $ctx->prefsStr('prefsUserSubCatLimit'),
+            exceptionSubNum: (string) ($ctx->prefsStr('prefsUSCLExLimit') ?? ''),
+            exceptionSubList: (string) ($ctx->prefsStr('prefsUSCLEx') ?? ''),
+            styleId: $styleRow?->id,
+            subCategoryCount: self::subCategoryCount($ctx, $userId, $code, $entry),
+        );
+
+        if (! $limits->allowed) {
+            return redirect('/list?msg='.$limits->reason);
+        }
+
+        $capacity = self::capacityCounts($ctx, $userId, $styleRow, $entry);
+        $capacityCheck = EntryLimits::checkCapacity(
+            userLevel: (int) ($request->user()->userLevel ?? 2),
+            groupLimit: $capacity['groupLimit'],
+            groupCount: $capacity['groupCount'],
+            styleTypeLimit: $capacity['styleTypeLimit'],
+            styleTypeCount: $capacity['styleTypeCount'],
+            tableLimit: $capacity['tableLimit'],
+            tableCount: $capacity['tableCount'],
+        );
+
+        if (! $capacityCheck->allowed) {
+            return redirect('/list?msg='.$capacityCheck->reason);
+        }
+
+        if (($discountError = self::applyMemberDiscount($ctx, $userId, $data)) !== null) {
+            return $discountError;
+        }
+
         $isAdmin = (bool) ($request->user()?->isAdmin() ?? false);
         $paid = $isAdmin && isset($data['brewPaid']) ? (int) $data['brewPaid'] : (int) $row->brewPaid;
         $received = $isAdmin && isset($data['brewReceived']) ? (int) $data['brewReceived'] : (int) $row->brewReceived;
@@ -400,7 +472,9 @@ final class BrewController extends Controller
             'brewMead1' => $mead1,
             'brewMead2' => $mead2,
             'brewMead3' => $mead3,
-            'brewComments' => (string) ($data['brewComments'] ?? ''),
+            'brewComments' => array_key_exists('brewComments', $data)
+                ? (string) $data['brewComments']
+                : (string) ($row->brewComments ?? ''),
             'brewPaid' => $paid,
             'brewInfoOptional' => (string) ($data['brewInfoOptional'] ?? ''),
             'brewPossAllergens' => (string) ($data['brewPossAllergens'] ?? ''),
@@ -589,7 +663,7 @@ final class BrewController extends Controller
      * the category filter (registration-rules #3/#4 — WHERE shape comes
      * from EntryLimits::countFilters).
      */
-    private static function subCategoryCount(TenantContext $ctx, int $userId, string $style): int
+    private static function subCategoryCount(TenantContext $ctx, int $userId, string $style, ?int $excludeEntryId = null): int
     {
         $filters = EntryLimits::countFilters($style, $ctx->prefsStr('prefsStyleSet') === 'BA');
         $query = DB::table('brewing')->where('brewBrewerID', $userId);
@@ -597,8 +671,171 @@ final class BrewController extends Controller
         if ($filters['categorySort'] !== null) {
             $query->where('brewCategorySort', $filters['categorySort']);
         }
+        if ($excludeEntryId !== null) {
+            $query->where('id', '!=', $excludeEntryId);
+        }
 
         return (int) $query->clone()->where('brewSubCategory', $filters['subCategory'])->count();
+    }
+
+    /**
+     * Member-discount gate: a submitted password matching the stored
+     * contestEntryFeePassword marks the brewer discounted (brewerDiscount =
+     * 'Y'), which is what FeeCalculator keys the member rate off. A wrong
+     * password returns an error rather than silently ignoring the attempt; a
+     * blank field is a no-op (an already-discounted brewer need not re-enter
+     * it on every save).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private static function applyMemberDiscount(TenantContext $ctx, int $userId, array $data): ?RedirectResponse
+    {
+        $posted = (string) ($data['contestEntryFeePassword'] ?? '');
+        if ($posted === '') {
+            return null;
+        }
+
+        $stored = (string) ($ctx->contestStr('contestEntryFeePassword') ?? '');
+        if ($stored === '' || ! hash_equals($stored, $posted)) {
+            return back()->withErrors([
+                'contestEntryFeePassword' => __('site.member_discount_password_invalid'),
+            ])->withInput();
+        }
+
+        DB::table('brewer')->where('uid', $userId)->update(['brewerDiscount' => 'Y']);
+
+        return null;
+    }
+
+    /**
+     * Effective per-participant total cap: the lower of the overall
+     * prefsUserEntryLimit and the time-windowed incremental tier limit
+     * (legacy: the overall limit overrides an incremental one when lower).
+     */
+    private static function effectiveUserLimit(TenantContext $ctx): ?string
+    {
+        $overall = $ctx->prefsStr('prefsUserEntryLimit');
+        $overall = ($overall !== null && $overall !== '') ? (int) $overall : null;
+
+        $incremental = EntryLimits::incrementalLimit(
+            json_decode((string) $ctx->prefsStr('prefsUserEntryLimitDates'), true) ?: [],
+            (int) ($ctx->contestStr('contestEntryOpen') ?? 0),
+            time(),
+        );
+
+        if ($overall === null) {
+            return $incremental === null ? null : (string) $incremental;
+        }
+        if ($incremental === null) {
+            return (string) $overall;
+        }
+
+        return (string) min($overall, $incremental);
+    }
+
+    /**
+     * Per-participant capacity inputs for the Entries tab's style/table and
+     * per-style-type limits: the configured limit (null = not configured)
+     * and how many entries the participant already holds. Counts exclude the
+     * row being edited so a benign re-save never trips a cap it already met.
+     *
+     * @return array{groupLimit: ?int, groupCount: int, styleTypeLimit: ?int, styleTypeCount: int, tableLimit: ?int, tableCount: int}
+     */
+    private static function capacityCounts(TenantContext $ctx, int $userId, ?\stdClass $styleRow, ?int $excludeEntryId): array
+    {
+        $result = [
+            'groupLimit' => null,
+            'groupCount' => 0,
+            'styleTypeLimit' => null,
+            'styleTypeCount' => 0,
+            'tableLimit' => null,
+            'tableCount' => 0,
+        ];
+
+        if ($styleRow === null) {
+            return $result;
+        }
+
+        $method = (string) $ctx->prefsStr('prefsStyleLimits');
+        $group = (string) $styleRow->brewStyleGroup;
+
+        // Method "1" ("Enable By Style"): JSON keyed by medal group.
+        if (str_starts_with($method, '{')) {
+            $limits = json_decode($method, true);
+            if (is_array($limits) && isset($limits[$group]) && (int) $limits[$group] > 0) {
+                $result['groupLimit'] = (int) $limits[$group];
+                $result['groupCount'] = self::brewerEntryCount($userId, $excludeEntryId, ['brewCategorySort' => $group]);
+            }
+        }
+
+        $typeLimit = DB::table('style_types')->where('id', (int) $styleRow->brewStyleType)->value('styleTypeEntryLimit');
+        if ($typeLimit !== null && (int) $typeLimit > 0) {
+            $result['styleTypeLimit'] = (int) $typeLimit;
+            $result['styleTypeCount'] = self::brewerEntryCount($userId, $excludeEntryId, ['brewStyleType' => (int) $styleRow->brewStyleType]);
+        }
+
+        // Method "2" ("Enable By Table or Medal Group").
+        if ($method === '2') {
+            [$result['tableLimit'], $result['tableCount']] = self::tableCapacity($userId, (int) $styleRow->id, $excludeEntryId);
+        }
+
+        return $result;
+    }
+
+    /** @param array<string, mixed> $wheres */
+    private static function brewerEntryCount(int $userId, ?int $excludeEntryId, array $wheres): int
+    {
+        $query = DB::table('brewing')->where('brewBrewerID', $userId);
+
+        foreach ($wheres as $column => $value) {
+            $query->where($column, $value);
+        }
+        if ($excludeEntryId !== null) {
+            $query->where('id', '!=', $excludeEntryId);
+        }
+
+        return (int) $query->count();
+    }
+
+    /**
+     * The first judging table whose tableStyles list contains the entry's
+     * style id, plus how many entries the participant already holds across
+     * that table's styles. Null limit when no table or no limit applies.
+     *
+     * @return array{0: ?int, 1: int}
+     */
+    private static function tableCapacity(int $userId, int $styleId, ?int $excludeEntryId): array
+    {
+        $table = null;
+        foreach (DB::table('judging_tables')->orderBy('id')->get(['id', 'tableStyles', 'tableEntryLimit']) as $candidate) {
+            $ids = array_filter(array_map('trim', explode(',', (string) $candidate->tableStyles)));
+            if (in_array((string) $styleId, $ids, true)) {
+                $table = $candidate;
+                break;
+            }
+        }
+
+        if ($table === null || (int) $table->tableEntryLimit < 1) {
+            return [null, 0];
+        }
+
+        $styleIds = array_values(array_filter(array_map('intval', explode(',', (string) $table->tableStyles))));
+        $styles = DB::table('styles')->whereIn('id', $styleIds === [] ? [0] : $styleIds)->get(['brewStyleGroup', 'brewStyleNum']);
+
+        $query = DB::table('brewing')->where('brewBrewerID', $userId);
+        $query->where(function ($q) use ($styles): void {
+            foreach ($styles as $style) {
+                $q->orWhere(function ($inner) use ($style): void {
+                    $inner->where('brewCategorySort', $style->brewStyleGroup)
+                        ->where('brewSubCategory', $style->brewStyleNum);
+                });
+            }
+        });
+        if ($excludeEntryId !== null) {
+            $query->where('id', '!=', $excludeEntryId);
+        }
+
+        return [(int) $table->tableEntryLimit, (int) $query->count()];
     }
 
     /**

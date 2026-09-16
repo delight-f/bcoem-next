@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\Entries\EntryPurge;
 use App\Support\Mail\MailSettings;
 use App\Support\Payments\PayPalSettings;
 use App\Support\Styles\StyleSets;
@@ -15,6 +16,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -230,12 +232,39 @@ final class SitePreferencesController extends Controller
         }
 
         // Tenant schemas vary (SCABS fork drops prefsLanguageToggle/Options);
-        // write only columns this database actually has.
+        // write only columns this database actually has. Log anything dropped
+        // so a silently-ignored field is visible instead of looking saved.
         $existing = collect(DB::getSchemaBuilder()->getColumnListing('preferences'))->flip();
+        $dropped = array_values(array_diff(array_keys($update), $existing->keys()->all()));
+        if ($dropped !== []) {
+            Log::warning('site-preferences: columns absent from the tenant schema were not written', [
+                'tab' => $go,
+                'columns' => $dropped,
+            ]);
+        }
         $update = collect($update)->only($existing->keys()->all())->all();
         DB::table('preferences')->where('id', 1)->update($update);
 
         return redirect('/admin/site-preferences/'.$go.'?msg=2');
+    }
+
+    /**
+     * Preferences "Purge stale entries" (legacy data_integrity_check() →
+     * purge_entries(type, 1)): delete unconfirmed entries, and entries whose
+     * style requires special-ingredient info but has none, once they have gone
+     * 24 hours without an update. Top-level-admin only, matching the
+     * Entries-screen purge it shares its predicate with.
+     */
+    public function purgeStale(Request $request): RedirectResponse
+    {
+        $actor = $request->user();
+        if ($actor === null || (int) $actor->userLevel !== 0) {
+            return redirect('/?msg=99');
+        }
+
+        $deleted = EntryPurge::purgeStale(TenantContext::load(), time());
+
+        return redirect('/admin/site-preferences/default?msg=purged&count='.$deleted);
     }
 
     /** @return array<string, mixed> */
@@ -252,7 +281,9 @@ final class SitePreferencesController extends Controller
             // The port ships two palettes (default public + brux); the legacy
             // Bootswatch names no longer exist, so reject anything else.
             'prefsTheme' => ['required', Rule::in(['default', 'bcoem-brux'])],
-            'prefsSEF' => ['required', 'in:Y,N'],
+            // No longer offered (Laravel routes clean URLs unconditionally);
+            // nullable so older payloads that still post it stay valid.
+            'prefsSEF' => ['nullable', 'in:Y,N'],
             // Custom Modules: legacy stores Y/N in a char(1) column and both
             // the dashboard and the public mods gate test for 'Y'.
             'prefsUseMods' => ['required', 'in:Y,N'],
@@ -261,7 +292,10 @@ final class SitePreferencesController extends Controller
             'prefsRecordPaging' => ['nullable', 'integer'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
-            'prefsAutoPurge' => ['required', 'in:0,1'],
+            // Replaced by the "Purge now" action in the same section (the
+            // legacy auto-purge ran from a cron path the port doesn't have);
+            // nullable so older payloads that still post it stay valid.
+            'prefsAutoPurge' => ['nullable', 'in:0,1'],
             'prefsLanguage' => ['required', 'string', 'max:10'],
             'prefsLanguageToggle' => ['required', 'in:Y,N'],
             'prefsLanguageOptions' => ['nullable', 'array'],
@@ -316,7 +350,6 @@ final class SitePreferencesController extends Controller
             'prefsWinnerDelay' => $this->winnerDelay($data['prefsWinnerDelay'] ?? '', $tz),
             'prefsWinnerMethod' => (string) $data['prefsWinnerMethod'],
             'prefsTheme' => (string) $data['prefsTheme'],
-            'prefsSEF' => (string) $data['prefsSEF'],
             'prefsUseMods' => (string) $data['prefsUseMods'],
             'prefsCAPTCHA' => self::blankToNull((string) ($data['prefsCAPTCHA'] ?? '')),
             'prefsGoogleAccount' => self::blankToNull($google),
@@ -324,7 +357,6 @@ final class SitePreferencesController extends Controller
             // char Y/N — normalize on input.
             'prefsDropOff' => in_array($data['prefsDropOff'], ['Y', '1'], true) ? 1 : 0,
             'prefsShipping' => in_array($data['prefsShipping'], ['Y', '1'], true) ? 1 : 0,
-            'prefsAutoPurge' => (string) $data['prefsAutoPurge'],
             'prefsLanguage' => (string) $data['prefsLanguage'],
             'prefsLanguageToggle' => (string) $data['prefsLanguageToggle'],
             'prefsLanguageOptions' => json_encode($languageOptions, JSON_THROW_ON_ERROR),
@@ -615,6 +647,9 @@ final class SitePreferencesController extends Controller
             'prefsCheck' => ['required', 'in:0,1'],
             'prefsCheckPayee' => ['nullable', 'string', 'max:255'],
             'prefsTransFee' => ['required', 'in:Y,N'],
+            // Rate applied to the checkout total while the fee is enabled.
+            'prefsTransFeePercent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'prefsTransFeeFixed' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         return [
@@ -624,6 +659,8 @@ final class SitePreferencesController extends Controller
             'prefsCheck' => (string) $data['prefsCheck'],
             'prefsCheckPayee' => self::blankToNull((string) ($data['prefsCheckPayee'] ?? '')),
             'prefsTransFee' => (string) $data['prefsTransFee'],
+            'prefsTransFeePercent' => self::blankToNull((string) ($data['prefsTransFeePercent'] ?? '')),
+            'prefsTransFeeFixed' => self::blankToNull((string) ($data['prefsTransFeeFixed'] ?? '')),
         ];
     }
 

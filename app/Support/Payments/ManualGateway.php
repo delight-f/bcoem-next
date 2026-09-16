@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support\Payments;
 
+use App\Support\Tenant\TenantContext;
+
 /**
  * Manual marking adapter (spec P3.5c): the admin IS the transport. There
  * is no hosted flow and no remote gateway — createCheckout no-ops, and
@@ -18,6 +20,29 @@ final class ManualGateway implements GatewayAdapter
 {
     /** Off-line collection methods accepted on the admin form (ticket 13). */
     public const PAY_METHODS = ['check', 'cash', 'dropoff', 'bank-transfer'];
+
+    /**
+     * The off-line methods THIS install offers: the Payment tab's "Accept
+     * Cash?" / "Accept Checks?" switches gate cash/check, while dropoff and
+     * bank-transfer are always available. A method is treated as enabled
+     * unless it was explicitly stored as off ('0'/'N'), so a legacy install
+     * that never touched the switches keeps its full list.
+     *
+     * @return list<string>
+     */
+    public static function methodsFor(TenantContext $ctx): array
+    {
+        $enabled = static fn (?string $value): bool => ! in_array($value, ['0', 'N'], true);
+
+        return array_values(array_filter(
+            self::PAY_METHODS,
+            static fn (string $method): bool => match ($method) {
+                'cash' => $enabled($ctx->prefsStr('prefsCash')),
+                'check' => $enabled($ctx->prefsStr('prefsCheck')),
+                default => true,
+            },
+        ));
+    }
 
     #[\Override]
     public function createCheckout(array $entries, int $entrantUid, string $feeTotal): Checkout

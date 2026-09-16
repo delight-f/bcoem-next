@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\BrewController;
 use App\Http\Controllers\Controller;
+use App\Support\Entries\EntryPurge;
 use App\Support\Payments\FeeCalculator;
 use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
@@ -243,6 +244,9 @@ final class EntriesController extends Controller
             'unconfirmed' => DB::table('brewing')->where('brewConfirmed', '0')
                 ->pluck('id')
                 ->merge($this->missingSpecialInfoIds()),
+            // Preferences "Purge stale entries": unconfirmed/special rows
+            // untouched for 24h (legacy purge_entries(type, 1)).
+            'stale' => collect(EntryPurge::stale(TenantContext::load(), time())),
             default => null,
         };
 
@@ -259,36 +263,14 @@ final class EntriesController extends Controller
 
     /**
      * Legacy purge_entries('special'): brewing rows whose style demands
-     * special-ingredient info but have no brewInfo. The styles-version
-     * predicate mirrors data_cleanup.inc.php:39-46 (BJCP2025 and AABC2025
-     * style sets span two seeded versions; every other set matches its own
-     * version).
+     * special-ingredient info but have no brewInfo. The predicate lives in
+     * EntryPurge so the Preferences "purge stale" action shares it.
      *
      * @return Collection<int, int>
      */
     private function missingSpecialInfoIds(): Collection
     {
-        $set = TenantContext::load()->prefsStr('prefsStyleSet');
-
-        $query = DB::table('brewing as a')
-            ->join('styles as b', function ($j): void {
-                $j->on('a.brewCategorySort', '=', 'b.brewStyleGroup')
-                    ->on('a.brewSubCategory', '=', 'b.brewStyleNum');
-            })
-            ->where('b.brewStyleReqSpec', '1')
-            ->where(function ($q): void {
-                $q->whereNull('a.brewInfo')->orWhere('a.brewInfo', '');
-            });
-
-        if ($set === 'BJCP2025') {
-            $query->whereIn('b.brewStyleVersion', ['BJCP2021', 'BJCP2025']);
-        } elseif ($set === 'AABC2025') {
-            $query->whereIn('b.brewStyleVersion', ['AABC2022', 'AABC2025']);
-        } else {
-            $query->where('b.brewStyleVersion', $set);
-        }
-
-        return $query->pluck('a.id');
+        return collect(EntryPurge::missingSpecialInfo(TenantContext::load()));
     }
 
     /**

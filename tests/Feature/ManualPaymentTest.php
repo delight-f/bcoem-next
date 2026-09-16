@@ -39,11 +39,22 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
     /** @var array<string, mixed> */
     private array $origContest = [];
 
+    /** @var array<string, mixed> */
+    private array $origPrefs = [];
+
     protected function setUp(): void
     {
         parent::setUp();
 
         MySqlTestCase::ensureMigrated();
+
+        // Manual marking only offers the methods the Payment tab enables
+        // (Accept Cash / Accept Checks); the baseline ships both off.
+        $this->origPrefs = [
+            'prefsCash' => DB::table('preferences')->where('id', 1)->value('prefsCash'),
+            'prefsCheck' => DB::table('preferences')->where('id', 1)->value('prefsCheck'),
+        ];
+        DB::table('preferences')->where('id', 1)->update(['prefsCash' => '1', 'prefsCheck' => '1']);
 
         foreach ([self::ADMIN, self::ENTRANT] as $email) {
             DB::table('users')->where('user_name', $email)->delete();
@@ -75,6 +86,9 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
         DB::table('brewer')->where('uid', 9102)->delete();
         if ($this->origContest !== []) {
             DB::table('contest_info')->where('id', 1)->update($this->origContest);
+        }
+        if ($this->origPrefs !== []) {
+            DB::table('preferences')->where('id', 1)->update($this->origPrefs);
         }
 
         parent::tearDown();

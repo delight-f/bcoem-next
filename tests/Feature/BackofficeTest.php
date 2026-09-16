@@ -62,7 +62,7 @@ final class BackofficeTest extends PublicSurfaceTestCase
             'brewerEmail' => self::ENTRANT_EMAIL,
         ]);
 
-        foreach (['prefsStyleSet', 'prefsSelectedStyles'] as $key) {
+        foreach (['prefsStyleSet', 'prefsSelectedStyles', 'prefsCheck'] as $key) {
             // Capture the raw value INCLUDING null. The baseline row's
             // prefsSelectedStyles is NULL, and skipping null here meant the
             // fixture value below was never restored — it leaked into sibling
@@ -74,6 +74,9 @@ final class BackofficeTest extends PublicSurfaceTestCase
             // C1/A (id 578) — the two groups the fixtures count against.
             'prefsStyleSet' => 'BJCP2021',
             'prefsSelectedStyles' => '{"453":1,"578":1}',
+            // Manual check marking requires the Payment tab's "Accept Checks?"
+            // switch (the baseline ships it off).
+            'prefsCheck' => '1',
         ]);
     }
 

@@ -66,6 +66,10 @@ Route::middleware(['web', 'auth'])->group(function (): void {
         ->name('admin.site_preferences.edit');
     Route::put('/admin/site-preferences/{go?}', [SitePreferencesController::class, 'update'])
         ->name('admin.site_preferences.update');
+    // Preferences "Purge stale entries" action (unconfirmed/special rows
+    // untouched for 24h). Top-level-admin only, like the Entries purge.
+    Route::post('/admin/site-preferences-purge-stale', [SitePreferencesController::class, 'purgeStale'])
+        ->name('admin.site_preferences.purge_stale');
 
     // all_dates — one form writing contest_info dates + judging window + winners delay.
     Route::get('/admin/dates', [AllDatesController::class, 'edit'])

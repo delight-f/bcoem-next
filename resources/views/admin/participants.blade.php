@@ -248,7 +248,7 @@
         @else<div class="error">There are no participants with entries yet.</div>
         @endif
     @else
-        <table class="table table-responsive table-bordered table-striped" id="sortable" data-dt data-dt-page="25">
+        <table class="table table-responsive table-bordered table-striped" id="sortable" data-dt data-dt-page="{{ (int) $ctx->prefsStr('prefsRecordPaging') ?: 25 }}">
             <thead>
                 <tr>
                     @if ($filter === 'with_entries')

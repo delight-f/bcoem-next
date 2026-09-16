@@ -39,11 +39,19 @@ final class SliceBE2ETest extends PublicSurfaceTestCase
     /** @var array<string, mixed> */
     private array $origContest = [];
 
+    /** @var array<string, mixed> */
+    private array $origPrefs = [];
+
     protected function setUp(): void
     {
         parent::setUp();
 
         MySqlTestCase::ensureMigrated();
+
+        // Manual check marking requires the Payment tab's "Accept Checks?"
+        // switch (the baseline ships it off).
+        $this->origPrefs = ['prefsCheck' => DB::table('preferences')->where('id', 1)->value('prefsCheck')];
+        DB::table('preferences')->where('id', 1)->update(['prefsCheck' => '1']);
 
         $this->email = 'gate.test.'.uniqid().'@example.com';
 
@@ -89,6 +97,9 @@ final class SliceBE2ETest extends PublicSurfaceTestCase
         }
         if ($this->origContest !== []) {
             DB::table('contest_info')->where('id', 1)->update($this->origContest);
+        }
+        if ($this->origPrefs !== []) {
+            DB::table('preferences')->where('id', 1)->update($this->origPrefs);
         }
 
         parent::tearDown();

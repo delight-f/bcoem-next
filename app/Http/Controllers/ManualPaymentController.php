@@ -40,11 +40,13 @@ final class ManualPaymentController extends Controller
             return redirect('/?msg=99');
         }
 
+        $ctx = TenantContext::load();
+
         return view('admin.payments', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'unpaid' => $this->unpaidEntries(),
-            'fee' => TenantContext::load()->contestStr('contestEntryFee') ?? '0',
-            'payMethods' => ManualGateway::PAY_METHODS,
+            'fee' => $ctx->contestStr('contestEntryFee') ?? '0',
+            'payMethods' => ManualGateway::methodsFor($ctx),
         ]);
     }
 
@@ -54,10 +56,12 @@ final class ManualPaymentController extends Controller
             return redirect('/?msg=99');
         }
 
+        $methods = ManualGateway::methodsFor(TenantContext::load());
+
         $data = $request->validate([
             'entry_ids' => ['required', 'array', 'min:1'],
             'entry_ids.*' => ['integer'],
-            'pay_method' => ['required', 'in:'.implode(',', ManualGateway::PAY_METHODS)],
+            'pay_method' => ['required', 'in:'.implode(',', $methods)],
             'reference' => ['nullable', 'string', 'max:255'],
             'note' => ['nullable', 'string', 'max:1000'],
         ]);

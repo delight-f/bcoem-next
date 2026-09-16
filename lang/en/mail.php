@@ -20,6 +20,7 @@ return [
     'pay_greeting' => 'Hello :name,',
     'pay_body' => 'Your payment has been received. The transaction details are provided here for your convenience.',
     'pay_luck' => 'Best of luck in the competition!',
+    'label_checks_payable' => 'Checks Payable To',
 
     'no_reply' => 'Please do not reply to this email as it is automatically generated. The originating account is not active or monitored.',
 

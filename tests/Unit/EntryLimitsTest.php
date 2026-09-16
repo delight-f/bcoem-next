@@ -277,4 +277,57 @@ final class EntryLimitsTest extends TestCase
         self::assertFalse($result->allowed);
         self::assertSame(EntryLimits::REASON_USER_CAP, $result->reason);
     }
+
+    // ---- capacity caps: per medal group / per style type / per table ----
+
+    public function test_capacity_caps_block_at_the_limit(): void
+    {
+        $group = EntryLimits::checkCapacity(2, 2, 2, null, 0, null, 0);
+        self::assertFalse($group->allowed);
+        self::assertSame(EntryLimits::REASON_STYLE_CAP, $group->reason);
+
+        self::assertFalse(EntryLimits::checkCapacity(2, null, 0, 3, 3, null, 0)->allowed);
+        self::assertFalse(EntryLimits::checkCapacity(2, null, 0, null, 0, 1, 1)->allowed);
+    }
+
+    public function test_capacity_caps_allow_below_and_when_unset(): void
+    {
+        self::assertTrue(EntryLimits::checkCapacity(2, 2, 1, 3, 2, 1, 0)->allowed);
+        // Null limit = "not configured" and must be skipped, never 0-treated.
+        self::assertTrue(EntryLimits::checkCapacity(2, null, 99, null, 99, null, 99)->allowed);
+    }
+
+    public function test_capacity_caps_bypass_for_admins(): void
+    {
+        foreach ([0, 1] as $level) {
+            self::assertTrue(EntryLimits::checkCapacity($level, 1, 99, 1, 99, 1, 99)->allowed, "level {$level}");
+        }
+    }
+
+    // ---- #1-#4 incremental tiers ----
+
+    /** @return iterable<string, array{array<int, array<string, string>>, ?int, int, ?int}> */
+    public static function provideIncremental(): iterable
+    {
+        $tiers = [
+            1 => ['limit-number' => '2', 'limit-days' => '10'],
+            2 => ['limit-number' => '5', 'limit-days' => '20'],
+        ];
+        $open = 1000000;
+
+        yield 'inside first window' => [$tiers, $open, $open + (5 * 86400), 2];
+        yield 'inside second window' => [$tiers, $open, $open + (15 * 86400), 5];
+        yield 'after every window' => [$tiers, $open, $open + (25 * 86400), null];
+        yield 'no open epoch' => [$tiers, null, $open, null];
+        yield 'no tiers' => [[], $open, $open, null];
+    }
+
+    /**
+     * @param  array<int, array<string, string>>  $tiers
+     */
+    #[DataProvider('provideIncremental')]
+    public function test_incremental_limit_selects_the_active_tier(array $tiers, ?int $open, int $now, ?int $expected): void
+    {
+        self::assertSame($expected, EntryLimits::incrementalLimit($tiers, $open, $now));
+    }
 }

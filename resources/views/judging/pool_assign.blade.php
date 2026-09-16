@@ -124,7 +124,7 @@
         @if (empty($rows))
             <div class="error">No participants have been assigned to the {{ $singular }} pool.</div>
         @else
-            <table class="table table-responsive table-bordered {{ $filter !== 'bos' ? 'table-striped' : '' }}" id="sortable" data-dt data-dt-page="25">
+            <table class="table table-responsive table-bordered {{ $filter !== 'bos' ? 'table-striped' : '' }}" id="sortable" data-dt data-dt-page="{{ (int) $ctx->prefsStr('prefsRecordPaging') ?: 25 }}">
                 <thead>
                     <tr>
                         <th style="width:1%" nowrap>

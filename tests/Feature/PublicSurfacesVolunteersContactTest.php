@@ -154,6 +154,32 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         });
     }
 
+    /** prefsEmailCC ("Contact Form CC") copies the sender on the message. */
+    public function test_contact_form_ccs_the_sender_when_enabled(): void
+    {
+        $origCc = DB::table('preferences')->where('id', 1)->value('prefsEmailCC');
+        DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'Y', 'prefsEmailCC' => '1']);
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
+
+        try {
+            Mail::fake();
+
+            $this->post('/contact', [
+                'to' => (int) $contact->id,
+                'from_name' => 'Jane Tester',
+                'from_email' => 'jane.tester@example.com',
+                'subject' => 'CC me',
+                'message' => 'Hello',
+            ])->assertRedirect('/contact');
+
+            Mail::assertSent(ContactMail::class, fn (ContactMail $mail): bool => collect($mail->cc)
+                ->contains(fn (array $a): bool => $a['address'] === 'jane.tester@example.com'));
+        } finally {
+            DB::table('preferences')->where('id', 1)->update(['prefsEmailCC' => $origCc]);
+        }
+    }
+
     public function test_contact_form_validates_required_fields(): void
     {
         DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'Y']);

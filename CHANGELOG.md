@@ -8,6 +8,32 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.10] - 2026-09-16
+
+### Fixed
+
+- **Every control on the site-preferences screens now does what it says.** An
+  audit found 15 controls that saved a value nothing ever read. The entry
+  limits (per style/table grid, per style type, and the #1-#4 incremental
+  tiers) are now enforced on add *and* edit; the member-discount password
+  actually grants the member rate; Pay to Print gates entrant label printing;
+  Accept Cash / Accept Checks gate the manual mark-as-paid methods; Checks
+  Payable To prints on the check confirmation; Checkout Fees Paid by Entrant
+  adds a real surcharge to the total; Contact Form CC copies the sender;
+  "Records Displayed" drives the table page size (it previously wrote a column
+  nothing read); and hiding the Brewer's Specifics field no longer risks
+  clearing a stored value. The Auto Purge switch became a manual "purge stale
+  entries" action (the legacy cron path does not exist here), and controls that
+  could never have an effect were removed: the Search Engine Friendly URLs
+  toggle (Laravel always serves clean URLs) and the test-email Yes/No radios
+  (the button beside them runs the test).
+
+### Added
+
+- **Entrants can print their own entry bottle/can labels** at `/list/labels`,
+  scoped to their own entries, with the legacy Pay-to-Print payment gate
+  restored.
+
 ## [4.1.0-alpha.9] - 2026-09-15
 
 ### Added

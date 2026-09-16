@@ -58,6 +58,13 @@
                             @else
                                 <span class="entry-action-locked" title="{{ __('site.delete_locked') }}"><i class="fa fa-fw fa-lg fa-trash-can text-muted"></i></span>
                             @endif
+                            {{-- Pay to Print: labels are gated on payment only
+                                 when the Payment tab enables it. --}}
+                            @if ((int) $e->brewPaid !== 1 && $ctx->prefsStr('prefsPayToPrint') === '1')
+                                <span class="entry-action-locked" title="{{ __('site.entry_labels_unpaid') }}"><i class="fa fa-fw fa-lg fa-tag text-muted"></i></span>
+                            @else
+                                <a href="{{ url('/list/labels?ids='.$e->id) }}" target="_blank" rel="noopener" title="{{ __('site.print_entry_labels') }}"><i class="fa fa-fw fa-lg fa-tag"></i></a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

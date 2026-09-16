@@ -34,8 +34,15 @@ final class ContactMail extends Mailable
         private readonly string $subjectLine,
         private readonly string $body,
         private readonly string $contestName,
+        private readonly ?string $ccEmail = null,
     ) {
         $this->to($this->toEmail, $this->toName);
+
+        // prefsEmailCC ("Contact Form CC"): also send the visitor a copy of
+        // their own message. Blank/absent leaves the message uncopied.
+        if ($this->ccEmail !== null && $this->ccEmail !== '') {
+            $this->cc($this->ccEmail);
+        }
     }
 
     public function envelope(): Envelope

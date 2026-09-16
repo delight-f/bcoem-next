@@ -129,7 +129,7 @@ final class PaymentService
         // Payment confirmation (P3.6): legacy ppv.php mailed the entrant
         // on every verified success, provider-neutral in the port (no
         // PayPal wording — ledger/payments.md D7).
-        $this->sendConfirmation($entries, $entrantUid, $amount);
+        $this->sendConfirmation($entries, $entrantUid, $amount, $payMethod);
 
         return true;
     }
@@ -200,11 +200,12 @@ final class PaymentService
 
     /**
      * Entrant confirmation mail for a settled batch (P3.6). Recipient and
-     * display name come from brewer; currency from prefs.
+     * display name come from brewer; currency from prefs. A manual check
+     * payment also carries the "Checks Payable To" name (Payment tab).
      *
      * @param  list<int>  $entries
      */
-    private function sendConfirmation(array $entries, int $entrantUid, string $amount): void
+    private function sendConfirmation(array $entries, int $entrantUid, string $amount, string $payMethod = ''): void
     {
         $brewer = DB::table('brewer')
             ->where('uid', $entrantUid)
@@ -214,12 +215,18 @@ final class PaymentService
             return;
         }
 
+        $ctx = TenantContext::load();
+        $checkPayee = $payMethod === 'check'
+            ? (string) ($ctx->prefsStr('prefsCheckPayee') ?? '')
+            : '';
+
         Mail::to($brewer->brewerEmail)->send(new PaymentConfirmMail(
             (string) $brewer->brewerFirstName,
-            (string) TenantContext::load()->contestStr('contestName'),
+            (string) $ctx->contestStr('contestName'),
             $entries,
             $amount,
-            (string) (TenantContext::load()->prefsStr('prefsCurrency') ?? 'USD'),
+            (string) ($ctx->prefsStr('prefsCurrency') ?? 'USD'),
+            $checkPayee !== '' ? $checkPayee : null,
         ));
     }
 

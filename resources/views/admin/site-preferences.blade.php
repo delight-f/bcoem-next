@@ -51,6 +51,9 @@
         @if ((int) request('msg') === 2)
             <div class="alert alert-success">Preferences updated.</div>
         @endif
+        @if (request('msg') === 'purged')
+            <div class="alert alert-success">{{ __('site.stale_entries_purged', ['count' => (int) request('count')]) }}</div>
+        @endif
         @if ($errors->any())
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
@@ -126,16 +129,10 @@
                     </div>
                 </div>
 
-                <div class="mb-4 row">
-                    <label for="sefY" class="col-md-4 col-form-label">Search Engine Friendly URLs</label>
-                    <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsSEF" value="Y" id="sefY" @checked($p('prefsSEF') === 'Y')><label class="form-check-label" for="sefY">Enable</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsSEF" value="N" id="sefN" @checked($p('prefsSEF') !== 'Y')><label class="form-check-label" for="sefN">Disable</label></div>
-                        <span class="form-text">If you enable this and receive 404 errors, navigate to the login screen at <a class="hide-loader" href="{{ url('/login') }}" target="_blank" rel="noopener">{{ url('/login') }}</a> to log back in and &ldquo;turn off&rdquo; this feature.</span>
-                    </div>
-                </div>
+                {{-- Search Engine Friendly URLs: the legacy toggle drove
+                     build_public_url()'s rewrite mode. Laravel routing always
+                     serves clean URLs, so the switch could never have an
+                     effect and was removed (prefsSEF column kept). --}}
                 <div class="mb-4 row">
                     <label for="modsYes" class="col-md-4 col-form-label">Custom Modules</label>
                     <div class="col-md-8">
@@ -179,7 +176,7 @@
                 <div class="mb-4 row">
                     <label for="prefsRecordPaging" class="col-md-4 col-form-label">Records Displayed</label>
                     <div class="col-md-8">
-                        <input class="form-control" id="prefsRecordPaging" name="prefsRecordPaging" type="text" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
+                        <input class="form-control" id="prefsRecordPaging" name="prefsRecordPaging" type="number" min="1" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
                         <span class="form-text">The number of records displayed per page when viewing lists.</span>
                     </div>
                 </div>
@@ -192,13 +189,19 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="apY" class="col-md-4 col-form-label">Automatically Purge Unconfirmed Entries and Perform Data Clean Up</label>
+                    <label class="col-md-4 col-form-label">Purge Unconfirmed and Special-Ingredient Entries</label>
                     <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsAutoPurge" value="1" id="apY" @checked($p('prefsAutoPurge') === '1')><label class="form-check-label" for="apY">Enable</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsAutoPurge" value="0" id="apN" @checked($p('prefsAutoPurge') !== '1')><label class="form-check-label" for="apN">Disable</label></div>
-                        <span class="form-text">Automatically purge any entries flagged as unconfirmed or that require special ingredients but do not 24 hours after entry, as well as any data clean-up functions. If disabled, Admins will have the option to manually purge the entries.</span>
+                        {{-- The legacy auto-purge ran from a cron path this port
+                             does not have, so the Enable/Disable switch could
+                             never do anything. Replaced with a manual action
+                             that runs the same 24-hour rule on demand. The
+                             button targets the standalone form after this one
+                             (a nested form would be invalid HTML). --}}
+                        <button type="submit" form="purge-stale-form" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Delete unconfirmed entries and entries missing required special-ingredient info that have not been updated for 24 hours?');">
+                            Purge stale entries now
+                        </button>
+                        <span class="form-text">Removes unconfirmed entries, and entries whose style requires special-ingredient info but have none, once they have gone 24 hours without an update.</span>
                     </div>
                 </div>
 
@@ -310,6 +313,12 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">Save Preferences</button>
+            </form>
+            {{-- Standalone form for the purge button above: it must live outside
+                 the preferences form (nested forms are invalid HTML and the
+                 parser would drop the inner one). --}}
+            <form id="purge-stale-form" method="post" action="{{ route('admin.site_preferences.purge_stale') }}">
+                @csrf
             </form>
         @elseif ($go === 'entries')
             <h3>Entries</h3>
@@ -956,16 +965,13 @@
                     </div>
                 </div>
                 <div class="mb-4 row">
-                    <label for="testEmailYes" class="col-md-4 col-form-label">SMTP Settings Test</label>
+                    <span class="col-md-4 col-form-label">SMTP Settings Test</span>
                     <div class="col-md-8">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="send-test-email" value="1" id="testEmailYes"><label class="form-check-label" for="testEmailYes">Yes</label></div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="send-test-email" value="0" id="testEmailNo" checked><label class="form-check-label" for="testEmailNo">No</label></div>
-                        {{-- Legacy sends the test email directly from
-                             send_test_email.admin.php (fancybox iframe);
-                             ported as SendTestEmailController. Kept on its own
-                             line: inline with the radios it read as a label. --}}
+                        {{-- Legacy's Yes/No radios posted a value nothing consumed;
+                             the test is run by the button below (ported from
+                             send_test_email.admin.php's fancybox iframe as
+                             SendTestEmailController). Radios removed so the tab
+                             has no dead control. --}}
                         <div class="mt-3">
                             <a data-fancybox data-type="iframe" class="modal-window-link hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
                         </div>
@@ -1022,6 +1028,19 @@
                             <input class="form-check-input" type="radio" name="prefsTransFee" value="Y" id="tfY" @checked($p('prefsTransFee') === 'Y')><label class="form-check-label" for="tfY">Enable</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsTransFee" value="N" id="tfN" @checked($p('prefsTransFee') !== 'Y')><label class="form-check-label" for="tfN">Disable</label></div>
+                        <span class="form-text">When enabled, the payment processor's fee is added to the amount the entrant pays.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row" id="trans-fee-rate">
+                    <label class="col-md-4 col-form-label">Transaction Fee Rate</label>
+                    <div class="col-md-8">
+                        <div class="input-group" style="width:auto;">
+                            <input class="form-control" id="prefsTransFeePercent" name="prefsTransFeePercent" type="number" min="0" max="100" step="0.01" style="width:8rem;" value="{{ $p('prefsTransFeePercent') }}">
+                            <span class="input-group-text">%</span>
+                            <input class="form-control" id="prefsTransFeeFixed" name="prefsTransFeeFixed" type="number" min="0" step="0.01" style="width:8rem;" value="{{ $p('prefsTransFeeFixed') }}">
+                            <span class="input-group-text">{{ $ctx->currencySymbol() }}</span>
+                        </div>
+                        <span class="form-text">A percentage of the entry-fee total plus a fixed amount (e.g. 2.90&nbsp;% plus 0.30). Leave blank or zero for no surcharge.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -1031,6 +1050,7 @@
                             <input class="form-check-input" type="radio" name="prefsPayToPrint" value="1" id="ptpYes" @checked($p('prefsPayToPrint') === '1')><label class="form-check-label" for="ptpYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsPayToPrint" value="0" id="ptpNo" @checked($p('prefsPayToPrint') !== '1')><label class="form-check-label" for="ptpNo">No</label></div>
+                        <span class="form-text">When enabled, entrants must pay for their entries before printing their own bottle/can entry labels.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -1040,6 +1060,7 @@
                             <input class="form-check-input" type="radio" name="prefsCash" value="1" id="cashYes" @checked($p('prefsCash') === '1')><label class="form-check-label" for="cashYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsCash" value="0" id="cashNo" @checked($p('prefsCash') !== '1')><label class="form-check-label" for="cashNo">No</label></div>
+                        <span class="form-text">Offers cash in the collection-method list on the admin mark-as-paid screen.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -1049,11 +1070,15 @@
                             <input class="form-check-input" type="radio" name="prefsCheck" value="1" id="checkYes" @checked($p('prefsCheck') === '1')><label class="form-check-label" for="checkYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsCheck" value="0" id="checkNo" @checked($p('prefsCheck') !== '1')><label class="form-check-label" for="checkNo">No</label></div>
+                        <span class="form-text">Offers checks in the collection-method list on the admin mark-as-paid screen.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
                     <label for="prefsCheckPayee" class="col-md-4 col-form-label">Checks Payable To</label>
-                    <div class="col-md-8"><input class="form-control" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}"></div>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsCheckPayee" name="prefsCheckPayee" type="text" value="{{ $p('prefsCheckPayee') }}">
+                        <span class="form-text">Printed on the payment confirmation sent to the entrant when an admin marks a payment as received by check.</span>
+                    </div>
                 </div>
                 {{-- Online payments (issue #24): read-only status summary for
                      both providers, with one CTA to the setup screen (the only
@@ -1084,6 +1109,23 @@
                 </div>
                 <button type="submit" class="btn btn-primary">Save Payment Preferences</button>
             </form>
+            <script>
+                // The transaction-fee rate only applies while the fee is
+                // enabled; keep the row out of the way otherwise. Inputs stay
+                // in the DOM so a value is never silently dropped.
+                (function () {
+                    var row = document.getElementById('trans-fee-rate');
+                    if (!row) { return; }
+                    function sync() {
+                        var checked = document.querySelector('input[name="prefsTransFee"]:checked');
+                        row.hidden = !checked || checked.value !== 'Y';
+                    }
+                    document.querySelectorAll('input[name="prefsTransFee"]').forEach(function (r) {
+                        r.addEventListener('change', sync);
+                    });
+                    sync();
+                })();
+            </script>
         @else
             @php($ordinal = fn (int $i) => ($i % 100 >= 11 && $i % 100 <= 13) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][$i % 10])
             @php($positionOptions = fn (?string $current) => collect(range(-1, 50))

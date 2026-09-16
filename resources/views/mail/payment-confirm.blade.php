@@ -7,6 +7,9 @@
 
 - **{{ __('mail.label_entries', ['count' => count($entries)]) }}:** {{ implode(', ', $entries) }}
 - **{{ __('mail.label_amount') }}:** {{ $amount }} {{ $currency }}
+@if (! empty($checkPayee))
+- **{{ __('mail.label_checks_payable') }}:** {{ $checkPayee }}
+@endif
 
 {{ __('mail.pay_luck') }}
 

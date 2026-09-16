@@ -77,7 +77,7 @@ final class FeeCalculator
      * Inputs from the tenant's competition row + one brewer's discount flag.
      *
      * @param  array<string, mixed>|\stdClass|null  $brewer  brewer row (brewerDiscount)
-     * @return array{fee: float, feeDiscount: float, discountOn: bool, discountNum: int, special: ?float, cap: float, hasSpecial: bool}
+     * @return array{fee: float, feeDiscount: float, discountOn: bool, discountNum: int, special: ?float, cap: float, hasSpecial: bool, transFeeOn: bool, transFeePercent: float, transFeeFixed: float}
      */
     public static function params(TenantContext $ctx, array|\stdClass|null $brewer = null): array
     {
@@ -92,19 +92,54 @@ final class FeeCalculator
             'cap' => (float) ($ctx->contestStr('contestEntryCap') ?? 0),
             'hasSpecial' => $specialRate !== ''
                 && (string) (is_array($brewer) ? ($brewer['brewerDiscount'] ?? '') : ($brewer instanceof \stdClass ? ($brewer->brewerDiscount ?? '') : '')) === 'Y',
+            // Checkout transaction fee passed to the entrant (Payment tab):
+            // applied only by withTransactionFee() on the checkout total.
+            'transFeeOn' => $ctx->prefsStr('prefsTransFee') === 'Y',
+            'transFeePercent' => (float) ($ctx->prefsStr('prefsTransFeePercent') ?? 0),
+            'transFeeFixed' => (float) ($ctx->prefsStr('prefsTransFeeFixed') ?? 0),
         ];
     }
 
     /**
      * Convenience: total for one entrant, params resolved from the tenant
-     * and the brewer's discount flag fetched here (legacy shape).
-     *
-     * @return numeric-string
+     * and the brewer's discount flag fetched here (legacy shape). The
+     * checkout transaction fee (when enabled) rides on top — this is the
+     * amount actually charged, so the public pay page, the gateway checkout
+     * and admin manual marking all agree.
      */
     public static function forEntrant(TenantContext $ctx, int $uid, int $entryCount): string
     {
+        $params = self::params($ctx);
         $hasSpecial = (string) (DB::table('brewer')->where('uid', $uid)->value('brewerDiscount') ?? '') === 'Y';
 
-        return self::total($entryCount, $hasSpecial, self::params($ctx));
+        return self::withTransactionFee(self::total($entryCount, $hasSpecial, $params), $params);
+    }
+
+    /**
+     * "Checkout Fees Paid by Entrant" (prefsTransFee): a percentage of the
+     * subtotal plus a fixed amount, rounded to cents. Deliberately kept out
+     * of total() — that is the entry-fee model entry-fee displays read — so
+     * only the checkout/manual amount carries the surcharge.
+     *
+     * @param  numeric-string  $subtotal
+     * @param  array{transFeeOn: bool, transFeePercent: float, transFeeFixed: float}  $p
+     */
+    private static function withTransactionFee(string $subtotal, array $p): string
+    {
+        if (! $p['transFeeOn']) {
+            return $subtotal;
+        }
+
+        $percent = (string) $p['transFeePercent'];
+        $fixed = (string) $p['transFeeFixed'];
+
+        // subtotal + (subtotal * percent/100 + fixed), rounded half-up to
+        // cents via *100 + 0.5 truncated. A zero rate leaves the total
+        // unchanged (the surcharge is 0, never the whole amount).
+        $surcharge = bcadd(bcmul($subtotal, bcdiv($percent, '100', 8), 8), $fixed, 8);
+        $total = bcadd($subtotal, $surcharge, 8);
+        $cents = bcadd(bcmul($total, '100', 6), '0.5', 0);
+
+        return bcdiv($cents, '100', 2);
     }
 }

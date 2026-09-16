@@ -11,6 +11,10 @@
         <p class="alert alert-success d-print-none">{{ __('site.registration_complete') }}</p>
     @elseif ($msg === 1)
         <p class="alert alert-success d-print-none"><strong>{{ __('site.info_added') }}</strong></p>
+    @elseif ($msg === 12)
+        <p class="alert alert-warning d-print-none">{{ __('site.entry_limit_style_reached') }}</p>
+    @elseif ($msg === 13)
+        <p class="alert alert-warning d-print-none">{{ __('site.entry_labels_unpaid') }}</p>
     @endif
 
     <a name="my-account"></a>

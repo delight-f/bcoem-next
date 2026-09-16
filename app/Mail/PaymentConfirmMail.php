@@ -28,6 +28,8 @@ final class PaymentConfirmMail extends Mailable
         public readonly array $entries,
         public readonly string $amount,
         public readonly string $currency,
+        /** Payment tab "Checks Payable To" — shown for a manual check payment. */
+        public readonly ?string $checkPayee = null,
     ) {}
 
     public function envelope(): Envelope

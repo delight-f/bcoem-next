@@ -40,6 +40,8 @@ final class EntryLimits
 
     public const REASON_NOT_OWNER = '403';
 
+    public const REASON_STYLE_CAP = '12';
+
     /**
      * @param  string  $action  'add' or 'edit'
      * @param  int  $userLevel  legacy session userLevel (<=1 admin, 2 entrant)
@@ -113,6 +115,74 @@ final class EntryLimits
             || $ownsEntry;
 
         return new EntryLimitResult($allowed, $allowed ? '' : self::REASON_NOT_OWNER);
+    }
+
+    /**
+     * Per-participant capacity caps beyond the user/subcat pair — the
+     * Entries tab's "Entry Limits by Style or Table/Medal Group" grid
+     * (prefsStyleLimits), its per-style-type limits
+     * (style_types.styleTypeEntryLimit) and its per-table limits
+     * (judging_tables.tableEntryLimit). Every limit/count pair is resolved
+     * by the caller; a null limit means "not configured" and is skipped.
+     * Same decision rule as the user/subcat caps: reached when the existing
+     * count is already >= the limit. Admins bypass all caps.
+     */
+    public static function checkCapacity(
+        int $userLevel,
+        ?int $groupLimit,
+        int $groupCount,
+        ?int $styleTypeLimit,
+        int $styleTypeCount,
+        ?int $tableLimit,
+        int $tableCount,
+    ): EntryLimitResult {
+        if ($userLevel !== 2) {
+            return new EntryLimitResult(true, '');
+        }
+
+        foreach ([[$groupLimit, $groupCount], [$styleTypeLimit, $styleTypeCount], [$tableLimit, $tableCount]] as [$limit, $count]) {
+            if ($limit !== null && $limit > 0 && $count >= $limit) {
+                return new EntryLimitResult(false, self::REASON_STYLE_CAP);
+            }
+        }
+
+        return new EntryLimitResult(true, '');
+    }
+
+    /**
+     * Effective per-participant cap from the #1-#4 incremental tiers
+     * (prefsUserEntryLimitDates): the limit-number of the first tier whose
+     * window — limit-days after the entry window opened — has not yet
+     * expired. Null when no window applies (or none is configured), meaning
+     * "no incremental limit". The overall prefsUserEntryLimit still wins
+     * when it is lower (the caller takes the minimum).
+     *
+     * @param  array<int|string, mixed>  $tiers  decoded prefsUserEntryLimitDates
+     */
+    public static function incrementalLimit(array $tiers, ?int $entryOpenEpoch, int $now): ?int
+    {
+        if ($entryOpenEpoch === null || $entryOpenEpoch < 1) {
+            return null;
+        }
+
+        for ($i = 1; $i <= 4; $i++) {
+            $tier = $tiers[$i] ?? $tiers[(string) $i] ?? null;
+            if (! is_array($tier)) {
+                continue;
+            }
+
+            $number = (int) ($tier['limit-number'] ?? 0);
+            $days = (int) ($tier['limit-days'] ?? 0);
+            if ($number < 1 || $days < 1) {
+                continue;
+            }
+
+            if ($now < $entryOpenEpoch + ($days * 86400)) {
+                return $number;
+            }
+        }
+
+        return null;
     }
 
     /**

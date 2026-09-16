@@ -520,6 +520,75 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame(3, (int) DB::table('preferences')->where('id', 1)->value('prefsSessionTimeout'));
     }
 
+    /**
+     * The General tab's "Records Displayed" (prefsRecordPaging) now actually
+     * drives the DataTables page size instead of the old hard-coded 25.
+     */
+    public function test_records_displayed_pref_drives_table_page_size(): void
+    {
+        $this->remember('preferences');
+        DB::table('preferences')->where('id', 1)->update(['prefsRecordPaging' => '40']);
+
+        $this->get('/backoffice/participants')->assertOk()->assertSee('data-dt-page="40"', false);
+    }
+
+    /**
+     * Controls that saved a value nothing consumed are gone: the SEF toggle
+     * (Laravel always serves clean URLs), the auto-purge switch (replaced by
+     * the purge action) and the test-email Yes/No radios (the button does it).
+     */
+    public function test_dead_controls_are_removed_from_the_forms(): void
+    {
+        $this->get('/admin/site-preferences/default')->assertOk()
+            ->assertDontSee('name="prefsSEF"', false)
+            ->assertDontSee('name="prefsAutoPurge"', false)
+            ->assertDontSee('Search Engine Friendly URLs')
+            ->assertSee('id="purge-stale-form"', false);
+
+        $this->get('/admin/site-preferences/email')->assertOk()
+            ->assertDontSee('name="send-test-email"', false)
+            // The working test-settings button stays.
+            ->assertSee('SMTP Settings Test')
+            ->assertSee('Test Current Email Sending Settings');
+    }
+
+    /**
+     * The General tab's purge action replaces the legacy auto-purge switch
+     * (which no longer had a cron path): unconfirmed entries untouched for
+     * 24h are removed, fresh ones are kept.
+     */
+    public function test_general_tab_purge_removes_only_stale_entries(): void
+    {
+        $this->remember('preferences');
+
+        $stale = (int) DB::table('brewing')->insertGetId([
+            'brewName' => 'P54 stale unconfirmed',
+            'brewCategorySort' => '10', 'brewCategory' => '10', 'brewSubCategory' => 'A',
+            'brewBrewerID' => 9999, 'brewConfirmed' => '0',
+            'brewUpdated' => now()->subDays(2)->format('Y-m-d H:i:s'),
+        ]);
+        $fresh = (int) DB::table('brewing')->insertGetId([
+            'brewName' => 'P54 fresh unconfirmed',
+            'brewCategorySort' => '10', 'brewCategory' => '10', 'brewSubCategory' => 'A',
+            'brewBrewerID' => 9999, 'brewConfirmed' => '0',
+            'brewUpdated' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        try {
+            $this->post('/admin/site-preferences-purge-stale')
+                ->assertRedirectContains('/admin/site-preferences/default?msg=purged');
+
+            self::assertNull(DB::table('brewing')->where('id', $stale)->first());
+            self::assertNotNull(DB::table('brewing')->where('id', $fresh)->first());
+        } finally {
+            DB::table('brewing')->whereIn('id', [$stale, $fresh])->delete();
+        }
+
+        // Top-level-admin only: a guest is bounced to login by the route gate.
+        $this->post('/logout');
+        $this->post('/admin/site-preferences-purge-stale')->assertRedirect('/login');
+    }
+
     public function test_site_preferences_entries_tab_moves_fees_and_keeps_discount_flag(): void
     {
         $this->remember('preferences');

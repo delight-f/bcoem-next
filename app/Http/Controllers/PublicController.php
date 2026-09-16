@@ -367,6 +367,8 @@ final class PublicController extends Controller
             subjectLine: $validated['subject'],
             body: $validated['message'],
             contestName: $ctx->contestStr('contestName') ?? '',
+            // prefsEmailCC: copy the sender when the site has CC enabled.
+            ccEmail: $ctx->prefsStr('prefsEmailCC') === '1' ? $validated['from_email'] : null,
         ));
 
         return redirect()->route('contact')->with('contactSent', true);
