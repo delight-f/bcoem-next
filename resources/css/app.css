@@ -570,6 +570,18 @@ html {
 .glance-card-body {
     padding: 1rem 1.15rem 1.15rem;
 }
+/* Card header: the title and its status pill must land on the same line (and
+   the body below them at the same height) on every card in the deck. The head
+   reserves two title lines so a one-line title does not lift its body above a
+   two-line neighbour's; the title shrinks and wraps rather than pushing the
+   pill onto a second line (the old flex-wrap did exactly that, which staggered
+   the pills and the text beneath them across the row). */
+.glance-card-head {
+    min-height: 2.6rem;
+}
+.glance-card-head .glance-header {
+    min-width: 0;
+}
 .glance-card-body h5 {
     margin: 0;
 }

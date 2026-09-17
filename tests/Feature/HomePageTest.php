@@ -138,6 +138,21 @@ final class HomePageTest extends PublicSurfaceTestCase
         }
     }
 
+    /**
+     * The at-a-glance deck must line up: every status pill sits inside the
+     * shared header wrapper, so the title + pill occupy one row and each card's
+     * body starts at the same height. Wrapping the pill to its own line (the
+     * old flex-wrap) staggered the pills and the text across the deck.
+     */
+    public function test_at_a_glance_cards_share_one_header_row(): void
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        $heads = substr_count($html, 'class="glance-card-head ');
+        self::assertGreaterThan(0, $heads, 'the deck must render its card headers');
+        self::assertSame($heads, substr_count($html, 'class="glance-status-pill '));
+    }
+
     public function test_list_redirects_anonymous_like_legacy(): void
     {
         $response = $this->get('/list');
