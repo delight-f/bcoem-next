@@ -38,14 +38,15 @@ final class DashboardController extends Controller
 {
     public function __invoke(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
         $user = $request->user();
+        if ($user === null) {
+            // Unreachable behind the `admin` middleware; keeps the static
+            // analyser honest without dead-ending a real request.
+            return redirect('/?msg=99');
+        }
 
         // The version of the code that is actually deployed, NOT the version
         // recorded in `bcoem_sys`. Used by the release notice below and shown

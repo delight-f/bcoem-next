@@ -36,10 +36,6 @@ final class FlightController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
         $counts = [];
@@ -58,10 +54,6 @@ final class FlightController extends Controller
 
     public function show(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $planning = self::planningMode($ctx);
         $table = DB::table('judging_tables')->where('id', $id)->first();
@@ -85,10 +77,6 @@ final class FlightController extends Controller
 
     public function store(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $table = DB::table('judging_tables')->where('id', $id)->first();
         if ($table === null) {
@@ -148,10 +136,6 @@ final class FlightController extends Controller
      */
     public function rounds(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $rows = [];
         $tables = DB::table('judging_tables')->orderBy('tableNumber')->get();
         foreach ($tables as $table) {
@@ -184,10 +168,6 @@ final class FlightController extends Controller
      */
     public function assignRounds(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate([
             'rounds' => ['required', 'array'],
             'rounds.*' => ['array'],

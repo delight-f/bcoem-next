@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
 use App\Support\Tenant\TenantContext;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -32,12 +31,8 @@ final class EntriesPrintController extends Controller
         'brewer_name' => ['brewer.brewerLastName', 'asc'],
     ];
 
-    public function __invoke(Request $request): View|RedirectResponse
+    public function __invoke(Request $request): View
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $psort = (string) $request->query('psort', 'entry_number');
         $view = (string) $request->query('view', 'default');
         [$sortCol, $dir] = self::SORTS[$psort] ?? self::SORTS['entry_number'];

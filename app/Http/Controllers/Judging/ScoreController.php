@@ -37,10 +37,6 @@ final class ScoreController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $scores = DB::table('judging_scores as js')
             ->leftJoin('brewing as b', 'js.eid', '=', 'b.id')
             ->leftJoin('judging_tables as t', 'js.scoreTable', '=', 't.id')
@@ -79,10 +75,6 @@ final class ScoreController extends Controller
      */
     public function edit(Request $request, int $table): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $tableRow = DB::table('judging_tables')->where('id', $table)->first();
         if ($tableRow === null) {
             return redirect('/admin/judging/scores');
@@ -97,10 +89,6 @@ final class ScoreController extends Controller
 
     public function update(Request $request, int $table): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::transaction(function () use ($request, $table): void {
             // First, wipe out all previously recorded scores for the table.
             DB::table('judging_scores')->where('scoreTable', $table)->delete();
@@ -141,10 +129,6 @@ final class ScoreController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('judging_scores')->delete($id);
 
         return redirect('/admin/judging/scores');

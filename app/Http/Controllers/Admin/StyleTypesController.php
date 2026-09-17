@@ -29,10 +29,6 @@ final class StyleTypesController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.style-types', [
             'ctx' => TenantContext::load(),
             'styleTypes' => DB::table('style_types')->orderBy('styleTypeName')->get(),
@@ -47,10 +43,6 @@ final class StyleTypesController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = self::validated($request);
 
         // ids 1-15 are reserved for system use.
@@ -70,10 +62,6 @@ final class StyleTypesController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.style-types', [
             'ctx' => TenantContext::load(),
             'styleTypes' => DB::table('style_types')->orderBy('styleTypeName')->get(),
@@ -83,10 +71,6 @@ final class StyleTypesController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $row = DB::table('style_types')->where('id', $id)->first();
         if ($row === null) {
             return redirect('/admin/style-types');
@@ -110,10 +94,6 @@ final class StyleTypesController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // bcoe system rows are not deletable (legacy hides the control).
         $row = DB::table('style_types')->where('id', $id)->first();
         if ($row === null || $row->styleTypeOwn === 'bcoe') {
@@ -127,10 +107,6 @@ final class StyleTypesController extends Controller
 
     public function combine(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('style_types')->where('styleTypeName', 'Mead/Cider')->update(['styleTypeBOS' => 'Y']);
         foreach ([2, 3] as $id) { // Cider = 2, Mead = 3
             DB::table('style_types')->where('id', $id)->update([
@@ -146,10 +122,6 @@ final class StyleTypesController extends Controller
 
     public function separate(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('style_types')->where('styleTypeName', 'Mead/Cider')->update([
             'styleTypeBOS' => 'N',
             'styleTypeEntryLimit' => null,

@@ -43,10 +43,6 @@ final class EntriesController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $rawView = $request->query('view');
         $view = is_string($rawView) ? $rawView : 'default';
@@ -192,9 +188,6 @@ final class EntriesController extends Controller
      */
     public function markAll(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
         $actions = [
             'paid' => ['column' => 'brewPaid', 'value' => '1', 'msg' => 20],
             'unpaid' => ['column' => 'brewPaid', 'value' => '0', 'msg' => 34],
@@ -282,10 +275,6 @@ final class EntriesController extends Controller
      */
     public function updateForm(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ids = $request->input('ids');
         if (! is_array($ids)) {
             return redirect('/backoffice/entries?msg=updated');
@@ -318,10 +307,6 @@ final class EntriesController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $entry = DB::table('brewing')->where('id', $id)->first();
         if ($entry === null) {
@@ -337,10 +322,6 @@ final class EntriesController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         $data = $request->validate([
@@ -395,10 +376,6 @@ final class EntriesController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::transaction(function () use ($id): void {
             // Legacy quirk mirrored: process_delete go=entries removes ONE
             // judging_scores row per entry (getOne → first match), not all.

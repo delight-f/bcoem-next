@@ -46,10 +46,6 @@ final class LocationController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.config.locations', [
             'ctx' => TenantContext::load(),
             'nonJudging' => $this->kind === 'non-judging',
@@ -59,10 +55,6 @@ final class LocationController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.config.location-form', [
             'ctx' => TenantContext::load(),
             'nonJudging' => $this->kind === 'non-judging',
@@ -72,23 +64,15 @@ final class LocationController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $this->validatePayload($request);
 
         DB::table('judging_locations')->insert($data);
 
-        return redirect($this->indexUrl());
+        return redirect($this->indexUrl())->with('status', $this->kindLabel().' saved.');
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $location = $this->query()->where('id', $id)->first();
         if ($location === null) {
             return redirect($this->indexUrl());
@@ -103,21 +87,21 @@ final class LocationController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $this->validatePayload($request);
+
+        if (! $this->query()->where('id', $id)->exists()) {
+            return redirect($this->indexUrl())->with('error', $this->kindLabel().' no longer exists.');
+        }
 
         DB::table('judging_locations')->where('id', $id)->update($data);
 
-        return redirect($this->indexUrl());
+        return redirect($this->indexUrl())->with('status', $this->kindLabel().' updated.');
     }
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! $this->query()->where('id', $id)->exists()) {
+            return redirect($this->indexUrl())->with('error', $this->kindLabel().' no longer exists.');
         }
 
         // Strip this location's availability marks from every brewer CSV
@@ -144,7 +128,12 @@ final class LocationController extends Controller
 
         DB::table('judging_locations')->delete($id);
 
-        return redirect($this->indexUrl());
+        return redirect($this->indexUrl())->with('status', $this->kindLabel().' deleted.');
+    }
+
+    private function kindLabel(): string
+    {
+        return $this->kind === 'non-judging' ? 'Non-judging session' : 'Judging session';
     }
 
     private function query(): Builder

@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Support\Outputs\StreamPdf;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -49,12 +48,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class TableCardsController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $psortQuery = $request->query('psort', 'default');
         $psort = is_string($psortQuery) ? $psortQuery : 'default';

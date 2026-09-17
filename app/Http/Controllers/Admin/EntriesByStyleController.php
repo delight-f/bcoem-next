@@ -34,10 +34,6 @@ final class EntriesByStyleController extends Controller
 {
     public function __invoke(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         // One row per category group, in styles-table order.

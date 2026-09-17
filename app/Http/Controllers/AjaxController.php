@@ -233,7 +233,8 @@ final class AjaxController extends Controller
                 try {
                     DB::table('brewing')->where('id', $id)->update($data);
                     $status = 1;
-                } catch (\Throwable) {
+                } catch (\Throwable $e) {
+                    report($e);
                     $errorType = 3; // SQL error
                 }
             }

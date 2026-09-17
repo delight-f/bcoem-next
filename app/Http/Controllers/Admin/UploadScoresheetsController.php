@@ -22,10 +22,6 @@ final class UploadScoresheetsController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $files = collect(is_dir(UserDocs::root()) ? scandir(UserDocs::root()) : [])
             ->filter(fn (string|false $f): bool => is_string($f) && str_ends_with(strtolower($f), '.pdf'))
             ->sort()
@@ -39,10 +35,6 @@ final class UploadScoresheetsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate([
             'files' => ['required', 'array'],
             'files.*' => ['file', 'extensions:pdf', 'max:20480'],

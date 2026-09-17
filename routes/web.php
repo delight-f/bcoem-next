@@ -100,7 +100,7 @@ Route::post('/entries/{id}', [EntriesController::class, 'destroy'])
 // Publish Results (legacy process.inc.php?action=publish): releases winners
 // publicly and forces all future deadlines closed. Lands /admin?msg=36.
 Route::post('/admin/results/publish', [PublishResultsController::class, 'store'])
-    ->name('admin.results.publish')->middleware('auth');
+    ->name('admin.results.publish')->middleware(['auth', 'admin.top']);
 
 // QR mobile check-in (legacy qr.php, PARITY-002). Public, password-gated
 // via contest_info.contestCheckInPassword; msg codes 1-7 mirror legacy,
@@ -208,9 +208,9 @@ Route::post('/admin/stripe/webhook-secret', [StripeConnectController::class, 'sa
 // routes through ManualGateway + PaymentService so the rows converge with
 // any gateway path. The full admin entries view is P5.5 scope.
 Route::get('/admin/payments/mark', [ManualPaymentController::class, 'show'])
-    ->name('admin.payments')->middleware('auth');
+    ->name('admin.payments')->middleware(['auth', 'admin']);
 Route::post('/admin/payments/mark', [ManualPaymentController::class, 'markPaid'])
-    ->name('admin.payments.mark')->middleware('auth');
+    ->name('admin.payments.mark')->middleware(['auth', 'admin']);
 
 // Payment provider setup (issue #24 follow-up). One plain-language screen
 // where the organizer switches on Stripe and/or PayPal; PayPal credentials

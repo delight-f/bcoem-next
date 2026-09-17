@@ -44,10 +44,6 @@ final class HeroImagesController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $allImages = self::discover();
 
         return view('admin.hero-images', [
@@ -60,10 +56,6 @@ final class HeroImagesController extends Controller
 
     public function save(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $map = [];
         foreach (self::discover() as $images) {
             foreach ($images as $image) {
@@ -82,10 +74,6 @@ final class HeroImagesController extends Controller
 
     public function upload(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $category = (string) $request->input('hero_image_category', '');
         if (! isset(self::CATEGORY_PREFIXES[$category])) {
             return back()->withErrors(['hero_image_category' => 'Please select a valid category.']);
@@ -152,10 +140,6 @@ final class HeroImagesController extends Controller
 
     public function delete(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $name = basename((string) $request->input('hero_image_delete', ''));
         $known = array_merge(...array_values(self::discover()));
 

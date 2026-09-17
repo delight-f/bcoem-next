@@ -8,7 +8,7 @@ use App\Http\Controllers\Archive\ArchiveController;
 use App\Http\Controllers\Archive\PurgeController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'admin'])->group(function () {
     Route::get('/admin/archive', [ArchiveController::class, 'index'])
         ->name('admin.archive.index');
     Route::post('/admin/archive', [ArchiveController::class, 'store'])

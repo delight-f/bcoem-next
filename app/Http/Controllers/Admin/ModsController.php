@@ -25,10 +25,6 @@ final class ModsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.mods', [
             'ctx' => TenantContext::load(),
             'mods' => DB::table('mods')->orderBy('mod_rank')->get(),
@@ -43,10 +39,6 @@ final class ModsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('mods')->insert(self::row($request));
 
         return redirect('/admin/mods?msg=9');
@@ -54,10 +46,6 @@ final class ModsController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.mods', [
             'ctx' => TenantContext::load(),
             'mods' => DB::table('mods')->orderBy('mod_rank')->get(),
@@ -67,10 +55,6 @@ final class ModsController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('mods')->where('id', $id)->update(self::row($request));
 
         return redirect('/admin/mods?msg=9');
@@ -79,10 +63,6 @@ final class ModsController extends Controller
     /** Enable-toggle bulk submit from the list form. */
     public function bulkUpdate(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         foreach ((array) $request->input('id', []) as $id) {
             $id = (int) $id;
             DB::table('mods')->where('id', $id)->update([
@@ -95,10 +75,6 @@ final class ModsController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! DB::table('mods')->where('id', $id)->exists()) {
             return redirect('/admin/mods');
         }

@@ -7,7 +7,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'admin'])->group(function () {
     foreach ([
         'pullsheets', 'labels', 'bottle_label', 'table_cards', 'sorting',
         'shipping_label', 'participant_summary',
@@ -23,6 +23,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         if (class_exists($cls)) {
             Route::get('/admin/output/'.$output, ['\\'.$cls, '__invoke'])
                 ->name('outputs.'.$output);
+        } elseif (! app()->isProduction()) {
+            // A missing controller used to drop its route silently, so the
+            // dashboard link 404'd with nothing pointing at the cause. Fail
+            // loudly everywhere except production, where a boot error would
+            // take the whole site down.
+            throw new RuntimeException("Output controller {$cls} is missing; route outputs.{$output} would be dropped.");
         }
     }
 });

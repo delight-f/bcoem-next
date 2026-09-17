@@ -30,10 +30,6 @@ final class ParticipantsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $rawFilter = $request->query('filter');
         $filter = is_string($rawFilter) ? $rawFilter : 'default';
         $rawQ = $request->query('q');
@@ -206,10 +202,6 @@ final class ParticipantsController extends Controller
 
     public function edit(Request $request, int $uid): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $participant = DB::table('brewer')->where('uid', $uid)->first();
         if ($participant === null) {
             return redirect('/backoffice/participants?msg=not-found');
@@ -227,10 +219,6 @@ final class ParticipantsController extends Controller
 
     public function update(Request $request, int $uid): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate([
             'brewerFirstName' => ['required', 'string', 'max:255'],
             'brewerLastName' => ['required', 'string', 'max:255'],
@@ -277,10 +265,6 @@ final class ParticipantsController extends Controller
 
     public function destroy(Request $request, int $uid): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Legacy guard: you cannot delete yourself.
         if ($uid === (int) Auth::id()) {
             return redirect('/backoffice/participants?msg=self');

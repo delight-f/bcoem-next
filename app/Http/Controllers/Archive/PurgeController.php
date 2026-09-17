@@ -27,10 +27,6 @@ final class PurgeController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.purge', [
             'ctx' => TenantContext::load(),
             'hasEvaluation' => self::tableExists('evaluation'),
@@ -40,10 +36,6 @@ final class PurgeController extends Controller
 
     public function run(Request $request, string $flow): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Server-enforced confirmation gate: no mutation without the
         // confirmation UI having posted confirm=yes.
         if ($request->input('confirm') !== 'yes') {
@@ -177,7 +169,12 @@ final class PurgeController extends Controller
 
             case 'cleanup':
                 $this->dataIntegrityCheck();
-                break;
+
+                // Legacy data_integrity_check() repaired orphan/consistency
+                // rows; the ported schema already enforces those constraints,
+                // so there is nothing to repair. Say so plainly rather than
+                // reporting the phantom "Purge cleanup completed." success.
+                return redirect('/admin/purge')->with('status', 'Data clean-up: nothing to repair — the ported schema already enforces the legacy integrity checks.');
 
             case 'confirmed':
                 DB::table('brewing')->update(['brewConfirmed' => 1]);

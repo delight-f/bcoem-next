@@ -30,10 +30,6 @@ final class SponsorsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.sponsors', [
             'ctx' => TenantContext::load(),
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
@@ -43,10 +39,6 @@ final class SponsorsController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.sponsors', [
             'ctx' => TenantContext::load(),
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
@@ -57,10 +49,6 @@ final class SponsorsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('sponsors')->insert(self::row($request));
 
         return redirect('/admin/sponsors?msg=9');
@@ -68,10 +56,6 @@ final class SponsorsController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.sponsors', [
             'ctx' => TenantContext::load(),
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
@@ -82,10 +66,6 @@ final class SponsorsController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $existing = DB::table('sponsors')->where('id', $id)->first();
         if ($existing === null) {
             return redirect('/admin/sponsors');
@@ -108,10 +88,6 @@ final class SponsorsController extends Controller
     /** Bulk update from the inline list form. */
     public function bulkUpdate(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ids = array_values(array_filter(
             array_map(intval(...), (array) $request->input('id', [])),
             static fn (int $id): bool => $id > 0,
@@ -119,6 +95,10 @@ final class SponsorsController extends Controller
 
         // The bulk form must enforce the same rules as the add/edit path, or
         // it becomes a weaker write route.
+        if ($ids === []) {
+            return redirect('/admin/sponsors')->with('error', 'No sponsors were selected to update.');
+        }
+
         $rules = [];
         foreach ($ids as $id) {
             $rules['sponsorLevel'.$id] = ['nullable', 'in:1,2,3,4,5'];
@@ -143,10 +123,6 @@ final class SponsorsController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! DB::table('sponsors')->where('id', $id)->exists()) {
             return redirect('/admin/sponsors');
         }

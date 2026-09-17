@@ -60,10 +60,6 @@ final class PoolAssignController extends Controller
 
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $filter = (string) $request->query('filter', 'judges');
         if (! in_array($filter, self::FILTERS, true)) {

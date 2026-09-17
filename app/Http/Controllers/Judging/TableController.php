@@ -41,10 +41,6 @@ final class TableController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Legacy ?action=assign&filter={judges|stewards|staff|bos} URLs (from
         // the participants dropdown, dashboard stats, sidebar, and nav) land
         // here. In legacy, go=judging&action=assign rendered the pool-assignment
@@ -143,10 +139,6 @@ final class TableController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.config.table-form', [
             'ctx' => TenantContext::load(),
             'table' => null,
@@ -180,10 +172,6 @@ final class TableController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('judging_tables')->insert($this->storageRow($request));
 
         return redirect('/admin/judging/tables');
@@ -191,10 +179,6 @@ final class TableController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $table = DB::table('judging_tables')->where('id', $id)->first();
         if ($table === null) {
             return redirect('/admin/judging/tables');
@@ -213,10 +197,6 @@ final class TableController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('judging_tables')->where('id', $id)->update($this->storageRow($request));
 
         return redirect('/admin/judging/tables');
@@ -224,10 +204,6 @@ final class TableController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Cascade like process_delete.inc.php (go=judging_tables): scores,
         // flights, BOS scores for the affected entries, then the row.
         $scoreIds = DB::table('judging_scores')->where('scoreTable', $id)->pluck('id');

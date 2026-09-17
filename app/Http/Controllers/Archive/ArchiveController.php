@@ -39,10 +39,6 @@ final class ArchiveController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.archive', [
             'ctx' => TenantContext::load(),
             'archives' => DB::table('archive')->orderBy('id')->get(),
@@ -51,10 +47,6 @@ final class ArchiveController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Server-enforced confirmation: the mutation only runs when the
         // request came through the warning UI (hidden confirm=yes field).
         if ($request->input('confirm') !== 'yes') {
@@ -97,8 +89,13 @@ final class ArchiveController extends Controller
         $adminUser = [];
         $adminBrewer = [];
         if (! $keepParticipants) {
-            $adminUser = (array) DB::table('users')->where('id', $request->user()->id)->first();
-            $adminBrewer = (array) DB::table('brewer')->where('uid', $request->user()->id)->first();
+            $actingAdmin = $request->user();
+            if ($actingAdmin === null) {
+                // Unreachable behind the `admin` middleware.
+                return redirect('/admin/archive')->with('error', 'Archive not run — the acting administrator could not be resolved.');
+            }
+            $adminUser = (array) DB::table('users')->where('id', $actingAdmin->id)->first();
+            $adminBrewer = (array) DB::table('brewer')->where('uid', $actingAdmin->id)->first();
         }
 
         // Copy-path first (kept flags): history copied to <t>_<suffix>,

@@ -236,6 +236,11 @@
             <p class="bcoem-admin-menu-disabled small">This menu contains only essential functions. Select <strong>Admin Dashboard</strong> for all options.</p>
             <ul class="nav flex-column admin-oc-nav">
                 <li class="nav-item"><a class="nav-link" href="{{ url('/admin') }}">Admin Dashboard</a></li>
+                {{-- Competition Preparation is Top-Level-Administrator-only on
+                     the dashboard (DashboardController gates it on level 0);
+                     gate the menu group the same way so the two surfaces agree,
+                     matching the g7/g8 precedent below. --}}
+                @if ($adminNavLevel0)
                 <li class="nav-item">
                     <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g1" aria-expanded="false" role="button">Competition Preparation</a>
                     <div class="collapse" id="oc-g1">
@@ -254,6 +259,7 @@
                         </ul>
                     </div>
                 </li>
+                @endif
                 <li class="nav-item">
                     <a class="nav-link oc-group-toggle" href="#" data-bs-toggle="collapse" data-bs-target="#oc-g2" aria-expanded="false" role="button">Entries{{ $stripeConnected ? ', Payments,' : '' }} and Participants</a>
                     <div class="collapse" id="oc-g2">
@@ -670,6 +676,18 @@
      label icon, in the case that surfaced this). --}}
 <div id="main-content" class="{{ $isAdminSide ? 'container-fluid' : 'container-xxl' }}"
      @if ($isAdminSide) style="padding-bottom: 5rem;" @endif>
+    {{-- Global admin feedback. Every controller redirect that carries
+         ->with('status') / ->with('error') surfaces here on every admin,
+         backoffice and eval page, so a save or delete can never complete
+         silently. Validation errors keep their per-view blocks. --}}
+    @if ($isAdminSide)
+        @if (session('status'))
+            <div class="alert alert-success d-print-none" role="alert">{{ session('status') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger d-print-none" role="alert">{{ session('error') }}</div>
+        @endif
+    @endif
     @if ($adminPageTitle !== null)
         {{-- Legacy index.legacy.php:97-98: admin pages render the page-header
              chrome (Administration: <label>) around the blade's own <p class="lead">. --}}

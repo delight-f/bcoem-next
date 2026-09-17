@@ -23,10 +23,6 @@ final class ContactsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.contacts', [
             'ctx' => TenantContext::load(),
             'contacts' => DB::table('contacts')->orderBy('contactLastName')->get(),
@@ -41,10 +37,6 @@ final class ContactsController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('contacts')->insert(self::row($request));
 
         return redirect('/admin/contacts?msg=9');
@@ -52,10 +44,6 @@ final class ContactsController extends Controller
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('admin.contacts', [
             'ctx' => TenantContext::load(),
             'contacts' => DB::table('contacts')->orderBy('contactLastName')->get(),
@@ -65,8 +53,8 @@ final class ContactsController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! DB::table('contacts')->where('id', $id)->exists()) {
+            return redirect('/admin/contacts')->with('error', 'That contact no longer exists.');
         }
 
         DB::table('contacts')->where('id', $id)->update(self::row($request));
@@ -76,10 +64,6 @@ final class ContactsController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! DB::table('contacts')->where('id', $id)->exists()) {
             return redirect('/admin/contacts');
         }

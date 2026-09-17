@@ -29,10 +29,6 @@ final class DropOffController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.config.dropoff', [
             'ctx' => TenantContext::load(),
             'locations' => DB::table('drop_off')->orderBy('id')->get(),
@@ -41,10 +37,6 @@ final class DropOffController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.config.dropoff-form', [
             'ctx' => TenantContext::load(),
             'location' => null,
@@ -53,21 +45,13 @@ final class DropOffController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('drop_off')->insert($this->storageRow($request));
 
-        return redirect('/admin/dropoff');
+        return redirect('/admin/dropoff')->with('status', 'Drop-off location saved.');
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $location = DB::table('drop_off')->where('id', $id)->first();
         if ($location === null) {
             return redirect('/admin/dropoff');
@@ -81,24 +65,24 @@ final class DropOffController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! DB::table('drop_off')->where('id', $id)->exists()) {
+            return redirect('/admin/dropoff')->with('error', 'That drop-off location no longer exists.');
         }
 
         DB::table('drop_off')->where('id', $id)->update($this->storageRow($request));
 
-        return redirect('/admin/dropoff');
+        return redirect('/admin/dropoff')->with('status', 'Drop-off location updated.');
     }
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! DB::table('drop_off')->where('id', $id)->exists()) {
+            return redirect('/admin/dropoff')->with('error', 'That drop-off location no longer exists.');
         }
 
         DB::table('drop_off')->delete($id);
 
-        return redirect('/admin/dropoff');
+        return redirect('/admin/dropoff')->with('status', 'Drop-off location deleted.');
     }
 
     /**

@@ -115,10 +115,6 @@ final class SitePreferencesController extends Controller
 
     public function edit(Request $request, string $go = 'default'): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! in_array($go, self::GO_TABS, true)) {
             return redirect('/admin/site-preferences');
         }
@@ -214,10 +210,6 @@ final class SitePreferencesController extends Controller
 
     public function update(Request $request, string $go = 'default'): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $update = match ($go) {
             'default' => $this->updateDefault($request),
             'entries' => $this->updateEntries($request),

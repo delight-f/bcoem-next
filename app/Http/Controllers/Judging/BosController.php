@@ -32,10 +32,6 @@ final class BosController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $types = DB::table('style_types')->where('styleTypeBOS', 'Y')->orderBy('id')->get();
 
         return view('judging.bos', [
@@ -60,10 +56,6 @@ final class BosController extends Controller
      */
     public function updatePanels(Request $request, int $styleType): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! DB::table('style_types')->where('id', $styleType)->where('styleTypeBOS', 'Y')->exists()) {
             return redirect('/admin/judging/bos');
         }
@@ -124,10 +116,6 @@ final class BosController extends Controller
     /** Add/update form for one BOS style type ("enter" in legacy). */
     public function edit(Request $request, int $styleType): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $type = DB::table('style_types')->where('id', $styleType)->first();
         if ($type === null) {
             return redirect('/admin/judging/bos');
@@ -146,10 +134,6 @@ final class BosController extends Controller
 
     public function update(Request $request, int $styleType): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $maxBos = max(5, (int) TenantContext::load()->judgingStr('jPrefsMaxBOS'));
         /** @var list<string> $keys */
         $keys = array_map(strval(...), (array) $request->input('score_id', []));

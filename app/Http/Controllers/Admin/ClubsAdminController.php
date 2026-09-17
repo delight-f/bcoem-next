@@ -29,10 +29,6 @@ final class ClubsAdminController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $version = DB::table('clubs_sync_state')->where('id', 1)->value('version');
         $syncedAt = DB::table('clubs_sync_state')->where('id', 1)->value('synced_at');
         $syncedAt = is_string($syncedAt) && $syncedAt !== '' ? $syncedAt : null;
@@ -49,10 +45,6 @@ final class ClubsAdminController extends Controller
 
     public function sync(Request $request, ClubsSyncService $service): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $result = $service->sync();
 
         return redirect('/admin/clubs')->with($result->ok ? 'status' : 'error', $result->summary());

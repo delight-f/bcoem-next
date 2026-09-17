@@ -77,7 +77,7 @@ final class PaymentSetupController extends Controller
             'webhook_id' => trim((string) $data['webhook_id']),
         ]);
 
-        return redirect()->route('admin.payments.setup')->with('status', 'paypal-saved');
+        return redirect()->route('admin.payments.setup')->with('status', 'PayPal settings saved.');
     }
 
     /** Remove saved PayPal credentials (reverts to env, or disables PayPal). */
@@ -87,7 +87,7 @@ final class PaymentSetupController extends Controller
 
         PayPalSettings::forget();
 
-        return redirect()->route('admin.payments.setup')->with('status', 'paypal-removed');
+        return redirect()->route('admin.payments.setup')->with('status', 'PayPal settings removed.');
     }
 
     private function guard(Request $request): void

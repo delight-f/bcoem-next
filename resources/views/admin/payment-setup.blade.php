@@ -2,12 +2,6 @@
     <section class="landing-page-section mt-6 mb-4">
         <h1>Payment Setup</h1>
 
-        @if (session('status') === 'paypal-saved')
-            <div class="alert alert-success">PayPal settings saved.</div>
-        @elseif (session('status') === 'paypal-removed')
-            <div class="alert alert-success">PayPal settings removed.</div>
-        @endif
-
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">

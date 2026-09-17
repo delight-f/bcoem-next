@@ -45,10 +45,6 @@ final class CompetitionInfoController extends Controller
 {
     public function edit(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         // Legacy directory_contents_dropdown(USER_IMAGES, ...): image files
@@ -72,10 +68,6 @@ final class CompetitionInfoController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $tz = TenantContext::load()->prefsStr('prefsTimeZone');
         $datetime = [
             function (string $attribute, mixed $value, \Closure $fail) use ($tz): void {
@@ -137,10 +129,6 @@ final class CompetitionInfoController extends Controller
      */
     public function updateQrPassword(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate([
             'contestCheckInPassword' => ['nullable', 'string', 'max:255'],
         ]);

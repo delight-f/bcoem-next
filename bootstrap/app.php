@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\ApplyMailSettings;
 use App\Http\Middleware\ApplySessionTimeout;
+use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureInstalled;
+use App\Http\Middleware\EnsureTopAdmin;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
@@ -17,6 +19,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Admin authorization aliases. The whole admin/backoffice/judging/
+        // output surface is gated here instead of by an ~143-copy inline
+        // `isAdmin()` check in every controller action. `admin` is the
+        // uniform gate (userLevel 0/1); `admin.top` is the stricter one
+        // (userLevel 0) the destructive actions have always used. Both keep
+        // the legacy contract: non-admin → /?msg=99, AJAX → JSON status 9.
+        // Attach after `auth`, which resolves the user and bounces guests.
+        $middleware->alias([
+            'admin' => EnsureAdmin::class,
+            'admin.top' => EnsureTopAdmin::class,
+        ]);
+
         // Legacy process.inc.php posts carry no CSRF token (legacy sent
         // bare POSTs); the redirect contract must issue its 307/302
         // before any token check. Downstream port forms stay protected.

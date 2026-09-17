@@ -46,10 +46,6 @@ final class StylesAdminController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         return view('admin.styles', [
@@ -65,10 +61,6 @@ final class StylesAdminController extends Controller
     /** Accepted-styles / at-limit checklist submit (action=update). */
     public function bulkUpdate(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate(['id' => ['nullable', 'array']]);
 
         $selected = [];
@@ -110,10 +102,6 @@ final class StylesAdminController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = self::validatedRow($request);
 
         DB::table('styles')->insert($data);
@@ -132,10 +120,6 @@ final class StylesAdminController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $current = DB::table('styles')->where('id', $id)->first();
         // Shipped system styles are read-only (the list hides Edit/Delete).
         if ($current === null || $current->brewStyleOwn === 'bcoe') {
@@ -164,10 +148,6 @@ final class StylesAdminController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $row = DB::table('styles')->where('id', $id)->first();
         if ($row === null || $row->brewStyleOwn === 'bcoe') {
             return redirect('/admin/styles');
@@ -226,10 +206,6 @@ final class StylesAdminController extends Controller
 
     private function formView(Request $request, ?int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $editing = $id === null ? null : DB::table('styles')->where('id', $id)->first();
 
         // Shipped system styles cannot be opened for edit (the list hides it).

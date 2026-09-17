@@ -89,7 +89,7 @@ final class StripeConnectController extends Controller
 
         self::mergePrefs(['account_id' => $accountId]);
 
-        return redirect()->route('admin.stripe')->with('status', 'connected');
+        return redirect()->route('admin.stripe')->with('status', 'Stripe account connected.');
     }
 
     /** The webhook signing secret is created in the dashboard; paste it in. */
@@ -101,7 +101,7 @@ final class StripeConnectController extends Controller
 
         self::mergePrefs(['webhook_secret' => $data['webhook_secret']]);
 
-        return redirect()->route('admin.stripe')->with('status', 'webhook-secret-saved');
+        return redirect()->route('admin.stripe')->with('status', 'Webhook signing secret saved.');
     }
 
     private function guard(Request $request): void

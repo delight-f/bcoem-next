@@ -9,7 +9,6 @@ use App\Support\Outputs\StreamPdf;
 use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -33,12 +32,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class PullsheetsController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         // Tables Planning Mode exists to assemble tables/flights before

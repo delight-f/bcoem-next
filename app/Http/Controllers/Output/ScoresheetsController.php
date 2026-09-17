@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Output;
 
 use App\Http\Controllers\Controller;
 use App\Support\Entries\UserDocs;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -29,12 +28,8 @@ use Illuminate\Http\Response;
  */
 final class ScoresheetsController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // basename() clamps any path component — ?file=../secret.pdf can
         // only ever resolve inside user_docs.
         $fileQuery = $request->query('file', '');

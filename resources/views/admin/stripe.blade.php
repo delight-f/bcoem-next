@@ -2,15 +2,6 @@
     <section class="landing-page-section mt-6 mb-4">
         <h1>Stripe Connect</h1>
 
-        @if (session('status'))
-            <div class="alert alert-success">
-                {{ session('status') === 'connected' ? 'Stripe account connected.' : 'Webhook signing secret saved.' }}
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-
         <p>
             Connect the competition's own Stripe account. Payments are
             collected directly by you (Stripe "Standard" connected account);

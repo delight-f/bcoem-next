@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Output;
 use App\Http\Controllers\Controller;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -53,12 +52,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 final class ExportController extends Controller
 {
-    public function __invoke(Request $request): StreamedResponse|RedirectResponse
+    public function __invoke(Request $request): StreamedResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         // Download filename mirrors export.output.php:246-251. The trailing

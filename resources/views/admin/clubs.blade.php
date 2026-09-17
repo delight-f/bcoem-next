@@ -2,13 +2,6 @@
     <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Clubs List</h1>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-
         <p>
             The central homebrew clubs list is mirrored into this site so entrants
             can pick their club. Nothing is ever removed automatically &mdash; a club

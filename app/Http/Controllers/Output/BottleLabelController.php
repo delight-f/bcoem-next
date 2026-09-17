@@ -11,7 +11,6 @@ use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -53,12 +52,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class BottleLabelController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $idsQuery = $request->query('ids', '');
         $idQuery = $request->query('id', 'default');
         $bidQuery = $request->query('bid', 'default');

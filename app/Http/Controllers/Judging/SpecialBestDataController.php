@@ -27,10 +27,6 @@ final class SpecialBestDataController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $rows = DB::table('special_best_data as sbd')
             ->leftJoin('brewing as b', 'sbd.eid', '=', 'b.id')
             ->leftJoin('brewer as br', 'sbd.bid', '=', 'br.uid')
@@ -79,10 +75,6 @@ final class SpecialBestDataController extends Controller
     /** Add/edit slots for one category (existing rows prefilled, rest blank). */
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $category = DB::table('special_best_info')->where('id', $id)->first();
         if ($category === null) {
             return redirect('/admin/judging/special-best');
@@ -107,10 +99,6 @@ final class SpecialBestDataController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $misses = 0;
         /** @var list<string> $keys */
         $keys = array_map(strval(...), (array) $request->input('slot_id', []));
@@ -165,10 +153,6 @@ final class SpecialBestDataController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('special_best_data')->delete($id);
 
         return redirect('/admin/judging/special-best-data');

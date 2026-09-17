@@ -93,7 +93,8 @@ final class TablesModeController extends Controller
             if (! Schema::hasColumn($table, $column)) {
                 try {
                     DB::statement(sprintf('ALTER TABLE `%s%s` ADD `%s` TINYINT(1) NULL;', $this->prefix(), $table, $column));
-                } catch (\Throwable) {
+                } catch (\Throwable $e) {
+                    report($e);
                     $errorCount += 1;
                 }
             }
@@ -137,7 +138,8 @@ final class TablesModeController extends Controller
                                     'flightEntryID' => $entry->id,
                                     'flightRound' => $round,
                                 ]);
-                            } catch (\Throwable) {
+                            } catch (\Throwable $e) {
+                                report($e);
                                 $errorCount += 1;
                             }
                         }
@@ -150,7 +152,8 @@ final class TablesModeController extends Controller
                     try {
                         DB::table('judging_tables')->where('id', $table->id)
                             ->update(['tableStyles' => implode(',', $keep)]);
-                    } catch (\Throwable) {
+                    } catch (\Throwable $e) {
+                        report($e);
                         $errorCount += 1;
                     }
                 }
@@ -158,20 +161,23 @@ final class TablesModeController extends Controller
 
             try {
                 DB::table('judging_flights')->update(['flightPlanning' => 1]);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 $errorCount += 1;
             }
 
             try {
                 DB::table('judging_assignments')->update(['assignPlanning' => 1]);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 $errorCount += 1;
             }
         }
 
         try {
             DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 1]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            report($e);
             $errorCount += 1;
         }
     }
@@ -201,13 +207,15 @@ final class TablesModeController extends Controller
                 } else {
                     DB::table('judging_flights')->whereNotIn('flightEntryID', $received)->delete();
                 }
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 $errorCount += 1;
             }
 
             try {
                 DB::table('judging_flights')->update(['flightPlanning' => 0]);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 $errorCount += 1;
             }
 
@@ -219,7 +227,8 @@ final class TablesModeController extends Controller
                     if ($this->entryConflict((string) $assignment->bid, (string) $table->tableStyles, $planningFlag)) {
                         try {
                             DB::table('judging_assignments')->where('id', $assignment->id)->delete();
-                        } catch (\Throwable) {
+                        } catch (\Throwable $e) {
+                            report($e);
                             $errorCount += 1;
                         }
 
@@ -231,7 +240,8 @@ final class TablesModeController extends Controller
 
         try {
             DB::table('judging_preferences')->where('id', 1)->update(['jPrefsTablePlanning' => 0]);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            report($e);
             $errorCount += 1;
         }
 
@@ -248,7 +258,8 @@ final class TablesModeController extends Controller
         foreach ([['judging_tables', 'id'], ['judging_assignments', 'assignTable'], ['judging_flights', 'flightTable']] as [$table, $column]) {
             try {
                 DB::table($table)->where($column, $tableId)->delete();
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 $errors += 1;
             }
         }

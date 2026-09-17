@@ -48,10 +48,6 @@ final class AllDatesController extends Controller
 
     public function edit(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $tz = $ctx->prefsStr('prefsTimeZone');
         $df = $ctx->prefsStr('prefsDateFormat');
@@ -91,10 +87,6 @@ final class AllDatesController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $tz = TenantContext::load()->prefsStr('prefsTimeZone');
         $dateKeys = [...self::CONTEST_DATES, 'jPrefsJudgingOpen', 'jPrefsJudgingClosed', 'prefsWinnerDelay'];
         $rules = array_combine(

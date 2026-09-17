@@ -36,10 +36,6 @@ final class ManualPaymentController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         return view('admin.payments', [
@@ -52,10 +48,6 @@ final class ManualPaymentController extends Controller
 
     public function markPaid(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $methods = ManualGateway::methodsFor(TenantContext::load());
 
         $data = $request->validate([

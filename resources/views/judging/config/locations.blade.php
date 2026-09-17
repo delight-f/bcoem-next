@@ -2,10 +2,6 @@
     <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $nonJudging ? 'Non-Judging Sessions' : 'Judging Sessions' }}</h1>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-
         <p class="d-print-none">
             <a class="btn btn-primary" href="{{ route($nonJudging ? 'admin.judging.non_judging.create' : 'admin.judging.locations.create') }}">Add a {{ $nonJudging ? 'Non-Judging Session' : 'Judging Session' }}</a>
         </p>

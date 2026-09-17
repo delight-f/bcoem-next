@@ -23,10 +23,6 @@ final class MapsController extends Controller
 {
     public function __invoke(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $idQuery = $request->query('id', '');
         $address = rtrim(is_string($idQuery) ? $idQuery : '', '&amp;KeepThis=true');
 

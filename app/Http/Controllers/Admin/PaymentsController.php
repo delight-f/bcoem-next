@@ -30,10 +30,6 @@ final class PaymentsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $payments = DB::table('payments')
             ->leftJoin('brewer', 'brewer.uid', '=', 'payments.entrant_uid')
             ->orderBy('payments.id')
@@ -53,10 +49,6 @@ final class PaymentsController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         // Legacy delete: removes the ledger row only, no flag reversal.
         DB::table('payments')->where('id', $id)->delete();
 
@@ -71,10 +63,6 @@ final class PaymentsController extends Controller
      */
     public function refund(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $row = DB::table('payments')->where('id', $id)->first();
 
         if ($row === null
@@ -94,7 +82,11 @@ final class PaymentsController extends Controller
 
         try {
             $result = $adapter->refund((string) $row->provider_ref);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            // Log the provider failure: the redirect only says "invalid", so
+            // the real cause was previously lost entirely.
+            report($e);
+
             return redirect('/admin/payments?msg=refund-invalid');
         }
 

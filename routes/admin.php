@@ -28,7 +28,7 @@ use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UploadScoresheetsController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function (): void {
+Route::middleware(['web', 'auth', 'admin'])->group(function (): void {
     // Admin landing menu (legacy ?section=admin → admin/default.admin.php).
     Route::get('/admin', DashboardController::class)
         ->name('admin.dashboard');
@@ -37,7 +37,7 @@ Route::middleware(['web', 'auth'])->group(function (): void {
     // The automatic release notice is cache-gated and never blocks a page, so
     // this is the on-demand equivalent — Top-Level Administrators only.
     Route::post('/admin/update-check', UpdateCheckController::class)
-        ->name('admin.update_check');
+        ->name('admin.update_check')->middleware('admin.top');
 
     Route::get('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'show'])
         ->name('admin.upload_scoresheets');
@@ -69,7 +69,7 @@ Route::middleware(['web', 'auth'])->group(function (): void {
     // Preferences "Purge stale entries" action (unconfirmed/special rows
     // untouched for 24h). Top-level-admin only, like the Entries purge.
     Route::post('/admin/site-preferences-purge-stale', [SitePreferencesController::class, 'purgeStale'])
-        ->name('admin.site_preferences.purge_stale');
+        ->name('admin.site_preferences.purge_stale')->middleware('admin.top');
 
     // all_dates — one form writing contest_info dates + judging window + winners delay.
     Route::get('/admin/dates', [AllDatesController::class, 'edit'])
@@ -175,13 +175,13 @@ Route::middleware(['web', 'auth'])->group(function (): void {
 
     // make_admin / change_user_password — per-user account ops.
     Route::get('/admin/users/{id}/level', [MakeAdminController::class, 'edit'])
-        ->name('admin.make_admin.edit');
+        ->name('admin.make_admin.edit')->middleware('admin.top');
     Route::put('/admin/users/{id}/level', [MakeAdminController::class, 'update'])
-        ->name('admin.make_admin.update');
+        ->name('admin.make_admin.update')->middleware('admin.top');
     Route::get('/admin/users/{id}/password', [ChangeUserPasswordController::class, 'edit'])
-        ->name('admin.change_user_password.edit');
+        ->name('admin.change_user_password.edit')->middleware('admin.top');
     Route::put('/admin/users/{id}/password', [ChangeUserPasswordController::class, 'update'])
-        ->name('admin.change_user_password.update');
+        ->name('admin.change_user_password.update')->middleware('admin.top');
 
     // send_test_email — GET performs the send (legacy sends during render).
     Route::get('/admin/send-test-email', [SendTestEmailController::class, 'show'])

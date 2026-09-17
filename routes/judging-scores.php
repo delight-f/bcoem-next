@@ -11,41 +11,41 @@ use App\Http\Controllers\Judging\SpecialBestController;
 use App\Http\Controllers\Judging\SpecialBestDataController;
 
 Route::get('/admin/judging/scores', [ScoreController::class, 'index'])
-    ->name('admin.judging.scores.index')->middleware('auth');
+    ->name('admin.judging.scores.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/scores/{table}/edit', [ScoreController::class, 'edit'])
-    ->name('admin.judging.scores.edit')->middleware('auth');
+    ->name('admin.judging.scores.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/scores/{table}', [ScoreController::class, 'update'])
-    ->name('admin.judging.scores.update')->middleware('auth');
+    ->name('admin.judging.scores.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/scores/{id}', [ScoreController::class, 'destroy'])
-    ->name('admin.judging.scores.destroy')->middleware('auth');
+    ->name('admin.judging.scores.destroy')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/bos', [BosController::class, 'index'])
-    ->name('admin.judging.bos.index')->middleware('auth');
+    ->name('admin.judging.bos.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/bos/{styleType}/edit', [BosController::class, 'edit'])
-    ->name('admin.judging.bos.edit')->middleware('auth');
+    ->name('admin.judging.bos.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/bos/{styleType}', [BosController::class, 'update'])
-    ->name('admin.judging.bos.update')->middleware('auth');
+    ->name('admin.judging.bos.update')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/bos/{styleType}/panels', [BosController::class, 'updatePanels'])
-    ->name('admin.judging.bos.panels')->middleware('auth');
+    ->name('admin.judging.bos.panels')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/special-best', [SpecialBestController::class, 'index'])
-    ->name('admin.specialbest.index')->middleware('auth');
+    ->name('admin.specialbest.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/special-best/create', [SpecialBestController::class, 'create'])
-    ->name('admin.specialbest.create')->middleware('auth');
+    ->name('admin.specialbest.create')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/special-best', [SpecialBestController::class, 'store'])
-    ->name('admin.specialbest.store')->middleware('auth');
+    ->name('admin.specialbest.store')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/special-best/{id}/edit', [SpecialBestController::class, 'edit'])
-    ->name('admin.specialbest.edit')->middleware('auth');
+    ->name('admin.specialbest.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/special-best/{id}', [SpecialBestController::class, 'update'])
-    ->name('admin.specialbest.update')->middleware('auth');
+    ->name('admin.specialbest.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/special-best/{id}', [SpecialBestController::class, 'destroy'])
-    ->name('admin.specialbest.destroy')->middleware('auth');
+    ->name('admin.specialbest.destroy')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/special-best-data', [SpecialBestDataController::class, 'index'])
-    ->name('admin.specialbest.data.index')->middleware('auth');
+    ->name('admin.specialbest.data.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/special-best/{id}/entries', [SpecialBestDataController::class, 'edit'])
-    ->name('admin.specialbest.data.edit')->middleware('auth');
+    ->name('admin.specialbest.data.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/special-best/{id}/entries', [SpecialBestDataController::class, 'update'])
-    ->name('admin.specialbest.data.update')->middleware('auth');
+    ->name('admin.specialbest.data.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/special-best-data/{id}', [SpecialBestDataController::class, 'destroy'])
-    ->name('admin.specialbest.data.destroy')->middleware('auth');
+    ->name('admin.specialbest.data.destroy')->middleware(['auth', 'admin']);

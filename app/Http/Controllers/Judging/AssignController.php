@@ -39,10 +39,6 @@ final class AssignController extends Controller
 {
     public function show(Request $request, int $id, string $role): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! in_array($role, ['judges', 'stewards'], true)) {
             abort(404);
         }
@@ -151,10 +147,6 @@ final class AssignController extends Controller
 
     public function store(Request $request, int $id, string $role): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if (! in_array($role, ['judges', 'stewards'], true)) {
             abort(404);
         }

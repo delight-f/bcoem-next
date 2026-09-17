@@ -32,10 +32,6 @@ final class JudgingPreferenceController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
 
         return view('judging.config.preferences', [
@@ -48,10 +44,6 @@ final class JudgingPreferenceController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $data = $request->validate([
             'jPrefsQueued' => ['required', 'in:Y,N'],
             'jPrefsBottleNum' => ['required', 'integer', 'min:1', 'max:15'],

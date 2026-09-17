@@ -13,9 +13,9 @@ use App\Http\Controllers\Judging\BarcodeCheckinController;
 // number / entry id → flip brewReceived to '1' (legacy
 // process_barcode_check_in.inc.php semantics; no undo path existed).
 Route::get('/admin/judging/checkin', [BarcodeCheckinController::class, 'show'])
-    ->name('admin.judging.checkin.show')->middleware('auth');
+    ->name('admin.judging.checkin.show')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/checkin', [BarcodeCheckinController::class, 'store'])
-    ->name('admin.judging.checkin.store')->middleware('auth');
+    ->name('admin.judging.checkin.store')->middleware(['auth', 'admin']);
 
 // ── P4.1 admin judging config (ticket 01). Admin-only (userLevel<=1,
 // gated in each controller like ManualPaymentController) CRUD for the
@@ -30,69 +30,69 @@ use App\Http\Controllers\Judging\TableController;
 $locationActions = ['index', 'create', 'store', 'edit', 'update', 'destroy'];
 
 Route::get('/admin/judging/locations', [LocationController::class, 'index'])
-    ->name('admin.judging.locations.index')->middleware('auth');
+    ->name('admin.judging.locations.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/locations/create', [LocationController::class, 'create'])
-    ->name('admin.judging.locations.create')->middleware('auth');
+    ->name('admin.judging.locations.create')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/locations', [LocationController::class, 'store'])
-    ->name('admin.judging.locations.store')->middleware('auth');
+    ->name('admin.judging.locations.store')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/locations/{id}/edit', [LocationController::class, 'edit'])
-    ->name('admin.judging.locations.edit')->middleware('auth');
+    ->name('admin.judging.locations.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/locations/{id}', [LocationController::class, 'update'])
-    ->name('admin.judging.locations.update')->middleware('auth');
+    ->name('admin.judging.locations.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/locations/{id}', [LocationController::class, 'destroy'])
-    ->name('admin.judging.locations.destroy')->middleware('auth');
+    ->name('admin.judging.locations.destroy')->middleware(['auth', 'admin']);
 // Regenerate all judging numbers (legacy regenerate.ajax.php /
 // generate_judging_numbers; methods: default|legacy|identical).
 use App\Http\Controllers\Judging\RegenerateNumbersController;
 
 Route::post('/admin/judging/regenerate-numbers', [RegenerateNumbersController::class, '__invoke'])
-    ->name('admin.judging.regenerate_numbers')->middleware('auth');
+    ->name('admin.judging.regenerate_numbers')->middleware(['auth', 'admin.top']);
 
 // Same controller/table; non-judging rows are judgingLocType=2 and the
 // form drops type/rounds. kind selects list filter + validation shape.
 Route::get('/admin/judging/non-judging', [LocationController::class, 'index'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.index')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/non-judging/create', [LocationController::class, 'create'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.create')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.create')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/non-judging', [LocationController::class, 'store'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.store')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.store')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/non-judging/{id}/edit', [LocationController::class, 'edit'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.edit')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/non-judging/{id}', [LocationController::class, 'update'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.update')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/non-judging/{id}', [LocationController::class, 'destroy'])
-    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.destroy')->middleware('auth');
+    ->defaults('kind', 'non-judging')->name('admin.judging.non_judging.destroy')->middleware(['auth', 'admin']);
 
 Route::get('/admin/dropoff', [DropOffController::class, 'index'])
-    ->name('admin.judging.dropoff.index')->middleware('auth');
+    ->name('admin.judging.dropoff.index')->middleware(['auth', 'admin']);
 Route::get('/admin/dropoff/create', [DropOffController::class, 'create'])
-    ->name('admin.judging.dropoff.create')->middleware('auth');
+    ->name('admin.judging.dropoff.create')->middleware(['auth', 'admin']);
 Route::post('/admin/dropoff', [DropOffController::class, 'store'])
-    ->name('admin.judging.dropoff.store')->middleware('auth');
+    ->name('admin.judging.dropoff.store')->middleware(['auth', 'admin']);
 Route::get('/admin/dropoff/{id}/edit', [DropOffController::class, 'edit'])
-    ->name('admin.judging.dropoff.edit')->middleware('auth');
+    ->name('admin.judging.dropoff.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/dropoff/{id}', [DropOffController::class, 'update'])
-    ->name('admin.judging.dropoff.update')->middleware('auth');
+    ->name('admin.judging.dropoff.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/dropoff/{id}', [DropOffController::class, 'destroy'])
-    ->name('admin.judging.dropoff.destroy')->middleware('auth');
+    ->name('admin.judging.dropoff.destroy')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/tables', [TableController::class, 'index'])
-    ->name('admin.judging.tables.index')->middleware('auth');
+    ->name('admin.judging.tables.index')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/tables/create', [TableController::class, 'create'])
-    ->name('admin.judging.tables.create')->middleware('auth');
+    ->name('admin.judging.tables.create')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/tables', [TableController::class, 'store'])
-    ->name('admin.judging.tables.store')->middleware('auth');
+    ->name('admin.judging.tables.store')->middleware(['auth', 'admin']);
 Route::get('/admin/judging/tables/{id}/edit', [TableController::class, 'edit'])
-    ->name('admin.judging.tables.edit')->middleware('auth');
+    ->name('admin.judging.tables.edit')->middleware(['auth', 'admin']);
 Route::put('/admin/judging/tables/{id}', [TableController::class, 'update'])
-    ->name('admin.judging.tables.update')->middleware('auth');
+    ->name('admin.judging.tables.update')->middleware(['auth', 'admin']);
 Route::delete('/admin/judging/tables/{id}', [TableController::class, 'destroy'])
-    ->name('admin.judging.tables.destroy')->middleware('auth');
+    ->name('admin.judging.tables.destroy')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/preferences', [JudgingPreferenceController::class, 'show'])
-    ->name('admin.judging.preferences.show')->middleware('auth');
+    ->name('admin.judging.preferences.show')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/preferences', [JudgingPreferenceController::class, 'store'])
-    ->name('admin.judging.preferences.store')->middleware('auth');
+    ->name('admin.judging.preferences.store')->middleware(['auth', 'admin']);
 
 // ── P4.3 assignments UI (ticket 03). Admin screens gated userLevel<=1 in
 // the controllers (ManualPaymentController pattern); judge signup is any
@@ -103,30 +103,30 @@ use App\Http\Controllers\Judging\JudgeSignupController;
 
 // Public judge signup (legacy pub/judge.pub.php + judge_info/judge_closed).
 Route::get('/judge', [JudgeSignupController::class, 'show'])
-    ->name('judge.signup')->middleware('auth');
+    ->name('judge.signup')->middleware(['auth']);
 Route::post('/judge', [JudgeSignupController::class, 'store'])
-    ->name('judge.signup.store')->middleware('auth');
+    ->name('judge.signup.store')->middleware(['auth']);
 
 // Flight definition grid: manual radio per entry (ledger #7).
 Route::get('/admin/judging/flights', [FlightController::class, 'index'])
-    ->name('admin.judging.flights.index')->middleware('auth');
+    ->name('admin.judging.flights.index')->middleware(['auth', 'admin']);
 // Assign Flights to Rounds sub-screen (legacy action=assign&filter=rounds);
 // registered before the {id} grid route.
 Route::get('/admin/judging/flights/rounds', [FlightController::class, 'rounds'])
-    ->name('admin.judging.flights.rounds')->middleware('auth');
+    ->name('admin.judging.flights.rounds')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/flights/rounds', [FlightController::class, 'assignRounds'])
-    ->name('admin.judging.flights.rounds.assign')->middleware('auth');
+    ->name('admin.judging.flights.rounds.assign')->middleware(['auth', 'admin']);
 
 Route::get('/admin/judging/flights/{id}', [FlightController::class, 'show'])
-    ->name('admin.judging.flights.show')->middleware('auth');
+    ->name('admin.judging.flights.show')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/flights/{id}', [FlightController::class, 'store'])
-    ->name('admin.judging.flights.store')->middleware('auth');
+    ->name('admin.judging.flights.store')->middleware(['auth', 'admin']);
 
 // Judge/steward → table/flight assignment with preference/conflict surfacing.
 Route::get('/admin/judging/flights/{id}/assign/{role}', [AssignController::class, 'show'])
-    ->name('admin.judging.assign.show')->middleware('auth');
+    ->name('admin.judging.assign.show')->middleware(['auth', 'admin']);
 Route::post('/admin/judging/flights/{id}/assign/{role}', [AssignController::class, 'store'])
-    ->name('admin.judging.assign.store')->middleware('auth');
+    ->name('admin.judging.assign.store')->middleware(['auth', 'admin']);
 
 // Participant → pool role assignment (judge/steward/staff/BOS pools) —
 // legacy go=judging&action=assign&filter={judges|stewards|staff|bos}
@@ -135,4 +135,4 @@ Route::post('/admin/judging/flights/{id}/assign/{role}', [AssignController::clas
 use App\Http\Controllers\Judging\PoolAssignController;
 
 Route::get('/admin/judging/pool-assign', [PoolAssignController::class, 'show'])
-    ->name('admin.judging.pool_assign.show')->middleware('auth');
+    ->name('admin.judging.pool_assign.show')->middleware(['auth', 'admin']);

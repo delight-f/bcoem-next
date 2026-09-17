@@ -7,16 +7,8 @@
                 <h1>Administration Dashboard</h1>
             </div>
 
-            {{-- Result of the manual "check for updates" (Competition Status
-                 panel). The automatic notice only appears when a newer release
-                 is already cached, so this is where "you're up to date" and
-                 "the check could not run" are reported. --}}
-            @if (session('status'))
-                <div class="alert alert-success">{{ session('status') }}</div>
-            @endif
-            @if (session('error'))
-                <div class="alert alert-danger">{{ session('error') }}</div>
-            @endif
+            {{-- Flash feedback (the manual "check for updates" result and every
+                 other admin write) is rendered globally by the layout. --}}
 
             {{-- New release published (Task 2.2). Where the server can replace
                  its own files (the app-data layout) this is the trigger for the
@@ -482,11 +474,34 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const csrf = document.querySelector('meta[name="csrf-token"]')?.content
                     || document.querySelector('input[name="_token"]')?.value;
+                const showModeError = (message) => {
+                    const host = document.getElementById('main-content') || document.body;
+                    const box = document.createElement('div');
+                    box.className = 'alert alert-danger d-print-none';
+                    box.setAttribute('role', 'alert');
+                    box.textContent = message;
+                    host.prepend(box);
+                };
                 const postMode = (section) => fetch('{{ url('/admin/judging/tables-mode') }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRF-TOKEN': csrf },
                     body: 'section=' + encodeURIComponent(section),
-                }).then((r) => { if (r.ok) window.location.reload(); });
+                }).then(async (r) => {
+                    // The endpoint answers {"status","error_count","error_type"}
+                    // for every outcome (and an empty body outside its gate), so
+                    // a 2xx alone is NOT success. Require status "1" with no
+                    // errors, or surface the failure instead of reloading as if
+                    // the switch had worked.
+                    let data = null;
+                    try { data = JSON.parse((await r.text()) || 'null'); } catch (e) { data = null; }
+                    if (!r.ok || data === null || data.status !== '1' || data.error_count !== '0') {
+                        showModeError('The tables mode change could not be applied. Reload the page and try again; if it keeps failing, check the server log.');
+                        return;
+                    }
+                    window.location.reload();
+                }).catch(() => {
+                    showModeError('The tables mode change could not be sent (network or session error). Reload the page and try again.');
+                });
                 document.getElementById('tables-planning-button')?.addEventListener('click', () =>
                     new bootstrap.Modal(document.getElementById('tables-planning-mode-modal')).show());
                 document.getElementById('tables-planning-button-yes')?.addEventListener('click', () => postMode('enable-planning'));

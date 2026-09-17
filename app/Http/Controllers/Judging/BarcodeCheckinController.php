@@ -38,10 +38,6 @@ final class BarcodeCheckinController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         if ($request->query('clear') !== null) {
             session()->forget('checkin.list');
         }
@@ -54,10 +50,6 @@ final class BarcodeCheckinController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $scan = trim((string) $request->validate([
             'scan' => ['required', 'string', 'max:32'],
         ])['scan']);

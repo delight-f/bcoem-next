@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\ParticipantsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['web', 'auth'])->group(function () {
+Route::middleware(['web', 'auth', 'admin'])->group(function () {
     // Participants
     Route::get('/backoffice/participants', [ParticipantsController::class, 'index'])
         ->name('backoffice.participants.index');
@@ -41,7 +41,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Legacy data_cleanup.inc.php purge flows (Admin Actions menu):
     // go=unconfirmed / go=unpaid, level-0 only (data_cleanup guard).
     Route::post('/backoffice/entries/purge', [EntriesController::class, 'purge'])
-        ->name('backoffice.entries.purge');
+        ->name('backoffice.entries.purge')->middleware('admin.top');
     // Legacy entries.admin.php single form wrapping the table: inline
     // judging-number / paid / received / box / notes edits POST together
     // (legacy saved each via AJAX save_column; the port saves the form).

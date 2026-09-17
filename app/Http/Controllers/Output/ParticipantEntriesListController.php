@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Output;
 use App\Http\Controllers\Controller;
 use App\Support\Outputs\OutputFormat;
 use App\Support\Outputs\StreamPdf;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +18,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class ParticipantEntriesListController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $brewers = DB::table('brewer as br')
             ->join('users as u', 'br.brewerEmail', '=', 'u.user_name')
             ->orderBy('br.brewerLastName')

@@ -9,7 +9,6 @@ use App\Support\Outputs\StreamPdf;
 use App\Support\Results\BestBrewerStandings;
 use App\Support\Results\ResultsRepository;
 use App\Support\Tenant\TenantContext;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -33,12 +32,8 @@ use Illuminate\Support\Facades\DB;
  */
 final class ResultsController extends Controller
 {
-    public function __invoke(Request $request): Response|RedirectResponse
+    public function __invoke(Request $request): Response
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $repo = ResultsRepository::current();
 

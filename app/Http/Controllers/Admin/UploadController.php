@@ -34,10 +34,6 @@ final class UploadController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $single = $request->query('action') === 'html';
 
         return view('admin.upload', [
@@ -54,10 +50,6 @@ final class UploadController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $suffix = $request->query('action') === 'html' ? '?action=html&msg=' : '?msg=';
 
         $dir = self::directory();
@@ -104,10 +96,11 @@ final class UploadController extends Controller
 
             try {
                 $file->move($dir, $name);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
                 // The file passed every check and still could not be written,
                 // which is a folder the web server cannot write to — not a bad
                 // file. Reported as msg=32 rather than blamed on the file type.
+                report($e);
                 $anyWriteFailed = true;
 
                 continue;
@@ -121,22 +114,25 @@ final class UploadController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $name = basename((string) $request->input('file'));
+        $single = $request->input('view') === 'html';
+        $deleted = false;
         $dir = realpath(self::directory());
         if ($dir !== false) {
             $real = realpath(self::directory().$name);
             if ($real !== false && str_starts_with($real, $dir.DIRECTORY_SEPARATOR) && is_file($real)) {
-                unlink($real);
+                $deleted = unlink($real);
             }
         }
 
-        $suffix = $request->input('view') === 'html' ? '?action=html&msg=31' : '?msg=31';
+        // Only claim success when a file was actually removed; a stale form
+        // (or an unwritable folder) previously reported "deleted" regardless.
+        if (! $deleted) {
+            return redirect('/admin/upload'.($single ? '?action=html' : ''))
+                ->with('error', 'The image could not be found, or could not be deleted.');
+        }
 
-        return redirect('/admin/upload'.$suffix);
+        return redirect('/admin/upload'.($single ? '?action=html&msg=31' : '?msg=31'));
     }
 
     /** @return list<array{name: string, mtime: int}> */

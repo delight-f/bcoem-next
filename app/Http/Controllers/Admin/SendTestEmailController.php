@@ -33,12 +33,13 @@ final class SendTestEmailController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $ctx = TenantContext::load();
         $user = $request->user();
+        if ($user === null) {
+            // Unreachable behind the `admin` middleware; keeps the static
+            // analyser honest without dead-ending a real request.
+            return redirect('/?msg=99');
+        }
 
         // Report the transport actually in force, so the summary reflects
         // what will happen rather than only the (possibly unused) SMTP row.

@@ -25,10 +25,6 @@ final class SpecialBestController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.special-best', [
             'ctx' => TenantContext::load(),
             'categories' => DB::table('special_best_info')->orderBy('sbi_rank')->get(),
@@ -64,10 +60,6 @@ final class SpecialBestController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         return view('judging.special-best-form', [
             'ctx' => TenantContext::load(),
             'category' => null,
@@ -76,21 +68,13 @@ final class SpecialBestController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         DB::table('special_best_info')->insert($this->storageRow($request));
 
-        return redirect('/admin/judging/special-best');
+        return redirect('/admin/judging/special-best')->with('status', 'Custom category saved.');
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
-        }
-
         $category = DB::table('special_best_info')->where('id', $id)->first();
         if ($category === null) {
             return redirect('/admin/judging/special-best');
@@ -104,20 +88,20 @@ final class SpecialBestController extends Controller
 
     public function update(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! DB::table('special_best_info')->where('id', $id)->exists()) {
+            return redirect('/admin/judging/special-best')->with('error', 'That custom category no longer exists.');
         }
 
         DB::table('special_best_info')->where('id', $id)->update($this->storageRow($request));
 
-        return redirect('/admin/judging/special-best');
+        return redirect('/admin/judging/special-best')->with('status', 'Custom category updated.');
     }
 
     /** Cascades the category's winner rows like process_delete.inc.php:66-101. */
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        if (! ($request->user()?->isAdmin() ?? false)) {
-            return redirect('/?msg=99');
+        if (! DB::table('special_best_info')->where('id', $id)->exists()) {
+            return redirect('/admin/judging/special-best')->with('error', 'That custom category no longer exists.');
         }
 
         DB::transaction(function () use ($id): void {
@@ -125,7 +109,7 @@ final class SpecialBestController extends Controller
             DB::table('special_best_info')->delete($id);
         });
 
-        return redirect('/admin/judging/special-best');
+        return redirect('/admin/judging/special-best')->with('status', 'Custom category deleted.');
     }
 
     /**
