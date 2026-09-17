@@ -18,30 +18,27 @@ Laravel 13, Bootstrap 5, Vite and Stripe.
 </div>
 
 > [!WARNING]
-> **Alpha.** Feature-complete and verified against the legacy application, but
-> not yet proven across a full production season. Treat it as production-capable
-> with caution, and keep backups.
+> **Alpha.** Treat with caution. This is for testing purposes only and should not be used to run real competitions at present.
 
 ## Why this rewrite
 
-The legacy BCOE&M app works, but its risks are structural — not fixable by
-patching: SQL assembled by string interpolation, a payment transport (PayPal
-IPN) at end-of-life with no migration path and no working ledger, unmaintained
-vendored libraries, and no static analysis or automated tests. bcoem-next
-re-hosts the exact behaviour with a structural fix for every one of those
-classes of defect.
+The legacy BCOE&M app works well but had accumulated a large amount of technical debt over the years.
+This project aims to improve on the great work already done and modernize the codebase - bringing it up to PHPStan level 8 with an empty baseline, Laravel 13, a modern updater,
+modern payment options (noting the Paypal IPN approaching EOL), full CI testing, static analysis and more.
 
-- **Zero-migration cutover** — an existing BCOE&M tenant dump loads as-is. No
-  conversion scripts, no data transformation.
-- **Behaviour pinned by tests, not assumed** — characterization tests lock the
+
+
+- ***Designed as a familiar drop-in* — an existing BCOE&M tenant dump loads as-is. No
+  conversion scripts, no data transformation. Looks the same for the end-user
+- **Behaviour pinned by tests** — characterization tests lock the
   legacy semantics users depend on (fee math, window states, judging order, BOS
   eligibility), including the quirks that must be preserved.
 - **1,100+ automated tests** run in CI against MySQL 8 and the real baseline
   schema.
 - **PHPStan level 8, permanently empty baseline** — zero suppressions, so a
   regression cannot hide.
-- **Payments you can reconcile** — Stripe Connect with idempotent webhooks and
-  an auditable `payments` ledger.
+- **Modern payment options — Stripe Connect with idempotent webhooks and
+  an auditable `payments` ledger. Paypal as a backup
 
 | Dimension | Legacy | bcoem-next |
 |---|---|---|
