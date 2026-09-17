@@ -5,6 +5,7 @@ use App\Http\Middleware\ApplySessionTimeout;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\EnsureTopAdmin;
+use App\Http\Middleware\RememberSignedInSession;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
@@ -78,6 +79,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // Point the mailer at the transport chosen in site preferences
         // (SMTP / host mail program / HTTPS provider) for every request.
         $middleware->appendToGroup('web', ApplyMailSettings::class);
+
+        // An expired session leaves no trace, so a timed-out user was bounced
+        // to a bare /login with no explanation. RememberSignedInSession drops a
+        // long-lived hint cookie while signed in; a guest still carrying it was
+        // timed out, so send them to the login screen's inactivity notice.
+        // Cleared on logout and once the notice is shown.
+        $middleware->redirectGuestsTo(fn (Request $request): string => $request->hasCookie(RememberSignedInSession::COOKIE)
+            ? route('login', ['timeout' => 1])
+            : route('login'));
+
+        $middleware->appendToGroup('web', RememberSignedInSession::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

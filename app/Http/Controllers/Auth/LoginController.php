@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\RememberSignedInSession;
 use App\Models\User;
 use App\Support\Auth\CredentialNormalizer;
 use App\Support\Tenant\TenantContext;
@@ -13,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -44,6 +46,12 @@ final class LoginController extends Controller
         $ctx = TenantContext::load();
         $now = time();
         $windows = Windows::derive($ctx, $now);
+
+        // Showing the inactivity notice consumes the "was signed in" hint so a
+        // later guest bounce is not mislabelled as a timeout.
+        if ($request->boolean('timeout')) {
+            Cookie::queue(Cookie::forget(RememberSignedInSession::COOKIE));
+        }
 
         $judgingStarted = $windows->firstJudgingDate !== null && $now > $windows->firstJudgingDate;
         $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
@@ -121,6 +129,9 @@ final class LoginController extends Controller
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // A deliberate sign-out must not be reported as a timeout later.
+        Cookie::queue(Cookie::forget(RememberSignedInSession::COOKIE));
 
         return $timedOut ? redirect('/login?timeout=1') : redirect('/');
     }
