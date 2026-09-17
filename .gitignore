@@ -20,6 +20,7 @@
 /node_modules
 /public/build
 /public/vendor/reveal
+/public/vendor/fontawesome
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
