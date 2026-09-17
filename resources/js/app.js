@@ -321,14 +321,30 @@ if (!document.getElementById('loader-submit')) {
     document.body.appendChild(loader);
 }
 const loaderEl = document.getElementById('loader-submit');
+
+// Issue #53: the overlay may only be raised when a page load will clear it.
+// mailto:/tel:/sms: links, in-page "#" placeholders (the participants phone
+// icon, the topbar print link, the sidebar map teasers) and new-tab targets
+// never replace the document, so raising it left the spinner up forever.
+const navigatesAway = (el) => {
+    if (el.getAttribute('target') === '_blank') return false;
+    const href = el.getAttribute('href') || '';
+    if (href === '' || href === '#') return false;
+    return !/^(mailto|tel|sms|javascript):/i.test(href);
+};
+
 document.querySelectorAll('.hide-loader').forEach((el) => {
     if (el.getAttribute('data-hide-loader')) return;
     el.setAttribute('data-hide-loader', '1');
     el.addEventListener('click', () => {
-        if (el.getAttribute('target') === '_blank') return;
+        if (!navigatesAway(el)) return;
         loaderEl.classList.add('show');
     });
 });
+
+// Back/forward-cache restores a page with the overlay still shown (the Back
+// button after a printed/downloaded report), so clear it on restore too.
+window.addEventListener('pageshow', () => loaderEl.classList.remove('show'));
 
 // ── Sticky back-to-top (INTERACTION-PARITY; legacy #sticky-home). A fixed
 // "back to top" link appears after scrolling past the hero.
