@@ -741,7 +741,7 @@
              lifetimeMin/endSeconds come from the effective timeout
              (preferences.prefsSessionTimeout, else session.lifetime) and
              heartbeatUrl feeds the app.js resync (ajax/heartbeat.ajax.php). --}}
-        <script>window.bcoemAdminSession = { endSeconds: {{ time() + $ctx->sessionTimeoutMinutes() * 60 }}, lifetimeMin: {{ $ctx->sessionTimeoutMinutes() }}, heartbeatUrl: "{{ route('ajax.heartbeat') }}", redirect: "{{ route('logout') }}" };</script>
+        <script>window.bcoemAdminSession = { endSeconds: {{ time() + $ctx->sessionTimeoutMinutes() * 60 }}, lifetimeMin: {{ $ctx->sessionTimeoutMinutes() }}, heartbeatUrl: "{{ route('ajax.heartbeat') }}", redirect: "{{ route('logout', ['timeout' => 1]) }}" };</script>
 
         <!-- Session Expiring Modal: 2 Minute Warning -->
         <div class="modal fade" id="session-expire-warning" tabindex="-1" aria-labelledby="session-expire-warning-label" aria-hidden="true">

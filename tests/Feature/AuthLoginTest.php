@@ -216,6 +216,29 @@ final class AuthLoginTest extends PublicSurfaceTestCase
         $this->get('/logout')->assertStatus(405);
     }
 
+    public function test_inactivity_logout_lands_on_login_with_an_explanation(): void
+    {
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ]);
+
+        // The countdowns post to /logout?timeout=1 (app.js).
+        $this->post('/logout?timeout=1')->assertRedirect('/login?timeout=1');
+        $this->assertGuest();
+
+        $this->get('/login?timeout=1')
+            ->assertOk()
+            ->assertSee('logged out automatically because your session expired through inactivity');
+    }
+
+    public function test_login_page_has_no_timeout_banner_without_the_marker(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertDontSee('logged out automatically because your session expired');
+    }
+
     public function test_admin_session_modal_logs_out_via_post_not_get(): void
     {
         $this->post('/login', [

@@ -91,6 +91,7 @@ return [
     'close' => 'Close',
     'login_problem' => 'Sorry, there was a problem with your last login attempt.',
     'login_problem_detail' => 'Please make sure your email address and password are correct.',
+    'session_expired' => 'You were logged out automatically because your session expired through inactivity. Please log in again.',
     'registration_complete' => 'The Awards Presentation will be available publicly after results are published.',
     'info_added' => 'Info added successfully.',
     'register_as_judge' => 'Register to be a Judge',

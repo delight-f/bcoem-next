@@ -142,13 +142,8 @@ const sessionHeartbeat = (url) => {
         span.textContent = fmt();
         if (remaining <= 0) {
             clearInterval(timer);
-            const btn = [...document.querySelectorAll('#nav-menu form button')]
-                .find((b) => (b.closest('form')?.getAttribute('action') || '').includes('logout'));
-            if (btn) {
-                btn.click();
-            } else {
-                window.bcoemLogout('/logout');
-            }
+            // timeout=1 tags an inactivity logout so /login explains it.
+            window.bcoemLogout('/logout?timeout=1');
         }
     };
     // Activity heartbeat: restart the countdown from the server's expiry.

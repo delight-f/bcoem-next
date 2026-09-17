@@ -15,6 +15,16 @@
     <section id="login" class="landing-page-section mt-6 mb-4">
         <header class="landing-page-section-header py-2"><h1>{{ $ctx->contestStr("contestName") }} - {{ __("site.log_in") }}</h1></header>
 
+        {{-- ?timeout=1 is set by the inactivity auto-logout (app.js countdowns
+             post to /logout?timeout=1); without it a signed-out visitor sees
+             no explanation for landing here. --}}
+        @if (request()->boolean('timeout'))
+            <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                <span class="fa fa-clock fa-lg" aria-hidden="true"></span>
+                <div>{{ __('site.session_expired') }}</div>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">

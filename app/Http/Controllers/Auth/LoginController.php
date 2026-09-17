@@ -112,11 +112,16 @@ final class LoginController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        // The inactivity countdowns log out through /logout?timeout=1 so the
+        // login screen can explain why the session ended; a manual logout
+        // still lands on the home page with no notice.
+        $timedOut = $request->boolean('timeout');
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return $timedOut ? redirect('/login?timeout=1') : redirect('/');
     }
 }
