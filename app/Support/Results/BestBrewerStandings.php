@@ -281,7 +281,7 @@ final class BestBrewerStandings
      * @param  array<string|int, float>  $poolSizes
      * @param  list<string>  $tiebreakers
      * @param  list<float>  $placePointPrefs
-     * @param  array<string,int>  $entryCounts paid+received entry counts keyed by brewer uid
+     * @param  array<string,int>  $entryCounts  paid+received entry counts keyed by brewer uid
      * @return list<object{name:string,club:string|null,points:float,places:list<int>}>
      */
     private static function scoreRows(

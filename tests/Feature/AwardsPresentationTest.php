@@ -210,8 +210,8 @@ final class AwardsPresentationTest extends AdminScreensTestCase
 
         $baseline = $this->countAwardsQueries();
 
-        $styleIds = DB::table('styles')->where('brewStyleActive', 'Y')->limit(3)->pluck('id')
-            ->map(static fn ($v): int => (int) $v)->all();
+        $styleIds = array_values(DB::table('styles')->where('brewStyleActive', 'Y')->limit(3)->pluck('id')
+            ->map(static fn ($v): int => (int) $v)->all());
         for ($i = 0; $i < 6; $i++) {
             $this->seedTableWithStyles(600 + $i, 'AWRD Scale Table '.$i, $styleIds);
         }
