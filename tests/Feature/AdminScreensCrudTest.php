@@ -281,6 +281,22 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             ->assertSessionHasErrors('hero_image_delete');
     }
 
+    public function test_hero_images_show_the_filename_as_a_subtitle_under_the_thumbnail(): void
+    {
+        $this->remember('preferences');
+
+        $image = 'beer-p54-caption.jpg';
+        file_put_contents(public_path('images/'.$image), 'stub');
+        $this->heroFiles[] = $image;
+
+        $html = (string) $this->get('/admin/hero-images')->assertOk()->getContent();
+
+        // The label stacks its contents, so the filename renders beneath the
+        // thumbnail instead of beside it.
+        self::assertStringContainsString('form-check-label d-flex flex-column align-items-center', $html);
+        self::assertStringContainsString('<span class="small text-muted text-break">'.$image.'</span>', $html);
+    }
+
     public function test_hero_images_upload_rejects_bad_extension(): void
     {
         // Extension whitelist fires before any dimension checks.

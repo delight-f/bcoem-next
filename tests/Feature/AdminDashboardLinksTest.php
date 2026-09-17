@@ -197,6 +197,14 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
             ->assertSee('Number of Labels per Entry', false)
             ->assertSee('Number of Labels per Table', false)
             ->assertSee('Number of Labels per Judge', false);
+
+        // Issue #49 follow-up: both label-matrix category headers carry the
+        // section band (same treatment as the judging-phase headings), so they
+        // cannot blend into the paper rows beneath them.
+        self::assertSame(
+            2,
+            substr_count((string) $response->getContent(), 'class="row bcoem-dash-subhead py-2"'),
+        );
     }
 
     public function test_every_active_dashboard_link_renders_with_label(): void

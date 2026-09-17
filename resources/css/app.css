@@ -1022,13 +1022,14 @@ html {
 .admin-page-title .lead,
 .admin-page-title p { margin-bottom: 0; }
 .bcoem-admin-element { padding: 0 0 15px 0; }
-/* Issue 29: small banner preview beside each hero-image filename, so the
-   admin can see which image they are toggling instead of reading filenames. */
+/* Issue 29 + #50: a banner preview for each hero-image filename so the admin
+   can see which image they are toggling; the filename is a subtitle beneath
+   the thumbnail rather than inline beside it. */
 .hero-image-thumb {
-    height: 2rem;
+    display: block;
+    height: 4rem;
     width: auto;
-    margin-right: 0.35rem;
-    vertical-align: middle;
+    margin: 0 auto 0.35rem;
     border: 1px solid var(--bs-border-color);
     border-radius: var(--bs-border-radius-sm);
     background-color: var(--bs-tertiary-bg);

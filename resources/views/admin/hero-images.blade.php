@@ -59,12 +59,12 @@
                     </legend>
                     @forelse ($images as $image)
                         @php $field = 'hero_image_'.preg_replace('/[^a-zA-Z0-9_]/', '_', $image); @endphp
-                        <div class="form-check form-check-inline">
+                        <div class="form-check form-check-inline mb-3">
                             <input class="form-check-input" type="checkbox" id="{{ $field }}" name="{{ $field }}" value="1"
                                 @checked($prefs[$image] ?? true)>
-                            <label class="form-check-label" for="{{ $field }}">
+                            <label class="form-check-label d-flex flex-column align-items-center text-center" for="{{ $field }}">
                                 <img src="{{ asset('images/'.$image) }}" alt="" class="hero-image-thumb">
-                                <span>{{ $image }}</span>
+                                <span class="small text-muted text-break">{{ $image }}</span>
                             </label>
                         </div>
                     @empty

@@ -293,8 +293,10 @@
                                                 @elseif (isset($rowLinks['matrix']))
                                                     {{-- Print Bottle/Box Labels matrix (default.admin.php:934-1241): each paper
                                                          (product link on the left) owns option rows, each with a real
-                                                         "Number of Labels per Entry/Table/Judge" 1-12 dropdown. --}}
-                                                    <div class="row" style="padding-top: 20px;">
+                                                         "Number of Labels per Entry/Table/Judge" 1-12 dropdown. The category
+                                                         header carries the same section band as the judging-phase headings
+                                                         (issue #49), so it cannot blend into the paper rows beneath it. --}}
+                                                    <div class="row bcoem-dash-subhead py-2">
                                                         <div class="col-12">
                                                             <strong class="bcoem-dash-label">{{ $category }}</strong>
                                                         </div>
