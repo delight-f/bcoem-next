@@ -30,37 +30,56 @@ final class SponsorsController extends Controller
 {
     public function index(Request $request): View|RedirectResponse
     {
+        $ctx = TenantContext::load();
+
         return view('admin.sponsors', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
             'sponsorImages' => self::imageFiles(),
+            // Public-display master switches (prefsSponsors / prefsSponsorLogos)
+            // live under Website Preferences; surface their state here so the
+            // per-row Display tick is not a dead end.
+            'sponsorsEnabled' => $ctx->prefsStr('prefsSponsors') === 'Y',
+            'logosEnabled' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
         ]);
     }
 
     public function create(Request $request): View|RedirectResponse
     {
+        $ctx = TenantContext::load();
+
         return view('admin.sponsors', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
             'sponsorImages' => self::imageFiles(),
             'editing' => null,
+            'sponsorsEnabled' => $ctx->prefsStr('prefsSponsors') === 'Y',
+            'logosEnabled' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        DB::table('sponsors')->insert(self::row($request));
+        $row = self::row($request);
+
+        DB::table('sponsors')->insert($row);
+
+        self::enablePublicDisplay((int) $row['sponsorEnable'] === 1, $row['sponsorImage'] !== null && $row['sponsorImage'] !== '');
 
         return redirect('/admin/sponsors?msg=9');
     }
 
     public function edit(Request $request, int $id): View|RedirectResponse
     {
+        $ctx = TenantContext::load();
+
         return view('admin.sponsors', [
-            'ctx' => TenantContext::load(),
+            'ctx' => $ctx,
             'sponsors' => DB::table('sponsors')->orderBy('sponsorName')->get(),
             'sponsorImages' => self::imageFiles(),
             'editing' => DB::table('sponsors')->where('id', $id)->first(),
+            'sponsorsEnabled' => $ctx->prefsStr('prefsSponsors') === 'Y',
+            'logosEnabled' => $ctx->prefsStr('prefsSponsorLogos') === 'Y',
         ]);
     }
 
@@ -81,6 +100,8 @@ final class SponsorsController extends Controller
         }
 
         DB::table('sponsors')->where('id', $id)->update($row);
+
+        self::enablePublicDisplay((int) $row['sponsorEnable'] === 1, $row['sponsorImage'] !== null && $row['sponsorImage'] !== '');
 
         return redirect('/admin/sponsors?msg=9');
     }
@@ -108,15 +129,28 @@ final class SponsorsController extends Controller
         }
         $request->validate($rules);
 
+        $anyDisplayed = false;
+        $anyDisplayedWithLogo = false;
+
         foreach ($ids as $id) {
+            $enabled = $request->boolean('sponsorEnable'.$id);
+            $image = self::blankToNull((string) $request->input('sponsorImage'.$id, ''));
+
             DB::table('sponsors')->where('id', $id)->update([
-                'sponsorEnable' => $request->boolean('sponsorEnable'.$id) ? 1 : 0,
+                'sponsorEnable' => $enabled ? 1 : 0,
                 'sponsorLevel' => self::blankToNull((string) $request->input('sponsorLevel'.$id, '')),
-                'sponsorImage' => self::blankToNull((string) $request->input('sponsorImage'.$id, '')),
+                'sponsorImage' => $image,
                 // Legacy purifies this HTML fragment; stored verbatim here.
                 'sponsorText' => self::blankToNull(trim((string) $request->input('sponsorText'.$id, ''))),
             ]);
+
+            if ($enabled) {
+                $anyDisplayed = true;
+                $anyDisplayedWithLogo = $anyDisplayedWithLogo || $image !== null;
+            }
         }
+
+        self::enablePublicDisplay($anyDisplayed, $anyDisplayedWithLogo);
 
         return redirect('/admin/sponsors?msg=9');
     }
@@ -178,6 +212,27 @@ final class SponsorsController extends Controller
         sort($files);
 
         return $files;
+    }
+
+    /**
+     * A displayed sponsor implies the public Sponsors section should be on, so
+     * saving one with Display = Yes (re)enables the master switches — the row
+     * tick otherwise had no visible effect and the section looked unwired.
+     * It never turns a switch off: a deliberate "Disable" in Website
+     * Preferences stays until the admin displays a sponsor again.
+     */
+    private static function enablePublicDisplay(bool $sponsorShown, bool $hasLogo): void
+    {
+        if (! $sponsorShown) {
+            return;
+        }
+
+        $prefs = ['prefsSponsors' => 'Y'];
+        if ($hasLogo) {
+            $prefs['prefsSponsorLogos'] = 'Y';
+        }
+
+        DB::table('preferences')->where('id', 1)->update($prefs);
     }
 
     private static function checkHttp(string $input): ?string

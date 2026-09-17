@@ -14,6 +14,16 @@
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
+        {{-- The public section is gated by two master switches under Website
+             Preferences, not by the per-row Display tick alone (issue #52).
+             Surface their state here so the tick is not a dead end. --}}
+        <p class="text-muted">
+            Public display:
+            sponsors <strong>{{ ($sponsorsEnabled ?? false) ? 'on' : 'off' }}</strong>,
+            logos <strong>{{ ($logosEnabled ?? false) ? 'on' : 'off' }}</strong>.
+            <a href="{{ url('/admin/site-preferences') }}">Manage under Website Preferences</a>.
+        </p>
+
         {{-- List with inline enable/level/image/text editors --}}
         @foreach ($sponsors as $sponsor)
             <div class="border-bottom pb-2 mb-2">

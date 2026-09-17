@@ -165,6 +165,53 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
         self::assertNull($updated['sponsorURL']); // blank_to_null
     }
 
+    /**
+     * Issue #52: the per-row Display tick alone never made a sponsor appear —
+     * the public section is gated by prefsSponsors (and prefsSponsorLogos for
+     * the logo). Saving a displayed sponsor now turns those on.
+     */
+    public function test_displaying_a_sponsor_turns_on_the_public_section(): void
+    {
+        $this->remember('preferences');
+        DB::table('preferences')->where('id', 1)->update(['prefsSponsors' => 'N', 'prefsSponsorLogos' => 'N']);
+
+        $this->post('/admin/sponsors', [
+            'sponsorName' => 'P52 Displayed',
+            'sponsorLevel' => '1',
+            'sponsorImage' => 'p52-logo.png',
+            'sponsorEnable' => '1',
+        ])->assertRedirect('/admin/sponsors?msg=9');
+
+        $this->sponsorIds[] = (int) DB::table('sponsors')->where('sponsorName', 'P52 Displayed')->value('id');
+
+        self::assertSame('Y', DB::table('preferences')->where('id', 1)->value('prefsSponsors'));
+        self::assertSame('Y', DB::table('preferences')->where('id', 1)->value('prefsSponsorLogos'));
+    }
+
+    public function test_a_hidden_sponsor_leaves_the_public_section_alone(): void
+    {
+        $this->remember('preferences');
+        DB::table('preferences')->where('id', 1)->update(['prefsSponsors' => 'N', 'prefsSponsorLogos' => 'N']);
+
+        $this->post('/admin/sponsors', [
+            'sponsorName' => 'P52 Hidden',
+            'sponsorLevel' => '1',
+            'sponsorEnable' => '0',
+        ])->assertRedirect('/admin/sponsors?msg=9');
+
+        $this->sponsorIds[] = (int) DB::table('sponsors')->where('sponsorName', 'P52 Hidden')->value('id');
+
+        self::assertSame('N', DB::table('preferences')->where('id', 1)->value('prefsSponsors'));
+    }
+
+    public function test_sponsors_screen_shows_the_public_display_state(): void
+    {
+        $this->get('/admin/sponsors')
+            ->assertOk()
+            ->assertSee('Public display:')
+            ->assertSee('Manage under Website Preferences');
+    }
+
     public function test_mods_crud_and_enable_bulk(): void
     {
         $this->post('/admin/mods', [
