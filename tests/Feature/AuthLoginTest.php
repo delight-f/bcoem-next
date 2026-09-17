@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Middleware\RememberSignedInSession;
 use Illuminate\Contracts\Hashing\Hasher;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\DB;
@@ -236,7 +237,60 @@ final class AuthLoginTest extends PublicSurfaceTestCase
     {
         $this->get('/login')
             ->assertOk()
-            ->assertDontSee('logged out automatically because your session expired');
+            ->assertDontSee('logged out automatically because your session expired through inactivity');
+    }
+
+    public function test_signed_in_request_sets_the_timeout_hint_cookie(): void
+    {
+        // The hint cookie is what lets a later guest redirect know the visitor
+        // was signed in (and so timed out) rather than a first-time visitor.
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ])->assertCookie(RememberSignedInSession::COOKIE, '1');
+    }
+
+    public function test_expired_session_guest_redirect_explains_the_timeout(): void
+    {
+        // Session gone (idle expiry wiped it) but the browser still carries the
+        // hint cookie: the auth middleware must flag the expiry, not bounce to a
+        // bare /login that leaves the operator wondering what happened.
+        $this->withCookie(RememberSignedInSession::COOKIE, '1')
+            ->get('/user/username')
+            ->assertRedirect('/login?timeout=1');
+
+        $this->get('/login?timeout=1')
+            ->assertOk()
+            ->assertSee('logged out automatically because your session expired through inactivity');
+    }
+
+    public function test_plain_guest_redirect_has_no_timeout_marker(): void
+    {
+        // Never signed in: no hint cookie, so no false "you were timed out".
+        $this->get('/user/username')->assertRedirect('/login');
+    }
+
+    public function test_logout_clears_the_timeout_hint_cookie(): void
+    {
+        // A deliberate sign-out must not be reported as a timeout later.
+        $this->post('/login', [
+            'loginUsername' => 'user.baseline@brewingcompetitions.com',
+            'loginPassword' => 'bcoem',
+        ])->assertCookie(RememberSignedInSession::COOKIE, '1');
+
+        $this->post('/logout')
+            ->assertRedirect('/')
+            ->assertCookieExpired(RememberSignedInSession::COOKIE);
+    }
+
+    public function test_timeout_notice_consumes_the_hint_cookie(): void
+    {
+        // Showing the notice once must clear the hint, or every later guest
+        // bounce would claim the session had just expired.
+        $this->withCookie(RememberSignedInSession::COOKIE, '1')
+            ->get('/login?timeout=1')
+            ->assertOk()
+            ->assertCookieExpired(RememberSignedInSession::COOKIE);
     }
 
     public function test_admin_session_modal_logs_out_via_post_not_get(): void
