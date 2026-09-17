@@ -97,6 +97,8 @@ final class FlightController extends Controller
             true,
         ));
 
+        $saved = 0;
+
         foreach ($data['flights'] ?? [] as $entryId => $flightNumber) {
             $entryId = (int) $entryId;
             $flightNumber = (int) $flightNumber;
@@ -121,9 +123,21 @@ final class FlightController extends Controller
                     FlightAssignment::flightRow($id, $flightNumber, $entryId),
                 );
             }
+
+            $saved++;
         }
 
-        return redirect('/admin/judging/flights/'.$id);
+        // The grid pre-selects flight 1 for every entry, so a save that
+        // changes nothing writes rows the page already showed as assigned —
+        // without a flash the screen reloads looking identical and the save
+        // reads as a dead button. Report the outcome either way.
+        if ($saved === 0) {
+            return redirect('/admin/judging/flights/'.$id)
+                ->with('error', 'No flight assignments were saved — no valid entries were submitted.');
+        }
+
+        return redirect('/admin/judging/flights/'.$id)
+            ->with('status', $saved === 1 ? 'Flight assignment saved.' : 'Flight assignments saved.');
     }
 
     /**
@@ -174,6 +188,8 @@ final class FlightController extends Controller
             'rounds.*.*' => ['nullable', 'regex:/^\d*$/'],
         ]);
 
+        $changed = 0;
+
         foreach ($data['rounds'] as $tableId => $flights) {
             $tableId = (int) $tableId;
             if (DB::table('judging_tables')->where('id', $tableId)->doesntExist()) {
@@ -201,10 +217,17 @@ final class FlightController extends Controller
                     ->where('flightTable', $tableId)
                     ->where('flightNumber', $flightNumber)
                     ->update(['flightRound' => $round === '' ? 0 : (int) $round]);
+
+                $changed++;
             }
         }
 
-        return redirect('/admin/judging/flights/rounds');
+        return redirect('/admin/judging/flights/rounds')->with(
+            $changed > 0 ? 'status' : 'error',
+            $changed > 0
+                ? 'Flights assigned to rounds.'
+                : 'No round assignments changed — nothing was saved.',
+        );
     }
 
     /**

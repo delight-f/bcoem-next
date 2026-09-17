@@ -207,6 +207,26 @@ final class JudgingFlightsTest extends PublicSurfaceTestCase
         self::assertNull($row['flightEntryOrder']);
     }
 
+    public function test_save_reports_its_outcome_instead_of_redirecting_silently(): void
+    {
+        $tableId = $this->seedTable();
+        $e1 = $this->seedEntry($tableId, '501');
+        $this->seedEntry($tableId, '502');
+        $this->seedEntry($tableId, '503'); // 3 entries / 2 per flight → 2 flights
+
+        // A real assignment is confirmed on the reloaded grid.
+        $this->followingRedirects()
+            ->post('/admin/judging/flights/'.$tableId, ['flights' => [$e1 => '2']])
+            ->assertOk()
+            ->assertSee('Flight assignment saved.');
+
+        // No valid entry posted: the save must say so, not reload silently.
+        $this->followingRedirects()
+            ->post('/admin/judging/flights/'.$tableId, ['flights' => [999999 => '1']])
+            ->assertOk()
+            ->assertSee('No flight assignments were saved');
+    }
+
     public function test_requires_admin(): void
     {
         $tableId = $this->seedTable();

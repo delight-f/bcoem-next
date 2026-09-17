@@ -302,6 +302,27 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
         $this->assertSame(0, (int) DB::table('judging_flights')->where('id', $this->flights[0])->value('flightRound'));
     }
 
+    public function test_round_assignment_reports_its_outcome(): void
+    {
+        $this->seedFlightTables([]);
+        $a = (int) DB::table('judging_tables')->where('tableName', 'P57 Main table')->value('id');
+        $this->flights[] = $this->insertFlight($a, 1, 501, 1);
+
+        $this->login();
+
+        // A changed round is confirmed on the reloaded sub-screen.
+        $this->followingRedirects()
+            ->post('/admin/judging/flights/rounds', ['rounds' => [$a => [1 => '2']]])
+            ->assertOk()
+            ->assertSee('Flights assigned to rounds.');
+
+        // Re-posting the same value changes nothing — and says so.
+        $this->followingRedirects()
+            ->post('/admin/judging/flights/rounds', ['rounds' => [$a => [1 => '2']]])
+            ->assertOk()
+            ->assertSee('No round assignments changed');
+    }
+
     // helpers used by payments test
 
     private function makePayment(): int
