@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Support\Payments\PaymentProviderRegistry;
 use App\Support\Payments\PaymentService;
 use App\Support\Payments\PayPalSettings;
+use App\Support\Payments\StripeSettings;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
@@ -150,6 +151,104 @@ final class PaymentSetupTest extends PublicSurfaceTestCase
             PaymentService::METHOD_PAYPAL,
             array_keys(app(PaymentProviderRegistry::class)->enabled()),
         );
+    }
+
+    // -----------------------------------------------------------------
+    // Stripe platform keys (issue #47: in-app entry, not env-only)
+    // -----------------------------------------------------------------
+
+    public function test_stripe_platform_keys_are_saved_encrypted_and_enable_connect(): void
+    {
+        $this->login(self::ADMIN);
+
+        $this->saveStripe()->assertRedirect(route('admin.payments.setup'));
+
+        $raw = (string) DB::table('preferences')->where('id', 1)->value('prefsStripe');
+        self::assertStringContainsString('ca_platform_id', $raw);
+        self::assertStringNotContainsString('sk_platform_secret', $raw, 'secret key must be encrypted at rest');
+
+        $settings = StripeSettings::get();
+        self::assertSame('ca_platform_id', $settings['client_id']);
+        self::assertSame('sk_platform_secret', $settings['secret']);
+        self::assertSame('database', $settings['source']);
+        self::assertTrue(StripeSettings::hasSecret());
+
+        // Both screens now offer the Connect flow.
+        $this->get('/admin/payments/setup')->assertOk()->assertSee('Connect with Stripe');
+        $this->get('/admin/stripe')->assertOk()->assertSee('Connect with Stripe');
+    }
+
+    public function test_stripe_blank_secret_keeps_the_stored_key(): void
+    {
+        $this->login(self::ADMIN);
+        $this->saveStripe();
+
+        $this->post('/admin/payments/setup/stripe', [
+            'client_id' => 'ca_platform_id_updated',
+            'client_secret' => '',
+        ])->assertRedirect(route('admin.payments.setup'));
+
+        $settings = StripeSettings::get();
+        self::assertSame('ca_platform_id_updated', $settings['client_id']);
+        self::assertSame('sk_platform_secret', $settings['secret'], 'blank secret must keep the stored one');
+    }
+
+    public function test_stripe_first_time_secret_is_required(): void
+    {
+        $this->login(self::ADMIN);
+
+        $this->post('/admin/payments/setup/stripe', [
+            'client_id' => 'ca_platform_id',
+            'client_secret' => '',
+        ])->assertSessionHasErrors('client_secret');
+    }
+
+    public function test_stripe_secret_is_never_rendered_back(): void
+    {
+        $this->login(self::ADMIN);
+        $this->saveStripe();
+
+        $html = (string) $this->get('/admin/payments/setup')->assertOk()->getContent();
+
+        self::assertStringNotContainsString('sk_platform_secret', $html);
+        self::assertStringContainsString('Saved — leave blank to keep', $html);
+    }
+
+    public function test_saving_stripe_keys_preserves_the_connect_values(): void
+    {
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsStripe' => json_encode(['account_id' => 'acct_1', 'webhook_secret' => 'whsec_1']),
+        ]);
+
+        $this->login(self::ADMIN);
+        $this->saveStripe();
+
+        /** @var array<string, string> $raw */
+        $raw = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsStripe'), true);
+
+        self::assertSame('acct_1', $raw['account_id']);
+        self::assertSame('whsec_1', $raw['webhook_secret']);
+        self::assertSame('ca_platform_id', $raw['client_id']);
+    }
+
+    public function test_stripe_keys_fall_back_to_env_when_nothing_is_saved(): void
+    {
+        config(['services.stripe.client_id' => 'ca_env', 'services.stripe.secret' => 'sk_env']);
+
+        $settings = StripeSettings::get();
+
+        self::assertSame('ca_env', $settings['client_id']);
+        self::assertSame('sk_env', $settings['secret']);
+        self::assertSame('env', $settings['source']);
+    }
+
+    /** @return TestResponse<Response> */
+    private function saveStripe(): TestResponse
+    {
+        return $this->post('/admin/payments/setup/stripe', [
+            'client_id' => 'ca_platform_id',
+            'client_secret' => 'sk_platform_secret',
+        ]);
     }
 
     /** @return TestResponse<Response> */

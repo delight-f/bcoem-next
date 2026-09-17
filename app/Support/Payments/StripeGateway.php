@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\Payments;
 
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
@@ -37,15 +36,15 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
     /**
      * Build from the competition's own settings: currency + connected
      * account + webhook secret come from preferences.prefsStripe, the
-     * platform secret key from config.
+     * platform secret key from StripeSettings (saved, else env).
      */
     public static function forTenant(string $successUrl = '', string $cancelUrl = ''): self
     {
         $prefs = (array) DB::table('preferences')->where('id', 1)->first();
-        $cfg = json_decode((string) ($prefs['prefsStripe'] ?? ''), true);
+        $cfg = StripeSettings::config();
 
         return new self(
-            (string) Config::get('services.stripe.secret'),
+            StripeSettings::get()['secret'],
             strtolower((string) (($cfg['currency'] ?? null) ?: ($prefs['prefsCurrency'] ?? '') ?: 'usd')),
             (string) ($cfg['webhook_secret'] ?? ''),
             isset($cfg['account_id']) && $cfg['account_id'] !== '' ? (string) $cfg['account_id'] : null,

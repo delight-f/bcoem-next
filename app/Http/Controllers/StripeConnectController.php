@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Payments\StripeSettings;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Stripe\OAuth;
 use Throwable;
 
@@ -23,15 +23,15 @@ final class StripeConnectController extends Controller
     {
         $this->guard($request);
 
-        $cfg = self::stripeConfig();
+        $cfg = StripeSettings::config();
 
         return view('admin.stripe', [
             'ctx' => TenantContext::load(),
             'salutation' => __('site.my_account'),
             'accountId' => $cfg['account_id'] ?? null,
             'webhookSecretSet' => ($cfg['webhook_secret'] ?? '') !== '',
-            'clientIdSet' => (bool) config('services.stripe.client_id'),
-            'secretKeySet' => (bool) config('services.stripe.secret'),
+            'clientIdSet' => StripeSettings::hasClientId(),
+            'secretKeySet' => StripeSettings::hasSecret(),
         ]);
     }
 
@@ -40,11 +40,11 @@ final class StripeConnectController extends Controller
     {
         $this->guard($request);
 
-        $clientId = (string) config('services.stripe.client_id');
+        $clientId = StripeSettings::get()['client_id'];
         if ($clientId === '') {
             return redirect()
                 ->route('admin.stripe')
-                ->with('error', 'STRIPE_CLIENT_ID is not configured.');
+                ->with('error', 'The Stripe OAuth client id is not configured — add the platform keys on the Payment Setup screen.');
         }
 
         $query = http_build_query([
@@ -69,13 +69,14 @@ final class StripeConnectController extends Controller
         // ponytail: SDK's static OAuth helper hits the live token
         // endpoint; untestable without a stub — kept to a single call.
         try {
+            $platform = StripeSettings::get();
             $resp = OAuth::token(
                 [
                     'grant_type' => 'authorization_code',
-                    'client_id' => (string) config('services.stripe.client_id'),
+                    'client_id' => $platform['client_id'],
                     'code' => (string) $request->input('code'),
                 ],
-                ['api_key' => (string) config('services.stripe.secret')],
+                ['api_key' => $platform['secret']],
             );
             $accountId = (string) ($resp->stripe_user_id ?? '');
         } catch (Throwable) {
@@ -87,7 +88,7 @@ final class StripeConnectController extends Controller
                 ->with('error', 'Stripe token exchange failed.');
         }
 
-        self::mergePrefs(['account_id' => $accountId]);
+        StripeSettings::merge(['account_id' => $accountId]);
 
         return redirect()->route('admin.stripe')->with('status', 'Stripe account connected.');
     }
@@ -99,7 +100,7 @@ final class StripeConnectController extends Controller
 
         $data = $request->validate(['webhook_secret' => ['required', 'string', 'starts_with:whsec_']]);
 
-        self::mergePrefs(['webhook_secret' => $data['webhook_secret']]);
+        StripeSettings::merge(['webhook_secret' => $data['webhook_secret']]);
 
         return redirect()->route('admin.stripe')->with('status', 'Webhook signing secret saved.');
     }
@@ -107,26 +108,5 @@ final class StripeConnectController extends Controller
     private function guard(Request $request): void
     {
         abort_unless($request->user()?->isAdmin() ?? false, 403);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function stripeConfig(): array
-    {
-        $prefs = DB::table('preferences')->where('id', 1)->value('prefsStripe');
-
-        return json_decode((string) ($prefs ?? ''), true) ?: [];
-    }
-
-    /**
-     * @param  array<string, string>  $patch
-     */
-    private static function mergePrefs(array $patch): void
-    {
-        DB::table('preferences')->where('id', 1)->update([
-            'prefsStripe' => json_encode(self::stripeConfig() + $patch, JSON_THROW_ON_ERROR),
-            // Legacy rows have no updated_at; leave timestamps alone.
-        ]);
     }
 }

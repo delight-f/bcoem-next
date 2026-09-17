@@ -46,12 +46,38 @@
                     <a class="btn btn-primary" href="{{ route('admin.stripe.connect') }}">Connect with Stripe</a>
                     <a class="btn btn-secondary" href="{{ route('admin.stripe') }}">Stripe settings and signing secret</a>
                 @else
-                    <p class="text-muted mb-0">
-                        Stripe cannot be switched on here yet: this installation is
-                        missing the platform keys (<code>STRIPE_CLIENT_ID</code>,
-                        <code>STRIPE_SECRET</code>).
+                    <p class="text-muted">
+                        Stripe cannot be connected yet: this installation has no platform keys.
+                        In your Stripe dashboard create a Connect platform app
+                        (Developers &rarr; API keys / Connect settings) and paste its
+                        <strong>OAuth Client ID</strong> and <strong>Secret key</strong> below.
                     </p>
                 @endif
+
+                <form method="post" action="{{ route('admin.payments.setup.stripe') }}" class="row g-3 mt-3">
+                    @csrf
+                    <div class="col-md-6">
+                        <label class="form-label" for="stripe_client_id">OAuth Client ID</label>
+                        <input class="form-control" id="stripe_client_id" name="client_id" value="{{ $stripe['clientId'] }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="stripe_client_secret">Secret key</label>
+                        <input class="form-control" id="stripe_client_secret" name="client_secret" type="password"
+                               placeholder="{{ $stripe['secretKeySet'] ? 'Saved — leave blank to keep' : '' }}">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Save Stripe platform keys</button>
+                    </div>
+                </form>
+
+                <p class="text-muted mt-3 mb-0">
+                    These are the platform's Connect keys, used to run the Connect flow — not a
+                    connected competition's keys. The secret key is stored encrypted. Leaving the
+                    field blank keeps the key that is already saved.
+                    @if ($stripe['fromEnv'])
+                        <span>Currently using this server's environment settings.</span>
+                    @endif
+                </p>
             </div>
         </div>
 

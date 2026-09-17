@@ -217,6 +217,8 @@ Route::post('/admin/payments/mark', [ManualPaymentController::class, 'markPaid']
 // are stored encrypted (PayPalSettings). Admin-gated in-controller.
 Route::get('/admin/payments/setup', [PaymentSetupController::class, 'show'])
     ->name('admin.payments.setup')->middleware('auth');
+Route::post('/admin/payments/setup/stripe', [PaymentSetupController::class, 'saveStripe'])
+    ->name('admin.payments.setup.stripe')->middleware('auth');
 Route::post('/admin/payments/setup/paypal', [PaymentSetupController::class, 'savePayPal'])
     ->name('admin.payments.setup.paypal')->middleware('auth');
 Route::post('/admin/payments/setup/paypal/remove', [PaymentSetupController::class, 'removePayPal'])

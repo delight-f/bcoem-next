@@ -16,15 +16,16 @@
                     <strong class="text-danger">not connected</strong>
                 @endif
             </li>
-            <li>Platform secret key: {{ $secretKeySet ? 'configured' : 'MISSING (set STRIPE_SECRET)' }}</li>
-            <li>OAuth client id: {{ $clientIdSet ? 'configured' : 'MISSING (set STRIPE_CLIENT_ID)' }}</li>
+            <li>Platform secret key: {{ $secretKeySet ? 'configured' : 'missing' }}</li>
+            <li>OAuth client id: {{ $clientIdSet ? 'configured' : 'missing' }}</li>
             <li>Webhook signing secret: {{ $webhookSecretSet ? 'saved' : 'not set' }}</li>
         </ul>
 
         @if ($clientIdSet && $secretKeySet)
             <a class="btn btn-primary" href="{{ route('admin.stripe.connect') }}">Connect with Stripe</a>
         @else
-            <p class="text-muted">Set STRIPE_CLIENT_ID and STRIPE_SECRET to enable connecting.</p>
+            <p class="text-muted">Add the platform keys on the
+                <a href="{{ route('admin.payments.setup') }}">Payment Setup</a> screen to enable connecting.</p>
         @endif
 
         <h2 class="mt-6">Webhook endpoint</h2>

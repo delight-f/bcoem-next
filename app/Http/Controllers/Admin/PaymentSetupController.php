@@ -6,12 +6,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Payments\PayPalSettings;
+use App\Support\Payments\StripeSettings;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Payment provider setup (issue #24 follow-up). One plain-language screen
@@ -32,7 +31,8 @@ final class PaymentSetupController extends Controller
         $this->guard($request);
 
         /** @var array<string, mixed> $stripe */
-        $stripe = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsStripe'), true) ?: [];
+        $stripe = StripeSettings::config();
+        $platform = StripeSettings::get();
         $paypal = PayPalSettings::get();
 
         return view('admin.payment-setup', [
@@ -41,8 +41,10 @@ final class PaymentSetupController extends Controller
             'stripe' => [
                 'accountId' => (string) ($stripe['account_id'] ?? ''),
                 'webhookSecretSet' => (string) ($stripe['webhook_secret'] ?? '') !== '',
-                'clientIdSet' => (bool) Config::get('services.stripe.client_id'),
-                'secretKeySet' => (bool) Config::get('services.stripe.secret'),
+                'clientId' => $platform['client_id'],
+                'clientIdSet' => $platform['client_id'] !== '',
+                'secretKeySet' => $platform['secret'] !== '',
+                'fromEnv' => $platform['source'] === 'env',
             ],
             'paypal' => [
                 'mode' => $paypal['mode'],
@@ -55,6 +57,28 @@ final class PaymentSetupController extends Controller
             'stripeWebhookUrl' => url('/webhooks/stripe'),
             'paypalWebhookUrl' => url('/webhooks/paypal'),
         ]);
+    }
+
+    /**
+     * Save the Stripe platform keys (Connect OAuth client id + secret key).
+     * First-time setup needs the secret; later saves may leave it blank to
+     * keep the stored one — same contract as the PayPal form.
+     */
+    public function saveStripe(Request $request): RedirectResponse
+    {
+        $this->guard($request);
+
+        $data = $request->validate([
+            'client_id' => ['required', 'string', 'max:255'],
+            'client_secret' => [StripeSettings::hasSecret() ? 'nullable' : 'required', 'string', 'max:1000'],
+        ]);
+
+        StripeSettings::save(
+            trim((string) $data['client_id']),
+            trim((string) ($data['client_secret'] ?? '')),
+        );
+
+        return redirect()->route('admin.payments.setup')->with('status', 'Stripe platform keys saved.');
     }
 
     public function savePayPal(Request $request): RedirectResponse
