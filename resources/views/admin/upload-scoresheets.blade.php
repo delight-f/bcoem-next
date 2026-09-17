@@ -4,6 +4,8 @@
 
         @if (request('msg') === '2')
             <p class="alert alert-success">Scoresheet PDF(s) uploaded.</p>
+        @elseif (request('msg') === '31')
+            <p class="alert alert-success">Scoresheet PDF(s) deleted.</p>
         @endif
 
         {{-- upload_scoresheets.admin.php: instructions + single/multi upload --}}
@@ -37,14 +39,17 @@
             <button type="submit" class="btn btn-primary">Upload PDF File(s)</button>
         </form>
 
-        {{-- Files in the Directory (upload_scoresheets.admin.php:131+). Delete
-             targets are legacy process.inc.php actions with no port route yet;
-             rendered disabled. --}}
+        {{-- Files in the Directory (upload_scoresheets.admin.php:131+).
+             Delete All / per-file delete are the legacy process.inc.php
+             action=delete_scoresheets and process_delete go=doc flows. --}}
         <h2>Files in the Directory</h2>
-        @if ($files->isNotEmpty())
-            {{-- TODO: legacy output — Delete All + per-file delete have no port
-                 route, rendered disabled. --}}
-            <p><button class="btn btn-danger btn-sm" disabled><span class="fa fa-trash"></span> Delete All Scoresheets</button></p>
+        @if ($files !== [])
+            <form method="POST" action="{{ route('admin.upload_scoresheets.destroy_all') }}" class="mb-3"
+                  onsubmit="return confirm('Are you sure? This will delete all scoresheets listed below. This cannot be undone.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-sm"><span class="fa fa-trash"></span> Delete All Scoresheets</button>
+            </form>
             <p>It is advised that you delete or archive scoresheets as you prepare for another competition iteration. Otherwise, your entrants may download incorrect PDFs from previous competition iterations, causing confusion.</p>
             <table class="table table-bordered table-responsive table-striped">
                 <thead>
@@ -61,7 +66,14 @@
                             <td>{{ $file }}</td>
                             <td>{{ number_format(filesize(\App\Support\Entries\UserDocs::path($file)) / 1000000, 4) }} MB</td>
                             <td>{{ \App\Support\Tenant\DateFmt::dateTime(filemtime(\App\Support\Entries\UserDocs::path($file)), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long') }}</td>
-                            <td><span class="fa fa-lg fa-trash text-muted" title="Delete &mdash; no port route yet"></span></td>
+                            <td>
+                                <form method="POST" action="{{ route('admin.upload_scoresheets.destroy', ['file' => $file]) }}"
+                                      onsubmit="return confirm('Are you sure? This will remove the file named {{ $file }} from the server.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-link p-0" title="Delete"><span class="fa fa-lg fa-trash text-danger"></span></button>
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

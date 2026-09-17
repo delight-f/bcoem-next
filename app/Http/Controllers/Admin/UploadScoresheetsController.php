@@ -22,14 +22,9 @@ final class UploadScoresheetsController extends Controller
 {
     public function show(Request $request): View|RedirectResponse
     {
-        $files = collect(is_dir(UserDocs::root()) ? scandir(UserDocs::root()) : [])
-            ->filter(fn (string|false $f): bool => is_string($f) && str_ends_with(strtolower($f), '.pdf'))
-            ->sort()
-            ->values();
-
         return view('admin.upload-scoresheets', [
             'ctx' => TenantContext::load(),
-            'files' => $files,
+            'files' => UserDocs::all(),
         ]);
     }
 
@@ -49,5 +44,30 @@ final class UploadScoresheetsController extends Controller
         }
 
         return redirect('/admin/upload-scoresheets?msg=2');
+    }
+
+    /**
+     * Delete All (legacy process.inc.php action=delete_scoresheets →
+     * rdelete(USER_DOCS)). Admin gate comes from the route middleware.
+     */
+    public function destroyAll(): RedirectResponse
+    {
+        foreach (UserDocs::all() as $name) {
+            UserDocs::delete($name);
+        }
+
+        return redirect('/admin/upload-scoresheets?msg=31');
+    }
+
+    /**
+     * Delete one file (legacy process_delete.inc.php go=doc branch →
+     * unlink(USER_DOCS.basename($filter))). UserDocs::delete clamps the
+     * name to a bare .pdf basename inside the docs root.
+     */
+    public function destroy(string $file): RedirectResponse
+    {
+        UserDocs::delete($file);
+
+        return redirect('/admin/upload-scoresheets?msg=31');
     }
 }

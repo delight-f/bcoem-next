@@ -1,6 +1,7 @@
 <x-public-layout :ctx="$ctx" :show-hero="false">
+    @php($variantCode = ['full' => 1, 'checklist' => 2, 'structured' => 3, 'nw-cider' => 4][$variant])
     <section class="landing-page-section mt-6 mb-4">
-        <h1>{{ $variant === 'structured' ? 'Structured' : 'Full' }} Scoresheet</h1>
+        <h1>{{ ['full' => 'Full', 'checklist' => 'Checklist', 'structured' => 'Structured', 'nw-cider' => 'NW Cider Structured'][$variant] }} Scoresheet</h1>
 
         @include('eval.partials.scoresheet-head', ['style' => $style])
 
@@ -20,15 +21,22 @@
 
             <input type="hidden" name="eid" value="{{ $entry->id }}">
             <input type="hidden" name="uid" value="{{ $entry->brewBrewerID }}">
+            {{-- Legacy posts the form variant so the saved row records it
+                 (eval/scoresheet.eval.php:935); the port never did. --}}
+            <input type="hidden" name="evalScoresheet" value="{{ $variantCode }}">
             <input type="hidden" name="evalStyle" value="{{ $style->id ?? ($evaluation->evalStyle ?? '') }}">
             <input type="hidden" name="evalTable" value="{{ $evaluation->evalTable ?? '' }}">
 
             {{-- Variant sections: full = score + comments per section;
-                 structured adds checklist ticks. Both share the overall
-                 block and the final consensus score. --}}
-            @include($variant === 'structured'
-                ? 'eval.partials.structured-scoresheet'
-                : 'eval.partials.full-scoresheet')
+                 structured adds checklist ticks; checklist = factor radios +
+                 descriptor grids; nw-cider = cider scales. All variants share
+                 the overall block and the final consensus score. --}}
+            @include(match ($variant) {
+                'structured' => 'eval.partials.structured-scoresheet',
+                'checklist' => 'eval.partials.checklist-scoresheet',
+                'nw-cider' => 'eval.partials.nw-cider-scoresheet',
+                default => 'eval.partials.full-scoresheet',
+            })
 
             <fieldset class="mb-4">
                 <legend>Overall Impression ({{ $points['overall'] }} possible)</legend>

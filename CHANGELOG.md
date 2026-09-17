@@ -18,9 +18,28 @@ Release notes for a tag are taken from the matching `## [version]` section below
   fallback, so enabling Stripe Connect no longer requires shell access.
   `App\Support\Payments\StripeSettings` is now the single reader/writer of that
   column, which also fixes reconnecting a different account being ignored.
+- **Electronic scoresheets gain the checklist and NW Cider forms.** The Judging
+  preferences choices "BJCP Checklist Scoresheet (Beer Only)" and "NW Cider Cup
+  Structured Scoresheet" now render their own scoresheets, save them and print
+  them, instead of silently falling back to the full or structured sheet. The
+  checklist stays beer-only (cider and mead fall back to the full sheet) and the
+  NW Cider sheet is used for cider entries, matching legacy.
+- **Uploaded scoresheets can be deleted.** The Upload Scoresheets screen's
+  Delete All and per-file controls work (admin-only; filenames are clamped to
+  the scoresheets directory).
 
 ### Fixed
 
+- **The Register menu opens the right form.** "A Judge/Steward (Quick)" and
+  "(Standard)", and the participant/judge/steward options, now render their own
+  forms instead of one identical full registration page: quick hides the contact
+  block and posts the legacy dummy defaults, and judge/steward forms carry their
+  BJCP ID and rank fields.
+- **Awards presentation assets.** Font Awesome is staged locally instead of
+  fetched from a CDN, and the sponsor images, Certificate of Analysis link and
+  table sort are repaired.
+- **Login explains an inactivity logout.** The login screen names the reason
+  when a session timed out.
 - **The at-a-glance deck lines up.** A wrapping card header dropped the status
   pill onto its own line for whichever cards had the longer titles, so the
   pills (and the text blocks beneath them) staggered across a row.

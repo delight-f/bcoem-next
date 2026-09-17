@@ -20,6 +20,11 @@
                     </span>
                 </div>
                 <div class="card-body">
+                    @if ((int) $evaluation->evalScoresheet === 2)
+                        @include('eval.partials.checklist-output')
+                    @elseif ((int) $evaluation->evalScoresheet === 4)
+                        @include('eval.partials.nw-cider-output')
+                    @else
                     <table class="table table-sm mb-4">
                         <thead><tr><th>Section</th><th>Score</th><th>Max</th></tr></thead>
                         <tbody>
@@ -56,6 +61,7 @@
                     @endif
                     @if (! empty($evaluation->evalDescriptors))
                         <p class="fs-6"><strong>Descriptors:</strong> {{ $evaluation->evalDescriptors }}</p>
+                    @endif
                     @endif
                 </div>
             </div>

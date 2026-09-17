@@ -9,7 +9,7 @@ use App\Http\Controllers\Eval\EvalProcessController;
 use App\Http\Controllers\Eval\EvalScoresheetController;
 use Illuminate\Support\Facades\Route;
 
-// Phase 4 / P4.6 — evaluation sub-app under /eval (ledger/eval-app.md).
+// Phase 4 / P4.6 — evaluation sub-app under /eval (spec §7).
 //
 // The eval app SHARES the tenant DB (legacy eval/db.eval.php used the
 // main $prefix tables); there is no second connection and no separate
@@ -19,13 +19,13 @@ use Illuminate\Support\Facades\Route;
 // extends the brewer/brewing table names (baseline_brewing_<suffix>);
 // evaluation/judging_scores stay unsuffixed, matching legacy.
 //
-// Port verdicts (ledger): dashboard, my_account, warnings, process and
-// import_scores ported now; full/structured scoresheets, scoresheet head,
-// descriptors and the judging_dashboard/judging_admin surfaces are folded
-// into the dashboard/scoresheet views above. DROPPED per ledger:
-// nw_structured_cider* (single-tenant legacy variant), checklist_* (thin
-// wrapper — jPrefsScoresheet=2 falls back to full), install_eval_db
-// (schema ships with the baseline SQL instead).
+// Ported surfaces: dashboard, my_account, warnings, process and
+// import_scores; the full, checklist, structured and NW Cider structured
+// scoresheets (selected by jPrefsScoresheet and the entry's style type);
+// descriptors; and the judging_dashboard/judging_admin surfaces folded
+// into the dashboard view. Deliberately not ported: the per-competition
+// `install_eval_db` action, because the evaluation schema ships with the
+// baseline SQL instead.
 //
 // Admin gating is in-controller (userLevel<=1) like every admin surface.
 

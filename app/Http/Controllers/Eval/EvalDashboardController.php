@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\DB;
 /**
  * Evaluation sub-app dashboard (spec P4.6): judge view of assigned tables
  * and entries, with the admin surfaces of legacy judging_dashboard /
- * judging_admin folded into one admin panel (ledger port verdict:
- * "fold into P4.6 admin UI"). Legacy dashboard.eval.php's live counters
- * and duplicate-place alerts are out of scope for the minimal port.
+ * judging_admin folded into one admin panel. Legacy dashboard.eval.php's
+ * live counters and duplicate-place alerts are out of scope for the
+ * minimal port.
  *
  * Auth is route middleware; the admin panel is gated in-controller
  * (userLevel<=1, same pattern as ManualPaymentController).
@@ -79,8 +79,6 @@ final class EvalDashboardController extends Controller
             'archive' => $archive,
             'tables' => $tables,
             'admin' => $adminPanel,
-            // jPrefsScoresheet: 1 full (checklist dropped), 3/4 structured.
-            'variant' => in_array((int) $ctx->judgingStr('jPrefsScoresheet'), [3, 4], true) ? 'structured' : 'full',
         ]);
     }
 
@@ -105,10 +103,10 @@ final class EvalDashboardController extends Controller
             return [];
         }
 
-        // Archive suffix support (ledger: archive_suffix): suffixed table
-        // names resolve through the connection prefix, e.g. ?archive=_2025
-        // reads baseline_brewing_2025. The evaluation/judging_scores tables
-        // themselves stay unsuffixed, matching eval/db.eval.php.
+        // Archive suffix support: suffixed table names resolve through the
+        // connection prefix, e.g. ?archive=_2025 reads baseline_brewing_2025.
+        // The evaluation/judging_scores tables themselves stay unsuffixed,
+        // matching eval/db.eval.php.
         return DB::table('brewing'.$archive)->whereIn('id', $ids)
             ->orderBy('id')
             ->get(['id', 'brewName', 'brewCategorySort', 'brewSubCategory', 'brewStyle']);

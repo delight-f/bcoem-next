@@ -114,6 +114,72 @@ final class EvalProcessController extends Controller
             'mouthfeelTicks.*' => ['string'],
             'flaws' => ['nullable', 'array'],
             'flaws.*' => ['string'],
+            'evalFlaws' => ['nullable', 'array'],
+            'evalFlaws.*' => ['string'],
+
+            // Checklist sheet (jPrefsScoresheet=2) factor radios — "Label: Level".
+            'evalAromaMalt' => ['nullable', 'string', 'max:255'],
+            'evalAromaHops' => ['nullable', 'string', 'max:255'],
+            'evalAromaEsters' => ['nullable', 'string', 'max:255'],
+            'evalAromaPhenols' => ['nullable', 'string', 'max:255'],
+            'evalAromaAlcohol' => ['nullable', 'string', 'max:255'],
+            'evalAromaSweetness' => ['nullable', 'string', 'max:255'],
+            'evalAromaAcidity' => ['nullable', 'string', 'max:255'],
+            'evalAppearanceHeadSize' => ['nullable', 'string', 'max:255'],
+            'evalAppearanceHeadRetention' => ['nullable', 'string', 'max:255'],
+            'evalFlavorMalt' => ['nullable', 'string', 'max:255'],
+            'evalFlavorHops' => ['nullable', 'string', 'max:255'],
+            'evalFlavorEsters' => ['nullable', 'string', 'max:255'],
+            'evalFlavorPhenols' => ['nullable', 'string', 'max:255'],
+            'evalFlavorSweetness' => ['nullable', 'string', 'max:255'],
+            'evalFlavorBitterness' => ['nullable', 'string', 'max:255'],
+            'evalFlavorAlcohol' => ['nullable', 'string', 'max:255'],
+            'evalFlavorAcidity' => ['nullable', 'string', 'max:255'],
+            'evalFlavorHarshness' => ['nullable', 'string', 'max:255'],
+            'evalMouthfeelCarbonation' => ['nullable', 'string', 'max:255'],
+            'evalMouthfeelWarmth' => ['nullable', 'string', 'max:255'],
+            'evalMouthfeelCreaminess' => ['nullable', 'string', 'max:255'],
+            'evalMouthfeelAstringency' => ['nullable', 'string', 'max:255'],
+            'evalAromaChecklistDesc' => ['nullable', 'array'],
+            'evalAromaChecklistDesc.*' => ['string'],
+            'evalAppearanceChecklistDesc' => ['nullable', 'array'],
+            'evalAppearanceChecklistDesc.*' => ['string'],
+            'evalFlavorChecklistDesc' => ['nullable', 'array'],
+            'evalFlavorChecklistDesc.*' => ['string'],
+            'evalMouthfeelChecklistDesc' => ['nullable', 'array'],
+            'evalMouthfeelChecklistDesc.*' => ['string'],
+
+            // NW Cider structured sheet (jPrefsScoresheet=4) — stored as JSON.
+            'evalAppearanceColorChoice' => ['nullable', 'string', 'max:50'],
+            'evalAppearanceColorOther' => ['nullable', 'string', 'max:50'],
+            'evalAppearanceColorInappr' => ['nullable', 'in:1'],
+            'evalAppearanceClarity' => ['nullable', 'string', 'max:10'],
+            'evalAppearanceClarityInappr' => ['nullable', 'in:1'],
+            'evalAppearanceCarb' => ['nullable', 'string', 'max:10'],
+            'evalAppearanceCarbInappr' => ['nullable', 'in:1'],
+            'evalAromaCharacteristics' => ['nullable', 'string'],
+            'evalAromaIntensity' => ['nullable', 'string', 'max:10'],
+            'evalAromaIntensityInappr' => ['nullable', 'in:1'],
+            'evalAromaQuality' => ['nullable', 'string', 'max:10'],
+            'evalAromaQualityInappr' => ['nullable', 'in:1'],
+            'evalFlavorCharacteristics' => ['nullable', 'string'],
+            'evalFlavorIntensity' => ['nullable', 'string', 'max:10'],
+            'evalFlavorIntensityInappr' => ['nullable', 'in:1'],
+            'evalFlavorQuality' => ['nullable', 'string', 'max:10'],
+            'evalFlavorQualityInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelBodyInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelSweetness' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelSweetnessInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelAcidity' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelAcidityInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelTanninBitter' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelTanninBitterInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelTanninAstringency' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelTanninAstringencyInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelBalance' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelBalanceInappr' => ['nullable', 'in:1'],
+            'evalMouthfeelLength' => ['nullable', 'string', 'max:10'],
+            'evalMouthfeelLengthInappr' => ['nullable', 'in:1'],
         ]);
 
         $joined = static fn (string $key): ?string => isset($validated[$key])
@@ -153,11 +219,95 @@ final class EvalProcessController extends Controller
             'evalAppearanceChecklist' => $joined('appearanceTicks'),
             'evalFlavorChecklist' => $joined('flavorTicks'),
             'evalMouthfeelChecklist' => $joined('mouthfeelTicks'),
-            'evalFlaws' => $joined('flaws'),
+            'evalFlaws' => $joined('flaws') ?? $joined('evalFlaws'),
             'evalInitialDate' => time(),
             'evalUpdatedDate' => time(),
         ];
 
+        // The checklist sheet stores its factor selections joined in the same
+        // columns the structured sheet uses for ticks; the NW Cider sheet
+        // stores a per-section JSON object (legacy process.eval.php).
+        $variant = (int) ($data['evalScoresheet'] ?? 0);
+        if ($variant === 2) {
+            $data = array_merge($data, $this->checklistColumns($validated));
+        } elseif ($variant === 4) {
+            $data = array_merge($data, $this->nwCiderColumns($validated));
+        }
+
         return $data;
+    }
+
+    /** Checklist factor radios per column, in the legacy assembly order. */
+    private const CHECKLIST_FACTORS = [
+        'evalAromaChecklist' => ['evalAromaMalt', 'evalAromaHops', 'evalAromaEsters', 'evalAromaPhenols', 'evalAromaAlcohol', 'evalAromaSweetness', 'evalAromaAcidity'],
+        'evalAppearanceChecklist' => ['evalAppearanceClarity', 'evalAppearanceHeadSize', 'evalAppearanceHeadRetention'],
+        'evalFlavorChecklist' => ['evalFlavorMalt', 'evalFlavorHops', 'evalFlavorEsters', 'evalFlavorPhenols', 'evalFlavorSweetness', 'evalFlavorBitterness', 'evalFlavorAlcohol', 'evalFlavorAcidity', 'evalFlavorHarshness'],
+        'evalMouthfeelChecklist' => ['evalMouthfeelBody', 'evalMouthfeelCarbonation', 'evalMouthfeelWarmth', 'evalMouthfeelCreaminess', 'evalMouthfeelAstringency'],
+    ];
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string|null>
+     */
+    private function checklistColumns(array $validated): array
+    {
+        $out = [];
+        foreach (self::CHECKLIST_FACTORS as $column => $fields) {
+            $parts = [];
+            foreach ($fields as $field) {
+                $value = $validated[$field] ?? null;
+                if (is_string($value) && $value !== '') {
+                    $parts[] = $value;
+                }
+            }
+            $out[$column] = $parts === [] ? null : implode(', ', $parts);
+        }
+
+        foreach (['evalAromaChecklistDesc', 'evalAppearanceChecklistDesc', 'evalFlavorChecklistDesc', 'evalMouthfeelChecklistDesc'] as $column) {
+            $items = $validated[$column] ?? null;
+            $out[$column] = is_array($items) && $items !== []
+                ? implode(', ', array_map(strval(...), $items))
+                : null;
+        }
+
+        return $out;
+    }
+
+    /** NW Cider fields grouped per section, matching the JSON keys legacy reads. */
+    private const NW_CIDER_SECTIONS = [
+        'evalAppearanceChecklist' => ['evalAppearanceColor', 'evalAppearanceColorInappr', 'evalAppearanceClarity', 'evalAppearanceClarityInappr', 'evalAppearanceCarb', 'evalAppearanceCarbInappr'],
+        'evalAromaChecklist' => ['evalAromaCharacteristics', 'evalAromaIntensity', 'evalAromaIntensityInappr', 'evalAromaQuality', 'evalAromaQualityInappr'],
+        'evalFlavorChecklist' => ['evalFlavorCharacteristics', 'evalFlavorIntensity', 'evalFlavorIntensityInappr', 'evalFlavorQuality', 'evalFlavorQualityInappr'],
+        'evalMouthfeelChecklist' => ['evalMouthfeelBody', 'evalMouthfeelBodyInappr', 'evalMouthfeelSweetness', 'evalMouthfeelSweetnessInappr', 'evalMouthfeelAcidity', 'evalMouthfeelAcidityInappr', 'evalMouthfeelTanninBitter', 'evalMouthfeelTanninBitterInappr', 'evalMouthfeelTanninAstringency', 'evalMouthfeelTanninAstringencyInappr', 'evalMouthfeelBalance', 'evalMouthfeelBalanceInappr', 'evalMouthfeelLength', 'evalMouthfeelLengthInappr'],
+    ];
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string|null>
+     */
+    private function nwCiderColumns(array $validated): array
+    {
+        // legacy process.eval.php: convert the colour radio to the stored
+        // evalAppearanceColor key, resolving the "Other" text choice.
+        $choice = $validated['evalAppearanceColorChoice'] ?? null;
+        $validated['evalAppearanceColor'] = match (true) {
+            $choice === '999' => $validated['evalAppearanceColorOther'] ?? null,
+            is_string($choice) && $choice !== '' => $choice,
+            default => null,
+        };
+
+        $out = [];
+        foreach (self::NW_CIDER_SECTIONS as $column => $fields) {
+            $section = [];
+            foreach ($fields as $field) {
+                $value = $validated[$field] ?? null;
+                if ($value !== null && $value !== '') {
+                    $section[$field] = $value;
+                }
+            }
+            $out[$column] = $section === [] ? null : (string) json_encode($section);
+        }
+
+        return $out;
     }
 }

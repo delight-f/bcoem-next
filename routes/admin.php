@@ -43,6 +43,12 @@ Route::middleware(['web', 'auth', 'admin'])->group(function (): void {
         ->name('admin.upload_scoresheets');
     Route::post('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'store'])
         ->name('admin.upload_scoresheets.store');
+    // Delete All / per-file (legacy action=delete_scoresheets and go=doc).
+    Route::delete('/admin/upload-scoresheets', [UploadScoresheetsController::class, 'destroyAll'])
+        ->name('admin.upload_scoresheets.destroy_all');
+    Route::delete('/admin/upload-scoresheets/{file}', [UploadScoresheetsController::class, 'destroy'])
+        ->where('file', '[A-Za-z0-9._-]+')
+        ->name('admin.upload_scoresheets.destroy');
 
     Route::get('/admin/competition-info', [CompetitionInfoController::class, 'edit'])
         ->name('admin.competition_info.edit');

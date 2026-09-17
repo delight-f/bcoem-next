@@ -19,9 +19,9 @@
         matching consensus scores entered by two or more judges.</p>
 
         @if ($admin !== null)
-            {{-- Admin panel: judging_dashboard/judging_admin folded in
-                 (ledger port verdict). Import button posts to the
-                 consensus importer; singles cannot be imported. --}}
+            {{-- Admin panel: the judging_dashboard/judging_admin surfaces
+                 folded into one. Import button posts to the consensus
+                 importer; singles cannot be imported. --}}
             <div class="card border-secondary mb-6">
                 <div class="card-header"><strong>Admin — Consensus Scoring</strong></div>
                 <div class="card-body">
@@ -68,7 +68,7 @@
                                     <td>
                                         <a class="btn btn-sm btn-primary"
                                            href="{{ route('eval.scoresheet', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">
-                                            Evaluate ({{ $variant }})
+                                            Evaluate
                                         </a>
                                         <a class="btn btn-sm btn-outline-secondary"
                                            href="{{ route('eval.output', ['entryId' => $entry->id, 'archive' => $archive ?: null]) }}">

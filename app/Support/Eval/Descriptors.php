@@ -152,4 +152,102 @@ final class Descriptors
             default => ['Acetaldehyde', 'Alcoholic', 'Astringent', 'Brettanomyces', 'Diacetyl', 'DMS', 'Estery', 'Grassy', 'Light-struck', 'Medicinal', 'Metallic', 'Musty', 'Oxidized', 'Plastic', 'Solvent', 'Sour/Acidic', 'Smoky', 'Spicy', 'Sulfury', 'Vegetal'],
         };
     }
+
+    /**
+     * Checklist-scoresheet (jPrefsScoresheet=2) layout, beer-only: per
+     * section a set of factor radios (None/Low/Medium/High) posting as
+     * named scalars, plus grouped descriptor checkboxes. Port of
+     * eval/checklist_scoresheet.eval.php's $cl_* arrays.
+     *
+     * @return array<string, array{factors: array<string, string>, descriptors: array<string, list<string>>}>
+     */
+    public static function checklist(): array
+    {
+        $malt = ['Grainy', 'Caramel', 'Bready', 'Rich', 'Dark Fruit', 'Toasty', 'Roasty', 'Burnt'];
+        $hops = ['Citrusy', 'Earthy', 'Floral', 'Grassy', 'Herbal', 'Piney', 'Spicy', 'Woody'];
+        $esters = ['Fruity', 'Apple/Pear', 'Banana', 'Berry', 'Citrus', 'Dried Fruit', 'Grape', 'Stone Fruit'];
+        $other = ['Brettanomyces', 'Fruit', 'Lactic', 'Smoke', 'Spice', 'Vinous', 'Wood'];
+
+        return [
+            'aroma' => [
+                'factors' => [
+                    'Malt' => 'evalAromaMalt',
+                    'Hops' => 'evalAromaHops',
+                    'Esters' => 'evalAromaEsters',
+                    'Phenols' => 'evalAromaPhenols',
+                    'Alcohol' => 'evalAromaAlcohol',
+                    'Sweetness' => 'evalAromaSweetness',
+                    'Acidity' => 'evalAromaAcidity',
+                ],
+                'descriptors' => ['Malt' => $malt, 'Hops' => $hops, 'Esters' => $esters, 'Other' => $other],
+            ],
+            'appearance' => [
+                'factors' => [
+                    'Clarity' => 'evalAppearanceClarity',
+                    'Head Size' => 'evalAppearanceHeadSize',
+                    'Head Retention' => 'evalAppearanceHeadRetention',
+                ],
+                'descriptors' => [
+                    'Color' => ['Straw', 'Yellow', 'Gold', 'Amber', 'Copper', 'Brown', 'Black'],
+                    'Head' => ['White', 'Ivory', 'Cream', 'Beige', 'Tan', 'Brown'],
+                    'Other' => ['Flat', 'Lacing', 'Legs', 'Opaque'],
+                ],
+            ],
+            'flavor' => [
+                'factors' => [
+                    'Malt' => 'evalFlavorMalt',
+                    'Hops' => 'evalFlavorHops',
+                    'Esters' => 'evalFlavorEsters',
+                    'Phenols' => 'evalFlavorPhenols',
+                    'Sweetness' => 'evalFlavorSweetness',
+                    'Bitterness' => 'evalFlavorBitterness',
+                    'Alcohol' => 'evalFlavorAlcohol',
+                    'Acidity' => 'evalFlavorAcidity',
+                    'Harshness' => 'evalFlavorHarshness',
+                ],
+                'descriptors' => [
+                    'Malt' => $malt, 'Hops' => $hops, 'Esters' => $esters, 'Other' => $other,
+                    'Balance' => ['Malty', 'Hoppy', 'Even'],
+                ],
+            ],
+            'mouthfeel' => [
+                'factors' => [
+                    'Body' => 'evalMouthfeelBody',
+                    'Carbonation' => 'evalMouthfeelCarbonation',
+                    'Warmth' => 'evalMouthfeelWarmth',
+                    'Creaminess' => 'evalMouthfeelCreaminess',
+                    'Astringency' => 'evalMouthfeelAstringency',
+                ],
+                'descriptors' => [
+                    'Flaws' => ['Flat', 'Gushed', 'Hot', 'Harsh', 'Slick'],
+                    'Finish' => ['Cloying', 'Sweet', 'Medium', 'Dry', 'Biting'],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * NW Cider structured sheet (jPrefsScoresheet=4, cider entries only)
+     * scales and colour list — port of eval/nw_structured_cider.eval.php's
+     * $color_array and slider labels. Scale values stay numeric 0-4 to
+     * match the legacy slider payloads stored in the JSON checklist.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function nwCider(): array
+    {
+        return [
+            'colors' => ['Pale', 'Straw', 'Gold', 'Deep Gold', 'Amber', 'Copper', 'Chestnut', 'Pink', 'Red', 'Purple', 'Garnet'],
+            'clarity' => ['Opaque', 'Cloudy', 'Hazy', 'Clear', 'Brilliant'],
+            'carb' => ['Still', '', 'Petillant', '', 'Sparkling'],
+            'intensity' => ['Low', '', 'Medium', '', 'High'],
+            'quality' => ['Low', '', 'Medium', '', 'High'],
+            'sweetness' => ['Dry', '', 'Medium', '', 'Sweet'],
+            'body' => ['Thin', '', 'Medium', '', 'Full'],
+            'acidity' => ['Low', '', 'Medium', '', 'High'],
+            'tannin' => ['Low', '', 'Medium', '', 'High'],
+            'balance' => ['Malic', '', 'Balanced', '', 'Tannic'],
+            'length' => ['Short', '', 'Medium', '', 'Long'],
+        ];
+    }
 }

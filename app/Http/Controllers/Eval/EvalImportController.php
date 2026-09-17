@@ -53,8 +53,8 @@ final class EvalImportController extends Controller
                 ->with('status', self::summary($report));
         }
 
-        // Same keys the legacy ajax endpoint echoed (minus the dropped
-        // flagged bucket, superseded by the ledger's MAX-wins pin).
+        // Same keys the legacy ajax endpoint echoed (minus the legacy
+        // `flagged` bucket, which the MAX-wins rule supersedes).
         return response()->json([
             'status' => (string) $report['status'],
             'scores_imported_count' => (string) $report['imported'],

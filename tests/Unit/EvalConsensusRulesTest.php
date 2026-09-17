@@ -11,8 +11,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Unit pins for the ported consensus engine
  * (App\Support\Eval\EvalConsensus), mirroring the expectations of
- * tests/Characterization/EvalConsensusTest.php against the real code:
- * ledger/eval-app.md #2–#6.
+ * tests/Characterization/EvalConsensusTest.php against the real code.
  */
 final class EvalConsensusRulesTest extends TestCase
 {

@@ -13,10 +13,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Scoresheet rendering (spec P4.6): full (generic BJCP) and structured
- * variants selected by judging_preferences.jPrefsScoresheet — checklist
- * (2) falls back to full, NW-cider variant dropped per ledger. Output
- * views render the saved evaluations for an entry.
+ * Scoresheet rendering (spec P4.6): full (generic BJCP), checklist (beer
+ * only), structured, and NW Cider structured variants selected by
+ * judging_preferences.jPrefsScoresheet and the entry's style type —
+ * mapping follows eval/scoresheet.eval.php:121-145,292-306.
  *
  * Legacy db.eval.php resolved the entry's style row with a version-aware
  * query; the port prefers the evaluation's stored style id and otherwise
@@ -47,7 +47,7 @@ final class EvalScoresheetController extends Controller
             ->first(static fn ($row) => $row->evalJudgeInfo === $user->id || $user->isAdmin());
 
         [$style, $styleType] = $this->styleFor($entry, $evaluation);
-        $variant = in_array((int) $ctx->judgingStr('jPrefsScoresheet'), [3, 4], true) ? 'structured' : 'full';
+        $variant = self::variantFor((int) $ctx->judgingStr('jPrefsScoresheet'), $styleType);
 
         return view('eval.scoresheet', [
             'ctx' => $ctx,
@@ -60,8 +60,25 @@ final class EvalScoresheetController extends Controller
             'descriptors' => Descriptors::descriptors($styleType),
             'ticks' => Descriptors::ticks($styleType),
             'flaws' => Descriptors::flaws($styleType),
+            'checklist' => Descriptors::checklist(),
+            'nwCider' => Descriptors::nwCider(),
             'variant' => $variant,
         ]);
+    }
+
+    /**
+     * Legacy variant resolution (eval/scoresheet.eval.php:121-145,292-306):
+     * the checklist sheet is beer-only, and only a cider entry gets the NW
+     * Cider structured form under preference 4.
+     */
+    public static function variantFor(int $pref, int $styleType): string
+    {
+        return match ($pref) {
+            2 => in_array($styleType, [2, 3], true) ? 'full' : 'checklist',
+            3 => 'structured',
+            4 => $styleType === 2 ? 'nw-cider' : 'structured',
+            default => 'full',
+        };
     }
 
     public function output(Request $request, int $entryId): View

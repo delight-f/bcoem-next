@@ -12,8 +12,7 @@
             </a>
         @else
             <p>No judging dashboard is available for your account right now.
-            Judge dashboards appear once you are assigned to a table and the
-            judging window is open.</p>
+            The dashboard appears to registered judges while the judging window is open.</p>
         @endif
     </section>
 </x-public-layout>

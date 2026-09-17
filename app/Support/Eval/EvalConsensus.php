@@ -10,12 +10,12 @@ use stdClass;
 /**
  * Evaluation → official-score consensus engine (spec P4.6, ticket P4.6).
  *
- * Port of eval/ajax/import_scores.ajax.php pinned by ledger/eval-app.md
- * #2–#6 and tests/Characterization/EvalConsensusTest.php:
+ * Port of eval/ajax/import_scores.ajax.php, pinned by
+ * tests/Characterization/EvalConsensusTest.php:
  *
  *  - import requires ≥2 evaluations per entry (one ⇒ "singles" bucket);
  *  - official score = MAX of the judges' evalFinalScore (highest wins,
- *    NOT an average — deliberate weirdness, preserved per ledger);
+ *    NOT an average — a deliberate legacy quirk, preserved);
  *  - place = max numeric place > 0, else no place (NULL sentinel; legacy
  *    used [] / "" before a final zero-scrub pass, reproduced below);
  *  - mini-BOS = max flag across judges (>0 ⇒ 1);
@@ -29,11 +29,12 @@ use stdClass;
  * (the typed BCOEM repositories are MysqliDb-backed and used from the
  * legacy-connection tests); same tables, no second connection.
  *
- * Ledger supersession note: legacy additionally refused to insert (and
- * flagged) when judges' final scores disagreed (the `flagged` bucket at
- * ajax/import_scores.ajax.php:264-271). The ledger pins MAX-wins once ≥2
- * evaluations exist ([38,42] ⇒ imported 42), matching
- * EvalConsensusTest::provideConsensusGroups, so no unanimity gate here.
+ * Supersession note: legacy additionally refused to insert (and flagged)
+ * when judges' final scores disagreed (the `flagged` bucket at
+ * ajax/import_scores.ajax.php:264-271). tests/Characterization/
+ * EvalConsensusTest::provideConsensusGroups expects MAX-wins once two or
+ * more evaluations exist ([38,42] ⇒ imported 42), so there is no unanimity
+ * gate here.
  */
 final class EvalConsensus
 {
@@ -129,8 +130,8 @@ final class EvalConsensus
     }
 
     /**
-     * Existing score row: sync place/type/mini-BOS only — entered score
-     * columns are never overwritten (ledger #5).
+     * Existing score row: sync place/type/mini-BOS only — the entered
+     * score columns are never overwritten.
      *
      * @param  list<stdClass>  $rows
      * @param  array{status: int, imported: int, updated: int, singles: list<int>, discrepancies: list<string>}  $report

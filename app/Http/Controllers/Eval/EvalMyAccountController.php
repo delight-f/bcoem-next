@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * my_account.eval.php port (spec P4.6): the "Judging Dashboard" prompt
- * injected into the judge's account view. Legacy gating (:7-18) kept:
- * assigned as a judge (assignment='J') AND brewerJudge='Y' AND inside
- * the judging window. Legacy rendered this fragment on the brewer
- * account page; here it is a dedicated /eval/my-account surface so the
- * brewer slices stay untouched.
+ * injected into the judge's account view.
+ *
+ * Legacy gating (eval/my_account.eval.php:7) reads the `staff` row via
+ * brewer_assignment() — staff_judge == 1 — plus brewerJudge='Y', and only
+ * shows the prompt inside the judging window. It does NOT require a
+ * judging_assignments row; that is what the /eval dashboard lists.
  */
 final class EvalMyAccountController extends Controller
 {
@@ -34,16 +35,13 @@ final class EvalMyAccountController extends Controller
             ->where('uid', $uid)
             ->first();
 
-        $assigned = DB::table('judging_assignments')
-            ->where('bid', $uid)
-            ->where('assignment', 'J')
-            ->exists();
+        $staffJudge = (int) DB::table('staff')->where('uid', $uid)->value('staff_judge') === 1;
 
         $now = time();
 
         return view('eval.my-account', [
             'ctx' => $ctx,
-            'judgeDashboard' => $assigned
+            'judgeDashboard' => $staffJudge
                 && $brewer !== null && $brewer->brewerJudge === 'Y'
                 && $now > (int) ($ctx->judgingStr('jPrefsJudgingOpen') ?? 0)
                 && $now < (int) ($ctx->judgingStr('jPrefsJudgingClosed') ?? 0),

@@ -10,9 +10,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
 
 /**
- * Eval sub-app feature pins (P4.6, ledger/eval-app.md):
+ * Eval sub-app feature pins (P4.6):
  *  - /eval is auth-gated; admin panel + import are userLevel<=1 only;
- *  - scoresheet variants render (full + structured per jPrefsScoresheet);
+ *  - the full, checklist, structured and NW Cider scoresheet variants
+ *    render per jPrefsScoresheet + the entry's style type;
  *  - process round-trip stores an evaluation bound to the submitting
  *    judge (legacy ownership binding) and 403s foreign edits;
  *  - import consensus round-trip: ≥2 evaluations ⇒ judging_scores row
@@ -80,6 +81,7 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
         }
         DB::table('judging_tables')->whereIn('id', $this->tables !== [] ? $this->tables : [0])->delete();
         DB::table('brewing')->whereIn('id', $this->entries !== [] ? $this->entries : [0])->delete();
+        DB::table('staff')->where('uid', 9202)->delete();
         DB::table('brewer')->whereIn('uid', [9202, 9203])->delete();
         DB::table('users')->whereIn('id', [9201, 9202, 9203])->delete();
         DB::table('judging_preferences')->where('id', 1)->update($this->origJudgingPrefs);
@@ -111,6 +113,16 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
         $this->entries[] = $id;
 
         return $id;
+    }
+
+    /** Entry whose style resolves to a cider (baseline styles 12/018, type 2). */
+    private function makeCiderEntry(): int
+    {
+        return $this->makeEntry([
+            'brewCategorySort' => '12',
+            'brewCategory' => '12',
+            'brewSubCategory' => '018',
+        ]);
     }
 
     /**
@@ -206,19 +218,111 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
 
     public function test_scoresheet_variants_render_per_preference(): void
     {
-        $entryId = $this->makeEntry();
+        $beer = $this->makeEntry();
 
         // Baseline ships jPrefsScoresheet=3 → structured.
         $this->login(self::JUDGE);
-        $this->get("/eval/scoresheet/{$entryId}")
+        $this->get("/eval/scoresheet/{$beer}")
             ->assertOk()
             ->assertSee('Structured Scoresheet')
             ->assertSee('Fermentation characteristics'); // tick label
 
         DB::table('judging_preferences')->where('id', 1)->update(['jPrefsScoresheet' => '1']);
-        $this->get("/eval/scoresheet/{$entryId}")
+        $this->get("/eval/scoresheet/{$beer}")->assertOk()->assertSee('Full Scoresheet');
+
+        // Preference 2 renders the checklist sheet for a beer entry.
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsScoresheet' => '2']);
+        $this->get("/eval/scoresheet/{$beer}")
             ->assertOk()
-            ->assertSee('Full Scoresheet');
+            ->assertSee('Checklist Scoresheet')
+            ->assertSee('name="evalAromaMalt"', false);
+
+        // …but a cider entry falls back to the full sheet (checklist is beer only).
+        $cider = $this->makeCiderEntry();
+        $this->get("/eval/scoresheet/{$cider}")->assertOk()->assertSee('Full Scoresheet');
+    }
+
+    public function test_preference_4_renders_nw_cider_only_for_cider_entries(): void
+    {
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsScoresheet' => '4']);
+
+        $beer = $this->makeEntry();
+        $cider = $this->makeCiderEntry();
+
+        $this->login(self::JUDGE);
+
+        // Beer under preference 4 stays on the generic structured sheet.
+        $this->get("/eval/scoresheet/{$beer}")->assertOk()->assertSee('Structured Scoresheet');
+
+        // Cider under preference 4 gets the NW Cider sheet.
+        $this->get("/eval/scoresheet/{$cider}")
+            ->assertOk()
+            ->assertSee('NW Cider Structured Scoresheet')
+            ->assertSee('name="evalAppearanceColorChoice"', false);
+    }
+
+    public function test_checklist_submission_stores_factor_and_descriptor_columns(): void
+    {
+        $entryId = $this->makeEntry();
+
+        $this->login(self::JUDGE);
+        $this->post('/eval/process', [
+            'eid' => $entryId,
+            'evalScoresheet' => 2,
+            'evalFinalScore' => 40,
+            'evalOverallScore' => 8,
+            'evalAromaMalt' => 'Malt: Low',
+            'evalAromaHops' => 'Hops: Medium',
+            'evalAromaChecklistDesc' => ['Malt: Caramel', 'Hops: Citrusy'],
+            'evalFlaws' => ['Diacetyl'],
+        ])->assertRedirect('/eval?msg=3');
+
+        $row = DB::table('evaluation')->where('eid', $entryId)->first();
+        self::assertNotNull($row);
+        self::assertSame(2, (int) $row->evalScoresheet);
+        self::assertSame('Malt: Low, Hops: Medium', $row->evalAromaChecklist);
+        self::assertSame('Malt: Caramel, Hops: Citrusy', $row->evalAromaChecklistDesc);
+        self::assertSame('Diacetyl', $row->evalFlaws);
+
+        // The output view renders the checklist columns for this variant.
+        $this->get("/eval/scoresheet/{$entryId}/output")
+            ->assertOk()
+            ->assertSee('Malt: Low, Hops: Medium');
+    }
+
+    public function test_nw_cider_submission_stores_json_sections(): void
+    {
+        $entryId = $this->makeCiderEntry();
+
+        $this->login(self::JUDGE);
+        $this->post('/eval/process', [
+            'eid' => $entryId,
+            'evalScoresheet' => 4,
+            'evalFinalScore' => 38,
+            'evalOverallScore' => 8,
+            'evalAppearanceColorChoice' => 'Gold',
+            'evalAppearanceClarity' => '3',
+            'evalAromaCharacteristics' => 'Apple, floral',
+            'evalAromaIntensity' => '2',
+        ])->assertRedirect('/eval?msg=3');
+
+        $row = DB::table('evaluation')->where('eid', $entryId)->first();
+        self::assertNotNull($row);
+        self::assertSame(4, (int) $row->evalScoresheet);
+
+        $appearance = json_decode((string) $row->evalAppearanceChecklist, true);
+        self::assertSame('Gold', $appearance['evalAppearanceColor']);
+        self::assertSame('3', $appearance['evalAppearanceClarity']);
+
+        $aroma = json_decode((string) $row->evalAromaChecklist, true);
+        self::assertSame('Apple, floral', $aroma['evalAromaCharacteristics']);
+        self::assertSame('2', $aroma['evalAromaIntensity']);
+
+        // The output view renders the decoded NW Cider sections.
+        $this->get("/eval/scoresheet/{$entryId}/output")
+            ->assertOk()
+            ->assertSee('Gold')
+            ->assertSee('Apple, floral');
     }
 
     public function test_process_round_trip_binds_evaluation_to_submitting_judge(): void
@@ -254,18 +358,18 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
 
     public function test_import_consensus_round_trip_and_idempotency(): void
     {
-        // Consensus entry: two judges, MAX wins (ledger #3), place and
-        // mini-BOS take the max across judges.
+        // Consensus entry: two judges, MAX wins; place and mini-BOS take
+        // the max across judges.
         $consensus = $this->makeEntry();
         $this->makeEvaluation($consensus, 9202, ['evalFinalScore' => 38, 'evalPlace' => 0, 'evalMiniBOS' => 0]);
         $this->makeEvaluation($consensus, 9203, ['evalFinalScore' => 42, 'evalPlace' => 2, 'evalMiniBOS' => 1]);
 
-        // Single evaluation: never imported (ledger #2).
+        // Single evaluation: never imported.
         $single = $this->makeEntry();
         $this->makeEvaluation($single, 9202, ['evalFinalScore' => 40]);
 
-        // Already-scored entry: entered score must survive untouched; the
-        // empty place/mini-BOS get filled from the evaluations (ledger #5).
+        // Already-scored entry: the entered score must survive untouched;
+        // the empty place/mini-BOS get filled from the evaluations.
         $scored = $this->makeEntry();
         DB::table('judging_scores')->insert([
             'eid' => $scored,
@@ -335,10 +439,11 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
         $this->get('/eval')->assertSee('Import complete:', false);
     }
 
-    public function test_my_account_gates_judging_dashboard_on_window_and_assignment(): void
+    public function test_my_account_gates_judging_dashboard_on_window_and_staff_judge(): void
     {
-        // Gating requires an actual judge assignment (legacy :7).
-        $this->makeAssignedTable();
+        // Legacy gates on the staff row (brewer_assignment → staff_judge),
+        // not on a judging_assignments row.
+        DB::table('staff')->updateOrInsert(['uid' => 9202], ['staff_judge' => 1]);
 
         // Baseline judging window closed long ago.
         $this->login(self::JUDGE);
