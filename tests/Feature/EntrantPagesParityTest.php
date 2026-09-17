@@ -160,6 +160,48 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
             ->assertSee('Entry Edit Deadline:');
     }
 
+    /**
+     * The pay button must read as a button only when it IS one: greyed
+     * (btn-secondary) and disabled with an explanatory tooltip when nothing is
+     * collectable, blue (btn-primary) otherwise. A disabled btn-primary only
+     * drops to 65% opacity, so it still looked clickable.
+     */
+    public function test_pay_button_is_greyed_out_and_explained_when_nothing_is_payable(): void
+    {
+        // A real per-entry fee exists; this entrant simply owes nothing.
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFee' => '10.00']);
+        DB::table('brewing')->where('brewBrewerID', 1)->delete();
+
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee('btn-secondary hide-loader disabled', false)
+            ->assertSee('No fees are payable.', false)
+            ->assertDontSee('btn-primary hide-loader', false);
+    }
+
+    public function test_pay_button_is_blue_when_fees_are_payable(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFee' => '10.00']);
+        DB::table('brewing')->where('brewBrewerID', 1)->delete();
+        DB::table('brewing')->insert([
+            'brewName' => 'Parity Unpaid Entry',
+            'brewCategorySort' => '1',
+            'brewCategory' => '1',
+            'brewSubCategory' => 'A',
+            'brewBrewerID' => '1',
+            'brewConfirmed' => '1',
+            'brewPaid' => '0',
+            'brewReceived' => '1',
+            'brewJudgingNumber' => '900002',
+        ]);
+
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee('btn-primary hide-loader', false)
+            ->assertDontSee('btn-secondary hide-loader', false)
+            ->assertDontSee('No fees are payable.', false);
+    }
+
     public function test_pay_renders_account_surface(): void
     {
         // The legacy PayPal $pay_modal ("Return to Merchant" / confirm-submit)

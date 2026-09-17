@@ -3,6 +3,12 @@
      /list (public/account) and /pay (public/pay) — index.pub.php renders
      the same list.pub.php block for both sections. --}}
     @php($msg = (int) request('msg'))
+    {{-- Pay button colour: blue only when there is something to collect.
+         Bootstrap's .btn.disabled keeps btn-primary's blue at 65% opacity, so
+         a disabled primary still reads as an actionable button — use a grey
+         button instead. The tooltip stays on the wrapper (below) because
+         .btn.disabled sets pointer-events:none on the anchor. --}}
+    @php($payButtonClass = $payDisabled ? 'btn-secondary' : 'btn-primary')
     @if ($msg === 5)
         <p class="alert alert-danger d-print-none">{{ __('site.deleted_ok') }}</p>
     @elseif ($msg === 2)
@@ -32,11 +38,12 @@
                 @if ($addEntryShow)
                     <a class="btn btn-primary" href="{{ url('/brew') }}"><i class="fa fa-plus-circle me-2"></i>{{ __('site.add_entry') }}</a>
                 @endif
-                {{-- Disabled when nothing is payable. The tooltip lives on a
+                {{-- Disabled when nothing is payable, and greyed (btn-secondary)
+                     rather than a faded btn-primary. The tooltip lives on the
                      wrapper: .btn.disabled sets pointer-events:none, so the
-                     disabled anchor itself can never fire a hover. --}}
+                     anchor itself can never fire a hover. --}}
                 <span class="d-grid" @if ($payDisabled) data-toggle="tooltip" data-bs-placement="top" title="No fees are payable." @endif>
-                    <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>{{ __('site.pay') }}</a>
+                    <a class="btn {{ $payButtonClass }} hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>{{ __('site.pay') }}</a>
                 </span>
                 <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>{{ __('site.edit_account') }}</a>
                 <a class="btn btn-dark" href="{{ url('/user/username') }}"><i class="fa fa-envelope me-2"></i>{{ __('site.change_email') }}</a>
@@ -67,7 +74,7 @@
         <div class="d-grid gap-2 mb-5 d-print-none">
             <a class="btn btn-primary {{ $windows->entry === App\Support\Tenant\WindowState::Before ? 'disabled' : '' }}" href="{{ url('/brew?filter='.$info['brewer']->id) }}"><i class="fa fa-plus-circle me-2"></i>Add Entry</a>
             <span class="d-grid" @if ($payDisabled) data-toggle="tooltip" data-bs-placement="top" title="No fees are payable." @endif>
-                <a class="btn btn-primary hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
+                <a class="btn {{ $payButtonClass }} hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
             </span>
             <a class="btn btn-dark" href="{{ url('/list/edit-account') }}"><i class="fa fa-user me-2"></i>Edit Account</a>
         </div>
