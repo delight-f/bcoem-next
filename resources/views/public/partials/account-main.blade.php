@@ -70,9 +70,22 @@
 
     {{-- Legacy mobile-only sticky button stack (brewer_entries.pub.php):
          d-md-none grid; the Add Entry href always carries the brewer id. --}}
+    @php($addEntryButtonClass = $addEntryShow ? 'btn-primary' : 'btn-secondary disabled')
+    {{-- Why Add Entry is unavailable, worded to the real reason. A disabled
+         btn-primary only fades to 65% opacity and still reads as clickable, so
+         the colour changes to grey instead; the tooltip sits on the wrapper
+         because .btn.disabled sets pointer-events:none on the anchor. --}}
+    @php($addEntryReason = match (true) {
+        $windows->compPaidEntryLimitReached => 'The competition paid entry limit has been reached.',
+        $windows->compEntryLimitReached => 'The competition entry limit has been reached.',
+        $windows->entry === App\Support\Tenant\WindowState::Before => 'Entry registration has not opened yet.',
+        default => 'Entry registration has closed.',
+    })
     <section class="mb-3 d-block d-sm-block d-md-none">
         <div class="d-grid gap-2 mb-5 d-print-none">
-            <a class="btn btn-primary {{ $windows->entry === App\Support\Tenant\WindowState::Before ? 'disabled' : '' }}" href="{{ url('/brew?filter='.$info['brewer']->id) }}"><i class="fa fa-plus-circle me-2"></i>Add Entry</a>
+            <span class="d-grid" @if (! $addEntryShow) data-toggle="tooltip" data-bs-placement="top" title="{{ $addEntryReason }}" @endif>
+                <a class="btn {{ $addEntryButtonClass }}" href="{{ url('/brew?filter='.$info['brewer']->id) }}" @if (! $addEntryShow) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-plus-circle me-2"></i>Add Entry</a>
+            </span>
             <span class="d-grid" @if ($payDisabled) data-toggle="tooltip" data-bs-placement="top" title="No fees are payable." @endif>
                 <a class="btn {{ $payButtonClass }} hide-loader {{ $payDisabled ? 'disabled' : '' }}" href="{{ url('/pay') }}#pay-fees" @if ($payDisabled) aria-disabled="true" tabindex="-1" @endif><i class="fa fa-lg fa-money-bill me-2"></i>Pay Entry Fees</a>
             </span>

@@ -202,6 +202,45 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
             ->assertDontSee('No fees are payable.', false);
     }
 
+    /**
+     * The sticky mobile Add Entry button always renders, so a faded
+     * btn-primary still promised an action it could not perform once the entry
+     * window closed. It is greyed (btn-secondary) and disabled with a reason
+     * whenever the entry window is not open, and blue only when it is.
+     */
+    public function test_add_entry_button_is_greyed_out_and_explained_when_entry_closed(): void
+    {
+        $this->closeEntryWindow();
+
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee('btn-secondary disabled', false)
+            ->assertSee('Entry registration has closed.', false)
+            ->assertDontSee('btn-primary" href="'.url('/brew?filter=1').'"', false);
+    }
+
+    public function test_add_entry_button_is_blue_when_entry_window_open(): void
+    {
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee('btn-primary" href="'.url('/brew?filter=1').'"', false)
+            ->assertDontSee('btn-secondary disabled', false)
+            ->assertDontSee('Entry registration has closed.', false);
+    }
+
+    public function test_add_entry_button_explains_entry_registration_not_yet_open(): void
+    {
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => Date::now()->addDays(2)->getTimestamp(),
+            'contestEntryDeadline' => Date::now()->addDays(9)->getTimestamp(),
+        ]);
+
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee('btn-secondary disabled', false)
+            ->assertSee('Entry registration has not opened yet.', false);
+    }
+
     public function test_pay_renders_account_surface(): void
     {
         // The legacy PayPal $pay_modal ("Return to Merchant" / confirm-submit)
