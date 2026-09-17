@@ -8,6 +8,56 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.11] - 2026-09-17
+
+### Added
+
+- **Stripe's platform keys can be entered in the admin.** Payment Setup now
+  carries inline OAuth Client ID and Secret key fields, stored in
+  `preferences.prefsStripe` with the secret encrypted at rest and an env
+  fallback, so enabling Stripe Connect no longer requires shell access.
+  `App\Support\Payments\StripeSettings` is now the single reader/writer of that
+  column, which also fixes reconnecting a different account being ignored.
+
+### Fixed
+
+- **The at-a-glance deck lines up.** A wrapping card header dropped the status
+  pill onto its own line for whichever cards had the longer titles, so the
+  pills (and the text blocks beneath them) staggered across a row.
+- **Contact form and contacts list (issue #54).** "Enable Contact Form" now
+  exposes the form on the landing page, not only at `/contact`. Official email
+  links no longer print the address — each is a signed, throttled redirect that
+  opens the visitor's mail program, so address harvesters find nothing — and the
+  form joins registration's spam belt (rate limit + `spatie/laravel-honeypot`).
+  The cryptic "Contact Form CC" option now explains that CC means carbon copy.
+- **Sponsors (issue #52).** Ticking Display on a sponsor now publishes it:
+  saving a displayed sponsor turns the public section on (and its logos when a
+  logo is chosen), and the screen shows both master switches with a link to
+  Website Preferences.
+- **Inactivity logout (issue #48).** The auto-logout lands on the login page
+  with a banner explaining why, instead of a bare login screen.
+- **The loader overlay no longer hangs (issue #53).** It is raised only for
+  links that actually navigate, so the email-a-participant `mailto:` links, the
+  phone icon, the topbar print link and the sidebar map teasers stop leaving a
+  permanent spinner; Back no longer restores it from the cache, and the phone
+  icon is a real `tel:` link.
+- **Judging assignment (issues #44, #46).** The pool checkboxes work again (a
+  wrong element id left them permanently disabled); entrants who mark
+  themselves available as a judge/steward join the pool automatically; the pool
+  screen links to per-table assignment and blocks it with a clear alert when no
+  tables exist; and the flight grid and "Assign Flights to Rounds" sub-screen
+  report the outcome of a save instead of reloading silently.
+- **Account page (issue #45).** The mobile "Add Entry" button is grey and inert,
+  with a tooltip naming the reason, when the entry window is closed or a limit
+  is reached — instead of a faded blue control that still looked clickable.
+- **Presentation fixes.** BOS cup mats keep "Mini-BOS" casing and the dashboard
+  Reports phase headings sit in their own band (issue #49); hero-image captions
+  sit under their thumbnail and the entry-sorting "Print Bottle/Box Labels
+  (PDF)" headers carry the same band (issue #50); the Competition Info section
+  cards are white with a theme-blue title (issue #51); and the discount
+  threshold and discounted fee stay hidden until Discount Multiple Entries is
+  Yes (issue #55).
+
 ## [4.1.0-alpha.10] - 2026-09-16
 
 ### Fixed
