@@ -122,6 +122,28 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('name="styleEntryLimit-'.$set.'-'.$group.'" value="5"', false);
     }
 
+    /**
+     * Issue #55: the discount threshold and the discounted fee only mean
+     * something when Discount Multiple Entries is Yes, so the field group
+     * starts hidden otherwise.
+     */
+    public function test_discount_fields_are_hidden_until_the_discount_is_enabled(): void
+    {
+        $this->login();
+
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFeeDiscount' => 'N']);
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('class="discount-fields d-none"', false)
+            ->assertSee('Minimum Entries for Discount');
+
+        DB::table('contest_info')->where('id', 1)->update(['contestEntryFeeDiscount' => 'Y']);
+        $this->get('/admin/site-preferences/entries')
+            ->assertOk()
+            ->assertSee('class="discount-fields"', false)
+            ->assertDontSee('discount-fields d-none', false);
+    }
+
     public function test_entries_tab_matches_legacy_structure_and_options(): void
     {
         $this->login();

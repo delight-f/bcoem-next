@@ -443,23 +443,50 @@
                         <span class="form-text">Designate Yes or No if your competition offers a discounted entry fee after a certain number is reached.</span>
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFeeDiscountNum" class="col-md-4 col-form-label">Minimum Entries for Discount</label>
-                    <div class="col-md-8">
-                        <input class="form-control" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="text" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}">
-                        <span class="form-text">The entry threshold participants must exceed to take advantage of the per entry fee discount (designated below). If no discounted fee exists, leave blank.</span>
-                    </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="contestEntryFee2" class="col-md-4 col-form-label">Discounted Entry Fee</label>
-                    <div class="col-md-8">
-                        <div class="input-group" style="width:auto;">
-                            <span class="input-group-text">{{ $cur }}</span>
-                            <input class="form-control" id="contestEntryFee2" name="contestEntryFee2" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryFee2') }}">
+                {{-- Issue #55: the threshold and the discounted fee only mean
+                     something when Discount Multiple Entries is Yes, so they
+                     stay hidden otherwise. Values are kept (not cleared) — the
+                     radio is the source of truth for the fee model, so
+                     re-enabling the discount does not lose the configuration. --}}
+                <div id="discount-fields" class="discount-fields{{ $c('contestEntryFeeDiscount') !== 'Y' ? ' d-none' : '' }}">
+                    <div class="mb-4 row">
+                        <label for="contestEntryFeeDiscountNum" class="col-md-4 col-form-label">Minimum Entries for Discount</label>
+                        <div class="col-md-8">
+                            <input class="form-control" id="contestEntryFeeDiscountNum" name="contestEntryFeeDiscountNum" type="text" style="width:auto;" value="{{ $c('contestEntryFeeDiscountNum') }}">
+                            <span class="form-text">The entry threshold participants must exceed to take advantage of the per entry fee discount (designated below). If no discounted fee exists, leave blank.</span>
                         </div>
-                        <span class="form-text">Fee for a single, discounted entry.</span>
+                    </div>
+                    <div class="mb-4 row">
+                        <label for="contestEntryFee2" class="col-md-4 col-form-label">Discounted Entry Fee</label>
+                        <div class="col-md-8">
+                            <div class="input-group" style="width:auto;">
+                                <span class="input-group-text">{{ $cur }}</span>
+                                <input class="form-control" id="contestEntryFee2" name="contestEntryFee2" type="number" step=".01" style="width:auto;" value="{{ $c('contestEntryFee2') }}">
+                            </div>
+                            <span class="form-text">Fee for a single, discounted entry.</span>
+                        </div>
                     </div>
                 </div>
+                <script>
+                    // Issue #55: reveal the discount threshold + rate only while
+                    // Discount Multiple Entries is Yes.
+                    (function () {
+                        var fields = document.getElementById('discount-fields');
+                        if (!fields) { return; }
+                        var radios = document.querySelectorAll('input[name="contestEntryFeeDiscount"]');
+                        if (!radios.length) { return; }
+                        var sync = function () {
+                            var yes = Array.prototype.some.call(radios, function (r) {
+                                return r.checked && r.value === 'Y';
+                            });
+                            fields.classList.toggle('d-none', !yes);
+                        };
+                        Array.prototype.forEach.call(radios, function (r) {
+                            r.addEventListener('change', sync);
+                        });
+                        sync();
+                    })();
+                </script>
                 <div class="mb-4 row">
                     <label for="contestEntryFeePassword" class="col-md-4 col-form-label">Member Discount Password</label>
                     <div class="col-md-8">
