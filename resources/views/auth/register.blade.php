@@ -44,6 +44,18 @@
                 </div>
             @endif
 
+            {{-- register.sec.php:137-146 — admin lead, and the quick-view
+                 explainer (register_text_012: dummy address/phone + bcoem). --}}
+            @if ($adminRegister ?? false)
+                <p class="lead">
+                    @if ($quickView)Quick @endif Register
+                    @if ($go === 'judge') a Judge @elseif ($go === 'steward') a Steward @endif
+                </p>
+                @if ($quickView)
+                    <p class="fs-6">Quickly add a participant to the competition&rsquo;s judge/steward pool. A dummy address and phone number will be used and a default password of <em>bcoem</em> will be given to each participant added via this screen.</p>
+                @endif
+            @endif
+
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link {{ $go === 'entrant' ? 'active' : '' }}"
@@ -95,43 +107,52 @@
                     </div>
                 </div>
 
-                <div class="mb-4 row">
-                    <label for="password" class="col-md-3 col-form-label">{{ __('site.password') }} *</label>
-                    <div class="col-md-9">
-                        <input class="form-control" id="password" name="password" type="password" required>
+                {{-- register.sec.php:496-553 — password fields sit inside the
+                     view=="default" block, so the admin quick form omits them
+                     (legacy posts a fixed default password server-side). --}}
+                @unless ($adminRegister && $quickView)
+                    <div class="mb-4 row">
+                        <label for="password" class="col-md-3 col-form-label">{{ __('site.password') }} *</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="password" name="password" type="password" required>
+                        </div>
                     </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="password-confirm" class="col-md-3 col-form-label">{{ __('site.confirm_password') }} *</label>
-                    <div class="col-md-9">
-                        <input class="form-control" id="password-confirm" name="password_confirmation" type="password" required>
+                    <div class="mb-4 row">
+                        <label for="password-confirm" class="col-md-3 col-form-label">{{ __('site.confirm_password') }} *</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="password-confirm" name="password_confirmation" type="password" required>
+                        </div>
                     </div>
-                </div>
+                @endunless
 
-                <div class="mb-4 row">
-                    <label class="col-md-3 col-form-label">{{ __('site.security_question') }} *</label>
-                    <div class="col-md-9">
-                        <select class="form-select" name="userQuestion" required>
-                            <option value="">{{ __('site.select_security_question') }}</option>
-                            <option value="What is your favorite all-time beer to drink?" {{ old('userQuestion') === 'What is your favorite all-time beer to drink?' ? 'selected' : '' }}>
-                                What is your favorite all-time beer to drink?
-                            </option>
-                            <option value="What is the name of your first pet?" {{ old('userQuestion') === 'What is the name of your first pet?' ? 'selected' : '' }}>
-                                What is the name of your first pet?
-                            </option>
-                            <option value="In what city were you born?" {{ old('userQuestion') === 'In what city were you born?' ? 'selected' : '' }}>
-                                In what city were you born?
-                            </option>
-                        </select>
+                {{-- register.sec.php:555-597 — security Q/A only for
+                     self-registration; admins get the legacy random defaults. --}}
+                @unless ($adminRegister)
+                    <div class="mb-4 row">
+                        <label class="col-md-3 col-form-label">{{ __('site.security_question') }} *</label>
+                        <div class="col-md-9">
+                            <select class="form-select" name="userQuestion" required>
+                                <option value="">{{ __('site.select_security_question') }}</option>
+                                <option value="What is your favorite all-time beer to drink?" {{ old('userQuestion') === 'What is your favorite all-time beer to drink?' ? 'selected' : '' }}>
+                                    What is your favorite all-time beer to drink?
+                                </option>
+                                <option value="What is the name of your first pet?" {{ old('userQuestion') === 'What is the name of your first pet?' ? 'selected' : '' }}>
+                                    What is the name of your first pet?
+                                </option>
+                                <option value="In what city were you born?" {{ old('userQuestion') === 'In what city were you born?' ? 'selected' : '' }}>
+                                    In what city were you born?
+                                </option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="userQuestionAnswer" class="col-md-3 col-form-label">{{ __('site.security_answer') }} *</label>
-                    <div class="col-md-9">
-                        <input class="form-control" id="userQuestionAnswer" name="userQuestionAnswer" type="text" required
-                               value="{{ old('userQuestionAnswer') }}">
+                    <div class="mb-4 row">
+                        <label for="userQuestionAnswer" class="col-md-3 col-form-label">{{ __('site.security_answer') }} *</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="userQuestionAnswer" name="userQuestionAnswer" type="text" required
+                                   value="{{ old('userQuestionAnswer') }}">
+                        </div>
                     </div>
-                </div>
+                @endunless
 
                 <div class="mb-4 row">
                     <label for="brewerFirstName" class="col-md-3 col-form-label">{{ __('site.first_name') }} *</label>
@@ -147,8 +168,12 @@
                                value="{{ old('brewerLastName') }}">
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label for="brewerCountry" class="col-md-3 col-form-label">{{ __('site.country') }}</label>
+                {{-- register.sec.php:601-785 — country through pro-am sit inside
+                     the view=="default" block. The admin quick form hides them
+                     and submits the legacy dummy contact values instead. --}}
+                @unless ($adminRegister && $quickView)
+                    <div class="mb-4 row">
+                        <label for="brewerCountry" class="col-md-3 col-form-label">{{ __('site.country') }}</label>
                     <div class="col-md-9">
                         <input class="form-control" id="brewerCountry" name="brewerCountry" type="text"
                                value="{{ old('brewerCountry', 'United States') }}">
@@ -227,8 +252,50 @@
                         </select>
                     </div>
                 </div>
+                @else
+                    {{-- register.sec.php:383-390 — quick-view dummy contact
+                         values, hidden so the quick form stays minimal. --}}
+                    <input type="hidden" name="brewerAddress" value="1234 Main Street">
+                    <input type="hidden" name="brewerCity" value="Anytown">
+                    <input type="hidden" name="brewerState" value="CO">
+                    <input type="hidden" name="brewerZip" value="80000">
+                    <input type="hidden" name="brewerCountry" value="United States">
+                    <input type="hidden" name="brewerPhone1" value="1234567890">
+                @endunless
 
+                {{-- register.sec.php:822-990 — judge/steward profile fields. The
+                     store already persists these (brewerJudgeID, rank CSV); the
+                     form supplied none of them, so every role rendered alike. --}}
                 @if ($go === 'judge' || $go === 'steward')
+                    <div class="mb-4 row">
+                        <label for="brewerJudgeID" class="col-md-3 col-form-label">{{ __('site.bjcp_id') }}</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="brewerJudgeID" name="brewerJudgeID" type="text" maxlength="25"
+                                   value="{{ old('brewerJudgeID') }}">
+                        </div>
+                    </div>
+                @endif
+                @if ($go === 'judge')
+                    <div class="mb-4 row">
+                        <label class="col-md-3 col-form-label">{{ __('site.bjcp_rank') }}</label>
+                        <div class="col-md-9">
+                            @foreach ([
+                                'Non-BJCP', 'Rank Pending', 'Apprentice', 'Provisional', 'Recognized',
+                                'Certified', 'National', 'Master', 'Honorary Master', 'Grand Master',
+                                'Honorary Grand Master',
+                            ] as $i => $rank)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="brewerJudgeRank[]"
+                                           value="{{ $rank }}" id="rank_{{ $i }}"
+                                           @checked(old('brewerJudgeRank.0', 'Non-BJCP') === $rank)>
+                                    <label class="form-check-label" for="rank_{{ $i }}">{{ $rank }}</label>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if (($go === 'judge' || $go === 'steward') && ! $adminRegister)
                     <div class="mb-4 row">
                         <label for="brewerJudgeWaiver" class="col-md-3 col-form-label">{{ __('site.waiver') }} *</label>
                         <div class="col-md-9 form-check mt-2">

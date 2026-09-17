@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -167,6 +168,16 @@ final class RegisterController extends Controller
             // "on but broken" must reject, not skip.
             $rules['cf-turnstile-response'] = ['required', new TurnstileCheck];
         }
+        if ($adminRegister) {
+            // Legacy admin registration (register.sec.php:373-390) hides the
+            // password and security Q/A and substitutes fixed defaults, so
+            // none of the three may be required here. `confirmed` still fires
+            // on the standard form, which posts the password field; the quick
+            // form omits it entirely and `nullable` short-circuits.
+            $rules['password'] = ['nullable', 'string', 'max:72', 'confirmed'];
+            $rules['userQuestion'] = ['nullable', 'string'];
+            $rules['userQuestionAnswer'] = ['nullable', 'string'];
+        }
 
         try {
             $data = $request->validate($rules);
@@ -180,6 +191,15 @@ final class RegisterController extends Controller
                 ]);
             }
             throw $e;
+        }
+
+        if ($adminRegister) {
+            // Defaults for the fields the admin form does not collect
+            // (register.sec.php:375-387). Downstream code (insert, confirmation
+            // email rows) can then treat them like any other submitted value.
+            $data['password'] = ($data['password'] ?? '') !== '' ? $data['password'] : 'bcoem';
+            $data['userQuestion'] = $data['userQuestion'] ?? 'Randomly generated.';
+            $data['userQuestionAnswer'] = $data['userQuestionAnswer'] ?? Str::random(6);
         }
 
         $username = CredentialNormalizer::username($data['user_name']);
