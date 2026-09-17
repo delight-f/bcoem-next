@@ -55,8 +55,15 @@ Route::get('/past-winners/{filter}', [PublicController::class, 'pastWinners'])->
 // POST (legacy includes/process.inc.php?dbTable=contacts&action=email).
 Route::get('/volunteers', [PublicController::class, 'volunteers'])->name('volunteers');
 Route::get('/contact', [PublicController::class, 'contact'])->name('contact');
+// Spam-safe per-official email link (issue #54): signed, so only a link the
+// site generated works, and throttled to blunt address harvesting.
+Route::get('/contact/{contact}/email', [PublicController::class, 'contactEmail'])
+    ->name('contact.email')->middleware(['signed', 'throttle:20,1']);
 Route::get('/sponsors', [PublicController::class, 'sponsors'])->name('sponsors');
-Route::post('/contact', [PublicController::class, 'contactStore'])->name('contact.store');
+Route::post('/contact', [PublicController::class, 'contactStore'])->name('contact.store')
+    // Issue #54: the public contact form carries the same anti-spam belt as
+    // registration — a rate limit plus spatie/laravel-honeypot.
+    ->middleware(['throttle:6,1', ProtectAgainstSpam::class]);
 
 // Auth (Phase 3 / Slice B). Login lives at clean /login (canonical); the
 // legacy query shapes (?section=login, go=password/action=forgot/reset)

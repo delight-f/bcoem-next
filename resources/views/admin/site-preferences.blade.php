@@ -953,6 +953,8 @@
                             <input class="form-check-input" type="radio" name="prefsEmailCC" value="1" id="ccYes" @checked($p('prefsEmailCC') === '1')><label class="form-check-label" for="ccYes">Yes</label></div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="prefsEmailCC" value="0" id="ccNo" @checked($p('prefsEmailCC') !== '1')><label class="form-check-label" for="ccNo">No</label></div>
+                        <span class="form-text d-block">CC means "carbon copy": when Yes, the person who filled in the contact
+                            form also receives a copy of their own message.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">

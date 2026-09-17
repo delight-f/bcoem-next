@@ -375,6 +375,28 @@ final class PublicController extends Controller
     }
 
     /**
+     * Spam-safe "email this official" link (issue #54): the contacts list links
+     * here through a Laravel signed URL instead of printing a mailto: address,
+     * so harvesting the page HTML yields no addresses. The signed middleware
+     * rejects tampered links, and the route is throttled to blunt enumeration.
+     *
+     * ponytail: a client that fetches the signed link still learns the address;
+     * the throttle is the ceiling. Move to a per-contact form with CSRF if
+     * harvesting ever shows up in the logs.
+     */
+    public function contactEmail(Request $request, int $contact): RedirectResponse
+    {
+        $row = DB::table('contacts')->where('id', $contact)->first();
+
+        $address = trim((string) ($row->contactEmail ?? ''));
+        if ($row === null || $address === '') {
+            abort(404);
+        }
+
+        return redirect()->away('mailto:'.$address);
+    }
+
+    /**
      * Section-page salutation for standalone public surfaces (volunteers,
      * contact, sponsors). Legacy index.pub.php:106-111 renders for
      * non-default sections: the contest-name h1 plus the logged-in

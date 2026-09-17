@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Mail\ContactMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 /**
  * Standalone volunteers + contact public pages (legacy volunteers.sec.php /
@@ -81,14 +82,49 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
     public function test_contact_page_lists_officials_when_mode_n(): void
     {
         $this->assertSame('N', (string) DB::table('preferences')->where('id', 1)->value('prefsContact'));
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
 
         $this->get('/contact')
             ->assertOk()
             ->assertSeeInOrder([
                 'Use the links below to contact individuals involved with coordinating this competition:',
                 'Default Admin',
-                'user.baseline@brewingcompetitions.com',
-            ]);
+            ])
+            // Issue #54: the address is never printed — each row links through a
+            // signed, throttled redirect so scrapers harvest nothing.
+            ->assertDontSee((string) $contact->contactEmail)
+            ->assertSee('/contact/'.$contact->id.'/email?signature=', false);
+    }
+
+    public function test_contact_email_link_redirects_to_the_mail_client(): void
+    {
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
+
+        $this->get(URL::signedRoute('contact.email', ['contact' => $contact->id]))
+            ->assertRedirect('mailto:'.$contact->contactEmail);
+    }
+
+    public function test_contact_email_link_rejects_an_unsigned_url(): void
+    {
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
+
+        // No signature: the signed middleware must refuse it.
+        $this->get('/contact/'.$contact->id.'/email')->assertForbidden();
+    }
+
+    public function test_home_contact_section_renders_the_form_when_mode_y(): void
+    {
+        DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'Y']);
+
+        // Issue #54: the landing #contact section used to show the officials
+        // list even in form mode, so "Enable Contact Form" had no effect here.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Use the form below to contact a competition official.')
+            ->assertSee('Send Message');
     }
 
     public function test_contact_page_renders_form_when_mode_y(): void
@@ -178,6 +214,37 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         } finally {
             DB::table('preferences')->where('id', 1)->update(['prefsEmailCC' => $origCc]);
         }
+    }
+
+    /**
+     * Issue #54: the contact form carries the same honeypot belt as
+     * registration — a bot that fills the hidden trap field is discarded
+     * silently and nothing is sent.
+     */
+    public function test_contact_form_is_honeypot_guarded(): void
+    {
+        DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'Y']);
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
+
+        $html = (string) $this->get('/contact')->assertOk()->getContent();
+        self::assertMatchesRegularExpression('/name="valid_from"/', $html);
+        self::assertSame(1, preg_match('/name="(my_name_[A-Za-z0-9]+)"/', $html, $m));
+        $trap = (string) ($m[1] ?? '');
+        self::assertNotSame('', $trap, 'the honeypot trap field must render in the form');
+
+        Mail::fake();
+
+        $this->post('/contact', [
+            'to' => (int) $contact->id,
+            'from_name' => 'Spam Bot',
+            'from_email' => 'bot@example.com',
+            'subject' => 'buy things',
+            'message' => 'spam',
+            $trap => 'filled in by a bot',
+        ])->assertOk();
+
+        Mail::assertNothingSent();
     }
 
     public function test_contact_form_validates_required_fields(): void

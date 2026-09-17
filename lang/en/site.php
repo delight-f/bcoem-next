@@ -79,6 +79,7 @@ return [
     'archived_not_available' => 'Archived data is not available.',
     'sponsors' => 'Sponsors',
     'contact_intro' => 'Use the links below to contact individuals involved with coordinating this competition:',
+    'contact_email_link' => 'Email',
     'contact' => 'Contact',
     'results' => 'Results',
     'club_other_hint' => 'Select "None" if you are not affiliated with a club. Select "Other" if your club is not on the list - be sure to use the search box.',

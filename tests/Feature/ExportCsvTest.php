@@ -349,7 +349,10 @@ final class ExportCsvTest extends PublicSurfaceTestCase
             })
             ->all();
 
-        $positions = array_map(fn (string $row): int => (int) strpos($body, "\n".$row."\n"), $scanOrder);
+        // Re-index: Collection::filter preserves the ORIGINAL keys, so a
+        // sibling row sitting between two of our fixture rows leaves a gap and
+        // the self-comparison below failed on the key set, not the order.
+        $positions = array_values(array_map(fn (string $row): int => (int) strpos($body, "\n".$row."\n"), $scanOrder));
         $this->assertSame($positions, array_slice($positions, 0), '');
         $ordered = $positions;
         sort($ordered);

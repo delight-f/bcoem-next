@@ -507,7 +507,9 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('Disable Contact Form - List Contacts')
             ->assertSee('Disable Contact Form - Do Not List Contacts')
             ->assertSee('SMTP Settings Test')
-            ->assertSee('Contact Form CC');
+            ->assertSee('Contact Form CC')
+            // Issue #54: "CC" is spelled out for non-technical organizers.
+            ->assertSee('carbon copy');
     }
 
     public function test_contacts_renders_help_modal_and_view_all_link(): void

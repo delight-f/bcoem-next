@@ -129,6 +129,9 @@ final class HomePageTest extends PublicSurfaceTestCase
             $count = DB::table('contacts')->count();
             if ($count === 0) {
                 $response->assertSee('No contacts have been listed', false);
+            } elseif ($mode === 'Y') {
+                // Issue #54: form mode exposes the contact form here too.
+                $response->assertSee('Use the form below to contact a competition official', false);
             } else {
                 $response->assertSee('Use the links below to contact individuals involved', false);
             }
