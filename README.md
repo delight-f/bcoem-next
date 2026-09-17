@@ -5,8 +5,7 @@
 **A ground-up Laravel rewrite of [BCOE&M](https://www.brewingcompetitions.com/) —
 Brew Competition Online Entry & Management**
 
-Same database schema, same URLs, same output documents. Rebuilt on PHP 8.4+,
-Laravel 13, Bootstrap 5, Vite and Stripe.
+Rebuilt on PHP 8.4+,Laravel 13, Bootstrap 5, Vite and Stripe.
 
 [![PHP](https://img.shields.io/badge/PHP-8.4%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)](https://laravel.com/)
