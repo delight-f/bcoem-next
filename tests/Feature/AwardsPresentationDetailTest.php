@@ -112,6 +112,22 @@ final class AwardsPresentationDetailTest extends AdminScreensTestCase
         self::assertStringContainsString('AWRD Special Best', $html);
     }
 
+    public function test_coa_scoring_dialog_renders_real_anchor(): void
+    {
+        $this->seedEntries(1);
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsWinnerMethod' => 0,
+            'prefsShowBestBrewer' => 1,
+            'prefsScoringCOA' => 1,
+        ]);
+
+        $html = (string) $this->get('/awards')->getContent();
+
+        // The Circuit of America link must be a real <a>, not escaped markup.
+        self::assertStringContainsString('<a href="https://www.masterhomebrewerprogram.com/circuit-of-america"', $html);
+        self::assertStringNotContainsString('&lt;a href', $html);
+    }
+
     public function test_best_brewer_slide_renders_when_enabled(): void
     {
         $this->seedEntries(1);
