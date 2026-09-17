@@ -30,17 +30,39 @@ env -u APP_ENV -u CACHE_STORE vendor/bin/phpunit
 
 ## Known-good baseline failures — do not chase
 
-These fail on a clean checkout of `main` and are unrelated to feature work:
+As of 2026-09-17 a clean checkout of `main` is **green**. The three failures this
+section used to list
+(`AdminDashboardLinksTest::test_every_active_dashboard_link_renders_with_label`,
+`AdminDashboardLinksTest::test_every_active_dashboard_route_responds`,
+`JudgingConfigTest::test_judging_session_round_trip_stores_epochs_and_blank_to_null`)
+no longer reproduce — they were fixed or were environment artifacts, not
+regressions to expect. Confirm against a clean tree (`git stash` or a scratch
+worktree) before calling anything a regression.
 
-- `AdminDashboardLinksTest::test_every_active_dashboard_link_renders_with_label` —
-  `All By Table` not found.
-- `AdminDashboardLinksTest::test_every_active_dashboard_route_responds` —
-  `/admin/output/pullsheets` returns 403.
-- `JudgingConfigTest::test_judging_session_round_trip_stores_epochs_and_blank_to_null`
-  — timezone offset.
+## The MySQL port trap — read before touching a test's DB gate
 
-Confirm against a clean tree (`git stash` or a scratch worktree) instead of
-assuming a regression.
+Four output classes (`OutputPairsATest`, `OutputLabelsAwardTest`,
+`OutputLabelsBottleTest`, `OutputLabelsBoxJudgeTest`) each hand-rolled a MySQL
+availability probe whose DSN **omitted the port**, so it always dialled `3306`.
+On a machine whose competition DB is on `3307` (this one) the probe threw, and
+because `markTestSkipped()` fires inside `setUp()` *after* the app has booted,
+Laravel's `tearDown()` never ran `HandleExceptions::flushState()` — so PHPUnit
+reported the leaked handlers as *"Test code or tested code did not remove its own
+error handlers"*, a message that hides the real cause. All 23 tests in those four
+classes errored that way and their PDF paths had **no** local coverage at all;
+on CI (MySQL on `3306`) the same tests were green, which is what made it look
+like a mystery.
+
+They now extend `PublicSurfaceTestCase`, whose probe is port-aware
+(`mysql:host=…;port=…`). Do not hand-roll a new gate — extend that base or copy
+its DSN exactly. Two corollaries worth remembering:
+
+- A skip reported as a *leaked error handler* error means a `markTestSkipped()`
+  fired in `setUp()`; look for the skip's real reason, not a PDF problem.
+- `BCOEM_TEST_DB_*` values in `.env` must name a database that exists. `.env`
+  points `BCOEM_TEST_DB_NAME` at `bcoem_test_fix`, which is absent on `3307`
+  (only `bcoem_test` is present) — export `BCOEM_TEST_DB_NAME=bcoem_test`, or
+  create and seed `bcoem_test_fix`.
 
 ## Local database
 

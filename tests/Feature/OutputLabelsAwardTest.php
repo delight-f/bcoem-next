@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Http\Controllers\Output\LabelsController;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
 /**
  * Award / medal / winner-address labels (output/labels.output.php
@@ -17,7 +16,7 @@ use Tests\TestCase;
  * prefsWinnerMethod=1 (by category) branch emits winner labels, and asserts
  * the empty-sheet contract when no winners exist.
  */
-final class OutputLabelsAwardTest extends TestCase
+final class OutputLabelsAwardTest extends PublicSurfaceTestCase
 {
     private const ADMIN_EMAIL = 'p52w.admin@brewingcompetitions.com';
 
@@ -50,25 +49,6 @@ final class OutputLabelsAwardTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
-        $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
-        try {
-            new \PDO("mysql:host={$host};dbname={$name}", getenv('BCOEM_TEST_DB_USER') ?: 'root', getenv('BCOEM_TEST_DB_PASS') ?: 'root');
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('MySQL not available: '.$e->getMessage());
-        }
-
-        config()->set('database.connections.mysql', array_merge(config('database.connections.mysql'), [
-            'host' => $host,
-            'port' => getenv('BCOEM_TEST_DB_PORT') ?: '3306',
-            'database' => $name,
-            'username' => getenv('BCOEM_TEST_DB_USER') ?: 'root',
-            'password' => getenv('BCOEM_TEST_DB_PASS') ?: 'root',
-            'prefix' => 'baseline_',
-        ]));
-        config()->set('database.default', 'mysql');
-        DB::purge('mysql');
 
         DB::table('users')->where('id', self::ADMIN_ID)->delete();
         DB::table('users')->insert([

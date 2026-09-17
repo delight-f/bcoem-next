@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Http\Controllers\Output\LabelsController;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
 /**
  * Bottle-label matrix (output/labels.output.php go=entries): the six-pair
@@ -18,7 +17,7 @@ use Tests\TestCase;
  * a mead entry (M1A) and a plain lager (02B) so each branch is exercised
  * against the baseline styles table.
  */
-final class OutputLabelsBottleTest extends TestCase
+final class OutputLabelsBottleTest extends PublicSurfaceTestCase
 {
     private const ADMIN_EMAIL = 'p52l.admin@brewingcompetitions.com';
 
@@ -38,25 +37,6 @@ final class OutputLabelsBottleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
-        $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
-        try {
-            new \PDO("mysql:host={$host};dbname={$name}", getenv('BCOEM_TEST_DB_USER') ?: 'root', getenv('BCOEM_TEST_DB_PASS') ?: 'root');
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('MySQL not available: '.$e->getMessage());
-        }
-
-        config()->set('database.connections.mysql', array_merge(config('database.connections.mysql'), [
-            'host' => $host,
-            'port' => getenv('BCOEM_TEST_DB_PORT') ?: '3306',
-            'database' => $name,
-            'username' => getenv('BCOEM_TEST_DB_USER') ?: 'root',
-            'password' => getenv('BCOEM_TEST_DB_PASS') ?: 'root',
-            'prefix' => 'baseline_',
-        ]));
-        config()->set('database.default', 'mysql');
-        DB::purge('mysql');
 
         DB::table('users')->where('id', self::ADMIN_ID)->delete();
         DB::table('users')->insert([

@@ -7,7 +7,6 @@ namespace Tests\Feature;
 use App\Http\Controllers\Output\LabelsController;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
 /**
  * Box labels, virtual judge labels, staff nametags and all-judge
@@ -18,7 +17,7 @@ use Tests\TestCase;
  * judgingLocType=1 location, and a judging table referencing a baseline
  * style so each branch is exercised against the real schema.
  */
-final class OutputLabelsBoxJudgeTest extends TestCase
+final class OutputLabelsBoxJudgeTest extends PublicSurfaceTestCase
 {
     private const ADMIN_EMAIL = 'p52j.admin@brewingcompetitions.com';
 
@@ -44,25 +43,6 @@ final class OutputLabelsBoxJudgeTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
-        $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
-        try {
-            new \PDO("mysql:host={$host};dbname={$name}", getenv('BCOEM_TEST_DB_USER') ?: 'root', getenv('BCOEM_TEST_DB_PASS') ?: 'root');
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('MySQL not available: '.$e->getMessage());
-        }
-
-        config()->set('database.connections.mysql', array_merge(config('database.connections.mysql'), [
-            'host' => $host,
-            'port' => getenv('BCOEM_TEST_DB_PORT') ?: '3306',
-            'database' => $name,
-            'username' => getenv('BCOEM_TEST_DB_USER') ?: 'root',
-            'password' => getenv('BCOEM_TEST_DB_PASS') ?: 'root',
-            'prefix' => 'baseline_',
-        ]));
-        config()->set('database.default', 'mysql');
-        DB::purge('mysql');
 
         DB::table('users')->where('id', self::ADMIN_ID)->delete();
         DB::table('users')->insert([

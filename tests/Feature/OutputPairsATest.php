@@ -10,7 +10,6 @@ use App\Http\Controllers\Output\SortingController;
 use App\Http\Controllers\Output\TableCardsController;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
-use Tests\TestCase;
 
 /**
  * Slice D output pair A (spec §7 P5.2, ticket 02): labels, bottle_label,
@@ -23,7 +22,7 @@ use Tests\TestCase;
  *   - output/table_cards.output.php (placards / tables / tent cards)
  *   - output/sorting.output.php (+ go=cheat)
  */
-final class OutputPairsATest extends TestCase
+final class OutputPairsATest extends PublicSurfaceTestCase
 {
     private const ADMIN_EMAIL = 'p52a.admin@brewingcompetitions.com';
 
@@ -48,26 +47,6 @@ final class OutputPairsATest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        // MySQL-gated like the rest of the suite (PublicSurfaceTestCase idiom).
-        $host = getenv('BCOEM_TEST_DB_HOST') ?: '127.0.0.1';
-        $name = getenv('BCOEM_TEST_DB_NAME') ?: 'bcoem_test';
-        try {
-            new \PDO("mysql:host={$host};dbname={$name}", getenv('BCOEM_TEST_DB_USER') ?: 'root', getenv('BCOEM_TEST_DB_PASS') ?: 'root');
-        } catch (\Throwable $e) {
-            $this->markTestSkipped('MySQL not available: '.$e->getMessage());
-        }
-
-        config()->set('database.connections.mysql', array_merge(config('database.connections.mysql'), [
-            'host' => $host,
-            'port' => getenv('BCOEM_TEST_DB_PORT') ?: '3306',
-            'database' => $name,
-            'username' => getenv('BCOEM_TEST_DB_USER') ?: 'root',
-            'password' => getenv('BCOEM_TEST_DB_PASS') ?: 'root',
-            'prefix' => 'baseline_',
-        ]));
-        config()->set('database.default', 'mysql');
-        DB::purge('mysql');
 
         DB::table('users')->where('user_name', self::ADMIN_EMAIL)->delete();
         DB::table('users')->insert([
