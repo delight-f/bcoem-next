@@ -107,7 +107,10 @@
             @endforeach
 
         @if (! $anyTiles)
-        <h1>No {{ strtolower($heading) }} entries are present.</h1>
+        {{-- Issue #49: keep the "Mini-BOS" proper-noun casing (a plain
+             strtolower produced "mini-bos"); other headings keep the legacy
+             lower-cased sentence form. --}}
+        <h1>No {{ $heading === 'Mini-BOS' ? 'mini-BOS' : strtolower($heading) }} entries are present.</h1>
     @endif
 @endif
 

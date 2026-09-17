@@ -442,6 +442,23 @@ html {
 .bcoem-admin-dashboard-accordion .card-body .bcoem-dash-label {
     color: var(--bs-emphasis-color);
 }
+/* Issue #49: the Reports panel's Before/During/After Judging phase headings
+   used to read as ordinary bold text and blended into the report rows below
+   them. Give each its own tinted band and a letter-spaced, upper-case rule so
+   the phase break is unmistakable. */
+.bcoem-admin-dashboard-accordion .card-body > .row.bcoem-dash-subhead {
+    background-color: var(--bs-tertiary-bg);
+    border-radius: var(--bs-border-radius);
+    margin-left: 0;
+    margin-right: 0;
+}
+.bcoem-admin-dashboard-accordion .card-body > .row.bcoem-dash-subhead strong {
+    display: block;
+    color: var(--bs-emphasis-color);
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
 /* Issue 31: draw every option link as an outlined chip so adjacent links are
    visually distinct instead of merging into a single line of blue text. */
 .bcoem-admin-dashboard-accordion .card-body ul.list-inline > li > a,

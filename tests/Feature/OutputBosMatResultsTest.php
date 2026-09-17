@@ -206,6 +206,23 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
     }
 
     /**
+     * Issue #49: the empty-state placeholder must keep the proper-noun casing
+     * of "Mini-BOS" rather than the fully lower-cased "mini-bos" the plain
+     * strtolower produced.
+     */
+    public function test_bos_mat_empty_mini_bos_placeholder_keeps_proper_capitalisation(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        // No scored rows on the requested table, so only the notice renders.
+        $empty = $this->decodePdfText($this->get('/admin/output/bos_mat?action=mini-bos&view=9999'));
+
+        $this->assertStringContainsString('No mini-BOS entries are present.', $empty);
+        $this->assertStringNotContainsString('mini-bos', $empty);
+    }
+
+    /**
      * Issue 32: a group longer than one 2×3 page continues onto further
      * pages instead of being truncated to the first six entries.
      */
