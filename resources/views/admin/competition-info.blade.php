@@ -28,26 +28,27 @@
         <style>
             /* This form is long. Each section is a <details> collapsed by
                default so the page opens compact; the heading stays visible as
-               the toggle. Each section is a light-blue Bruxellensis card so
-               adjacent sections read as separate blocks rather than one run of
-               headings (issue #40). */
+               the toggle. Each section is a white card with a blue heading and
+               a blue left rule so adjacent sections read as separate blocks
+               (issue #40; recoloured for issue #51 — the light-blue Brux fill
+               is gone and the section title uses the admin theme's blue). */
             .bcoem-comp-info details.bcoem-comp-info-section {
                 margin-top: 1rem;
-                border: 1px solid #cfe2ff;
-                border-left: 4px solid #1565C0;
+                border: 1px solid var(--bs-border-color);
+                border-left: 4px solid var(--bs-primary);
                 border-radius: .5rem;
-                background-color: #f5faff;
+                background-color: #fff;
                 overflow: hidden;
             }
             .bcoem-comp-info details.bcoem-comp-info-section > summary {
                 cursor: pointer;
                 list-style-position: inside;
                 padding: .6rem 1rem;
-                background-color: #eaf3fd;
-                color: #084298;
+                background-color: #fff;
+                color: var(--bs-primary);
             }
             .bcoem-comp-info details.bcoem-comp-info-section[open] > summary {
-                border-bottom: 1px solid #cfe2ff;
+                border-bottom: 1px solid var(--bs-border-color);
             }
             .bcoem-comp-info details.bcoem-comp-info-section > summary h3 {
                 display: inline;

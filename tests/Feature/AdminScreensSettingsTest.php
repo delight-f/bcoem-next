@@ -67,9 +67,10 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
     /**
      * Issue 20: the competition-info form's subsections render collapsed so
-     * the page is not one very tall wall of fields. Issue 40: each section
-     * carries a light-blue Bruxellensis accent so adjacent sections are
-     * visually distinguishable.
+     * the page is not one very tall wall of fields. Issue 40: each section is
+     * its own card so adjacent sections are visually distinguishable. Issue
+     * #51: the cards are white with the admin theme's blue on the section
+     * title, replacing the light-blue Brux fill.
      */
     public function test_competition_info_sections_render_collapsed(): void
     {
@@ -83,11 +84,14 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         }
 
         // The section styling is inline in the Blade (the shared app.css is
-        // off-limits) and applies the same light-blue accent values the
-        // Bruxellensis palette already uses elsewhere.
+        // off-limits). Issue #51: white cards, with the admin theme's primary
+        // blue on the title — the same blue the dashboard uses — and no
+        // light-blue fill.
         $response->assertSee('.bcoem-comp-info details.bcoem-comp-info-section {', false);
-        $response->assertSee('background-color: #eaf3fd;', false);
-        $response->assertSee('border-left: 4px solid #1565C0;', false);
+        $response->assertSee('background-color: #fff;', false);
+        $response->assertSee('color: var(--bs-primary);', false);
+        $response->assertSee('border-left: 4px solid var(--bs-primary);', false);
+        $response->assertDontSee('background-color: #eaf3fd;', false);
     }
 
     public function test_competition_info_club_search_wires_add_button_state(): void
