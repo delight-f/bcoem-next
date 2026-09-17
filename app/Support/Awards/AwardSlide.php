@@ -19,5 +19,6 @@ final readonly class AwardSlide
         public string $titleLong,    // alternate sort key (table name / category)
         public int $count,           // entry count for the group line
         public array $winners,
+        public ?int $sortNumber = null, // numeric table number (table-slide ordering)
     ) {}
 }

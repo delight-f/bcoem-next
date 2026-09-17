@@ -1,8 +1,9 @@
 /* Awards presentation deck styles (legacy css/awards.css + reveal overrides). */
 
 /* Medal grid — legacy #medal-grid: three columns (place | name/club | style),
-   rows run 1st (pos-5, gold) down to HM (pos-1, teal). */
-#medal-grid {
+   rows run 1st (pos-5, gold) down to HM (pos-1, teal). Class, not id: the
+   grid repeats once per winner and duplicate ids are invalid HTML. */
+.medal-grid {
     display: grid;
     grid-template-columns: auto 1fr auto;
     margin: 0 auto;
@@ -14,8 +15,8 @@
     margin-top: 0.75em;
 }
 
-.reveal #medal-grid .col-right { text-align: right; font-weight: bold; }
-.reveal #medal-grid .entry-name { word-break: break-word; }
+.reveal .medal-grid .col-right { text-align: right; font-weight: bold; }
+.reveal .medal-grid .entry-name { word-break: break-word; }
 
 .reveal .pos-5-medal-color, .text-gold { color: #FFD700; }
 .reveal .pos-4-medal-color, .text-silver { color: #C0C0C0; }
@@ -25,7 +26,9 @@
 
 .reveal .footer {
     position: fixed;
-    bottom: 12px;
+    /* Clear reveal's bottom-right cluster (controls + slide number, ~30px)
+       and the 3px progress bar. */
+    bottom: 40px;
     left: 0;
     right: 0;
     text-align: center;

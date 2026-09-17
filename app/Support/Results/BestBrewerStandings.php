@@ -106,6 +106,7 @@ final class BestBrewerStandings
             : collect();
 
         $poolSizes = $coa ? self::poolSizes($ctx, $winnerMethod) : [];
+        $entryCounts = self::entryCountsByBrewer();
 
         $brewerAcc = [];
         $clubAcc = [];
@@ -119,11 +120,11 @@ final class BestBrewerStandings
         }
 
         $brewerRows = $showBrewer && $brewerAcc !== []
-            ? self::scoreRows($brewerAcc, $poolSizes, $tiebreakers, $placePointPrefs, $coa, $proEdition, false, $maxBrewer)
+            ? self::scoreRows($brewerAcc, $poolSizes, $tiebreakers, $placePointPrefs, $coa, $proEdition, false, $maxBrewer, $entryCounts)
             : [];
 
         $clubRows = $showClub && ! $proEdition && $clubAcc !== []
-            ? self::scoreRows($clubAcc, $poolSizes, $tiebreakers, $placePointPrefs, $coa, $proEdition, true, $maxClub)
+            ? self::scoreRows($clubAcc, $poolSizes, $tiebreakers, $placePointPrefs, $coa, $proEdition, true, $maxClub, $entryCounts)
             : [];
 
         $show4th = false;
@@ -280,6 +281,7 @@ final class BestBrewerStandings
      * @param  array<string|int, float>  $poolSizes
      * @param  list<string>  $tiebreakers
      * @param  list<float>  $placePointPrefs
+     * @param  array<string,int>  $entryCounts paid+received entry counts keyed by brewer uid
      * @return list<object{name:string,club:string|null,points:float,places:list<int>}>
      */
     private static function scoreRows(
@@ -291,13 +293,14 @@ final class BestBrewerStandings
         bool $proEdition,
         bool $club,
         int $maxPosition,
+        array $entryCounts,
     ): array {
         $rows = [];
 
         foreach ($acc as $key => $a) {
             $points = $coa
                 ? BestBrewerPoints::calculate($a['Places-data'] ?? $a['Places'], $a['Scores'], $poolSizes, $tiebreakers, '1')
-                : BestBrewerPoints::calculate($a['Places'], $a['Scores'], $placePointPrefs, $tiebreakers, '0', $club ? 0 : self::userEntries((string) $key));
+                : BestBrewerPoints::calculate($a['Places'], $a['Scores'], $placePointPrefs, $tiebreakers, '0', $club ? 0 : ($entryCounts[(string) $key] ?? 0));
 
             $rows[] = (object) [
                 'name' => (string) ($a['Name'] ?? $a['Clubs'] ?? ''),
@@ -331,13 +334,28 @@ final class BestBrewerStandings
         return array_slice($rows, 0, max($maxPosition, 0));
     }
 
-    private static function userEntries(string $uid): int
+    /**
+     * One grouped query for every brewer's paid+received entry count
+     * (replaces the per-brewer userEntries() N+1). Club rows never reach
+     * this map (scoreRows passes 0 for them), so unknown keys are just 0.
+     *
+     * @return array<string,int>
+     */
+    private static function entryCountsByBrewer(): array
     {
-        if ($uid === '') {
-            return 0;
+        $counts = [];
+        $rows = DB::table('brewing')
+            ->where('brewPaid', 1)
+            ->where('brewReceived', 1)
+            ->selectRaw('brewBrewerID, COUNT(*) as cnt')
+            ->groupBy('brewBrewerID')
+            ->get();
+
+        foreach ($rows as $r) {
+            $counts[(string) $r->brewBrewerID] = (int) $r->cnt;
         }
 
-        return (int) DB::table('brewing')->where('brewBrewerID', $uid)->where('brewPaid', 1)->where('brewReceived', 1)->count();
+        return $counts;
     }
 
     private static function participantCount(string $type): int

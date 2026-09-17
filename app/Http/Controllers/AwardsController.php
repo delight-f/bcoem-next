@@ -66,8 +66,8 @@ final class AwardsController extends Controller
             return redirect('/?msg=7');
         }
 
-        $view = self::THEMES[(string) $request->query('view', 'default')] ?? 'white';
-        $go = (string) $request->query('go', 'table-numbers');
+        $view = self::THEMES[$request->string('view', 'default')->toString()] ?? 'white';
+        $go = $request->string('go', 'table-numbers')->toString();
         if (! in_array($go, self::SORTS, true)) {
             $go = 'table-numbers';
         }
@@ -109,7 +109,7 @@ final class AwardsController extends Controller
             'sponsors' => $this->sponsors($ctx),
             'staffRolls' => $staffRolls,
             'stats' => $this->stats(),
-            'winnerSlides' => $builder->winnerSlides($ctx, $go),
+            'winnerSlides' => $builder->winnerSlides($ctx, $go, $request->boolean('empty')),
             'bosSlides' => $builder->bosSlides($ctx),
             'specialBestSlides' => $builder->specialBestSlides($ctx),
             'bestBrewerSlides' => $bestBrewerSlides,
@@ -117,7 +117,6 @@ final class AwardsController extends Controller
             'styleSet' => (string) $ctx->prefsStr('prefsStyleSet'),
             'noscript' => 'For an optimal experience and so that all features and functions execute properly, please enable JavaScript to continue using this site. Otherwise, unexpected behavior will occur.',
             'coaScoring' => $coaScoring,
-            'coaLead' => $coaScoring ? 'The points for each placing entry are calculated using the following formula, based on the one used by the Master Homebrewer Program for the <a href=\'https://www.masterhomebrewerprogram.com/circuit-of-america\' target=\'_blank\'>Circuit of America</a>:' : '',
             'winnerMethod' => $winnerMethod,
             'placePoints' => $placePoints,
             'tiebreakers' => $tiebreakers,
@@ -138,7 +137,9 @@ final class AwardsController extends Controller
             ->where('sponsorImage', '!=', '')
             ->orderBy('sponsorLevel')->orderBy('sponsorName')
             ->get()
-            ->map(fn ($s): object => (object) ['id' => (string) $s->id, 'url' => url('/storage/user_images/'.(string) $s->sponsorImage)])
+            ->filter(static fn ($s): bool => is_file(public_path('user_images/'.(string) $s->sponsorImage)))
+            ->map(static fn ($s): object => (object) ['id' => (string) $s->id, 'url' => asset('user_images/'.(string) $s->sponsorImage)])
+            ->values()
             ->all());
     }
 

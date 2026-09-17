@@ -16,7 +16,7 @@
     @else
         <link rel="stylesheet" href="{{ asset('vendor/reveal/theme/white.css') }}" id="theme">
     @endif
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
     @vite(['resources/css/awards.css', 'resources/js/awards.js'])
 </head>
 <body>
@@ -161,8 +161,14 @@
 <dialog id="scoring-method">
     <h2>Scoring Methodology</h2>
     @if ($coaScoring)
-        <p class="bold-text">{{ $coaLead }}</p>
-        <p><img src="{{ $winnerMethod === 0 ? 'https://brewingcompetitions.com/00_images/CoA_Scoring_Tables.png' : 'https://brewingcompetitions.com/00_images/CoA_Scoring_Styles.png' }}" class="img-responsive" alt=""></p>
+        <p class="bold-text">The points for each placing entry are calculated using the following formula, based on the one used by the Master Homebrewer Program for the <a href="https://www.masterhomebrewerprogram.com/circuit-of-america" target="_blank" rel="noopener">Circuit of America</a>:</p>
+        @php
+            // Prefer the staged copy (offline-safe); fall back to the remote
+            // original when the asset has not been committed (licensing).
+            $coaImage = $winnerMethod === 0 ? 'CoA_Scoring_Tables.png' : 'CoA_Scoring_Styles.png';
+            $coaLocal = 'vendor/coa/'.$coaImage;
+        @endphp
+        <p><img src="{{ is_file(public_path($coaLocal)) ? asset($coaLocal) : 'https://brewingcompetitions.com/00_images/'.$coaImage }}" class="img-responsive" alt=""></p>
     @else
         <p class="bold-text">Each placing entry is given the following points:</p>
         <ul>
