@@ -24,7 +24,11 @@
         </nav>
 
         @if ($flights->isEmpty())
-            <p>No flights have been defined for this table yet. Define flights first.</p>
+            <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+                <span class="fa fa-exclamation-triangle fa-lg" aria-hidden="true"></span>
+                <div>No flights have been defined for this table yet. Define flights for this table before
+                    assigning {{ $role }}.</div>
+            </div>
         @elseif ($rows === [])
             <p>No {{ $role }} have volunteered.</p>
         @else

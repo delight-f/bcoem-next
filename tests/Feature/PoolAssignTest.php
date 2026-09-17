@@ -30,6 +30,9 @@ final class PoolAssignTest extends PublicSurfaceTestCase
 
     private const UID_MAX = 9549;
 
+    /** @var list<int> */
+    private array $tableIds = [];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -58,6 +61,7 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         DB::table('judging_assignments')->whereBetween('bid', [self::UID_MIN, self::UID_MAX])->delete();
         DB::table('staff')->whereBetween('uid', [self::UID_MIN, self::UID_MAX])->delete();
         DB::table('brewer')->whereBetween('uid', [self::UID_MIN, self::UID_MAX])->delete();
+        DB::table('judging_tables')->whereIn('id', $this->tableIds ?: [0])->delete();
         DB::table('users')->whereIn('id', [self::ADMIN_ID, self::PARTICIPANT_ID])->delete();
 
         parent::tearDown();
@@ -119,6 +123,69 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         $body = (string) $response->getContent();
         self::assertStringContainsString('Alpha, Amy', $body);
         self::assertStringContainsString('Bravo, Bob', $body);
+    }
+
+    // -----------------------------------------------------------------
+    // Page purpose + judge→table assignment entry point
+    // -----------------------------------------------------------------
+
+    public function test_page_states_its_purpose_and_the_checkbox_handler_uses_the_real_spans(): void
+    {
+        $this->seedBrewer(9530, 'Alpha', 'Amy', 'alpha.pool@example.com', 'Y');
+
+        $response = $this->actingAs($this->admin())
+            ->get('/admin/judging/pool-assign?filter=judges');
+
+        $response->assertOk();
+        $body = (string) $response->getContent();
+        self::assertStringContainsString('This page assigns judges, stewards, BOS judges, and staff to a pool of available', $body);
+
+        // The row renders ...-status / ...-status-msg. The handler used to look
+        // up the non-existent ...-ok / ...-err, which threw on success before
+        // the box was re-enabled and froze the checkbox.
+        self::assertStringContainsString('`${col}-status`', $body);
+        self::assertStringNotContainsString('`${col}-ok`', $body);
+        self::assertStringNotContainsString('`${col}-err`', $body);
+    }
+
+    public function test_pool_page_offers_per_table_assignment_when_tables_exist(): void
+    {
+        $this->seedBrewer(9530, 'Alpha', 'Amy', 'alpha.pool@example.com', 'Y');
+        $this->tableIds[] = (int) DB::table('judging_tables')->insertGetId([
+            'tableName' => 'Pool Fixture Table',
+            'tableNumber' => 977,
+            'tableStyles' => '',
+        ]);
+
+        $response = $this->actingAs($this->admin())
+            ->get('/admin/judging/pool-assign?filter=judges');
+
+        $response->assertOk()
+            ->assertSee('Assign Judges to a Table')
+            ->assertSee('/admin/judging/flights/'.$this->tableIds[0].'/assign/judges', false)
+            ->assertDontSee('No tables have been created');
+    }
+
+    public function test_pool_page_blocks_table_assignment_with_an_alert_when_no_tables_exist(): void
+    {
+        $this->seedBrewer(9530, 'Alpha', 'Amy', 'alpha.pool@example.com', 'Y');
+
+        // Snapshot + restore so the shared fixture tables survive the test.
+        $saved = DB::table('judging_tables')->get()->map(fn ($r): array => (array) $r)->all();
+        DB::table('judging_tables')->delete();
+
+        try {
+            $response = $this->actingAs($this->admin())
+                ->get('/admin/judging/pool-assign?filter=judges');
+
+            $response->assertOk()
+                ->assertSee('No tables have been created. Create a table and define its flights before assigning')
+                ->assertDontSee('Assign Judges to a Table');
+        } finally {
+            foreach ($saved as $row) {
+                DB::table('judging_tables')->insert($row);
+            }
+        }
     }
 
     // -----------------------------------------------------------------

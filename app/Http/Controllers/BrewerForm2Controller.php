@@ -221,6 +221,18 @@ final class BrewerForm2Controller extends Controller
             $this->deleteAssignmentsAtLocations($brewer->uid, 'S', $stewardWithdrawals);
         }
 
+        // Marking yourself available as a judge/steward joins that pool
+        // automatically. Registration and the judge-signup screen already did
+        // this; the account-edit path did not, so an account that started as a
+        // participant and later turned the role on never appeared in the pool
+        // until an admin checked the box by hand.
+        if ($judge === 'Y') {
+            DB::table('staff')->updateOrInsert(['uid' => $brewer->uid], ['staff_judge' => 1]);
+        }
+        if ($steward === 'Y') {
+            DB::table('staff')->updateOrInsert(['uid' => $brewer->uid], ['staff_steward' => 1]);
+        }
+
         // Wizard completion → legacy post-registration landing
         // (?section=list&msg=2 account-save path).
         return redirect('/list?msg=2');

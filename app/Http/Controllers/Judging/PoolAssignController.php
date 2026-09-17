@@ -218,6 +218,13 @@ final class PoolAssignController extends Controller
             ->get(['uid', 'brewerFirstName', 'brewerLastName']);
         $organizerUid = (int) (DB::table('staff')->where('staff_organizer', 1)->value('uid') ?? 0);
 
+        // Per-table assignment targets for judges/stewards — the pool screen
+        // had no route to the table-assignment screen, which sits on
+        // /admin/judging/flights/{id}/assign/{role}.
+        $tables = in_array($filter, ['judges', 'stewards'], true)
+            ? DB::table('judging_tables')->orderBy('tableNumber')->get(['id', 'tableNumber', 'tableName'])
+            : collect();
+
         return view('judging.pool_assign', [
             'ctx' => $ctx,
             'filter' => $filter,
@@ -227,6 +234,7 @@ final class PoolAssignController extends Controller
             'checkedEmails' => $checkedEmails,
             'allBrewers' => $allBrewers,
             'organizerUid' => $organizerUid,
+            'tables' => $tables,
         ]);
     }
 

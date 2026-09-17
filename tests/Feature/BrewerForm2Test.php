@@ -191,11 +191,29 @@ final class BrewerForm2Test extends PublicSurfaceTestCase
         $this->assertNotNull($row);
         $this->assertSame('Y', $row->brewerStaff);
 
-        // Legacy's public edit path never flips staff.* on opting in — only
-        // registration and the admin assignment screens do.
+        // Legacy's public edit path never flips the *staff pool* flag on
+        // opting in — only registration and the admin assignment screens do.
+        // (The judge/steward pool flags ARE set here; see
+        // test_opting_in_adds_the_role_to_the_judging_pool.)
         $staff = DB::table('staff')->where('uid', $uid)->first();
         $this->assertNotNull($staff);
         $this->assertSame(0, (int) $staff->staff_staff);
+    }
+
+    public function test_opting_in_adds_the_role_to_the_judging_pool(): void
+    {
+        $uid = $this->seedUser();
+
+        $this->actingAs($this->user($uid))
+            ->post('/list/edit-judging', $this->payload());
+
+        // An entrant who turns on judge/steward availability joins the pool
+        // automatically, so the pool screen lists them without an admin
+        // checking the box by hand.
+        $staff = (array) DB::table('staff')->where('uid', $uid)->first();
+        $this->assertSame(1, (int) $staff['staff_judge']);
+        $this->assertSame(1, (int) $staff['staff_steward']);
+        $this->assertSame(0, (int) $staff['staff_staff']);
     }
 
     public function test_waiver_is_required_to_volunteer(): void
