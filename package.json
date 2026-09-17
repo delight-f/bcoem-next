@@ -3,7 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build && node scripts/copy-reveal.mjs",
+        "build": "vite build && node scripts/copy-reveal.mjs && node scripts/copy-fontawesome.mjs",
         "dev": "vite"
     },
     "devDependencies": {
@@ -16,6 +16,7 @@
         "@laravel/multiplex": "^0.4.1"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-free": "6.7.2",
         "bootstrap": "^5.3.8",
         "reveal.js": "^5.2.1"
     }
