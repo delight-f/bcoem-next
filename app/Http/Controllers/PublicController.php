@@ -367,17 +367,27 @@ final class PublicController extends Controller
         }
 
         $ctx = TenantContext::load();
-        Mail::send(new ContactMail(
-            toName: $contact->contactFirstName.' '.$contact->contactLastName,
-            toEmail: $contact->contactEmail,
-            fromName: $validated['from_name'],
-            fromEmail: $validated['from_email'],
-            subjectLine: $validated['subject'],
-            body: $validated['message'],
-            contestName: $ctx->contestStr('contestName') ?? '',
-            // prefsEmailCC: copy the sender when the site has CC enabled.
-            ccEmail: $ctx->prefsStr('prefsEmailCC') === '1' ? $validated['from_email'] : null,
-        ));
+        try {
+            Mail::send(new ContactMail(
+                toName: $contact->contactFirstName.' '.$contact->contactLastName,
+                toEmail: $contact->contactEmail,
+                fromName: $validated['from_name'],
+                fromEmail: $validated['from_email'],
+                subjectLine: $validated['subject'],
+                body: $validated['message'],
+                contestName: $ctx->contestStr('contestName') ?? '',
+                // prefsEmailCC: copy the sender when the site has CC enabled.
+                ccEmail: $ctx->prefsStr('prefsEmailCC') === '1' ? $validated['from_email'] : null,
+            ));
+        } catch (\Throwable $e) {
+            // The message is the whole point of this request, so unlike the
+            // signup receipts a failure cannot be swallowed. It still must not
+            // reach the sender as a 500: hand the form back with what they
+            // typed plus an explanation, and log the transport error.
+            report($e);
+
+            return back()->withInput()->withErrors(['message' => __('site.contact_send_failed')]);
+        }
 
         return redirect()->route('contact')->with('contactSent', true);
     }

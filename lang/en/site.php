@@ -342,6 +342,7 @@ return [
     'contact_send_message' => 'Send Message',
     'contact_sent' => 'Additionally, a copy has been sent to the email address you provided.',
     'contact_send_another' => 'Would you like to send another message?',
+    'contact_send_failed' => 'Your message could not be sent because this server could not send email. Your text has been kept below — please try again later, or contact an official by another route if it keeps failing.',
     'contact_form_required' => 'Not all required fields have been filled out or selected. Required fields that are missing values are indicated with a star.',
     'visit' => 'Visit',
     'no_website' => 'No Website',

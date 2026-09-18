@@ -190,6 +190,33 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         });
     }
 
+    /**
+     * Live symptom: on a host whose mail program is missing or misconfigured
+     * (scabs.nfshost.com ran "/usr/sbin/sendmail -t -i" and got "exit code
+     * 127: not found"), pressing Send returned a 500 and the sender lost the
+     * message they had typed. The form must come back with their input and an
+     * explanation instead.
+     */
+    public function test_contact_form_survives_a_broken_mail_transport(): void
+    {
+        DB::table('preferences')->where('id', 1)->update(['prefsContact' => 'Y']);
+        $contact = DB::table('contacts')->orderBy('id')->first();
+        $this->assertNotNull($contact);
+
+        Mail::shouldReceive('send')->once()->andThrow(new \RuntimeException('Process failed with exit code 127: sh: /usr/sbin/sendmail: not found'));
+
+        $this->from('/contact')->post('/contact', [
+            'to' => (int) $contact->id,
+            'from_name' => 'Jane Tester',
+            'from_email' => 'jane.tester@example.com',
+            'subject' => 'Question about entries',
+            'message' => 'Hello, when do entries close?',
+        ])->assertRedirect('/contact')
+            ->assertSessionHasErrors('message')
+            // The typed message is kept so the sender does not retype it.
+            ->assertSessionHasInput('message', 'Hello, when do entries close?');
+    }
+
     /** prefsEmailCC ("Contact Form CC") copies the sender on the message. */
     public function test_contact_form_ccs_the_sender_when_enabled(): void
     {
