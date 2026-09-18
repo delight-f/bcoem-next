@@ -683,5 +683,4 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         $response->assertOk();
         $response->assertJsonPath('status', '9');
     }
-    }
 }
