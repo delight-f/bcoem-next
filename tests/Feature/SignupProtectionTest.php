@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Support\Security\EmailVerificationGate;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,11 @@ final class SignupProtectionTest extends PublicSurfaceTestCase
     protected function tearDown(): void
     {
         Carbon::setTestNow();
-        DB::table('preferences')->where('id', 1)->update(['prefsCAPTCHA' => null, 'prefsGoogleAccount' => null]);
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsCAPTCHA' => null,
+            'prefsGoogleAccount' => null,
+            EmailVerificationGate::PREF => null,
+        ]);
         foreach ($this->createdUsers as $id) {
             DB::table('staff')->where('uid', $id)->delete();
             DB::table('brewer')->where('uid', $id)->delete();
@@ -141,17 +146,31 @@ final class SignupProtectionTest extends PublicSurfaceTestCase
         $this->assertNull(DB::table('users')->where('user_name', 'bot.test@example.com')->first());
     }
 
-    public function test_entry_route_is_not_verified_gated_by_default(): void
+    /**
+     * The entry/payment routes carry `verified` unconditionally and the gate
+     * (Site Preferences switch, else EMAIL_VERIFICATION_ENABLED) decides at
+     * request time whether it bites. Gating the route list instead would bake
+     * the choice into a cached route table, so this asserts the middleware is
+     * present *and* inert on a default install.
+     */
+    public function test_entry_route_carries_verified_but_is_open_by_default(): void
     {
         $route = app('router')->getRoutes()->getByName('brew.create');
         self::assertNotNull($route);
-        $middleware = $route->gatherMiddleware();
+        self::assertContains('verified', $route->gatherMiddleware());
 
-        $this->assertNotContains('verified', $middleware);
+        DB::table('preferences')->where('id', 1)->update([EmailVerificationGate::PREF => '0']);
+        DB::table('users')->where('id', 1)->update(['email_verified_at' => null]);
+
+        Route::get('/_test-verified', fn () => 'ok')->middleware(['web', 'auth', 'verified']);
+
+        $this->actingAs(User::findOrFail(1))->get('/_test-verified')->assertOk();
     }
 
-    public function test_verified_middleware_redirects_unverified_user_to_notice(): void
+    public function test_verified_middleware_redirects_unverified_user_when_switched_on(): void
     {
+        DB::table('preferences')->where('id', 1)->update([EmailVerificationGate::PREF => '1']);
+
         Route::get('/_test-verified', fn () => 'ok')->middleware(['web', 'auth', 'verified']);
 
         DB::table('users')->where('id', 1)->update(['email_verified_at' => null]);

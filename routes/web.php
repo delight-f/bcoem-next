@@ -31,11 +31,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Spatie\Honeypot\ProtectAgainstSpam;
 
-// Email verification gate (Task 4): applied only to the actions that should
-// require a confirmed address (adding/paying for entries), and only when the
-// installation has deliberately turned the feature on. A data-heavy
-// conditional would otherwise have to be repeated on every route below.
-$emailVerified = config('services.email_verification.enabled') ? ['verified'] : [];
+// Email verification gate (Task 4): the routes that must require a confirmed
+// address always carry `verified` (App\Http\Middleware\EnsureEmailIsVerified),
+// which steps aside when the site preference has the feature off. Deciding
+// here instead would bake the choice into a cached route table and need a
+// database read while routes register.
 
 // Home (Phase 2) doubles as the legacy URL entry point: old bookmarks hit
 // index.php?section=… and LegacyRedirectController 301s them onto the
@@ -160,16 +160,16 @@ Route::post('/list/edit-clubs', [BrewerForm1Controller::class, 'store'])->name('
 // Entry creation (P3.3a). Legacy: ?section=brew&action=add behind a login
 // gate; clean /brew is canonical. Save lands on /list?msg=1 (legacy msg
 // codes; msg=8/9 are the user/subcategory cap rejections).
-Route::get('/brew', [BrewController::class, 'showCreate'])->name('brew.create')->middleware(['auth', ...$emailVerified]);
-Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')->middleware(['auth', ...$emailVerified]);
+Route::get('/brew', [BrewController::class, 'showCreate'])->name('brew.create')->middleware(['auth', 'verified']);
+Route::post('/brew', [BrewController::class, 'storeCreate'])->name('brew.store')->middleware(['auth', 'verified']);
 
 // Entry edit (P3.3b). Legacy: ?section=brew&action=edit&id=N — the same
 // brew form in edit mode, posted back to its own URL; clean
 // /brew/{id}/edit is canonical and matches the /list edit links.
 // Save lands on /list?msg=2 (legacy msg codes; msg=1-<style> is the
 // missing-required-style-field rejection served back at the edit form).
-Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware(['auth', ...$emailVerified]);
-Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware(['auth', ...$emailVerified]);
+Route::get('/brew/{entry}/edit', [BrewController::class, 'showEdit'])->name('brew.edit')->middleware(['auth', 'verified']);
+Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('brew.update')->middleware(['auth', 'verified']);
 
 // Entrant entry bottle/can labels (Payment tab "Pay to Print?"). Legacy let a
 // brewer print their own labels behind a bid ownership check; the port
@@ -180,11 +180,11 @@ Route::get('/list/labels', EntrantLabelController::class)->name('labels.own')->m
 // Success lands back on the page with the legacy confirmation alert
 // (msg=13); cancel renders msg=14 — legacy used section=list&msg=13/14,
 // the port keeps the post-payment state on /pay itself.
-Route::get('/pay', [PayController::class, 'show'])->name('pay')->middleware(['auth', ...$emailVerified]);
+Route::get('/pay', [PayController::class, 'show'])->name('pay')->middleware(['auth', 'verified']);
 // Named alias for gateway cancel_url builders: renders the legacy
 // "payment cancelled" state (alerts.pub.php msg=14).
 Route::get('/pay/cancel', fn () => redirect()->to('/pay?msg=14'))->name('pay.cancel');
-Route::post('/pay/checkout', [PayController::class, 'checkout'])->name('pay.checkout')->middleware(['auth', ...$emailVerified]);
+Route::post('/pay/checkout', [PayController::class, 'checkout'])->name('pay.checkout')->middleware(['auth', 'verified']);
 Route::get('/pay/callback', [PayController::class, 'callback'])->name('pay.callback')->middleware('auth');
 
 // Stripe webhook (P3.5b). No auth middleware — authenticity comes from

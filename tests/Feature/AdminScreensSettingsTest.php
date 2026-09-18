@@ -395,6 +395,30 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     }
 
     /**
+     * Email verification (Spam Protection section) is a saved preference now,
+     * not an env-only flag: the admin page used to describe the feature in a
+     * paragraph with no way to turn it on.
+     */
+    public function test_email_verification_switch_saves_and_validates(): void
+    {
+        $this->remember('preferences');
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsEmailVerify' => '1']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        self::assertSame('1', (string) $this->prefs()['prefsEmailVerify']);
+
+        // The tab renders it as Yes/No radios, reflecting the saved value.
+        $this->get('/admin/site-preferences/default')
+            ->assertOk()
+            ->assertSee('name="prefsEmailVerify" value="1"', false)
+            ->assertSee('name="prefsEmailVerify" value="0"', false);
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsEmailVerify' => 'yes']))
+            ->assertSessionHasErrors('prefsEmailVerify');
+    }
+
+    /**
      * Issue 17: the Theme picker used to be a dead control (prefsTheme was
      * saved but never consumed). It now selects between the two palettes the
      * port actually ships, and the legacy Bootswatch names are rejected.

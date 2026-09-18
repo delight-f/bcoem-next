@@ -14,9 +14,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Email verification (opt-in, Task 4). Routes are registered always but the
- * `verified` gate they satisfy is only applied to entry/payment routes when
- * EMAIL_VERIFICATION_ENABLED is on (see routes/web.php).
+ * Email verification (opt-in, Task 4). Routes are registered always; whether
+ * the `verified` gate on the entry/payment routes actually bites is decided
+ * per request by EmailVerificationGate — the Site Preferences switch
+ * (Email Verification) with EMAIL_VERIFICATION_ENABLED as the install default.
  *
  * The verifiable address is the legacy `users.user_name` column; see
  * User::getEmailForVerification().

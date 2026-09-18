@@ -281,6 +281,11 @@ final class SitePreferencesController extends Controller
             'prefsUseMods' => ['required', 'in:Y,N'],
             'prefsCAPTCHA' => ['nullable', 'in:0,1'],
             'prefsGoogleAccount' => ['nullable', 'string', 'max:255'],
+            // Email verification switch (EmailVerificationGate). Nullable so
+            // payloads from before the column existed stay valid; the column
+            // itself stays NULL when neither radio was posted, which leaves
+            // the .env default in charge.
+            'prefsEmailVerify' => ['nullable', 'in:0,1'],
             'prefsRecordPaging' => ['nullable', 'integer'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
@@ -344,6 +349,7 @@ final class SitePreferencesController extends Controller
             'prefsTheme' => (string) $data['prefsTheme'],
             'prefsUseMods' => (string) $data['prefsUseMods'],
             'prefsCAPTCHA' => self::blankToNull((string) ($data['prefsCAPTCHA'] ?? '')),
+            'prefsEmailVerify' => self::blankToNull((string) ($data['prefsEmailVerify'] ?? '')),
             'prefsGoogleAccount' => self::blankToNull($google),
             // Baseline schema stores these two as tinyint, unlike legacy's
             // char Y/N — normalize on input.

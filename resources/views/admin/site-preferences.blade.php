@@ -168,7 +168,18 @@
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Email Verification</label>
                     <div class="col-md-8">
-                        <span class="form-text">New signups must confirm their email before adding entries or paying. Set <code>EMAIL_VERIFICATION_ENABLED=true</code> in <code>.env</code> to turn it on (default off) &mdash; requires working outbound email on your server, so test your email settings first.</span>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsEmailVerify" value="1" id="verifyY" @checked($p('prefsEmailVerify') === '1')><label class="form-check-label" for="verifyY">Yes</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsEmailVerify" value="0" id="verifyN" @checked($p('prefsEmailVerify') !== '1')><label class="form-check-label" for="verifyN">No</label></div>
+                        <span class="form-text">New signups must confirm their email before adding entries or paying. Requires working outbound email on your server, so test your email settings first. Off unless turned on here &mdash; <code>EMAIL_VERIFICATION_ENABLED</code> in <code>.env</code> only sets the default for an install that has never saved this tab.</span>
+                        @if ($p('prefsEmailVerify') === '1' && ! \App\Support\Mail\MailSettings::delivers($ctx))
+                            <div class="alert alert-warning mt-2 mb-0">
+                                Sending is currently set not to deliver mail (see the Email tab), so a
+                                signup would never receive the confirmation link and could not add entries or
+                                pay. Fix the email settings, or choose No.
+                            </div>
+                        @endif
                     </div>
                 </div>
 

@@ -9,6 +9,7 @@ use App\Mail\RegistrationConfirmMail;
 use App\Models\User;
 use App\Support\Auth\CredentialNormalizer;
 use App\Support\Brewer\Clubs;
+use App\Support\Security\EmailVerificationGate;
 use App\Support\Security\TurnstileGate;
 use App\Support\Tenant\TenantContext;
 use App\Support\Tenant\Windows;
@@ -296,9 +297,10 @@ final class RegisterController extends Controller
             ]);
         }
 
-        // Email verification (Task 4): off by default. When on, the new user
-        // gets the signed verification link; entry/payment routes are gated
-        // by the `verified` middleware (see routes/web.php).
+        // Email verification (Task 4): off unless the site preference (or the
+        // .env default) turns it on. When on, the new user gets the signed
+        // verification link; entry/payment routes carry the `verified`
+        // middleware, which the same gate switches off and on.
         //
         // Registration confirmation (P3.6): legacy sent it only when
         // prefsEmailRegConfirm == 1 (and SMTP mode; the port's transport is
@@ -311,7 +313,7 @@ final class RegisterController extends Controller
         // successful signup into a 500: log it and let the new entrant in, the
         // same way a failed receipt never cost legacy the registration.
         try {
-            if ((bool) config('services.email_verification.enabled', false)) {
+            if (EmailVerificationGate::enabled()) {
                 User::findOrFail($userId)->sendEmailVerificationNotification();
             }
 

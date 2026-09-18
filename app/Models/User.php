@@ -30,7 +30,8 @@ use Illuminate\Notifications\Notifiable;
  * over md5(plaintext)), and `userLevel` is a char: '1' admin / '2' entrant /
  * '3' participant.
  *
- * Email verification (opt-in via EMAIL_VERIFICATION_ENABLED) uses the
+ * Email verification (opt-in via the Email Verification switch in Site
+ * Preferences, defaulting to EMAIL_VERIFICATION_ENABLED) uses the
  * `email_verified_at` column added by migration 2026_09_12_100000; the
  * address itself is `user_name`, exposed through getEmailForVerification().
  *

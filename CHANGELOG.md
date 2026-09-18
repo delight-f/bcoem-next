@@ -8,6 +8,32 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Added
+
+- **Email verification can be switched on in the admin.** Site Preferences →
+  Spam Protection now carries a Yes/No switch for "New signups must confirm
+  their email before adding entries or paying" (`preferences.prefsEmailVerify`).
+  It previously shipped as an `.env`-only flag the page could describe but not
+  change; `EMAIL_VERIFICATION_ENABLED` is now just the default for an install
+  that has never saved the tab, and the same switch decides whether the
+  `verified` middleware on the entry and payment routes applies.
+
+### Fixed
+
+- **Mail goes to this server's own mail program.** The sendmail transport ran
+  `MAIL_SENDMAIL_PATH` verbatim, so a path copied from another host failed with
+  "Process failed with exit code 127: sh: /usr/sbin/sendmail: not found" —
+  NearlyFreeSpeech.NET keeps the binary at `/usr/bin/sendmail` and directs PHP
+  at `mail()`. A configured path is now used only when it exists on this server;
+  otherwise the transport runs whatever `php.ini`'s `sendmail_path` names, which
+  is the program `mail()` uses. The test-email page shows the program in use,
+  and the settings that cannot deliver say so instead of implying success.
+- **A dead mailer no longer reports successful work as a failure.** Registration
+  and payment confirmation mail is sent after the user, brewer and payment rows
+  are committed, so a mail failure now logs and carries on rather than returning
+  a 500 for work that did happen. The contact form does the same for the sender:
+  it comes back with their message kept and an explanation instead of a 500.
+
 ## [4.1.0-alpha.11] - 2026-09-17
 
 ### Added
