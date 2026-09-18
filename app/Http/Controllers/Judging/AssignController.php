@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Judging;
 
 use App\Http\Controllers\Controller;
+use App\Support\Judging\TableAssignment;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -82,7 +83,7 @@ final class AssignController extends Controller
         foreach ($participants as $participant) {
             $bid = (int) $participant->uid;
 
-            $conflict = $this->entryConflict($bid, $styleIds, $planning);
+            $conflict = TableAssignment::entryConflict($bid, $styleIds, $planning);
 
             // Legacy deletes conflicting assignments while rendering the
             // screen; the port performs the identical cleanup here.
@@ -164,69 +165,30 @@ final class AssignController extends Controller
         ]);
 
         $planning = $ctx->judgingStr('jPrefsTablePlanning') === '1';
-        $assignment = $role === 'judges' ? 'J' : 'S';
+        $code = TableAssignment::code($role);
         $styleIds = array_values(array_filter(array_map(intval(...), explode(',', (string) $table->tableStyles))));
+        $planningValue = (int) ($ctx->judgingStr('jPrefsTablePlanning') ?? 0);
 
         foreach ($data['assign'] ?? [] as $bid => $rounds) {
             $bid = (int) $bid;
-            if ($this->entryConflict($bid, $styleIds, $planning)) {
+            if (TableAssignment::entryConflict($bid, $styleIds, $planning)) {
                 continue; // never (re)assign a conflicted participant
             }
 
             foreach ($rounds as $round => $flight) {
-                $round = (int) $round;
-
-                DB::table('judging_assignments')
-                    ->where('bid', $bid)
-                    ->where('assignTable', $id)
-                    ->where('assignRound', $round)
-                    ->where('assignment', $assignment)
-                    ->delete();
-
-                if ((int) $flight > 0) {
-                    DB::table('judging_assignments')->insert([
-                        'bid' => $bid,
-                        'assignment' => $assignment,
-                        'assignTable' => $id,
-                        'assignFlight' => (int) $flight,
-                        'assignRound' => $round,
-                        'assignLocation' => (int) $table->tableLocation,
-                        'assignPlanning' => (int) ($ctx->judgingStr('jPrefsTablePlanning') ?? 0),
-                        'assignRoles' => null,
-                    ]);
-                }
+                TableAssignment::write(
+                    $bid,
+                    $code,
+                    $id,
+                    (int) $flight,
+                    (int) $round,
+                    (int) $table->tableLocation,
+                    $planningValue,
+                );
             }
         }
 
         return redirect('/admin/judging/flights/'.$id.'/assign/'.$role);
-    }
-
-    /**
-     * Legacy entry_conflict(): does the participant have an entry (received
-     * unless planning mode) whose category/subcategory matches one of the
-     * table's styles?
-     *
-     * @param  list<int>  $styleIds
-     */
-    private function entryConflict(int $bid, array $styleIds, bool $planning): bool
-    {
-        $styles = DB::table('styles')->whereIn('id', $styleIds ?: [0])
-            ->get(['brewStyleGroup', 'brewStyleNum']);
-
-        foreach ($styles as $style) {
-            $q = DB::table('brewing')
-                ->where('brewBrewerID', $bid)
-                ->where('brewCategorySort', $style->brewStyleGroup)
-                ->where('brewSubCategory', $style->brewStyleNum);
-            if (! $planning) {
-                $q->where('brewReceived', '1');
-            }
-            if ($q->exists()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

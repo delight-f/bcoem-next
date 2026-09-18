@@ -13,8 +13,14 @@
             'bos' => 'BOS judge',
         };
     @endphp
-    <section class="landing-page-section mt-6 mb-4">
-        <p class="lead">{{ $ctx->contestStr('contestName') }}: Assign or Unassign Participants as {{ $filterLabel }}</p>
+    <section class="container mt-6 mb-4">
+        <p class="lead">{{ $ctx->contestStr('contestName') }}: {{ $filterLabel }} Pool</p>
+        <p>Tick a name to add or remove that person from the {{ $singular }} pool.</p>
+        @if ($allocatesTables)
+            <p>The list is split into <strong>unallocated</strong> (no judging table yet) and <strong>allocated</strong>
+                participants. Use the <em>Assigned To</em> picker to place someone at a table, or the &times; to take them
+                off one. Unallocated includes {{ $singular }}s not yet added to the pool.</p>
+        @endif
 
         {{-- Page purpose: the pool is the prerequisite for any table/flight
              assignment, and the four pools share one screen. --}}
@@ -153,77 +159,14 @@
             </div>
         @endif
 
-        @if (empty($rows))
-            <div class="error">No participants have been assigned to the {{ $singular }} pool.</div>
+        @if ($allocatesTables)
+            <h2 class="h4 mt-4">Unallocated to a Table ({{ count($unallocated) }})</h2>
+            @include('judging.partials.pool_table', ['rows' => $unallocated])
+
+            <h2 class="h4 mt-4">Allocated to a Table ({{ count($allocated) }})</h2>
+            @include('judging.partials.pool_table', ['rows' => $allocated])
         @else
-            <table class="table table-responsive table-bordered {{ $filter !== 'bos' ? 'table-striped' : '' }}" id="sortable" data-dt data-dt-page="{{ (int) $ctx->prefsStr('prefsRecordPaging') ?: 25 }}">
-                <thead>
-                    <tr>
-                        <th style="width:1%" nowrap>
-                            <input type="checkbox" id="pool-check-all" aria-label="Check all">
-                        </th>
-                        <th>Name</th>
-                        <th class="hidden-xs hidden-sm">Assigned As</th>
-                        @if ($filter === 'bos')
-                            <th>Placing Entries</th>
-                        @endif
-                        @if ($filter === 'judges' || $filter === 'bos')
-                            <th class="hidden-xs hidden-sm">ID</th>
-                            <th>Rank</th>
-                        @endif
-                        @if (in_array($filter, ['judges', 'stewards', 'staff'], true))
-                            <th class="hidden-xs hidden-sm">Preferences</th>
-                        @endif
-                        @if ($filter === 'judges' || $filter === 'stewards')
-                            <th class="hidden-xs hidden-sm" style="width:30%">Has Entries In...</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($rows as $row)
-                        <tr @if ($filter === 'bos' && $row['hasPlacingEntries']) class="bg-danger text-danger"
-                            @elseif ($filter === 'bos' && ! $row['hasPlacingEntries'] && $row['checked']) class="bg-info text-info"
-                            @elseif ($filter === 'bos' && ! $row['hasPlacingEntries']) class="bg-success text-success" @endif>
-                            <td>
-                                <input type="checkbox"
-                                       name="{{ $staffColumn }}{{ $row['uid'] }}"
-                                       value="{{ $row['checked'] ? 1 : 0 }}"
-                                       id="assigned-{{ $row['uid'] }}"
-                                       @checked($row['checked'])
-                                       @disabled($row['disabled'])
-                                       data-uid="{{ $row['uid'] }}"
-                                       data-col="{{ $staffColumn }}"
-                                       aria-label="Assign {{ $row['name'] }} as {{ $singular }}">
-                            </td>
-                            <td>
-                                {{ $row['name'] }}
-                                <div>
-                                    <span id="assigned-{{ $row['uid'] }}-{{ $staffColumn }}-status"></span>
-                                    <span id="assigned-{{ $row['uid'] }}-{{ $staffColumn }}-status-msg"></span>
-                                </div>
-                            </td>
-                            <td class="hidden-xs hidden-sm">{{ ucwords($row['assignmentLabel']) }}</td>
-                            @if ($filter === 'bos')
-                                <td>{!! $row['placingEntries'] ?: '&nbsp;' !!}</td>
-                            @endif
-                            @if ($filter === 'judges' || $filter === 'bos')
-                                <td class="hidden-xs hidden-sm">{{ strtoupper((string) $row['judgeId']) }}</td>
-                                <td>{!! $row['rankDisplay'] !!}</td>
-                            @endif
-                            @if (in_array($filter, ['judges', 'stewards', 'staff'], true))
-                                <td class="hidden-xs hidden-sm">{!! $row['preferences'] ?: ($filter === 'staff' ? '&nbsp;' : '<span class="fa fa-sm fa-ban text-danger"></span> <a href="'.url('/backoffice/participants/'.$row['uid'].'/edit').'" data-bs-toggle="tooltip" title="Enter '.$row['firstName'].'\'s location preferences">None specified</a>') !!}</td>
-                            @endif
-                            @if ($filter === 'judges' || $filter === 'stewards')
-                                <td class="hidden-xs hidden-sm">
-                                    @if ($row['entryCount'] > 0)
-                                        <a href="{{ url('/backoffice/entries?filter='.$row['uid']) }}">{{ $row['entryCount'] }} entr{{ $row['entryCount'] === 1 ? 'y' : 'ies' }}</a>
-                                    @endif
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            @include('judging.partials.pool_table', ['rows' => $rows])
         @endif
     </section>
 
@@ -232,75 +175,110 @@
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content
                 || document.querySelector('input[name="_token"]')?.value;
 
-            const statusSpan = (uid, suffix) => document.getElementById(`assigned-${uid}-${suffix}`);
-            // The row renders ...-status / ...-status-msg spans; the handler
-            // used to look up ...-ok / ...-err, which never exist, so the
-            // success branch threw before re-enabling the box and left the
-            // checkbox permanently disabled (the "frozen" UI).
-            const setStatus = (uid, col, ok) => {
-                const el = statusSpan(uid, `${col}-status`);
-                const msg = statusSpan(uid, `${col}-status-msg`);
-                if (! el) return;
-                if (ok) {
-                    el.innerHTML = '<span class="fa fa-check text-success"></span>';
-                    if (msg) msg.textContent = '';
-                } else {
-                    el.innerHTML = '<span class="fa fa-times text-danger"></span>';
-                    if (msg) msg.textContent = 'Save failed — not saved.';
-                }
-            };
-
-            const saveColumn = (body) => {
+            const post = (url, body) => {
                 if (! csrf) return Promise.reject(new Error('no csrf'));
-                const params = new URLSearchParams({ action: 'judging_staff', ...body });
-                return fetch('{{ url('/admin/judging/pool-assign/staff') }}', {
+                return fetch(url, {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRF-TOKEN': csrf,
                     },
-                    body: params.toString(),
-                }).then((r) => r.json()).then((d) => d.status === '1');
+                    body: new URLSearchParams(body).toString(),
+                }).then((r) => r.json());
             };
 
-            document.querySelectorAll('#sortable input[type="checkbox"][data-uid]').forEach((box) => {
-                box.addEventListener('change', () => {
-                    const uid = box.dataset.uid;
-                    const col = box.dataset.col;
-                    const settle = (ok) => {
-                        if (! ok) box.checked = ! box.checked;
-                        box.value = box.checked ? '1' : '0';
-                        box.disabled = false;
-                        setStatus(uid, col, ok);
-                    };
-                    box.disabled = true;
-                    saveColumn({ go: col, id: uid, [col]: box.checked ? '1' : '0' })
-                        .then((ok) => {
-                            settle(ok);
-                            // Roles are mutually exclusive judge<->steward; on
-                            // assignment, clear the opposite-role box.
-                            if (ok && col === 'staff_judge' && box.checked) {
-                                document.querySelectorAll('#sortable input[data-col="staff_steward"]').forEach((b) => { if (b.checked) b.checked = false; });
-                            } else if (ok && col === 'staff_steward' && box.checked) {
-                                document.querySelectorAll('#sortable input[data-col="staff_judge"]').forEach((b) => { if (b.checked) b.checked = false; });
+            const statusSpan = (uid, suffix) => document.getElementById(`assigned-${uid}-${suffix}`);
+            const setStatus = (uid, col, ok) => {
+                const el = statusSpan(uid, `${col}-status`);
+                const msg = statusSpan(uid, `${col}-status-msg`);
+                if (! el) return;
+                el.innerHTML = ok
+                    ? '<span class="fa fa-check text-success"></span>'
+                    : '<span class="fa fa-times text-danger"></span>';
+                if (msg) msg.textContent = ok ? '' : 'Save failed — not saved.';
+            };
+
+            // Pool membership checkboxes, scoped per table so the unallocated
+            // and allocated tables each manage their own rows.
+            document.querySelectorAll('[data-pool-table]').forEach((table) => {
+                const boxes = table.querySelectorAll('input[type="checkbox"][data-uid]');
+
+                boxes.forEach((box) => {
+                    box.addEventListener('change', () => {
+                        const uid = box.dataset.uid;
+                        const col = box.dataset.col;
+                        box.disabled = true;
+                        post('{{ url('/admin/judging/pool-assign/staff') }}', {
+                            action: 'judging_staff', go: col, id: uid, [col]: box.checked ? '1' : '0',
+                        }).then((d) => {
+                            if (d.status !== '1') throw new Error('save failed');
+                            box.disabled = false;
+                            box.value = box.checked ? '1' : '0';
+                            setStatus(uid, col, true);
+                            // Roles are mutually exclusive judge<->steward.
+                            if (col === 'staff_judge' && box.checked) {
+                                document.querySelectorAll('[data-pool-table] input[data-col="staff_steward"]').forEach((b) => { if (b.checked) b.checked = false; });
+                            } else if (col === 'staff_steward' && box.checked) {
+                                document.querySelectorAll('[data-pool-table] input[data-col="staff_judge"]').forEach((b) => { if (b.checked) b.checked = false; });
                             }
-                        })
-                        .catch(() => settle(false));
+                        }).catch(() => {
+                            box.checked = ! box.checked;
+                            box.disabled = false;
+                            setStatus(uid, col, false);
+                        });
+                    });
+                });
+
+                const checkAll = table.querySelector('[data-pool-check-all]');
+                if (checkAll) {
+                    checkAll.addEventListener('change', () => {
+                        boxes.forEach((box) => {
+                            if (! box.disabled) {
+                                box.checked = checkAll.checked;
+                                box.dispatchEvent(new Event('change'));
+                            }
+                        });
+                    });
+                }
+            });
+
+            // Inline table allocation (judges/stewards).
+            document.querySelectorAll('.pool-assign-select').forEach((select) => {
+                select.addEventListener('change', () => {
+                    if (! select.value) return;
+                    const [table, flight] = select.value.split(':');
+                    select.disabled = true;
+                    post('{{ url('/admin/judging/pool-assign/table') }}', {
+                        action: 'assign', id: select.dataset.uid, role: select.dataset.role, table, flight,
+                    }).then((d) => {
+                        if (d.status === '1') {
+                            window.location.reload();
+                            return;
+                        }
+                        select.value = '';
+                        select.disabled = false;
+                        window.alert(d.error_type === '4'
+                            ? 'This person has an entry at that table and cannot be assigned there.'
+                            : 'Assignment failed.');
+                    }).catch(() => {
+                        select.value = '';
+                        select.disabled = false;
+                        window.alert('Assignment failed.');
+                    });
                 });
             });
 
-            const checkAll = document.getElementById('pool-check-all');
-            if (checkAll) {
-                checkAll.addEventListener('change', () => {
-                    document.querySelectorAll('#sortable input[type="checkbox"][data-uid]').forEach((box) => {
-                        if (! box.disabled) {
-                            box.checked = checkAll.checked;
-                            box.dispatchEvent(new Event('change'));
-                        }
+            // Remove a participant from their table.
+            document.querySelectorAll('.pool-remove').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    post('{{ url('/admin/judging/pool-assign/table') }}', {
+                        action: 'remove', id: btn.dataset.uid, role: btn.dataset.role, table: btn.dataset.table,
+                    }).then((d) => {
+                        if (d.status === '1') window.location.reload();
                     });
                 });
-            }
+            });
 
             const organizer = document.getElementById('staff-organizer-ajax');
             if (organizer) {
@@ -309,17 +287,13 @@
                     const errEl = document.getElementById('staff-organizer-ajax-staff_organizer-status-msg');
                     okEl.innerHTML = '';
                     errEl.textContent = '';
-                    saveColumn({ go: 'staff_organizer', staff_organizer: organizer.value })
-                        .then((ok) => {
-                            if (ok) {
-                                if (organizer.value !== '') {
-                                    okEl.innerHTML = '<span class="fa fa-check text-success"></span>';
-                                }
-                            } else {
-                                errEl.textContent = 'Save failed — not saved.';
-                            }
-                        })
-                        .catch(() => { errEl.textContent = 'Save failed — not saved.'; });
+                    post('{{ url('/admin/judging/pool-assign/staff') }}', {
+                        action: 'judging_staff', go: 'staff_organizer', staff_organizer: organizer.value,
+                    }).then((d) => {
+                        if (d.status === '1' && organizer.value !== '') {
+                            okEl.innerHTML = '<span class="fa fa-check text-success"></span>';
+                        }
+                    });
                 });
             }
         });

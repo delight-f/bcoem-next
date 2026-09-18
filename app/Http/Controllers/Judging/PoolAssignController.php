@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Judging;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Judging\TableAssignment;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -33,8 +34,11 @@ use Illuminate\Support\Facades\DB;
  *                                  then set (or insert) the chosen uid with
  *                                  its other four flags zeroed
  *
- * The per-table AssignController (judge/steward -> table/flight rows) is a
- * separate screen and is untouched.
+ * The per-table AssignController (judge/steward -> table/flight rows) remains
+ * the full allocation matrix. Since issue #56 the pool screen also shows each
+ * judge's/steward's table allocation and offers an inline assign/remove
+ * control; both screens write through App\Support\Judging\TableAssignment so
+ * the row shape and entry-conflict guard stay identical.
  */
 final class PoolAssignController extends Controller
 {
@@ -211,6 +215,73 @@ final class PoolAssignController extends Controller
             ];
         }
 
+        // Table allocation for judges/stewards (issue #56): the roles that own
+        // judging_assignments rows. Each row gains its "Assigned To" entries and
+        // an isAllocated flag so the view can split allocated vs unallocated and
+        // offer the inline picker.
+        $allocatesTables = in_array($filter, ['judges', 'stewards'], true);
+        $tableChoices = [];
+        if ($allocatesTables) {
+            $assigned = $uids === []
+                ? collect()
+                : DB::table('judging_assignments as ja')
+                    ->join('judging_tables as t', 't.id', '=', 'ja.assignTable')
+                    ->whereIn('ja.bid', $uids)
+                    ->where('ja.assignment', TableAssignment::code($filter))
+                    ->orderBy('t.tableNumber')
+                    ->orderBy('ja.assignRound')
+                    ->get(['ja.bid', 'ja.assignTable', 'ja.assignFlight', 'ja.assignRound', 't.tableNumber', 't.tableName'])
+                    ->groupBy('bid');
+
+            foreach ($rows as $i => $row) {
+                $list = [];
+                foreach ($assigned[$row['uid']] ?? [] as $a) {
+                    $list[] = [
+                        'table' => (int) $a->assignTable,
+                        'tableNumber' => (int) $a->tableNumber,
+                        'flight' => (int) $a->assignFlight,
+                        'round' => (int) $a->assignRound,
+                        'text' => 'Table '.$a->tableNumber.' &ndash; '.e((string) $a->tableName)
+                            .' (Flight '.$a->assignFlight.', Round '.$a->assignRound.')',
+                    ];
+                }
+                $rows[$i]['assignments'] = $list;
+                $rows[$i]['isAllocated'] = $list !== [];
+            }
+
+            // Assignable (table, flight) pairs — one option per flight with its
+            // round, mirroring the matrix header's MAX(flightRound) shape. The
+            // per-table loop keeps the aggregate on a single (unaliased) table
+            // so the raw MAX is unaffected by the table-name prefix.
+            $tableChoices = [];
+            $tables = DB::table('judging_tables')->orderBy('tableNumber')->get(['id', 'tableNumber', 'tableName']);
+            foreach ($tables as $table) {
+                $flights = DB::table('judging_flights')
+                    ->where('flightTable', $table->id)
+                    ->groupBy('flightNumber')
+                    ->orderBy('flightNumber')
+                    ->selectRaw('flightNumber, MAX(flightRound) as flightRound')
+                    ->get();
+
+                foreach ($flights as $flight) {
+                    $tableChoices[] = [
+                        'tableId' => (int) $table->id,
+                        'tableNumber' => (int) $table->tableNumber,
+                        'tableName' => (string) $table->tableName,
+                        'flight' => (int) $flight->flightNumber,
+                        'round' => (int) $flight->flightRound,
+                    ];
+                }
+            }
+        }
+
+        $allocated = $allocatesTables
+            ? array_values(array_filter($rows, static fn (array $r): bool => $r['isAllocated']))
+            : [];
+        $unallocated = $allocatesTables
+            ? array_values(array_filter($rows, static fn (array $r): bool => ! $r['isAllocated']))
+            : [];
+
         // All brewers for the staff organizer dropdown (judging_locations
         // .db.php:100-102), ordered like the legacy select.
         $allBrewers = DB::table('brewer')
@@ -231,6 +302,10 @@ final class PoolAssignController extends Controller
             'view' => $view,
             'staffColumn' => $staffColumn,
             'rows' => $rows,
+            'allocatesTables' => $allocatesTables,
+            'allocated' => $allocated,
+            'unallocated' => $unallocated,
+            'tableChoices' => $tableChoices,
             'checkedEmails' => $checkedEmails,
             'allBrewers' => $allBrewers,
             'organizerUid' => $organizerUid,
@@ -272,9 +347,64 @@ final class PoolAssignController extends Controller
             }
         }
 
+        return $this->envelope($request, $status, $errorType);
+    }
+
+    /**
+     * POST /admin/judging/pool-assign/table — inline table allocation for a
+     * judge/steward straight from the pool screen (issue #56). Reuses
+     * TableAssignment so the row shape and entry-conflict guard match the
+     * per-table matrix screen; `action=remove` clears the person's rows.
+     */
+    public function assignTable(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if (! ($user instanceof User)) {
+            return $this->envelope($request, 9, 0); // no session
+        }
+
+        if ((int) $user->userLevel > 1) {
+            return $this->envelope($request, 0, 0); // non-admin: silent no-op
+        }
+
+        $role = (string) $request->input('role', 'judges');
+        $bid = (int) $request->input('id', 0);
+        $action = (string) $request->input('action', 'assign');
+
+        if ($bid <= 0 || ! in_array($role, ['judges', 'stewards'], true)) {
+            return $this->envelope($request, 0, 3);
+        }
+
+        if ($action === 'remove') {
+            $tableId = (int) $request->input('table', 0);
+            TableAssignment::remove($bid, $role, $tableId > 0 ? $tableId : null);
+
+            return $this->envelope($request, 1, 0);
+        }
+
+        if ($action !== 'assign') {
+            return $this->envelope($request, 0, 3);
+        }
+
+        $planning = TenantContext::load()->judgingStr('jPrefsTablePlanning') === '1';
+        [$status, $errorType] = TableAssignment::assign(
+            $bid,
+            $role,
+            (int) $request->input('table', 0),
+            (int) $request->input('flight', 0),
+            $planning,
+        );
+
+        return $this->envelope($request, $status, $errorType);
+    }
+
+    /** Legacy ajax/save.ajax.php response envelope. */
+    private function envelope(Request $request, int $status, int $errorType): JsonResponse
+    {
         return response()->json([
             'status' => (string) $status,
-            'query' => '', // legacy save.ajax.php envelope fields
+            'query' => '',
             'post' => '0',
             'input' => '',
             'id' => (string) $request->input('id', 'default'),

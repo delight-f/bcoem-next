@@ -41,6 +41,37 @@ final class HomePageTest extends PublicSurfaceTestCase
         self::assertStringNotContainsString('BCOE&amp;M 3.1.0', $html);
     }
 
+    /**
+     * Issue #57: the organising club renders on its own line so a long host
+     * name cannot orphan a single word of the interest sentence.
+     */
+    public function test_landing_salutation_puts_host_on_its_own_line(): void
+    {
+        $snap = $this->snapshotFixture();
+
+        try {
+            $host = 'Homebrewers Club of McDowell and Surrounding Counties';
+            DB::table('contest_info')->where('id', 1)->update([
+                'contestHost' => $host,
+                'contestHostWebsite' => null,
+                'contestHostLocation' => null,
+            ]);
+
+            $response = $this->get('/');
+            $response->assertOk();
+            $body = (string) $response->getContent();
+
+            // The interest <p> closes before the host <p> begins.
+            self::assertMatchesRegularExpression(
+                '/landing-page-salutation[^>]*>.*?<\/p>\s*<p[^>]*landing-page-host/s',
+                $body,
+            );
+            self::assertStringContainsString($host, $body);
+        } finally {
+            $this->restoreFixture($snap);
+        }
+    }
+
     public function test_window_sections_render_dates_or_not_set(): void
     {
         $response = $this->get('/');

@@ -28,6 +28,10 @@ Route::post('/admin/judging/tables-mode', [TablesModeController::class, 'store']
 Route::post('/admin/judging/pool-assign/staff', [PoolAssignController::class, 'toggle'])
     ->name('admin.judging.pool_assign.staff');
 
+// Inline table allocation from the pool screen (issue #56).
+Route::post('/admin/judging/pool-assign/table', [PoolAssignController::class, 'assignTable'])
+    ->name('admin.judging.pool_assign.table');
+
 Route::post('/admin/judging/practice-session', [PracticeSessionController::class, 'store'])
     ->name('admin.judging.practice_session');
 
