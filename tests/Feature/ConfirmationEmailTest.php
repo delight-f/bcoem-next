@@ -132,6 +132,24 @@ final class ConfirmationEmailTest extends PublicSurfaceTestCase
         }
     }
 
+    public function test_registration_survives_a_broken_mail_transport(): void
+    {
+        // The account rows are committed before either message is handed to
+        // the transport, so a host with no working mail program (the live
+        // "exit code 127: /usr/sbin/sendmail: not found") must not turn a
+        // successful signup into a 500 that hides the created account.
+        $this->setRegConfirmPref(1);
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('sh: /usr/sbin/sendmail: not found'));
+
+        $this->post('/register/entrant', $this->registerPayload())
+            ->assertRedirect('/?section=list&msg=7');
+
+        $user = DB::table('users')->where('user_name', 'mail.entrant@example.com')->first();
+        $this->assertNotNull($user);
+        $this->createdUsers[] = (int) $user->id;
+        $this->assertDatabaseHas('brewer', ['uid' => $user->id]);
+    }
+
     private function seedPaidFixture(): int
     {
         DB::table('brewing')->insert([

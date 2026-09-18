@@ -54,7 +54,48 @@ final class MailSettingsTest extends PublicSurfaceTestCase
         $this->apply();
 
         self::assertSame('sendmail', config('mail.default'));
-        self::assertTrue(MailSettings::delivers(TenantContext::load()));
+        self::assertSame($this->sendmailBinaryExists(), MailSettings::delivers(TenantContext::load()));
+    }
+
+    /** Whether the configured mail program is actually on this machine. */
+    private function sendmailBinaryExists(): bool
+    {
+        $binary = trim(explode(' ', (string) config('mail.mailers.sendmail.path'))[0], "'\"");
+
+        return is_file($binary);
+    }
+
+    public function test_sendmail_path_ignores_a_program_this_server_does_not_have(): void
+    {
+        // The live failure: .env carried /usr/sbin/sendmail from an older
+        // host, and the transport died with "Process failed with exit code
+        // 127: sh: /usr/sbin/sendmail: not found" instead of handing the
+        // message to the program PHP's mail() runs.
+        $path = MailSettings::sendmailPath('/nonexistent-bcoem-host/sendmail -t -i');
+
+        // A host where php.ini names no program at all has nothing better to
+        // fall back on, so the configured path survives there.
+        if (trim((string) ini_get('sendmail_path')) !== '') {
+            self::assertStringNotContainsString('/nonexistent-bcoem-host', $path);
+        }
+
+        self::assertMatchesRegularExpression('/ (?:-t|-bs)/', $path);
+    }
+
+    public function test_sendmail_path_keeps_a_configured_program_that_exists(): void
+    {
+        // An admin who knows the right path keeps it.
+        $command = PHP_BINARY.' -t -i';
+
+        self::assertSame($command, MailSettings::sendmailPath($command));
+    }
+
+    public function test_sendmail_path_always_carries_a_mode_flag(): void
+    {
+        // Symfony's SendmailTransport throws on a command with neither -t
+        // nor -bs, so a bare path has to be completed rather than passed on.
+        self::assertSame(PHP_BINARY.' -t -i', MailSettings::sendmailPath(PHP_BINARY));
+        self::assertStringContainsString(' -t', MailSettings::sendmailPath(''));
     }
 
     public function test_https_provider_transport_uses_stored_api_key(): void
@@ -174,7 +215,8 @@ final class MailSettingsTest extends PublicSurfaceTestCase
         // off; treating 3 as off would silently blackhole mail on import.
         $this->prefs([
             'prefsEmailSMTP' => '3',
-            'prefsEmailTransport' => 'sendmail',
+            'prefsEmailTransport' => 'resend',
+            'prefsEmailApiKey' => 're_test_key',
         ]);
 
         self::assertFalse(MailSettings::disabled(TenantContext::load()));

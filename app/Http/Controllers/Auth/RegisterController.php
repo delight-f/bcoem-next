@@ -299,21 +299,33 @@ final class RegisterController extends Controller
         // Email verification (Task 4): off by default. When on, the new user
         // gets the signed verification link; entry/payment routes are gated
         // by the `verified` middleware (see routes/web.php).
-        if ((bool) config('services.email_verification.enabled', false)) {
-            User::findOrFail($userId)->sendEmailVerificationNotification();
+        //
+        // Registration confirmation (P3.6): legacy sent it only when
+        // prefsEmailRegConfirm == 1 (and SMTP mode; the port's transport is
+        // env-configured). Content ported from
+        // process_users_register.inc.php:317-401.
+        //
+        // Both messages go out synchronously, so a host whose mail program is
+        // missing or misconfigured throws here. The users/brewer/staff rows are
+        // already committed, so a failed confirmation must not turn a
+        // successful signup into a 500: log it and let the new entrant in, the
+        // same way a failed receipt never cost legacy the registration.
+        try {
+            if ((bool) config('services.email_verification.enabled', false)) {
+                User::findOrFail($userId)->sendEmailVerificationNotification();
+            }
+
+            if ((int) ($ctx->prefsStr('prefsEmailRegConfirm') ?? '0') === 1) {
+                Mail::to($username)->send(new RegistrationConfirmMail(
+                    $data['brewerFirstName'],
+                    (string) $ctx->contestStr('contestName'),
+                    $this->confirmRows($data, $clubs, $brewerJudge, $brewerSteward, $brewerStaff),
+                ));
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
 
-        // Registration confirmation (P3.6): legacy sent it only when
-        // prefsEmailRegConfirm == 1 (and SMTP mode; the port's transport
-        // is env-configured). Content ported from
-        // process_users_register.inc.php:317-401.
-        if ((int) ($ctx->prefsStr('prefsEmailRegConfirm') ?? '0') === 1) {
-            Mail::to($username)->send(new RegistrationConfirmMail(
-                $data['brewerFirstName'],
-                (string) $ctx->contestStr('contestName'),
-                $this->confirmRows($data, $clubs, $brewerJudge, $brewerSteward, $brewerStaff),
-            ));
-        }
         if ($adminRegister) {
             // filter=admin branch (process_users_register.inc.php:430-458):
             // keep the admin session; route to the new participant.

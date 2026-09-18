@@ -951,9 +951,13 @@
                             <div class="form-text mt-0">
                                 Messages are handed to this server's own mail program — the same one
                                 behind PHP's <code>mail()</code> — so no outgoing SMTP port is needed.
-                                The program path is set with <code>MAIL_SENDMAIL_PATH</code> in
-                                <code>.env</code> (cPanel hosts usually want
-                                <code>/usr/sbin/sendmail -t -i</code>).
+                                The program is whatever <code>php.ini</code>'s
+                                <code>sendmail_path</code> names (NearlyFreeSpeech.NET uses
+                                <code>/usr/bin/sendmail</code>, cPanel
+                                <code>/usr/sbin/sendmail -t -i</code>); set
+                                <code>MAIL_SENDMAIL_PATH</code> in <code>.env</code> only to override
+                                it. The "Test Current Email Sending Settings" button shows the program
+                                in use.
                             </div>
                         </div>
                     </div>

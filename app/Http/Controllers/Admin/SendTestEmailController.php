@@ -43,11 +43,18 @@ final class SendTestEmailController extends Controller
 
         // Report the transport actually in force, so the summary reflects
         // what will happen rather than only the (possibly unused) SMTP row.
+        $transport = MailSettings::transport($ctx);
         $settings = [
-            'transport' => MailSettings::transport($ctx) === null
+            'transport' => $transport === null
                 ? (string) config('mail.default')
-                : MailSettings::label((string) MailSettings::transport($ctx)),
+                : MailSettings::label($transport),
             'delivers' => MailSettings::delivers($ctx),
+            // The program the mailer will actually run, which is the one
+            // thing that cannot be read off the preferences: it comes from
+            // this server's php.ini (or MAIL_SENDMAIL_PATH).
+            'program' => $transport === 'sendmail' || ($transport === null && config('mail.default') === 'sendmail')
+                ? (string) config('mail.mailers.sendmail.path')
+                : '',
             'from' => strtolower((string) filter_var((string) $ctx->prefsStr('prefsEmailFrom'), FILTER_SANITIZE_EMAIL)),
             'host' => (string) $ctx->prefsStr('prefsEmailHost'),
             'username' => (string) $ctx->prefsStr('prefsEmailUsername'),

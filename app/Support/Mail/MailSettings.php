@@ -30,6 +30,9 @@ use App\Support\Tenant\TenantContext;
  */
 final class MailSettings
 {
+    /** Last-resort mail program path, and the shape most hosts expect. */
+    public const SENDMAIL_FALLBACK = '/usr/sbin/sendmail -t -i';
+
     /** Selectable transports, in display order. */
     public const TRANSPORTS = ['smtp', 'sendmail', 'resend', 'postmark', 'log'];
 
@@ -113,7 +116,15 @@ final class MailSettings
 
         if ($transport === null) {
             // Nothing chosen: whatever .env says decides.
-            return in_array((string) config('mail.default'), self::DELIVERING, true);
+            $transport = (string) config('mail.default');
+        }
+
+        if ($transport === 'sendmail') {
+            // Naming a mail program this server does not have delivers
+            // nothing — that is the "exit code 127: /usr/sbin/sendmail: not
+            // found" state. Say so, rather than let the admin page promise a
+            // delivery the host cannot make.
+            return self::sendmailBinaryExists((string) config('mail.mailers.sendmail.path', ''));
         }
 
         return in_array($transport, self::DELIVERING, true);
@@ -122,6 +133,48 @@ final class MailSettings
     public static function label(string $transport): string
     {
         return self::LABELS[$transport] ?? $transport;
+    }
+
+    /**
+     * Command the "sendmail" transport runs, i.e. the host's own mail
+     * program.
+     *
+     * php.ini's sendmail_path is the program PHP's mail() itself runs, so it
+     * is by definition present and permitted on this server — shared hosts
+     * that block outbound SMTP (NearlyFreeSpeech.NET, whose FAQ sends PHP at
+     * mail() and everything else at /usr/bin/sendmail) only work through it.
+     * A MAIL_SENDMAIL_PATH carried over from a different host is the
+     * "Process failed with exit code 127: sh: /usr/sbin/sendmail: not found"
+     * failure, so a configured path counts only when it exists here.
+     *
+     * @param  string|null  $configured  MAIL_SENDMAIL_PATH, as read by config.
+     */
+    public static function sendmailPath(?string $configured = null): string
+    {
+        $configured = trim((string) $configured);
+        $native = trim((string) ini_get('sendmail_path'));
+
+        $command = match (true) {
+            $configured !== '' && self::sendmailBinaryExists($configured) => $configured,
+            $native !== '' => $native,
+            $configured !== '' => $configured,
+            default => self::SENDMAIL_FALLBACK,
+        };
+
+        // Symfony's SendmailTransport rejects a command carrying neither -t
+        // (take recipients from the headers) nor -bs (SMTP over stdio).
+        if (! str_contains($command, ' -t') && ! str_contains($command, ' -bs')) {
+            $command .= ' -t -i';
+        }
+
+        return $command;
+    }
+
+    private static function sendmailBinaryExists(string $command): bool
+    {
+        $binary = trim(explode(' ', $command)[0], "'\"");
+
+        return $binary !== '' && @is_file($binary);
     }
 
     private static function configure(string $transport, TenantContext $ctx): void
@@ -133,8 +186,8 @@ final class MailSettings
         }
 
         // sendmail needs no config of its own: its path is server-specific
-        // and stays under env/config control (cPanel typically wants
-        // "-t -i"), so selecting the mailer is the whole change.
+        // (see sendmailPath(), which config/mail.php already resolved), so
+        // selecting the mailer is the whole change.
         match ($transport) {
             'smtp' => self::configureSmtp($ctx),
             'resend' => self::configureApiKey('resend', $ctx),

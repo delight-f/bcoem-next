@@ -1,5 +1,7 @@
 <?php
 
+use App\Support\Mail\MailSettings;
+
 return [
 
     /*
@@ -70,8 +72,10 @@ return [
             // "-t -i" (recipients from headers; stop on a lone dot) is the
             // invocation shared/cPanel hosts expect — the same shape PHP's
             // mail() uses. Laravel's "-bs -i" speaks SMTP over stdio instead,
-            // which those MTAs do not offer.
-            'path' => env('MAIL_SENDMAIL_PATH', '/usr/sbin/sendmail -t -i'),
+            // which those MTAs do not offer. The path itself comes from
+            // php.ini's sendmail_path unless MAIL_SENDMAIL_PATH names a
+            // program that exists on this server — see MailSettings::sendmailPath().
+            'path' => MailSettings::sendmailPath((string) env('MAIL_SENDMAIL_PATH', '')),
         ],
 
         'log' => [

@@ -5,6 +5,9 @@
 
         <ul class="list-unstyled">
             <li><strong>Transport:</strong> {{ $settings['transport'] }}</li>
+            @if ($settings['program'] !== '')
+                <li><strong>Mail Program:</strong> <code>{{ $settings['program'] }}</code></li>
+            @endif
             <li><strong>Originating Email Address:</strong> {{ $settings['from'] }}</li>
             <li><strong>Host:</strong> {{ $settings['host'] }}</li>
             <li><strong>Username:</strong> {{ $settings['username'] }}</li>

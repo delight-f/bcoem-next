@@ -128,8 +128,14 @@ final class PaymentService
 
         // Payment confirmation (P3.6): legacy ppv.php mailed the entrant
         // on every verified success, provider-neutral in the port (no
-        // PayPal wording — ledger/payments.md D7).
-        $this->sendConfirmation($entries, $entrantUid, $amount, $payMethod);
+        // PayPal wording — ledger/payments.md D7). The ledger entry above is
+        // already committed, so a mail failure must not report the payment
+        // itself as failed: log it and settle the return value as usual.
+        try {
+            $this->sendConfirmation($entries, $entrantUid, $amount, $payMethod);
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return true;
     }
