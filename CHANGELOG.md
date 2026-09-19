@@ -8,6 +8,18 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Fixed
+
+- **"New Zealand-Style India Pale Ale" no longer shares a style code with
+  "New Zealand-Style Pale Ale."** The baseline dump seeded the India Pale Ale
+  as `06-182`, the same code as the Pale Ale, and `StyleSets::findStyle()` —
+  group + number + version, no ORDER BY — resolves such a pair to whichever
+  row sorts first. An entry saved as the India Pale Ale could therefore be
+  stored and printed as the Pale Ale: the entry form writes the resolved
+  style's *name* onto the entry. The dump gives the India Pale Ale its own
+  code (`183`) and a migration repairs installs seeded from the old data
+  (upstream 25686a8).
+
 ## [4.1.0-alpha.12] - 2026-09-19
 
 Closes out the [unwired-features audit](docs/unwired-features-audit.md): every
