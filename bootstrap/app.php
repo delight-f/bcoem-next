@@ -4,6 +4,7 @@ use App\Http\Middleware\ApplyMailSettings;
 use App\Http\Middleware\ApplySessionTimeout;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\EnsureEvalEnabled;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\EnsureTopAdmin;
 use App\Http\Middleware\RememberSignedInSession;
@@ -35,6 +36,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // routes can always carry it and the site preference decides at
             // request time whether it applies — see the class docblock.
             'verified' => EnsureEmailIsVerified::class,
+            // The /eval/* sub-app is only reachable while Electronic
+            // Scoresheets is enabled (B3-06).
+            'eval.enabled' => EnsureEvalEnabled::class,
         ]);
 
         // Legacy process.inc.php posts carry no CSRF token (legacy sent

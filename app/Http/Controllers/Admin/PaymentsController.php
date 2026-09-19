@@ -49,7 +49,20 @@ final class PaymentsController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
-        // Legacy delete: removes the ledger row only, no flag reversal.
+        $row = DB::table('payments')->where('id', $id)->first();
+
+        // A settled online payment is money the provider actually collected:
+        // deleting the record would leave its entries marked paid with nothing
+        // backing them. Refuse, and point the admin at Refund instead.
+        if ($row !== null
+            && $row->status === 'paid'
+            && in_array((string) $row->method, [PaymentService::METHOD_STRIPE, PaymentService::METHOD_PAYPAL], true)
+        ) {
+            return redirect('/admin/payments?msg=delete-refund-first');
+        }
+
+        // Otherwise (manual rows, already-refunded rows): remove the ledger
+        // row only, no flag reversal (legacy behaviour).
         DB::table('payments')->where('id', $id)->delete();
 
         return redirect('/admin/payments?msg=deleted');

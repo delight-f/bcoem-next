@@ -260,13 +260,22 @@ final class AjaxController extends Controller
      */
     public function countRecords(Request $request): JsonResponse
     {
-        $section = self::sterilize((string) $request->input('section', 'default'));
-
         $response = [
             'success' => false,
             'count' => 0,
             'message' => '',
         ];
+
+        // Counts must not answer anonymous callers (legacy's other ajax files
+        // only checked the always-bootstrapped session flag, which any visitor
+        // has) — require a real session, like the sibling `save` (D3-08).
+        if (! ($request->user() instanceof User)) {
+            $response['message'] = 'Not Authorized.';
+
+            return response()->json($response);
+        }
+
+        $section = self::sterilize((string) $request->input('section', 'default'));
 
         if (! in_array($section, self::COUNT_SECTIONS, true)) {
             $response['message'] = 'Not Authorized.';

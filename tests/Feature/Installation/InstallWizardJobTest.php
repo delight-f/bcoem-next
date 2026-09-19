@@ -12,10 +12,12 @@ use App\Support\Wizard\ProgressTracker;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Drives the sync-queue job that runs one install step per invocation.
  */
+#[Group('slow')]
 final class InstallWizardJobTest extends InstallationTestCase
 {
     private function token(string $prefix): string

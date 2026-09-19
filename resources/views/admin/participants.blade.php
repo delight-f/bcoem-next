@@ -150,8 +150,8 @@
             $assignment = trim((string) ($p->brewerAssignment ?? ''));
             $hasJudge = str_contains($assignment, 'Judge');
             $hasSteward = str_contains($assignment, 'Steward');
-            $tableJudge = $tableAssignments[$p->uid.'|J'] ?? '';
-            $tableSteward = $tableAssignments[$p->uid.'|S'] ?? '';
+            $tableJudge = collect($tableAssignments[$p->uid.'|J'] ?? [])->pluck('label')->implode(', ');
+            $tableSteward = collect($tableAssignments[$p->uid.'|S'] ?? [])->pluck('label')->implode(', ');
             $entriesIn = $judgeEntries[$p->uid] ?? collect();
         @endphp
         @if (($hasJudge || $hasSteward) && $filter !== 'judges' && $filter !== 'stewards')
@@ -304,7 +304,13 @@
                                      icon set — edit account, delete account, edit user level,
                                      add entry, list entries. --}}
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account information."><span class="fa fa-lg fa-pencil"></span></a></span>
-                                <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/backoffice/participants/'.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account." data-confirm="Are you sure you want to delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone."><span class="fa fa-lg fa-trash-o"></span></a></span>
+                                <span style="margin-right: .4em">
+                                    <form method="post" action="{{ route('backoffice.participants.destroy', ['uid' => $p->uid]) }}" class="d-inline" onsubmit="return confirm('Delete the participant account for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}? ALL entries for this participant WILL BE DELETED as well. This cannot be undone.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s account."><span class="fa fa-lg fa-trash-o"></span></button>
+                                    </form>
+                                </span>
                                 <span style="margin-right: .4em"><a href="{{ url('/backoffice/participants/'.$p->uid.'/edit') }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s user account information"><span class="fa fa-lg fa-pencil"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/user/username?filter=admin&id='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Change {{ $p->brewerFirstName }} {{ $p->brewerLastName }}'s email address"><span class="fa fa-lg fa-user"></span></a></span>
                                 <span style="margin-right: .4em"><a class="hide-loader" href="{{ url('/brew?filter='.$p->uid) }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Add an entry for {{ $p->brewerFirstName }} {{ $p->brewerLastName }}"><span class="fa fa-lg fa-beer"></span></a></span>

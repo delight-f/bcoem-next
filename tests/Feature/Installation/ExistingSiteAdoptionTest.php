@@ -11,6 +11,7 @@ use App\Services\Installation\Exceptions\AlreadyInstalledException;
 use App\Services\Installation\Exceptions\NotInstalledException;
 use App\Services\Installation\InstallationService;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * The club replaces the old application's files with this release and keeps the
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\DB;
  * Each test gets its own throwaway database (InstallationTestCase), so a
  * populated one is built here exactly as a legacy site leaves it.
  */
+#[Group('slow')]
 final class ExistingSiteAdoptionTest extends InstallationTestCase
 {
     private function installInput(DbCredentials $credentials): InstallInput

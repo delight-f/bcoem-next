@@ -9,10 +9,12 @@
                 <li><strong>Mail Program:</strong> <code>{{ $settings['program'] }}</code></li>
             @endif
             <li><strong>Originating Email Address:</strong> {{ $settings['from'] }}</li>
-            <li><strong>Host:</strong> {{ $settings['host'] }}</li>
-            <li><strong>Username:</strong> {{ $settings['username'] }}</li>
-            <li><strong>Encryption:</strong> {{ $settings['encryption'] }}</li>
-            <li><strong>Port:</strong> {{ $settings['port'] }}</li>
+            @if ($settings['smtp'])
+                <li><strong>Host:</strong> {{ $settings['host'] }}</li>
+                <li><strong>Username:</strong> {{ $settings['username'] }}</li>
+                <li><strong>Encryption:</strong> {{ $settings['encryption'] }}</li>
+                <li><strong>Port:</strong> {{ $settings['port'] }}</li>
+            @endif
         </ul>
 
         @if ($sent === true)

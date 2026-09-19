@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Http\Controllers\Output\PullsheetsController;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Pull-sheet variant matrix (spec §7 P5.1): the legacy ?go=... dispatch and
@@ -89,11 +90,7 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
 
     private function login(string $email): void
     {
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => $email,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail($email);
     }
 
     /**
@@ -173,6 +170,7 @@ final class OutputPullSheetsVariantTest extends PublicSurfaceTestCase
         return $eids;
     }
 
+    #[Group('slow')]
     public function test_variant_urls_return_pdf_with_filename(): void
     {
         $this->seedStyle();

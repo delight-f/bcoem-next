@@ -61,9 +61,15 @@ final class BrewerForm1Controller extends Controller
         $values = [
             'brewerClubs' => self::blankToNull(Clubs::value($data, $ctx)),
             'brewerAHA' => self::blankToNull($data['brewerAHA'] ?? ''),
-            'brewerMHP' => isset($data['brewerMHP']) ? (int) $data['brewerMHP'] : null,
             'brewerProAm' => $data['brewerProAm'] ?? '0',
         ];
+
+        // The MHP input is only on the form while the admin has the field
+        // enabled; when it is absent, keep the stored value instead of
+        // nulling it (the prefsSpecific rule, BrewController:475-477) (D2-01).
+        if (array_key_exists('brewerMHP', $data)) {
+            $values['brewerMHP'] = isset($data['brewerMHP']) ? (int) $data['brewerMHP'] : null;
+        }
 
         $uid = (int) Auth::id();
 

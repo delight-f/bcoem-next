@@ -353,6 +353,15 @@ final class PublicController extends Controller
      */
     public function contactStore(Request $request): RedirectResponse
     {
+        $ctx = TenantContext::load();
+
+        // The message form only exists while prefsContact is 'Y' ('N' shows the
+        // officials list, 'X' nothing). A crafted POST must obey that too — the
+        // view gate alone is cosmetic (D2-02).
+        if ($ctx->prefsStr('prefsContact') !== 'Y') {
+            return redirect()->route('contact');
+        }
+
         $validated = $request->validate([
             'to' => ['required', 'integer', 'exists:contacts,id'],
             'from_name' => ['required', 'string', 'max:120'],
@@ -366,7 +375,6 @@ final class PublicController extends Controller
             return back()->withInput()->withErrors(['to' => __('validation.exists')]);
         }
 
-        $ctx = TenantContext::load();
         try {
             Mail::send(new ContactMail(
                 toName: $contact->contactFirstName.' '.$contact->contactLastName,
@@ -582,8 +590,14 @@ final class PublicController extends Controller
 
             $cards[] = $windowCard('entry-registration', self::t('site.entries_registration'), 'blue', $w->entry,
                 $fmt($ctx->contestEpoch('contestEntryOpen')), $fmt($ctx->contestEpoch('contestEntryDeadline')));
-            $cards[] = $windowCard('drop-off', self::t('site.drop_off'), 'cyan', $w->dropoff,
-                $fmt($ctx->contestEpoch('contestDropoffOpen')), $fmt($ctx->contestEpoch('contestDropoffDeadline')));
+
+            // Drop-off and shipping each follow their own Display switch
+            // (prefsDropOff / prefsShipping): with the switch off the window is
+            // not part of the competition, so its card must not render.
+            if ((int) $ctx->prefsStr('prefsDropOff') === 1) {
+                $cards[] = $windowCard('drop-off', self::t('site.drop_off'), 'cyan', $w->dropoff,
+                    $fmt($ctx->contestEpoch('contestDropoffOpen')), $fmt($ctx->contestEpoch('contestDropoffDeadline')));
+            }
 
             if ((int) $ctx->prefsStr('prefsShipping') === 1 && $ctx->contestStr('contestShippingAddress')) {
                 $cards[] = $windowCard('shipping', self::t('site.shipping'), 'cyan', $w->shipping,
@@ -784,7 +798,9 @@ final class PublicController extends Controller
             && ! empty($ctx->contestStr('contestShippingAddress'))
             && $shipOpen !== null;
 
-        $dropOffCard = $dropoffOpen !== null
+        // Drop-off display switch (prefsDropOff) gates the account-deck card the
+        // same way prefsShipping gates the shipping card below.
+        $dropOffCard = (int) $ctx->prefsStr('prefsDropOff') === 1 && $dropoffOpen !== null
             ? $windowCard('drop-off', self::t('site.drop_off'), $accentLogistics, $w->dropoff, $dropoffOpen, $dropoffClose)
             : null;
         $shippingCard = $shippingGated
@@ -868,6 +884,17 @@ final class PublicController extends Controller
      */
     private static function heroImage(TenantContext $ctx): string
     {
+        // Admin-chosen banner images win (prefsHeroImages: filename => shown),
+        // falling back to the built-in pool when none are selected — so the
+        // Banner Images screen actually drives the homepage (C1-01).
+        $chosen = json_decode((string) $ctx->prefsStr('prefsHeroImages'), true);
+        if (is_array($chosen)) {
+            $enabled = array_keys(array_filter($chosen));
+            if ($enabled !== []) {
+                return (string) $enabled[random_int(0, count($enabled) - 1)];
+            }
+        }
+
         $poolByType = [
             0 => ['misc-cropped-bottles_3000x500.webp', 'misc-brussels-bottles_3000x500.webp', 'misc-plzen-fermenters_3000x500.webp', 'misc-bottles_3000x500.webp'],
             1 => ['beer-barley-malt_3000x500.webp', 'beer-brussels-barrels_3000x500.webp', 'beer-hop-cones_3000x500.webp', 'beer-kegs_3000x500.webp', 'beer-munich-mugs_3000x500.webp', 'beer-on-bar_3000x500.webp'],

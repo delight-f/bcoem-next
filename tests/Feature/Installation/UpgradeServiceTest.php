@@ -10,7 +10,9 @@ use App\Services\Installation\InstallationService;
 use App\Services\Installation\UpgradeService;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('slow')]
 final class UpgradeServiceTest extends InstallationTestCase
 {
     private function service(?string $mysqldumpPath = null): UpgradeService

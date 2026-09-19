@@ -39,7 +39,7 @@ final class ChangePasswordController extends Controller
             // Legacy form marks both required; bcrypt caps usable input at
             // 72 bytes (LoginController's hard cap).
             'passwordOld' => ['required', 'string', 'max:72'],
-            'password' => ['required', 'string', 'max:72'],
+            'password' => ['required', 'string', 'min:8', 'max:72'],
         ]);
 
         /** @var User $user */

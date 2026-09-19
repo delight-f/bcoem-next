@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Journey-level browser-equivalent tests (PARITY-011, audit §14). The repo
@@ -104,6 +105,7 @@ final class BrowserJourneysTest extends PublicSurfaceTestCase
         $this->get('/list')->assertOk()->assertSee('Journey Pale Ale');
     }
 
+    #[Group('slow')]
     public function test_admin_journey_dashboard_offcanvas_nav_resolves(): void
     {
         // Flow 2 (audit §14): admin -> dashboard -> every off-canvas section
@@ -126,10 +128,7 @@ final class BrowserJourneysTest extends PublicSurfaceTestCase
             'brewerEmail' => 'p54.admin@brewingcompetitions.com',
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => 'p54.admin@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('p54.admin@brewingcompetitions.com');
 
         $html = (string) $this->get('/admin')->assertOk()->getContent();
         $this->assertStringContainsString('Admin Essentials Menu', $html);

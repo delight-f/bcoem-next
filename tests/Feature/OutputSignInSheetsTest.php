@@ -49,10 +49,7 @@ final class OutputSignInSheetsTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void

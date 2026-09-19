@@ -8,12 +8,10 @@
             <p class="alert alert-success">Scoresheet PDF(s) deleted.</p>
         @endif
 
-        {{-- upload_scoresheets.admin.php: instructions + single/multi upload --}}
-        {{-- upload_scoresheets.admin.php: naming instructions. Port uses a
-             plain multi-file input; legacy's Dropzone drag-and-drop has no
-             port dependency, so it is kept as-is (no JS added for dropzone
-             parity). --}}
-        <p class="lead">The <a href="{{ url('/admin/upload-scoresheets?action=html') }}">single file upload function</a> is also available as an alternative to this multiple file uploader.</p>
+        {{-- upload_scoresheets.admin.php: instructions + upload. The port's
+             form is already a plain multi-file input with no JS, so legacy's
+             "single file upload function" fallback (action=html) would point
+             at the same screen — the link was removed (C1-04). --}}
 
         <p>For entrants to be able to view their scoresheets, each PDF should:</p>
         <ul style="margin-bottom: 30px;" class="list-disc">

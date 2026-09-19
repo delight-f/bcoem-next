@@ -53,10 +53,7 @@ final class SliceCSeasonTest extends PublicSurfaceTestCase
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
         ]);
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
 
         // Remove leftovers from any previously failed run.
         $staleTables = DB::table('judging_tables')->where('tableName', 'Season Table')->pluck('id');

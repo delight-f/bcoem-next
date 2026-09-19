@@ -8,6 +8,7 @@ use App\Services\Installation\InstallationService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
 /**
@@ -17,6 +18,7 @@ use Tests\TestCase;
  * wizard could redirect. They must now fall through to their defaults, while
  * still surfacing a real failure on an installed site.
  */
+#[Group('slow')]
 final class BareUploadMiddlewareTest extends TestCase
 {
     protected function setUp(): void

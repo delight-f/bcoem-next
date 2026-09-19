@@ -63,10 +63,7 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN);
     }
 
     /**
@@ -302,10 +299,7 @@ final class BrewerEntriesListTest extends PublicSurfaceTestCase
         ]);
         // Deliberately NO brewer row for $uid.
 
-        $this->post('/login', [
-            'loginUsername' => 'rowless'.$uid.'@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('rowless'.$uid.'@brewingcompetitions.com');
 
         $this->get('/list')->assertOk();
         $this->get('/list/edit-account')->assertOk();

@@ -711,9 +711,10 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         self::assertSame('stored@example.org', (string) $p['prefsEmailFrom']);
         self::assertSame('smtp.stored.example', $p['prefsEmailHost']);
         self::assertSame('stored-pass', (string) $p['prefsEmailPassword']);
-        // …and confirmations plus CC are forced off.
-        self::assertSame('0', (string) $p['prefsEmailRegConfirm']);
-        self::assertSame('0', (string) $p['prefsEmailCC']);
+        // …and confirmations plus CC keep the posted values: switching sending
+        // off no longer clobbers them, so re-enabling restores them (A3-05).
+        self::assertSame('1', (string) $p['prefsEmailRegConfirm']);
+        self::assertSame('1', (string) $p['prefsEmailCC']);
     }
 
     public function test_send_test_email_mails_the_admin(): void

@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Entrant-side parity batch (matrix rows: /brew gate, /list/edit-account
@@ -69,10 +70,7 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
             'contestDropoffDeadline' => Date::now()->addDays(14)->getTimestamp(),
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN);
     }
 
     protected function tearDown(): void
@@ -103,11 +101,7 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
 
         // Admins bypass the legacy gate (userLevel > 1 condition).
         DB::table('users')->where('id', 1)->update(['userLevel' => '0']);
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN);
 
         $this->get('/brew')
             ->assertOk()
@@ -254,6 +248,7 @@ final class EntrantPagesParityTest extends PublicSurfaceTestCase
             ->assertSee('id="entries"', false);
     }
 
+    #[Group('slow')]
     public function test_change_password_flow(): void
     {
         // Wrong old password → back with ?msg=3.

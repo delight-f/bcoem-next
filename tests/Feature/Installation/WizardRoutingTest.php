@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Installation;
 
+use PHPUnit\Framework\Attributes\Group;
+
 /**
  * Task 2.3 acceptance: install redirect, allow-list reachability, upgrade
  * gating, banner, and the 404-when-current rule.
  */
+#[Group('slow')]
 final class WizardRoutingTest extends WizardTestCase
 {
     public function test_uninstalled_site_redirects_every_request_to_the_wizard(): void

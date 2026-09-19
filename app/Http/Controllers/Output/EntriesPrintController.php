@@ -50,7 +50,7 @@ final class EntriesPrintController extends Controller
             ]);
 
         $ctx = TenantContext::load();
-        $proEdition = (int) $ctx->prefsStr('proEdition') === 1;
+        $proEdition = (int) $ctx->prefsStr('prefsProEdition') === 1;
 
         // Legacy header (:49-54): "<Contest>: All Entries" (paid/unpaid variants
         // never reach this print path with another $view).

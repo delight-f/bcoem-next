@@ -231,7 +231,7 @@ final class PaymentService
             (string) $ctx->contestStr('contestName'),
             $entries,
             $amount,
-            (string) ($ctx->prefsStr('prefsCurrency') ?? 'USD'),
+            $ctx->currencySymbol(),
             $checkPayee !== '' ? $checkPayee : null,
         ));
     }

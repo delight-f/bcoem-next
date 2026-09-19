@@ -71,10 +71,7 @@ final class OutputLabelsBoxJudgeTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     private function ctx(): TenantContext
@@ -167,10 +164,7 @@ final class OutputLabelsBoxJudgeTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::PREFIX.'.member@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::PREFIX.'.member@brewingcompetitions.com');
 
         foreach ([
             'go=judging_tables',

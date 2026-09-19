@@ -62,6 +62,10 @@
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
+            "@php artisan test --exclude-group=slow"
+        ],
+        "test:all": [
+            "@php artisan config:clear --ansi @no_additional_args",
             "@php artisan test"
         ],
         "post-autoload-dump": [

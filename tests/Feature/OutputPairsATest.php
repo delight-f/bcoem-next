@@ -76,10 +76,7 @@ final class OutputPairsATest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     /**
@@ -150,10 +147,7 @@ final class OutputPairsATest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => 'p52a.member@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('p52a.member@brewingcompetitions.com');
 
         try {
             foreach (['labels', 'bottle_label', 'table_cards', 'sorting'] as $output) {

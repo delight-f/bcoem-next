@@ -74,6 +74,11 @@ final class PaymentProviderRegistry
             return false; // console / no-DB contexts
         }
 
-        return is_array($cfg) && ($cfg['account_id'] ?? '') !== '';
+        // Require the webhook signing secret too: the webhook is the only
+        // thing that marks entries paid, so a keyless Stripe would charge the
+        // entrant and leave the entries unpaid (C2-01).
+        return is_array($cfg)
+            && ($cfg['account_id'] ?? '') !== ''
+            && ($cfg['webhook_secret'] ?? '') !== '';
     }
 }

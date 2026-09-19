@@ -224,10 +224,7 @@ final class StripeWebhookTest extends PublicSurfaceTestCase
                 'userCreated' => '2024-01-01 00:00:01',
             ]);
         }
-        $this->post('/login', [
-            'loginUsername' => 'admin-refund@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('admin-refund@brewingcompetitions.com');
     }
 
     public function test_invalid_signature_is_rejected_and_changes_nothing(): void

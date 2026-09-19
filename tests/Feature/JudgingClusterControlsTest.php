@@ -53,10 +53,7 @@ final class JudgingClusterControlsTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -132,14 +129,29 @@ final class JudgingClusterControlsTest extends PublicSurfaceTestCase
 
     public function test_preferences_renders_tabs_help_modals_and_help_text(): void
     {
+        $html = (string) $this->get('/admin/judging/preferences')->assertOk()->getContent();
+
+        // Issue #58: the sibling preference links are the shared tab bar now
+        // (the same markup the site-preferences pages render), not the old
+        // row of blue buttons.
+        self::assertStringContainsString('nav nav-tabs mb-4', $html);
+        self::assertStringContainsString('aria-current="page"', $html);
+        foreach ([
+            '>General</a>',
+            '>Entries</a>',
+            '>Email &amp; Contact</a>',
+            '>Currency and payments</a>',
+            '>Best Brewer and/or Club</a>',
+            '>Judging/Competition Organization</a>',
+        ] as $tab) {
+            self::assertStringContainsString($tab, $html);
+        }
+        // The old button labels are gone.
+        self::assertStringNotContainsString('General Preferences', $html);
+        self::assertStringNotContainsString('Email Sending / Contact Display Preferences', $html);
+
         $this->get('/admin/judging/preferences')
             ->assertOk()
-            ->assertSee('General Preferences')
-            ->assertSee('Entry Preferences')
-            ->assertSee('Email Sending / Contact Display Preferences')
-            ->assertSee('Currency and Payment Preferences')
-            ->assertSee('Best Brewer and/or Club Preferences')
-            ->assertSee('Judging/Competition Organization Preferences')
             ->assertSee('Queued Judging Info')
             ->assertSee('Electronic Scoresheets Info')
             ->assertSee('How entries are identified to judges when evaluating')

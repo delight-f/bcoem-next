@@ -125,10 +125,7 @@ final class PayPageTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN);
     }
 
     private function setFee(string $fee): void

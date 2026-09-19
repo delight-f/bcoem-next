@@ -445,10 +445,7 @@ final class BjcpXmlReportTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     /**

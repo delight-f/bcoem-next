@@ -53,7 +53,7 @@
                         <tr>
                             <td><a data-fancybox="gallery" class="user_images hide-loader" rel="group1"
                                    href="{{ asset('user_images/'.$f['name']) }}" title="{{ $f['name'] }}">{{ $f['name'] }}</a></td>
-                            <td>{{ date('l, F j, Y H:i', $f['mtime']) }}</td>
+                            <td>{{ \App\Support\Tenant\DateFmt::dateTime($f['mtime'], $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long', withZone: false) }}</td>
                             <td>
                                 {{-- Delete route is POST-only and reads `file`; a
                                      GET link to it only ever 405'd. --}}

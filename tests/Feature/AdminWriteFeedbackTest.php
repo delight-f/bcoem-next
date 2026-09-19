@@ -56,7 +56,7 @@ final class AdminWriteFeedbackTest extends PublicSurfaceTestCase
 
         $this->maxContactId = (int) (DB::table('contacts')->max('id') ?? 0);
 
-        $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void

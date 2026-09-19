@@ -58,10 +58,7 @@ abstract class AdminScreensTestCase extends PublicSurfaceTestCase
             'brewerEmail' => self::ADMIN_EMAIL,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void

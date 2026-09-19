@@ -93,11 +93,7 @@ final class OutputPullSheetsTest extends PublicSurfaceTestCase
 
     private function login(string $email): void
     {
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => $email,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail($email);
     }
 
     /**

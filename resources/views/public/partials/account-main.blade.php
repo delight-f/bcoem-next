@@ -21,6 +21,10 @@
         <p class="alert alert-warning d-print-none">{{ __('site.entry_limit_style_reached') }}</p>
     @elseif ($msg === 13)
         <p class="alert alert-warning d-print-none">{{ __('site.entry_labels_unpaid') }}</p>
+    @elseif ($msg === 15)
+        <p class="alert alert-warning d-print-none">{{ __('site.entry_limit_reached') }}</p>
+    @elseif ($msg === 16)
+        <p class="alert alert-warning d-print-none">{{ __('site.paid_limit_reached') }}</p>
     @endif
 
     <a name="my-account"></a>

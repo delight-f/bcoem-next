@@ -54,10 +54,7 @@ final class JudgingAssignTest extends PublicSurfaceTestCase
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
         ]);
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Admin dashboard link parity. The rebuilt dashboard (Phase 2) presents
@@ -218,6 +219,7 @@ final class AdminDashboardLinksTest extends AdminScreensTestCase
         }
     }
 
+    #[Group('slow')]
     public function test_every_active_dashboard_route_responds(): void
     {
         $this->primeTables();

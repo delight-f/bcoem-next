@@ -42,7 +42,7 @@
                                 @endif
                             </td>
                             @if (in_array($filter, ['judges', 'stewards'], true))
-                                <td>{{ $locationDisplay[$p->uid] ?? '' }}</td>
+                                <td>{{ $locationDisplay($filter === 'judges' ? $p->brewerJudgeLocation : $p->brewerStewardLocation) }}</td>
                             @endif
                             @if ($filter === 'judges')
                                 <td>{{ $p->brewerJudgeID }}</td>

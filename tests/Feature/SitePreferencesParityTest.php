@@ -72,7 +72,7 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     private function pref(string $key): string
@@ -591,5 +591,151 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
         // The page title uses the same <h1> treatment as admin/contacts.
         self::assertStringContainsString(': Update Competition Information</h1>', $html);
         self::assertStringNotContainsString('<p class="lead">', $html);
+    }
+
+    /**
+     * Issue 3: prefsDropOff / prefsShipping must change the public display, not
+     * just store a value — both switches drive the public sidebar panels.
+     */
+    public function test_dropoff_and_shipping_switches_change_the_public_sidebar(): void
+    {
+        $this->login();
+
+        // Off → neither the Drop-Off nor the Shipping panel renders.
+        $this->put('/admin/site-preferences/default', $this->defaultPrefsPayload([
+            'prefsDropOff' => '0', 'prefsShipping' => '0',
+        ]))->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        $this->get('/contact')->assertOk()
+            ->assertDontSee('Entry Drop-Off')
+            ->assertDontSee('Entry Shipping');
+
+        // On → both panels render.
+        $this->put('/admin/site-preferences/default', $this->defaultPrefsPayload([
+            'prefsDropOff' => '1', 'prefsShipping' => '1',
+        ]))->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        $this->get('/contact')->assertOk()
+            ->assertSee('Entry Drop-Off')
+            ->assertSee('Entry Shipping');
+    }
+
+    /**
+     * Issue 3 (the gap): the at-a-glance Drop-Off card ignored prefsDropOff
+     * while the Shipping card already honoured prefsShipping — disabling
+     * drop-off still advertised an Entry Drop-Off window on the landing deck.
+     */
+    public function test_dropoff_and_shipping_switches_gate_the_landing_deck(): void
+    {
+        $this->login();
+
+        $now = time();
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => (string) ($now - 86400),
+            'contestEntryDeadline' => (string) ($now + 864000),
+            'contestDropoffOpen' => (string) ($now - 86400),
+            'contestDropoffDeadline' => (string) ($now + 864000),
+            'contestShippingOpen' => (string) ($now - 86400),
+            'contestShippingDeadline' => (string) ($now + 864000),
+            'contestShippingAddress' => '123 Main St, Anytown',
+        ]);
+
+        $this->put('/admin/site-preferences/default', $this->defaultPrefsPayload([
+            'prefsDropOff' => '0', 'prefsShipping' => '0',
+        ]))->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        $this->get('/')->assertOk()
+            ->assertDontSee('>Entry Drop-Off</h5>', false)
+            ->assertDontSee('>Entry Shipping</h5>', false);
+
+        $this->put('/admin/site-preferences/default', $this->defaultPrefsPayload([
+            'prefsDropOff' => '1', 'prefsShipping' => '1',
+        ]))->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        $this->get('/')->assertOk()
+            ->assertSee('>Entry Drop-Off</h5>', false)
+            ->assertSee('>Entry Shipping</h5>', false);
+    }
+
+    /**
+     * Issue 4: changing Date Format / Time Format / Time Zone must change the
+     * date actually rendered on a public page. The landing at-a-glance deck
+     * renders the entry window through DateFmt, so it is the probe.
+     */
+    public function test_localization_switches_change_the_displayed_date(): void
+    {
+        $this->login();
+
+        // 2030-01-15 15:30 UTC — day and month digits differ, so a swapped
+        // order is visible; London is GMT and New York EST in January.
+        $instant = 1894721400;
+        $now = time();
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => (string) ($now - 86400),
+            'contestEntryDeadline' => (string) $instant,
+        ]);
+
+        $payload = fn (string $dateFormat, string $timeFormat, string $tz): array => $this->defaultPrefsPayload([
+            'prefsDateFormat' => $dateFormat,
+            'prefsTimeFormat' => $timeFormat,
+            'prefsTimeZone' => $tz,
+        ]);
+
+        // 1 = MM/DD/YYYY, 12-hour, GMT.
+        $this->put('/admin/site-preferences/default', $payload('1', '0', '0.000'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()->assertSee('01/15/2030 3:30 PM, GMT', false);
+
+        // 2 = DD/MM/YYYY.
+        $this->put('/admin/site-preferences/default', $payload('2', '0', '0.000'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()
+            ->assertSee('15/01/2030 3:30 PM, GMT', false)
+            ->assertDontSee('01/15/2030 3:30 PM, GMT', false);
+
+        // 1 = 24-hour.
+        $this->put('/admin/site-preferences/default', $payload('1', '1', '0.000'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()->assertSee('01/15/2030 15:30, GMT', false);
+
+        // The Time Zone shifts the rendered clock (EST = UTC-5 in January).
+        $this->put('/admin/site-preferences/default', $payload('1', '0', '-5.000'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()->assertSee('01/15/2030 10:30 AM, EST', false);
+    }
+
+    /**
+     * Full General-tab payload (the tab validates ~14 required columns), so a
+     * test can flip one switch through the real form.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function defaultPrefsPayload(array $overrides = []): array
+    {
+        return array_merge([
+            'prefsProEdition' => '0',
+            'prefsMHPDisplay' => '1',
+            'prefsDisplayWinners' => 'N',
+            'prefsWinnerDelay' => '',
+            'prefsWinnerMethod' => '0',
+            'prefsTheme' => 'default',
+            'prefsUseMods' => 'N',
+            'prefsCAPTCHA' => '0',
+            'prefsGoogleAccount' => '',
+            'prefsEmailVerify' => '0',
+            'prefsRecordPaging' => '25',
+            'prefsSessionTimeout' => '',
+            'prefsLanguage' => 'en-US',
+            'prefsLanguageToggle' => 'N',
+            'prefsLanguageOptions' => ['en-US'],
+            'prefsDateFormat' => '1',
+            'prefsTimeFormat' => '0',
+            'prefsTimeZone' => '0.000',
+            'prefsSponsors' => 'Y',
+            'prefsSponsorLogos' => 'Y',
+            'prefsDropOff' => 'N',
+            'prefsShipping' => 'N',
+        ], $overrides);
     }
 }

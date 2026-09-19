@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use PDO;
@@ -45,5 +46,28 @@ abstract class PublicSurfaceTestCase extends TestCase
         ));
         Config::set('database.default', 'mysql');
         DB::purge('mysql');
+    }
+
+    /**
+     * Authenticate as an existing user without the real login round-trip.
+     * Use where the login flow is not itself under test; keep `POST /login`
+     * wherever session state produced by a real login is asserted.
+     */
+    protected function loginWith(int $userId): static
+    {
+        $this->actingAs(User::query()->findOrFail($userId));
+
+        return $this;
+    }
+
+    /**
+     * Authenticate by email without the real login round-trip.
+     * See loginWith() for when to prefer a real `POST /login` instead.
+     */
+    protected function loginWithEmail(string $email): static
+    {
+        $this->actingAs(User::query()->where('user_name', $email)->firstOrFail());
+
+        return $this;
     }
 }

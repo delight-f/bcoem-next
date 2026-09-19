@@ -258,12 +258,12 @@
                             <td class="d-print-none" nowrap>
                                 {{-- Pullsheets by Entry/Judging Numbers (legacy planning-mode gate). --}}
                                 @if (! $planning)
-                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}&view=entry&id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=entry&id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the pullsheet by Entry Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
                                 @else
                                     <span class="fa fa-lg fa-print text-muted" data-bs-toggle="tooltip" data-placement="top" title="Printing pullsheets is disabled in Tables Planning Mode"></span>
                                 @endif
                                 @if ($sessionCount > 1 && ! $planning)
-                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}&view=judging&id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the pullsheet by Judging Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
+                                    <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?view=judging&id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the pullsheet by Judging Numbers for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-print"></span></a>
                                 @endif
                                 @if (! $obfuscate && ! $planning)
                                     <a class="hide-loader" href="{{ route('outputs.pullsheets') }}?id={{ $table->id }}" data-bs-toggle="tooltip" data-placement="top" title="Print the Entries with Additional Info Report for Table {{ $table->tableNumber }}: {{ $table->tableName }}"><span class="fa fa-lg fa-plus-square"></span></a>

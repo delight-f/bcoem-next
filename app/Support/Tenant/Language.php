@@ -18,6 +18,19 @@ use Illuminate\Http\Request;
 final class Language
 {
     /**
+     * Canonical codes for the installed lang/ folders, keyed by folder name
+     * (legacy constants.inc.php $languages). Unknown folders are skipped.
+     */
+    private const CANONICAL = [
+        'cs' => 'cs-CZ',
+        'en' => 'en-US',
+        'es' => 'es-419',
+        'fr' => 'fr-FR',
+        'hu' => 'hu-HU',
+        'pt' => 'pt-BR',
+    ];
+
+    /**
      * Available language codes from the installed lang/ packs.
      * Mirrors legacy's get_available_language_codes() (common.lib.php:160-170)
      * which globs the lang folders.
@@ -34,8 +47,8 @@ final class Language
         }
         foreach ($files as $file) {
             $folder = basename(dirname($file));
-            if (preg_match('/^[a-z]{2}$/', $folder)) {
-                $codes[] = $folder === 'en' ? 'en-US' : strtoupper(substr($folder, 0, 2)).'-'.ucfirst($folder);
+            if (isset(self::CANONICAL[$folder])) {
+                $codes[] = self::CANONICAL[$folder];
             }
         }
         sort($codes);

@@ -96,10 +96,7 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
         ]);
-        $this->post('/login', [
-            'loginUsername' => 'etp.level1@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('etp.level1@brewingcompetitions.com');
         $this->post('/backoffice/entries/purge', ['go' => 'unpaid'])
             ->assertRedirect('/?msg=99');
         self::assertNotNull(DB::table('brewing')->where('id', $keep)->value('id'));

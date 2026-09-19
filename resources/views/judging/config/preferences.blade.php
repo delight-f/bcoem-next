@@ -9,16 +9,9 @@
     @endphp
     <section class="landing-page-section mt-6 mb-4">
         <h1>{{ $ctx->contestStr('contestName') }}: Set Preferences</h1>
-        {{-- Sibling preference-tab buttons (judging_preferences.admin.php:187-198).
-             The Judging tab is the current page, so it is rendered disabled. --}}
-        <div class="bcoem-admin-element d-print-none mb-3">
-            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit') }}"><span class="fa fa-cog"></span> General Preferences</a>
-            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'entries']) }}"><span class="fa fa-beer"></span> Entry Preferences</a>
-            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'email']) }}"><span class="fa fa-envelope"></span> Email Sending / Contact Display Preferences</a>
-            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'payment']) }}"><span class="fa fa-money"></span> Currency and Payment Preferences</a>
-            <a class="btn btn-primary" style="margin: 5px 5px 5px 0" href="{{ route('admin.site_preferences.edit', ['go' => 'best']) }}"><span class="fa fa-trophy"></span> Best Brewer and/or Club Preferences</a>
-            <a class="btn btn-primary disabled" style="margin: 5px 5px 5px 0" href="{{ route('admin.judging.preferences.show') }}"><span class="fa fa-cog"></span> Judging/Competition Organization Preferences</a>
-        </div>
+        {{-- Issue #58: the same preference tab bar the site-preferences pages
+             use (one shared partial), with the Judging tab active. --}}
+        @include('admin.partials.preference-tabs', ['active' => 'judging'])
         <h3>Judging/Competition Organization</h3>
 
         @if ($errors->any())

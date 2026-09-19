@@ -13,6 +13,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Group;
 use ZipArchive;
 
 /**
@@ -23,6 +24,7 @@ use ZipArchive;
  * The file work is pointed at a throwaway app-data fixture bound into the
  * container, so the repository is never touched.
  */
+#[Group('slow')]
 final class UpdateWizardTest extends WizardTestCase
 {
     private string $fixtureDoc;

@@ -79,7 +79,7 @@ final class PaymentProviderRegistryTest extends PublicSurfaceTestCase
     public function test_stripe_connected_plus_paypal_enables_both_with_stripe_default(): void
     {
         DB::table('preferences')->where('id', 1)->update([
-            'prefsStripe' => json_encode(['account_id' => 'acct_connected'], JSON_THROW_ON_ERROR),
+            'prefsStripe' => json_encode(['account_id' => 'acct_connected', 'webhook_secret' => 'whsec_test'], JSON_THROW_ON_ERROR),
         ]);
         config(['services.paypal' => self::PAYPAL]);
 
@@ -96,7 +96,7 @@ final class PaymentProviderRegistryTest extends PublicSurfaceTestCase
     public function test_disabled_provider_is_not_selectable(): void
     {
         DB::table('preferences')->where('id', 1)->update([
-            'prefsStripe' => json_encode(['account_id' => 'acct_connected'], JSON_THROW_ON_ERROR),
+            'prefsStripe' => json_encode(['account_id' => 'acct_connected', 'webhook_secret' => 'whsec_test'], JSON_THROW_ON_ERROR),
         ]);
         config(['services.paypal' => []]);
 

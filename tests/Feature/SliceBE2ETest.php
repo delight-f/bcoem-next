@@ -192,8 +192,7 @@ final class SliceBE2ETest extends PublicSurfaceTestCase
         self::assertSame('Gate Pale Ale (revised)', (string) DB::table('brewing')->where('id', $entryId)->value('brewName'));
 
         // --- 4. Pay via the deterministic MANUAL marking path (admin). ---
-        $this->post('/logout');
-        $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
 
         $fee = (float) DB::table('contest_info')->where('id', 1)->value('contestEntryFee');
 

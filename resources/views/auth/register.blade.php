@@ -235,13 +235,15 @@
                                value="{{ old('brewerAHA') }}">
                     </div>
                 </div>
-                <div class="mb-4 row">
-                    <label for="brewerMHP" class="col-md-3 col-form-label">{{ __('site.mhp_number') }}</label>
-                    <div class="col-md-9">
-                        <input class="form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
-                               value="{{ old('brewerMHP') }}">
+                @if ((int) $ctx->prefsStr('prefsMHPDisplay') === 1)
+                    <div class="mb-4 row">
+                        <label for="brewerMHP" class="col-md-3 col-form-label">{{ __('site.mhp_number') }}</label>
+                        <div class="col-md-9">
+                            <input class="form-control" id="brewerMHP" name="brewerMHP" type="text" pattern="\d*"
+                                   value="{{ old('brewerMHP') }}">
+                        </div>
                     </div>
-                </div>
+                @endif
                 <div class="mb-4 row">
                     <label for="brewerProAm" class="col-md-3 col-form-label">{{ __('site.pro_am') }}</label>
                     <div class="col-md-9">

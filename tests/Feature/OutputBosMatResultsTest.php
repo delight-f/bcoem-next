@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * BOS cup mats and results PDF families (spec §7 P5.1): every legacy
@@ -69,11 +70,7 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => self::ADMIN_PASS,
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     /**
@@ -138,6 +135,7 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
         return $entryId;
     }
 
+    #[Group('slow')]
     public function test_bos_mat_shapes_return_pdf_with_filename(): void
     {
         $this->seedBosMat();
@@ -318,7 +316,7 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
         ]);
-        $this->post('/login', ['loginUsername' => 'bmr.user@brewingcompetitions.com', 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail('bmr.user@brewingcompetitions.com');
         $this->get('/admin/output/bos_mat')->assertRedirect('/?msg=99');
         $this->get('/admin/output/results')->assertRedirect('/?msg=99');
     }

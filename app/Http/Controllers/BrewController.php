@@ -119,6 +119,20 @@ final class BrewController extends Controller
         }
 
         $ctx = TenantContext::load();
+
+        // Comp-wide caps (prefsEntryLimit / prefsEntryLimitPaid) are a hard
+        // stop on add: the render gate in create() is not enough, a direct
+        // POST would otherwise exceed the cap. Admins bypass (legacy #9/#10).
+        if (! ($request->user()?->isAdmin() ?? false)) {
+            if (self::compPaidEntryLimitReached($ctx)) {
+                return redirect('/list?msg=16');
+            }
+
+            if (self::compEntryLimitReached($ctx)) {
+                return redirect('/list?msg=15');
+            }
+        }
+
         $data = $request->validate(self::RULES);
 
         $sort = self::styleSort($data['brewStyle']);
@@ -228,7 +242,18 @@ final class BrewController extends Controller
             $pouring['pouring_notes'] = $data['brewPouringNotes'];
         }
 
-        DB::table('brewing')->insert([
+        // Required style fields: special ingredients/classic-style info,
+        // carbonation, sweetness, strength. Enforced on add too — previously
+        // only the edit path unconfirmed a row, so a first submission with a
+        // blank required field was created confirmed (D2-04). A miss stores the
+        // row unconfirmed and lands on its edit form with the legacy msg.
+        $missing =
+            (self::requiresSpecInfo((string) $data['brewStyle'], $styleRow, $ctx) && (string) ($data['brewInfo'] ?? '') === '')
+            || ((int) ($styleRow->brewStyleCarb ?? 0) === 1 && ($mead1 === null || $mead1 === ''))
+            || ((int) ($styleRow->brewStyleSweet ?? 0) === 1 && ($mead2 === null || $mead2 === ''))
+            || ((int) ($styleRow->brewStyleStrength ?? 0) === 1 && ($mead3 === null || $mead3 === ''));
+
+        $newId = (int) DB::table('brewing')->insertGetId([
             'brewName' => self::blankToNull($data['brewName']),
             'brewStyle' => $styleRow->brewStyle ?? null,
             'brewCategory' => self::blankToNull(ltrim($sort, '0')),
@@ -244,7 +269,7 @@ final class BrewController extends Controller
             'brewBrewerLastName' => $brewer->brewerLastName,
             'brewPaid' => ((float) ($ctx->contestStr('contestEntryFee') ?? 0)) == 0 ? 1 : 0,
             'brewReceived' => 0,
-            'brewConfirmed' => '1',
+            'brewConfirmed' => $missing ? '0' : '1',
             'brewInfoOptional' => self::blankToNull($data['brewInfoOptional'] ?? ''),
             'brewAdminNotes' => null,
             'brewStaffNotes' => null,
@@ -260,6 +285,16 @@ final class BrewController extends Controller
             'brewStyleType' => $styleRow->brewStyleType ?? null,
             'brewPackaging' => self::blankToNull($data['brewPackaging'] ?? ''),
         ]);
+
+        if ($missing) {
+            // Non-admin landing for a missing required field, same as edit:
+            // the unconfirmed row opens on its edit form with msg=1-<style>.
+            $index = ctype_digit(explode('-', (string) $data['brewStyle'])[0])
+                ? sprintf('%02d', (int) explode('-', (string) $data['brewStyle'])[0])
+                : explode('-', (string) $data['brewStyle'])[0];
+
+            return redirect('/brew/'.$newId.'/edit?msg=1-'.$index.'-'.$sub);
+        }
 
         // Legacy success landing: ?section=list&msg=1.
         return redirect('/list?msg=1');

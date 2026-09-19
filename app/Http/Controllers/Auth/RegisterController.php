@@ -156,7 +156,12 @@ final class RegisterController extends Controller
             'brewerJudgeDislikes' => ['nullable', 'array'],
             'brewerJudgeExp' => ['nullable', 'string', 'max:25'],
             'brewerJudgeNotes' => ['nullable', 'string'],
-            'brewerJudgeWaiver' => ['nullable', 'in:Y'],
+            // Self-service judge/steward sign-ups must actually accept the
+            // waiver; admin-created registrations (no waiver checkbox) and
+            // other roles keep it optional (defaulted on insert).
+            'brewerJudgeWaiver' => (! $adminRegister && in_array($go, ['judge', 'steward'], true))
+                ? ['required', 'in:Y']
+                : ['nullable', 'in:Y'],
             'brewerJudgeLocation' => ['nullable', 'string'],
             'brewerStewardLocation' => ['nullable', 'string'],
             'brewerBreweryName' => ['nullable', 'string', 'max:255'],
@@ -265,7 +270,7 @@ final class RegisterController extends Controller
             'brewerJudgeNotes' => $data['brewerJudgeNotes'] ?? null,
             'brewerJudgeWaiver' => $data['brewerJudgeWaiver'] ?? 'Y',
             'brewerAHA' => $data['brewerAHA'] ?? null,
-            'brewerMHP' => $data['brewerMHP'] ?? null,
+            'brewerMHP' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1 ? ($data['brewerMHP'] ?? null) : null,
             'brewerProAm' => $data['brewerProAm'] ?? '0',
             'brewerDropOff' => $data['brewerDropOff'] ?? null,
             'brewerBreweryName' => $data['brewerBreweryName'] ?? null,

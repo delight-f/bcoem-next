@@ -82,7 +82,7 @@ final class JudgeSignupTest extends PublicSurfaceTestCase
 
         $this->createdUsers[] = $uid;
 
-        $this->post('/login', ['loginUsername' => $email, 'loginPassword' => 'correct-horse-battery']);
+        $this->loginWithEmail($email);
 
         return $uid;
     }

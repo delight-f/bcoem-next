@@ -48,6 +48,9 @@ final class SendTestEmailController extends Controller
             'transport' => $transport === null
                 ? (string) config('mail.default')
                 : MailSettings::label($transport),
+            // Only SMTP actually uses the host/username/encryption/port rows;
+            // hide them for the API-key, sendmail and log transports.
+            'smtp' => ($transport ?? (string) config('mail.default')) === 'smtp',
             'delivers' => MailSettings::delivers($ctx),
             // The program the mailer will actually run, which is the one
             // thing that cannot be read off the preferences: it comes from

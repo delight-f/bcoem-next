@@ -29,7 +29,7 @@ use Illuminate\Support\Facades\Route;
 //
 // Admin gating is in-controller (userLevel<=1) like every admin surface.
 
-Route::middleware('auth')->prefix('eval')->name('eval.')->group(function (): void {
+Route::middleware(['auth', 'eval.enabled'])->prefix('eval')->name('eval.')->group(function (): void {
     Route::get('/', [EvalDashboardController::class, 'show'])->name('dashboard');
     Route::get('/my-account', [EvalMyAccountController::class, 'show'])->name('my_account');
 

@@ -55,10 +55,7 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -519,7 +516,56 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
 
         $this->get('/admin/judging/preferences')
             ->assertOk()
-            ->assertSeeText('Judging/Competition Organization Preferences');
+            ->assertSeeText('Judging/Competition Organization');
+    }
+
+    /**
+     * Issue #58: the judging preferences page used a row of blue buttons while
+     * every other preferences page used a tab bar. Both now render the same
+     * shared partial, so the tabs (and their targets) cannot drift.
+     */
+    public function test_preference_pages_share_one_tab_bar(): void
+    {
+        $judging = (string) $this->get('/admin/judging/preferences')->assertOk()->getContent();
+        $bar = $this->tabBar($judging);
+
+        // Six tabs, all six destinations present.
+        self::assertSame(6, substr_count($bar, 'class="nav-link '));
+        foreach (['default', 'entries', 'email', 'payment', 'best'] as $go) {
+            self::assertStringContainsString('href="'.url('/admin/site-preferences/'.$go).'"', $bar);
+        }
+        self::assertStringContainsString('href="'.route('admin.judging.preferences.show').'"', $bar);
+
+        // Judging is the one active tab: exactly one aria-current, on it.
+        self::assertStringContainsString(
+            '<a class="nav-link active" aria-current="page" href="'.route('admin.judging.preferences.show').'">Judging/Competition Organization</a>',
+            $bar,
+        );
+        self::assertSame(1, substr_count($bar, 'aria-current="page"'));
+
+        // The old blue button row is gone.
+        self::assertStringNotContainsString('General Preferences', $judging);
+
+        // The site-preferences pages render the same bar (now with six tabs),
+        // with their own tab active.
+        $site = $this->tabBar((string) $this->get('/admin/site-preferences')->assertOk()->getContent());
+        self::assertSame(6, substr_count($site, 'class="nav-link '));
+        self::assertStringContainsString('href="'.route('admin.judging.preferences.show').'"', $site);
+        self::assertStringContainsString(
+            '<a class="nav-link active" aria-current="page" href="'.url('/admin/site-preferences/default').'">General</a>',
+            $site,
+        );
+    }
+
+    /** The preference tab bar markup, sliced out of a rendered page. */
+    private function tabBar(string $html): string
+    {
+        $start = strpos($html, 'nav nav-tabs mb-4');
+        self::assertNotFalse($start, 'preference tab bar not found');
+        $end = strpos($html, '</ul>', (int) $start);
+        self::assertNotFalse($end, 'preference tab bar not closed');
+
+        return substr($html, (int) $start, (int) $end - (int) $start);
     }
 
     public function test_tables_empty_state_renders_as_an_alert(): void

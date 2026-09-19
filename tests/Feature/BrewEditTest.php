@@ -66,10 +66,7 @@ final class BrewEditTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN);
     }
 
     /**

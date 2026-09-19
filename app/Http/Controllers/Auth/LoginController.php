@@ -111,9 +111,10 @@ final class LoginController extends Controller
         // jail watches (production).
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        if (app()->environment('production')) {
-            error_log('user authentication failure');
-        }
+        // Always record the failure (a fail2ban-keyable line); previously this
+        // was written only in production, so other environments had no
+        // brute-force signal at all.
+        error_log('user authentication failure');
 
         return redirect('/?msg=11');
     }

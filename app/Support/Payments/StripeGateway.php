@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\Payments;
 
-use Illuminate\Support\Facades\DB;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\StripeClient;
@@ -40,12 +39,13 @@ final class StripeGateway implements GatewayAdapter, SessionCheckout
      */
     public static function forTenant(string $successUrl = '', string $cancelUrl = ''): self
     {
-        $prefs = (array) DB::table('preferences')->where('id', 1)->first();
         $cfg = StripeSettings::config();
 
         return new self(
             StripeSettings::get()['secret'],
-            strtolower((string) (($cfg['currency'] ?? null) ?: ($prefs['prefsCurrency'] ?? '') ?: 'usd')),
+            // ISO currency only — the legacy prefsCurrency display token
+            // ('$', 'euro', ...) must never reach Stripe (B1-01).
+            strtolower((string) (($cfg['currency'] ?? null) ?: PaymentService::tenantCurrency())),
             (string) ($cfg['webhook_secret'] ?? ''),
             isset($cfg['account_id']) && $cfg['account_id'] !== '' ? (string) $cfg['account_id'] : null,
             $successUrl,

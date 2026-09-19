@@ -63,6 +63,7 @@ final class EvalScoresheetController extends Controller
             'checklist' => Descriptors::checklist(),
             'nwCider' => Descriptors::nwCider(),
             'variant' => $variant,
+            'displayId' => self::displayId($entry, $ctx),
         ]);
     }
 
@@ -111,7 +112,25 @@ final class EvalScoresheetController extends Controller
             'evaluations' => $evaluations,
             'style' => $style,
             'points' => Descriptors::points($styleType),
+            'displayId' => self::displayId($entry, $ctx),
         ]);
+    }
+
+    /**
+     * The identifier shown to judges ("Scoresheet Unique Identifier",
+     * preferences.prefsDisplaySpecial): 'E' = the entry id zero-padded to six
+     * digits; 'J' (default) = the entry's six-character judging number, with
+     * the padded id as a fallback when none is assigned (B3-07).
+     */
+    private static function displayId(\stdClass $entry, TenantContext $ctx): string
+    {
+        if ((string) $ctx->prefsStr('prefsDisplaySpecial') === 'E') {
+            return str_pad((string) $entry->id, 6, '0', STR_PAD_LEFT);
+        }
+
+        $judging = trim((string) ($entry->brewJudgingNumber ?? ''));
+
+        return $judging !== '' ? $judging : str_pad((string) $entry->id, 6, '0', STR_PAD_LEFT);
     }
 
     /**

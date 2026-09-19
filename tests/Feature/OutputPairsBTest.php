@@ -200,10 +200,7 @@ final class OutputPairsBTest extends PublicSurfaceTestCase
 
     private function loginAs(string $email): void
     {
-        $this->post('/login', [
-            'loginUsername' => $email,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail($email);
     }
 
     private function makeUser(string $email, int $id, string $level): void

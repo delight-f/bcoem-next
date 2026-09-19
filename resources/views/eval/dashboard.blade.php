@@ -38,10 +38,10 @@
                         </div>
                     @endif
 
-                    <form method="post" action="{{ route('eval.import.run') }}" id="import-scores-form">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Import Score Data</button>
-                    </form>
+                    {{-- Two-step import: land on the confirmation screen, which
+                         states the material rules, then it posts to import.run
+                         (the confirmation page used to be orphaned) (D3-07). --}}
+                    <a class="btn btn-success" href="{{ route('eval.import') }}">Import Score Data</a>
                 </div>
             </div>
         @endif

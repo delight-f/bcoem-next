@@ -52,10 +52,7 @@ final class JudgingFlightsTest extends PublicSurfaceTestCase
             'userCreated' => '2024-01-01 00:00:01',
             'userAdminObfuscate' => 0,
         ]);
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -241,11 +238,7 @@ final class JudgingFlightsTest extends PublicSurfaceTestCase
             'password' => self::HASH,
             'userCreated' => '2024-01-01 00:00:01',
         ]);
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => 'flights.entrant@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('flights.entrant@brewingcompetitions.com');
 
         $this->get('/admin/judging/flights')->assertRedirect('/?msg=99');
         $this->post('/admin/judging/flights/'.$tableId, ['flights' => [1 => '1']])

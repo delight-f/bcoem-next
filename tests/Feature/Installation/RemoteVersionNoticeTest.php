@@ -6,12 +6,14 @@ namespace Tests\Feature\Installation;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Task 2.2 acceptance: the "new release published" dashboard notice, its
  * 24-hour cache, and the rule that it does not even run for non-Top-Level
  * Administrators.
  */
+#[Group('slow')]
 final class RemoteVersionNoticeTest extends WizardTestCase
 {
     public function test_top_level_admin_sees_the_cached_release_notice_without_http(): void

@@ -66,10 +66,7 @@ final class OutputPairsDTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -109,10 +106,7 @@ final class OutputPairsDTest extends PublicSurfaceTestCase
         }
 
         // …and authenticated non-admins to the standard alert.
-        $this->post('/login', [
-            'loginUsername' => self::USER_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::USER_EMAIL);
         foreach (['maps', 'dropoff', 'print', 'results', 'bos_mat'] as $output) {
             $this->get('/admin/output/'.$output)->assertRedirect('/?msg=99');
         }

@@ -86,7 +86,7 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     private function trackUpload(string $name): void
@@ -190,6 +190,14 @@ final class AdminPagesControlsTest extends PublicSurfaceTestCase
             ->assertSee('000123, 000124')
             ->assertSee('p57-txn-1');
 
+        // A settled online (Stripe) payment must not be deletable — the admin
+        // is steered to Refund, so the entries don't stay marked paid with no
+        // backing payment (C2-05).
+        $this->delete('/admin/payments/'.$paymentId)->assertRedirect('/admin/payments?msg=delete-refund-first');
+        $this->assertSame(1, DB::table('payments')->where('event_id', 'evt_p57')->count());
+
+        // An already-refunded row may still be removed from the ledger.
+        DB::table('payments')->where('id', $paymentId)->update(['status' => 'refunded']);
         $this->delete('/admin/payments/'.$paymentId)->assertRedirect('/admin/payments?msg=deleted');
         $this->assertSame(0, DB::table('payments')->where('event_id', 'evt_p57')->count());
     }

@@ -87,10 +87,7 @@ final class BrewerForm1Test extends PublicSurfaceTestCase
 
     private function login(): void
     {
-        $this->post('/login', [
-            'loginUsername' => self::LOGIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::LOGIN_EMAIL);
     }
 
     /**

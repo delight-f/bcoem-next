@@ -65,6 +65,18 @@ final class LanguageToggleTest extends PublicSurfaceTestCase
         self::assertStringContainsString('Français', $html);
     }
 
+    public function test_toggle_shown_with_null_options_uses_canonical_fallback_codes(): void
+    {
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsLanguageToggle' => 'Y',
+            'prefsLanguageOptions' => null,
+        ]);
+
+        $html = (string) $this->get('/')->getContent();
+        self::assertStringContainsString('fa-globe', $html);
+        self::assertStringContainsString('Čeština', $html);
+    }
+
     public function test_lang_param_sets_cookie_and_redirects(): void
     {
         DB::table('preferences')->where('id', 1)->update([

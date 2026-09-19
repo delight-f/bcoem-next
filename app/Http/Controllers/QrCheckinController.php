@@ -98,7 +98,16 @@ final class QrCheckinController extends Controller
         }
         $data['brewPaid'] = $brewPaid;
 
-        $judgingNumber = strtolower(sprintf('%06s', trim((string) $request->input('brewJudgingNumber', ''))));
+        $rawJudging = trim((string) $request->input('brewJudgingNumber', ''));
+
+        // Judging numbers are the barcode/QR key: digits only, at most six.
+        // A non-numeric value used to be stored verbatim (e.g. "000abc"), and
+        // an empty field used to become "000000" (D2-05).
+        if ($rawJudging !== '' && (! ctype_digit($rawJudging) || strlen($rawJudging) > 6)) {
+            return redirect('/qr?action=default&go=default&view='.$id.'^'.urlencode($rawJudging).'&msg=7');
+        }
+
+        $judgingNumber = $rawJudging === '' ? '' : strtolower(sprintf('%06s', $rawJudging));
         if ($judgingNumber !== '') {
             $clash = DB::table('brewing')
                 ->where('brewJudgingNumber', $judgingNumber)

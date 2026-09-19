@@ -28,6 +28,12 @@
                 <a href="{{ route('admin.payments.setup') }}">Payment Setup</a> screen to enable connecting.</p>
         @endif
 
+        @if ($accountId && ! $webhookSecretSet)
+            <p class="alert alert-warning mt-3">Stripe is connected but no webhook signing secret is saved.
+                Checkout stays disabled until it is set — without it the platform cannot mark entries
+                paid after a payment, so an entrant could be charged with their entries left unpaid.</p>
+        @endif
+
         <h2 class="mt-6">Webhook endpoint</h2>
         <p>
             Create a webhook endpoint in your Stripe dashboard pointing at

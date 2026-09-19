@@ -9,6 +9,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ViewErrorBag;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * P5.4 CRUD screens: sponsors, contacts, mods, style_types, hero_images —
@@ -404,6 +405,7 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
         }
     }
 
+    #[Group('slow')]
     public function test_change_user_password_updates_hash_and_invalidates_old(): void
     {
         Auth::logout();
@@ -422,7 +424,7 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
         $originalHash = (string) $originalUser['password'];
 
         try {
-            $this->post('/login', ['loginUsername' => self::ADMIN_EMAIL, 'loginPassword' => 'bcoem']);
+            $this->loginWithEmail(self::ADMIN_EMAIL);
 
             // Mismatch is a server-side validation error (documented divergence).
             $this->put('/admin/users/9403/password', [
@@ -467,7 +469,7 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
         ]);
 
         try {
-            $this->post('/login', ['loginUsername' => 'p54.lowlevel@brewingcompetitions.com', 'loginPassword' => 'pw']);
+            $this->loginWithEmail('p54.lowlevel@brewingcompetitions.com');
 
             foreach (
                 [

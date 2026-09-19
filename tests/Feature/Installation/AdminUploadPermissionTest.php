@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature\Installation;
 
 use Illuminate\Http\UploadedFile;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * An upload folder the web server cannot write to must report a permissions
  * message, not a 500 — the failure a host produces when PHP runs as a different
  * user than the one owning the site's files (NearlyFreeSpeech, for one).
  */
+#[Group('slow')]
 final class AdminUploadPermissionTest extends WizardTestCase
 {
     private string $directory = '';

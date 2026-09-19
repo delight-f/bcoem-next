@@ -66,6 +66,10 @@ final class StaffPointsController extends Controller
             return $this->xmlReport($ctx, $request);
         }
 
+        // The dashboard's three links: Print (no params) stays an inline PDF;
+        // PDF (?action=download&view=pdf) is an attachment (D1-06).
+        $download = $request->query('action') === 'download' || $request->query('view') === 'pdf';
+
         $entries = self::bjcpEntryCount();
 
         // Style-type tallies over the active set (styles ledger #5-#7
@@ -240,7 +244,7 @@ final class StaffPointsController extends Controller
             'staff' => $staff,
             'staffMax' => number_format($staffMax, 1),
             'staffOverflow' => $runningTotal > $staffMax,
-        ], 'staff-points.pdf');
+        ], 'staff-points.pdf', $download);
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Support\Payments\PaymentEvent;
 use App\Support\Payments\PaymentResult;
 use App\Support\Payments\PaymentService;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * P5.5 back-office: participants / payments / entries admin + by_style
@@ -97,7 +98,7 @@ final class BackofficeTest extends PublicSurfaceTestCase
 
     private function login(string $email): void
     {
-        $this->post('/login', ['loginUsername' => $email, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail($email);
     }
 
     /**
@@ -253,6 +254,7 @@ final class BackofficeTest extends PublicSurfaceTestCase
         self::assertSame(1, (int) $row['brewStyleType']);
     }
 
+    #[Group('slow')]
     public function test_participant_delete_cascades_like_legacy(): void
     {
         $entryId = $this->makeEntry();

@@ -13,7 +13,9 @@ use App\Services\Installation\UpgradeService;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('slow')]
 final class InstallationServiceTest extends InstallationTestCase
 {
     private function input(DbCredentials $credentials): InstallInput

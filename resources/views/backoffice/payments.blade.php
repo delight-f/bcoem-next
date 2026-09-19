@@ -6,7 +6,9 @@
     @elseif (request('msg') === 'refunded')
         <div class="alert alert-success">Payment refunded; affected entries un-confirmed.</div>
     @elseif (request('msg') === 'refund-invalid')
-        <div class="alert alert-danger">Refund could not be completed (already refunded, not a Stripe payment, or gateway error).</div>
+        <div class="alert alert-danger">Refund could not be completed (already refunded, not an online payment, or gateway error).</div>
+    @elseif (request('msg') === 'delete-refund-first')
+        <div class="alert alert-warning">That payment was collected online, so it cannot be deleted — refund it instead to return the money and un-confirm its entries.</div>
     @endif
 
     @if ($payments->isEmpty())
@@ -37,19 +39,21 @@
                         <td class="d-none d-md-table-cell">{{ \App\Http\Controllers\Admin\PaymentsController::entryList($payment->entry_ids) }}</td>
                         <td>{{ \App\Http\Controllers\Admin\PaymentsController::paymentDate($ctx, $payment->created_at) }}</td>
                         <td nowrap>
-                            @if ($payment->method === 'stripe' && $payment->status === 'paid' && $payment->provider_ref !== null && $payment->provider_ref !== '')
+                            @if (in_array($payment->method, ['stripe', 'paypal'], true) && $payment->status === 'paid' && $payment->provider_ref !== null && $payment->provider_ref !== '')
                                 <form method="post" action="{{ route('admin.payments.refund', ['id' => $payment->id]) }}" class="d-inline"
                                       onsubmit="return confirm('Refund this payment and un-confirm its entries? This cannot be undone.');">
                                     @csrf
                                     <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-bs-placement="top" title="Refund this payment"><span class="fa fa-lg fa-undo"></span></button>
                                 </form>
                             @endif
-                            <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="d-inline"
-                                  onsubmit="return confirm('Are you sure you want to delete this payment? This cannot be undone.');">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete this payment"><span class="fa fa-lg fa-trash-o"></span></button>
-                            </form>
+                            @unless ($payment->status === 'paid' && in_array($payment->method, ['stripe', 'paypal'], true))
+                                <form method="post" action="{{ route('admin.payments.destroy', ['id' => $payment->id]) }}" class="d-inline"
+                                      onsubmit="return confirm('Are you sure you want to delete this payment? This cannot be undone.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="tooltip" data-bs-placement="top" title="Delete this payment"><span class="fa fa-lg fa-trash-o"></span></button>
+                                </form>
+                            @endunless
                         </td>
                     </tr>
                 @endforeach

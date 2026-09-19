@@ -6,12 +6,14 @@ namespace Tests\Feature\Installation;
 
 use App\Support\Wizard\ProgressTracker;
 use Illuminate\Support\Facades\Crypt;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Drives the wizard's own endpoints over HTTP while the site is uninstalled:
  * the double-submit guard, the encrypted-at-rest admin password, and the
  * pollable failure marker with both messages.
  */
+#[Group('slow')]
 final class InstallWizardHttpTest extends WizardTestCase
 {
     /**

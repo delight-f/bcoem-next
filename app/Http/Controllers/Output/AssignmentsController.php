@@ -32,6 +32,10 @@ use Illuminate\Support\Facades\DB;
  *  - view=sign-in: per-session sign-in sheets (name / BJCP ID / waiver /
  *    signature) + blank-row sheet, not a roster
  *  - tb=view: legacy print-window chrome — no roster change
+ *
+ * (filter=staff) is NOT a roster: the dashboard "Staff Availability" row
+ * links here with filter=staff and the legacy staff branch lists who
+ * volunteered for non-judging sessions. See staffAvailabilityData().
  */
 final class AssignmentsController extends Controller
 {
@@ -46,6 +50,13 @@ final class AssignmentsController extends Controller
     public function __invoke(Request $request): Response
     {
         $ctx = TenantContext::load();
+
+        // The dashboard's "Staff Availability" row (filter=staff) is a
+        // different report, not a role of the roster — legacy branches on it
+        // before the sign-in/roster split.
+        if ($request->query('filter') === 'staff') {
+            return $this->staffAvailability($ctx, (string) $request->query('view', ''));
+        }
 
         $role = $request->query('filter') === 'stewards' ? 'S' : 'J';
         $staffColumn = $role === 'S' ? 'staff_steward' : 'staff_judge';
@@ -198,6 +209,77 @@ final class AssignmentsController extends Controller
         $blankRows = max(1, DB::table('staff')->where($staffColumn, 1)->count());
 
         return ['sheets' => $sheets, 'blankRows' => $blankRows];
+    }
+
+    /**
+     * filter=staff (assignments.output.php staff branch): staff availability,
+     * NOT an assignments roster. One row per brewer flagged brewerStaff=Y who
+     * marked `Y-<id>` availability (brewer.brewerJudgeLocation) at a
+     * non-judging session (judging_locations.judgingLocType=2).
+     */
+    private function staffAvailability(TenantContext $ctx, string $view): Response
+    {
+        return StreamPdf::response('outputs.assignments-staff', [
+            'contestName' => $ctx->contestStr('contestName'),
+            'rows' => self::staffAvailabilityData($view, $ctx),
+        ], 'assignments-staff.pdf');
+    }
+
+    /**
+     * Data for the staff availability report. view=name orders by person then
+     * session; any other view orders by session then person — the legacy
+     * DataTables `aaSorting` pair, so the dashboard's "By Last Name" and "By
+     * Non-Judging Session" links are the SAME data set in two orderings (the
+     * user-observed equivalence is intended; what was wrong is that
+     * filter=staff fell through to the judge roster).
+     *
+     * @return list<array{name: string, email: string, session: string}>
+     */
+    public static function staffAvailabilityData(string $view, TenantContext $ctx): array
+    {
+        $sessions = [];
+        foreach (DB::table('judging_locations')->where('judgingLocType', 2)->orderBy('id')
+            ->get(['id', 'judgingLocName', 'judgingDate']) as $loc) {
+            $sessions[(int) $loc->id] = $loc;
+        }
+
+        $tz = $ctx->prefsStr('prefsTimeZone');
+        $dateFormat = $ctx->prefsStr('prefsDateFormat');
+        $timeFormat = $ctx->prefsStr('prefsTimeFormat');
+
+        $rows = [];
+        foreach (DB::table('brewer')->where('brewerStaff', 'Y')
+            ->get(['brewerFirstName', 'brewerLastName', 'brewerEmail', 'brewerJudgeLocation']) as $person) {
+            foreach (explode(',', (string) $person->brewerJudgeLocation) as $mark) {
+                if (preg_match('/^Y-(\d+)$/', trim($mark), $m) !== 1) {
+                    continue;
+                }
+                $loc = $sessions[(int) $m[1]] ?? null;
+                if ($loc === null) {
+                    continue;
+                }
+                $rows[] = [
+                    'name' => trim(($person->brewerLastName ?? '').', '.($person->brewerFirstName ?? '')),
+                    'email' => (string) $person->brewerEmail,
+                    // Legacy table_location(..., "known-id"): name + long
+                    // date-time without the zone suffix.
+                    'session' => $loc->judgingLocName.', '.(string) DateFmt::dateTime(
+                        (int) $loc->judgingDate,
+                        $tz,
+                        $dateFormat,
+                        $timeFormat,
+                        'long',
+                        false,
+                    ),
+                ];
+            }
+        }
+
+        usort($rows, $view === 'name'
+            ? static fn (array $a, array $b): int => [$a['name'], $a['session']] <=> [$b['name'], $b['session']]
+            : static fn (array $a, array $b): int => [$a['session'], $a['name']] <=> [$b['session'], $b['name']]);
+
+        return $rows;
     }
 
     /** Shared roster row shape for both orderings. */

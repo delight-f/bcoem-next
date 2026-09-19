@@ -4,7 +4,7 @@
     <div class="card-body">
         <h2 class="h5 mb-1">{{ $entry->brewName }}</h2>
         <p class="mb-0 fs-6">
-            Entry #{{ $entry->id }} &middot;
+            Entry #{{ $displayId ?? $entry->id }} &middot;
             Style: {{ $entry->brewCategorySort }}{{ $entry->brewSubCategory }} {{ $entry->brewStyle }}
             @if ($style ?? null)
                 &middot; {{ $style->brewStyle }}

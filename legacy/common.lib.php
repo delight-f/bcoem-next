@@ -244,11 +244,6 @@ function search_array(array $array, $key, $value): array
     return $result;
 }
 
-function in_string($haystack, $needle): bool
-{
-    return str_contains($haystack, $needle);
-}
-
 function designations(string $judge_array, string $display): string
 {
     $return = '';

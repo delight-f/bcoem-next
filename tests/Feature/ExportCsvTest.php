@@ -122,10 +122,7 @@ final class ExportCsvTest extends PublicSurfaceTestCase
             'tableLocation' => self::LOCATION_ID,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -468,10 +465,7 @@ final class ExportCsvTest extends PublicSurfaceTestCase
             'userAdminObfuscate' => 0,
         ]);
 
-        $this->post('/login', [
-            'loginUsername' => 'p53.user@brewingcompetitions.com',
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail('p53.user@brewingcompetitions.com');
 
         $this->get('/admin/output/export?go=csv&action=all&tb=all')
             ->assertRedirect('/?msg=99');

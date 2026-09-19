@@ -4,7 +4,7 @@
      is what the ported surfaces include. Timers degrade gracefully
      without JS (the text below simply stays). --}}
 <p id="judging-ends-p" class="fs-6 text-muted">
-    <strong>Judging closes:</strong> <span id="judging-ends">{{ \Carbon\Carbon::createFromTimestamp((int) ($ctx->judgingStr('jPrefsJudgingClosed') ?? 0))->toDayDateTimeString() }}</span>
+    <strong>Judging closes:</strong> <span id="judging-ends">{{ \App\Support\Tenant\DateFmt::dateTime((int) ($ctx->judgingStr('jPrefsJudgingClosed') ?? 0), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long') }}</span>
 </p>
 <script>
     (function () {

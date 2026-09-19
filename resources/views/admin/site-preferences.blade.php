@@ -6,7 +6,6 @@
     // dateFormat ('Y-m-d H:i' 24h / 'Y-m-d h:i K' 12h).
     $tf24 = ((int) $tf) === 1;
     $go = $go ?? 'default';
-    $tabs = ['default' => 'General', 'entries' => 'Entries', 'email' => 'Email & Contact', 'payment' => 'Currency and payments', 'best' => 'Best Brewer and/or Club'];
     $langOptions = json_decode((string) $ctx->prefsStr('prefsLanguageOptions'), true);
     if (! is_array($langOptions)) {
         $langOptions = array_keys($languages);
@@ -40,13 +39,7 @@
 
         <h1>{{ $ctx->contestStr('contestName') }}: Preferences</h1>
 
-        <ul class="nav nav-tabs mb-4">
-            @foreach ($tabs as $tabGo => $label)
-                <li class="nav-item">
-                    <a class="nav-link {{ $go === $tabGo ? 'active' : '' }}" href="{{ url('/admin/site-preferences/'.$tabGo) }}">{{ $label }}</a>
-                </li>
-            @endforeach
-        </ul>
+        @include('admin.partials.preference-tabs', ['active' => $go])
 
         @if ((int) request('msg') === 2)
             <div class="alert alert-success">Preferences updated.</div>
@@ -189,6 +182,13 @@
                     <div class="col-md-8">
                         <input class="form-control" id="prefsRecordPaging" name="prefsRecordPaging" type="number" min="1" style="width:auto;" placeholder="12" value="{{ $p('prefsRecordPaging') }}">
                         <span class="form-text">The number of records displayed per page when viewing lists.</span>
+                    </div>
+                </div>
+                <div class="mb-4 row">
+                    <label for="prefsRecordLimit" class="col-md-4 col-form-label">DataTables Record Threshold</label>
+                    <div class="col-md-8">
+                        <input class="form-control" id="prefsRecordLimit" name="prefsRecordLimit" type="number" min="1" style="width:auto;" placeholder="200" value="{{ $p('prefsRecordLimit') }}">
+                        <span class="form-text">The total number of records above which lists stop offering sorting, filtering and &ldquo;print all&rdquo;. Leave blank to disable the threshold.</span>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -938,6 +938,10 @@
                             <input class="form-check-input" type="radio" name="change-email-password-choice" value="1" id="pwChange">
                             <label class="form-check-label" for="pwChange">Set new password below</label>
                         </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="change-email-password-choice" value="2" id="pwRemove">
+                            <label class="form-check-label" for="pwRemove">Remove stored password</label>
+                        </div>
                     </div>
                 </div>
                 <div class="mb-4 row">
@@ -1017,13 +1021,13 @@
                              SendTestEmailController). Radios removed so the tab
                              has no dead control. --}}
                         <div class="mt-3">
-                            <a data-fancybox data-type="iframe" class="modal-window-link hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
+                            <a class="hide-loader btn btn-primary" href="{{ route('admin.send_test_email.show') }}">Test Current Email Sending Settings</a>
                         </div>
                         @unless (\App\Support\Mail\MailSettings::delivers($ctx))
                             <div class="alert alert-warning mt-3 mb-0">
                                 The current settings do not deliver mail. Sending is
                                 {{ \App\Support\Mail\MailSettings::disabled($ctx) ? 'switched off above' : 'set to log only' }},
-                                so the test will report success without an email arriving.
+                                so the test will warn that nothing was delivered rather than claiming success.
                             </div>
                         @endunless
                     </div>
@@ -1101,9 +1105,9 @@
                     <label class="col-md-4 col-form-label">Accept Cash?</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsCash" value="1" id="cashYes" @checked($p('prefsCash') === '1')><label class="form-check-label" for="cashYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCash" value="1" id="cashYes" @checked(! in_array($p('prefsCash'), ['0', 'N'], true))><label class="form-check-label" for="cashYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsCash" value="0" id="cashNo" @checked($p('prefsCash') !== '1')><label class="form-check-label" for="cashNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCash" value="0" id="cashNo" @checked(in_array($p('prefsCash'), ['0', 'N'], true))><label class="form-check-label" for="cashNo">No</label></div>
                         <span class="form-text">Offers cash in the collection-method list on the admin mark-as-paid screen.</span>
                     </div>
                 </div>
@@ -1111,9 +1115,9 @@
                     <label class="col-md-4 col-form-label">Accept Checks?</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsCheck" value="1" id="checkYes" @checked($p('prefsCheck') === '1')><label class="form-check-label" for="checkYes">Yes</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCheck" value="1" id="checkYes" @checked(! in_array($p('prefsCheck'), ['0', 'N'], true))><label class="form-check-label" for="checkYes">Yes</label></div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="prefsCheck" value="0" id="checkNo" @checked($p('prefsCheck') !== '1')><label class="form-check-label" for="checkNo">No</label></div>
+                            <input class="form-check-input" type="radio" name="prefsCheck" value="0" id="checkNo" @checked(in_array($p('prefsCheck'), ['0', 'N'], true))><label class="form-check-label" for="checkNo">No</label></div>
                         <span class="form-text">Offers checks in the collection-method list on the admin mark-as-paid screen.</span>
                     </div>
                 </div>

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Output\AssignmentsController;
 use App\Http\Controllers\Output\StaffPointsController;
 use App\Support\Outputs\OutputFormat;
+use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * P5.2 pair C outputs (spec §7 P5.2, ticket 02-remaining-outputs):
@@ -68,10 +71,7 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
             ]);
         }
 
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void
@@ -196,17 +196,14 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
 
     public function test_non_admin_is_rejected(): void
     {
-        $this->post('/logout');
-        $this->post('/login', [
-            'loginUsername' => self::JUDGE_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::JUDGE_EMAIL);
 
         foreach (self::OUTPUTS as $output) {
             $this->get('/admin/output/'.$output)->assertRedirect('/?msg=99');
         }
     }
 
+    #[Group('slow')]
     public function test_outputs_render_pdf_for_admin(): void
     {
         $this->seedSeason();
@@ -218,6 +215,103 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
             $this->assertSame('inline', substr((string) $response->headers->get('Content-Disposition'), 0, 6));
             $this->assertSame('%PDF', substr((string) $response->getContent(), 0, 4));
         }
+    }
+
+    /**
+     * Issue 5: the dashboard "Staff Availability" row links twice with
+     * filter=staff ("By Last Name" / "By Non-Judging Session"). Legacy
+     * assignments.output.php branches on filter=staff BEFORE the roster
+     * split, so both links must render the staff availability report —
+     * brewers flagged brewerStaff=Y who marked `Y-<id>` availability for a
+     * judgingLocType=2 session — and never the judge/steward roster.
+     */
+    public function test_staff_availability_filter_renders_staff_volunteers_not_the_judge_roster(): void
+    {
+        $judgingId = $this->location('P52c Judging Hall', 0);
+        $nonJudgingId = $this->location('P52c Non-Judging Hall', 2);
+
+        DB::table('brewer')->insert([
+            'uid' => self::JUDGE_ID, 'brewerFirstName' => 'Judy', 'brewerLastName' => 'Judge', 'brewerEmail' => self::JUDGE_EMAIL,
+        ]);
+        DB::table('brewer')->insert([
+            'uid' => self::ORGANIZER_ID, 'brewerFirstName' => 'Oscar', 'brewerLastName' => 'Organizer', 'brewerEmail' => self::ORGANIZER_EMAIL,
+            'brewerStaff' => 'Y', 'brewerJudgeLocation' => 'Y-'.$nonJudgingId,
+        ]);
+
+        // Roster data: a judge assigned to a judging session. It must not
+        // leak into the staff availability report.
+        DB::table('judging_assignments')->insert([
+            'bid' => self::JUDGE_ID, 'assignment' => 'J', 'assignLocation' => $judgingId, 'assignRound' => 1,
+        ]);
+
+        $response = $this->get('/admin/output/assignments?filter=staff&view=name');
+        $response->assertOk();
+        self::assertSame('application/pdf', $response->headers->get('Content-Type'));
+        self::assertStringContainsString('assignments-staff.pdf', (string) $response->headers->get('Content-Disposition'));
+
+        $rows = AssignmentsController::staffAvailabilityData('name', TenantContext::load());
+
+        self::assertCount(1, $rows, 'only the staff volunteer belongs in the staff availability report');
+        self::assertSame('Organizer, Oscar', $rows[0]['name']);
+        self::assertSame(self::ORGANIZER_EMAIL, $rows[0]['email']);
+        self::assertStringStartsWith('P52c Non-Judging Hall', $rows[0]['session']);
+    }
+
+    /**
+     * The two staff availability links are the SAME data set in two
+     * orderings — view=name sorts person-then-session, the default sorts
+     * session-then-person (legacy DataTables aaSorting). The equivalence the
+     * user noticed is intended; only the underlying data was wrong.
+     */
+    public function test_staff_availability_views_are_the_same_data_in_two_orderings(): void
+    {
+        $alpha = $this->location('P52c Alpha Session', 2);
+        $zulu = $this->location('P52c Zulu Session', 2);
+
+        DB::table('brewer')->insert([
+            ['uid' => self::JUDGE_ID, 'brewerFirstName' => 'Amy', 'brewerLastName' => 'Abbot', 'brewerEmail' => self::JUDGE_EMAIL,
+                'brewerStaff' => 'Y', 'brewerJudgeLocation' => 'Y-'.$zulu],
+            ['uid' => self::ORGANIZER_ID, 'brewerFirstName' => 'Zed', 'brewerLastName' => 'Zimmer', 'brewerEmail' => self::ORGANIZER_EMAIL,
+                'brewerStaff' => 'Y', 'brewerJudgeLocation' => 'Y-'.$alpha],
+        ]);
+
+        $ctx = TenantContext::load();
+        $byName = AssignmentsController::staffAvailabilityData('name', $ctx);
+        $bySession = AssignmentsController::staffAvailabilityData('', $ctx);
+
+        // Both dashboard links render a PDF (same report, different order).
+        foreach (['?filter=staff&view=name', '?filter=staff'] as $query) {
+            $response = $this->get('/admin/output/assignments'.$query);
+            $response->assertOk();
+            self::assertStringStartsWith('%PDF', (string) $response->getContent());
+        }
+
+        self::assertSame(['Abbot, Amy', 'Zimmer, Zed'], array_column($byName, 'name'));
+        self::assertSame(['Zimmer, Zed', 'Abbot, Amy'], array_column($bySession, 'name'));
+
+        $normalize = static fn (array $rows): array => array_map(
+            static fn (array $r): array => [$r['name'], $r['email'], $r['session']],
+            $rows,
+        );
+        $a = $normalize($byName);
+        $b = $normalize($bySession);
+        sort($a);
+        sort($b);
+
+        self::assertSame($a, $b, 'both orderings must carry the identical staff/session pairs');
+    }
+
+    /** @param 0|1|2 $type */
+    private function location(string $name, int $type): int
+    {
+        $id = (int) DB::table('judging_locations')->insertGetId([
+            'judgingLocType' => $type,
+            'judgingDate' => '1750000000',
+            'judgingLocName' => $name,
+        ]);
+        $this->locationIds[] = $id;
+
+        return $id;
     }
 
     /**

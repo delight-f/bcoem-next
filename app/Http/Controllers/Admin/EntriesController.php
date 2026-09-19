@@ -280,6 +280,23 @@ final class EntriesController extends Controller
             return redirect('/backoffice/entries?msg=updated');
         }
 
+        // Validate every posted cell before writing, as the companion
+        // update() path already does: the inline judging number is the
+        // barcode/QR key, so it must be a six-character value, and the box
+        // and notes fields match the edit form's limits.
+        $rules = [];
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if ($id <= 0) {
+                continue;
+            }
+            $rules['brewJudgingNumber'.$id] = ['nullable', 'string', 'max:6'];
+            $rules['brewBoxNum'.$id] = ['nullable', 'string', 'max:10'];
+            $rules['brewAdminNotes'.$id] = ['nullable', 'string', 'max:255'];
+            $rules['brewStaffNotes'.$id] = ['nullable', 'string', 'max:255'];
+        }
+        $request->validate($rules);
+
         foreach ($ids as $id) {
             $id = (int) $id;
             if ($id <= 0) {

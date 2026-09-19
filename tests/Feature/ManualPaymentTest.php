@@ -96,7 +96,7 @@ final class ManualPaymentTest extends PublicSurfaceTestCase
 
     private function login(string $email): void
     {
-        $this->post('/login', ['loginUsername' => $email, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail($email);
     }
 
     /**

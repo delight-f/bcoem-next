@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * P5.6 archive + purge flows against an ISOLATED database
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
  * themselves stay on the boring default connection — production behavior
  * needs no configuration.
  */
+#[Group('slow')]
 final class ArchiveFlowsTest extends PublicSurfaceTestCase
 {
     private const ADMIN_EMAIL = 'archive.admin@brewingcompetitions.com';
@@ -70,10 +72,7 @@ final class ArchiveFlowsTest extends PublicSurfaceTestCase
 
         self::seedConfigRows();
         self::seedUser(self::ADMIN_ID, self::ADMIN_EMAIL, '1');
-        $this->post('/login', [
-            'loginUsername' => self::ADMIN_EMAIL,
-            'loginPassword' => 'bcoem',
-        ]);
+        $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
     protected function tearDown(): void

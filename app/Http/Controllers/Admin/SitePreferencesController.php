@@ -287,6 +287,7 @@ final class SitePreferencesController extends Controller
             // the .env default in charge.
             'prefsEmailVerify' => ['nullable', 'in:0,1'],
             'prefsRecordPaging' => ['nullable', 'integer'],
+            'prefsRecordLimit' => ['nullable', 'integer', 'min:1'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
             // Replaced by the "Purge now" action in the same section (the
@@ -365,6 +366,7 @@ final class SitePreferencesController extends Controller
             'prefsSponsorLogos' => (string) $data['prefsSponsorLogos'],
             'prefsSessionTimeout' => $this->sessionTimeout($data['prefsSessionTimeout'] ?? null),
             'prefsRecordPaging' => self::blankToNull((string) ($data['prefsRecordPaging'] ?? '')),
+            'prefsRecordLimit' => self::blankToNull((string) ($data['prefsRecordLimit'] ?? '')),
         ];
     }
 
@@ -559,7 +561,7 @@ final class SitePreferencesController extends Controller
             'prefsEmailSMTP' => ['required', 'in:0,1'],
             'prefsContact' => ['required', 'in:Y,N,X'],
             'prefsEmailRegConfirm' => ['required', 'in:0,1'],
-            'change-email-password-choice' => ['required', 'in:0,1'],
+            'change-email-password-choice' => ['required', 'in:0,1,2'],
             'prefsEmailPassword' => ['nullable', 'string', 'max:255'],
             'prefsEmailFrom' => ['nullable', 'string', 'max:255'],
             'prefsEmailUsername' => ['nullable', 'string', 'max:255'],
@@ -585,7 +587,8 @@ final class SitePreferencesController extends Controller
         $apiKey = trim((string) ($data['prefsEmailApiKey'] ?? ''));
 
         $storedPassword = (string) ($stored['prefsEmailPassword'] ?? '');
-        if ($data['change-email-password-choice'] == 1) {
+        $passwordChoice = (string) $data['change-email-password-choice'];
+        if ($passwordChoice === '1') {
             // "Set new password" with the field left blank keeps the stored
             // password rather than silently wiping it (the same keep-blank
             // rule the provider API key uses below).
@@ -593,12 +596,17 @@ final class SitePreferencesController extends Controller
                 $password = $storedPassword;
             }
             // Divergence: stored as-is (see class docblock re simpleEncrypt).
+        } elseif ($passwordChoice === '2') {
+            // "Remove stored password": explicit clear (blank → NULL below).
+            $password = '';
         } elseif ($storedPassword !== '') {
             $password = $storedPassword;
         }
 
         if ($data['prefsEmailSMTP'] == 0) {
-            // SMTP off: keep the stored transport settings, kill confirmations/CC.
+            // SMTP off: keep the stored transport settings (sending is
+            // suppressed at runtime) — do not clobber the posted
+            // confirmation/CC choices, so re-enabling sending restores them.
             $from = (string) ($stored['prefsEmailFrom'] ?? '');
             $username = (string) ($stored['prefsEmailUsername'] ?? '');
             $host = (string) ($stored['prefsEmailHost'] ?? '');
@@ -606,8 +614,6 @@ final class SitePreferencesController extends Controller
             $port = (string) ($stored['prefsEmailPort'] ?? '');
             $transport = strtolower(trim((string) ($stored['prefsEmailTransport'] ?? '')));
             $apiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
-            $confirm = '0';
-            $cc = '0';
         }
 
         // An API key left blank on an unchanged provider must not wipe the
@@ -678,12 +684,15 @@ final class SitePreferencesController extends Controller
             'prefsThirdPlacePts' => ['required', 'integer', 'min:0'],
             'prefsFourthPlacePts' => ['required', 'integer', 'min:0'],
             'prefsHMPts' => ['required', 'integer', 'min:0'],
-            'prefsTieBreakRule1' => ['nullable', 'integer'],
-            'prefsTieBreakRule2' => ['nullable', 'integer'],
-            'prefsTieBreakRule3' => ['nullable', 'integer'],
-            'prefsTieBreakRule4' => ['nullable', 'integer'],
-            'prefsTieBreakRule5' => ['nullable', 'integer'],
-            'prefsTieBreakRule6' => ['nullable', 'integer'],
+            // Rule codes (TBTotalPlaces, TBFirstPlaces, ...) or blank for
+            // "Unused". The columns are varchar(255) and the consumers switch
+            // on the codes; validating as integer 422'd the whole Best tab.
+            'prefsTieBreakRule1' => ['nullable', 'string', 'max:255'],
+            'prefsTieBreakRule2' => ['nullable', 'string', 'max:255'],
+            'prefsTieBreakRule3' => ['nullable', 'string', 'max:255'],
+            'prefsTieBreakRule4' => ['nullable', 'string', 'max:255'],
+            'prefsTieBreakRule5' => ['nullable', 'string', 'max:255'],
+            'prefsTieBreakRule6' => ['nullable', 'string', 'max:255'],
         ]);
 
         // COA scoring excludes the BOS tie-breaker (legacy quirk).

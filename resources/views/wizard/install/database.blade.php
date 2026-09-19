@@ -50,7 +50,7 @@
 
         <div class="d-flex gap-2 mt-4">
             <button type="button" class="btn btn-outline-secondary" id="test">Test Connection</button>
-            <button type="submit" class="btn btn-primary" id="next" disabled>Next</button>
+            <button type="submit" class="btn btn-primary" id="next">Next</button>
             <button type="button" class="btn btn-primary d-none" id="adopt">Use this existing site</button>
         </div>
     </form>

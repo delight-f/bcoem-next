@@ -7,6 +7,7 @@ namespace Tests\Feature;
 use App\Support\Results\BestBrewerStandings;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Pins BestBrewerStandings (port of scores_bestbrewer.db.php + awards.php
@@ -78,6 +79,7 @@ final class BestBrewerStandingsTest extends AdminScreensTestCase
         self::assertSame([2, 1, 0, 0, 0], $standings->brewerRows[0]->places);
     }
 
+    #[Group('slow')]
     public function test_coa_points_use_pool_size(): void
     {
         // Table pools: brewer A a 1st in a table carrying 4 scored rows →

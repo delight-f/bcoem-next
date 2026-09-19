@@ -322,6 +322,8 @@ final class AjaxEndpointsTest extends PublicSurfaceTestCase
 
     public function test_count_records_counts_brewing_rows_by_column_filters(): void
     {
+        $this->login('0');
+
         // The table may hold rows seeded by other suites; assert the delta this
         // test adds rather than an absolute count.
         $paidBefore = (int) DB::table('brewing')->where('brewPaid', 1)->count();
@@ -356,6 +358,8 @@ final class AjaxEndpointsTest extends PublicSurfaceTestCase
 
     public function test_count_records_total_fees_matches_flat_fee_model(): void
     {
+        $this->login('0');
+
         $row = (array) DB::table('contest_info')->where('id', 1)->first();
         $this->origContest = collect($row)->except(['id'])->all();
 
@@ -385,6 +389,8 @@ final class AjaxEndpointsTest extends PublicSurfaceTestCase
 
     public function test_count_records_updated_display_returns_timestamp(): void
     {
+        $this->login('0');
+
         $response = $this->post('/ajax/count-records?section=updated-display');
 
         $response->assertOk()->assertJsonPath('success', true)

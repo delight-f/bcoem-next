@@ -12,12 +12,14 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * The resumable wizard: run() is bookkeeping only and each progress request
  * executes exactly one step, returning the terminal marker in band when it ran
  * the last one. Uses throwaway MySQL + a temp root via InstallationTestCase.
  */
+#[Group('slow')]
 final class ResumableWizardTest extends InstallationTestCase
 {
     protected function setUp(): void

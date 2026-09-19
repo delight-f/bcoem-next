@@ -102,7 +102,7 @@ final class PaymentWiringTest extends PublicSurfaceTestCase
 
     private function loginAs(string $email): void
     {
-        $this->post('/login', ['loginUsername' => $email, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail($email);
     }
 
     /** @param array<string, mixed> $overrides */

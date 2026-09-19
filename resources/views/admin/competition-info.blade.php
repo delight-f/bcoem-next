@@ -71,6 +71,13 @@
             .bcoem-comp-info details.bcoem-comp-info-section[open] {
                 padding-bottom: .5rem;
             }
+            /* Sections are separated by the NEXT section's margin-top, so the
+               last one has nothing between it and the submit block — the
+               button sat flush against it. Give the submit block the same
+               1rem the section rhythm uses (only the last section is
+               affected; adding margin-bottom to every section would double
+               the gap between all of them). */
+            .bcoem-comp-info .bcoem-admin-element { margin-top: 1rem; }
             .bcoem-comp-info h3 { margin-top: 1.75rem; padding-bottom: .5rem; border-bottom: 1px solid var(--bs-border-color); }
             /* Live club-search suggestions (issue #41): a scrollable list so a
                broad search cannot push the rest of the form off-screen. */

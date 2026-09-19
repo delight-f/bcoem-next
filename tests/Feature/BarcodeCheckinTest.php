@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use BCOEM\Tests\Integration\MySqlTestCase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Barcode check-in (P4.5, ticket 05). Pins the flag semantics of legacy
@@ -67,7 +68,7 @@ final class BarcodeCheckinTest extends PublicSurfaceTestCase
 
     private function login(string $email): void
     {
-        $this->post('/login', ['loginUsername' => $email, 'loginPassword' => 'bcoem']);
+        $this->loginWithEmail($email);
     }
 
     /**
@@ -101,6 +102,7 @@ final class BarcodeCheckinTest extends PublicSurfaceTestCase
         return (array) DB::table('brewing')->where('id', $id)->sole();
     }
 
+    #[Group('slow')]
     public function test_guest_and_entrant_are_rejected(): void
     {
         $this->get('/admin/judging/checkin')->assertRedirect('/login');

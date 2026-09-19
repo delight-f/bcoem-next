@@ -69,7 +69,7 @@ Route::post('/contact', [PublicController::class, 'contactStore'])->name('contac
 // legacy query shapes (?section=login, go=password/action=forgot/reset)
 // are accepted so old links and the login page's own reset links work.
 Route::get('/login', [LoginController::class, 'show'])->name('login');
-Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store')->middleware('throttle:6,1');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout')->middleware('auth');
 
 // Email verification (Task 4). Registered unconditionally so the `verified`
@@ -138,11 +138,13 @@ Route::post('/user/password', [ChangePasswordController::class, 'update'])
 // Password reset (P3.1c). Legacy: ?section=login&go=password&action=
 // forgot|verify|reset-password; clean URLs are canonical.
 Route::get('/forgot-password', [ForgotPasswordController::class, 'show'])->name('password.forgot');
-Route::post('/forgot-password', [ForgotPasswordController::class, 'forgot'])->name('password.forgot.post');
+// Throttled like the signup/verification routes: without it the
+// security-question gate can be brute-forced and the email oracle mined (D3-02).
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgot'])->name('password.forgot.post')->middleware('throttle:6,1');
 Route::get('/forgot-password/verify', [ForgotPasswordController::class, 'verifyForm'])->name('password.verify');
-Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verify'])->name('password.verify.post');
+Route::post('/forgot-password/verify', [ForgotPasswordController::class, 'verify'])->name('password.verify.post')->middleware('throttle:6,1');
 Route::get('/reset-password', [ForgotPasswordController::class, 'resetForm'])->name('password.reset');
-Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset.post');
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])->name('password.reset.post')->middleware('throttle:6,1');
 
 // Brewer profile form 2 (P3.2c). Legacy: ?section=list&go=account edit of
 // the judge/steward/staff preference fields; clean URL is canonical. Save
