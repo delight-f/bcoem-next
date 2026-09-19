@@ -8,6 +8,14 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+## [4.1.0-alpha.12] - 2026-09-19
+
+Closes out the [unwired-features audit](docs/unwired-features-audit.md): every
+control on the site now reaches a real consumer, or has been retired. The
+prominent additions are that report and export options finally produce the
+document they name, and that several settings which were saved but ignored —
+or promised a refusal the server never made — now take effect.
+
 ### Added
 
 - **Email verification can be switched on in the admin.** Site Preferences →
@@ -17,6 +25,55 @@ Release notes for a tag are taken from the matching `## [version]` section below
   change; `EMAIL_VERIFICATION_ENABLED` is now just the default for an install
   that has never saved the tab, and the same switch decides whether the
   `verified` middleware on the entry and payment routes applies.
+- **Stripe has a currency control and a disconnect action.** Payment Setup now
+  offers an ISO 4217 currency selector (the gateway previously fell back to the
+  display symbol), and a connected account can be disconnected from the admin
+  instead of only by editing the database.
+- **A box/paid check-in view.** The check-in screen's "Entry/Judging Numbers,
+  Box, and Paid" switch now opens a per-entry table with box and paid columns
+  and a per-row check-in, alongside the scan form.
+- **The custom "best of" category form can show places on the awards deck.**
+  The `sbi_display_places` setting the deck already honoured is now editable.
+- **Drop-off locations are listed publicly** with map and driving-directions
+  links, which is what the Judging preferences help text always promised.
+- **The four Competition Info text areas are published.** "Entry Acceptance
+  Rules", "Best of Show", "Awards Structure" and "Circuit Qualifying Events"
+  now render on the public rules/info surface with the visibility windows legacy
+  used.
+- **A judge can print their own scoresheet labels** from their account page
+  through a login-only route scoped to their own records (the link previously
+  bounced them off the admin-only output routes).
+- **Structured (variant 3) evaluations render on read-back.** The tick grid that
+  the form captured is now shown on the saved evaluation instead of falling
+  through to the generic view.
+
+### Changed
+
+- **Professional Edition no longer discards the MHP choice.** The "MHP Fields"
+  setting is preserved and hidden (as Best Club already was) rather than
+  force-cleared on save, and the consumers honour the edition. The dashboard now
+  explains what Professional Edition changes.
+- **"Application default" is a real, sticky mail transport.** It was displayed
+  while SMTP silently ran; the choice is now stored, honoured, and shown
+  accurately.
+- **The stored SMTP password and provider API key are encrypted at rest**, as
+  the Stripe and PayPal secrets already were.
+- **The per-entry fee cap is stored as money.** The field and calculator always
+  treated it as currency but the save required a whole number, so a fractional
+  cap could not be entered.
+- **Judging preferences take effect.** The per-session round cap and the minimum
+  scoresheet-comment length are enforced, and the score-disagreement tolerance
+  is read from the preference instead of a fixed value.
+- **Reports are produced as named.** The Results matrix, Participant Summary,
+  Table Cards and the Data Exports now read their query options, so each link
+  yields the document, ordering, filter or dataset it describes rather than a
+  single fixed output.
+- **Participants' "Assigned As" shows the real role** instead of the
+  affiliations JSON, and the role lookup drives the assignment popup.
+- **Destructive admin actions are confirmed server-side.** The purge dashboard
+  and archive page now require top-level admin, and the entries admin actions
+  and judging-number regeneration refuse a direct POST that did not carry the
+  confirmation the UI shows.
 
 ### Fixed
 
@@ -33,6 +90,27 @@ Release notes for a tag are taken from the matching `## [version]` section below
   are committed, so a mail failure now logs and carries on rather than returning
   a 500 for work that did happen. The contact form does the same for the sender:
   it comes back with their message kept and an explanation instead of a 500.
+- **Saving the judges matrix no longer removes a steward's assignment.** The
+  assignment writer deleted every row for a participant, table and round rather
+  than only the role being saved, so a participant who was both a judge and a
+  steward lost the steward row whenever the judge screen was saved.
+- **The module "Extends…" list no longer offers "Administration"**, a target the
+  public-only render gate could never reach.
+- **The table add/edit form's "Not Assigned" rosters open** — the modals were
+  only rendered on the tables list page.
+- **The un-assigned judges are shown after switching to tables mode.** The
+  switch had always deleted conflicting assignments silently; the caution modal
+  now lists who was removed.
+
+### Removed
+
+- **Retired preference columns** `prefsSEF`, `prefsAutoPurge`, and the PayPal
+  IPN-era `prefsPaypal` / `prefsPaypalAccount` / `prefsPaypalIPN`, dropped by a
+  guarded migration (the live PayPal config is `prefsPaypalConfig`).
+- **The inert `styles.brewStyleAtLimit` control and column**, which nothing read
+  and which left a stale flag when a style's "Accept" box was cleared.
+- **The dead `app/Domain/*Row.php` and `app/Session/Prefs.php` families**, which
+  had no callers outside themselves and their tests.
 
 ## [4.1.0-alpha.11] - 2026-09-17
 
