@@ -73,16 +73,17 @@ final class PublicController extends Controller
         $salutation = '';
         if ($request->user() !== null) {
             $firstName = DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '';
-            $salutation .= '<p class="landing-page-salutation">'.self::t('site.welcome').' '.e($firstName).'!</p>';
+            $salutation .= '<p class="landing-page-salutation text-center">'.self::t('site.welcome').' '.e($firstName).'!</p>';
         }
         $host = e($ctx->contestStr('contestHost') ?? '');
         $website = $ctx->contestStr('contestHostWebsite');
         $hostHtml = $website !== null && $website !== ''
             ? '<a class="hide-loader" href="'.e($website).'" target="_blank">'.$host.'</a>'
             : $host;
-        $salutation .= '<p class="lead landing-page-salutation fw-light"><small>'
+        $salutation .= '<p class="lead landing-page-salutation fw-light text-center"><small>'
             .self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
-            .' '.self::t('site.organized_by').' '.$hostHtml
+            .' '.self::t('site.organized_by')
+            .'<br>'.$hostHtml
             .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
             .'.</small></p>';
 
