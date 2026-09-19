@@ -39,7 +39,7 @@
     $sbTz = $sbCtx->prefsStr('prefsTimeZone');
     $sbDf = $sbCtx->prefsStr('prefsDateFormat');
     $sbTf = $sbCtx->prefsStr('prefsTimeFormat');
-    $sbShort = fn ($epoch): string => \App\Support\Tenant\DateFmt::dateTime($epoch, $sbTz, $sbDf, $sbTf, 'short') ?? '';
+    $sbShort = fn ($epoch): string => \App\Support\Tenant\DateFmt::dateTime($epoch, $sbTz, $sbDf, $sbTf, 'short', $sbCtx->showTimezone()) ?? '';
 
     // Window open/closed facts for the registration + entry panels.
     $sbRegOpen = $sbWindows->registration === \App\Support\Tenant\WindowState::Open;

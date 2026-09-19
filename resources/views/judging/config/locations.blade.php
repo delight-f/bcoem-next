@@ -42,9 +42,9 @@
                             @if (! $nonJudging)
                                 <td>{{ ((int) $location->judgingLocType) === 1 ? 'Distributed' : 'Traditional' }}</td>
                             @endif
-                            <td>{{ \App\Support\Tenant\DateFmt::dateTime($location->judgingDate, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', withZone: false) ?? '' }}</td>
+                            <td>{{ \App\Support\Tenant\DateFmt::dateTime($location->judgingDate, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', $ctx->showTimezone()) ?? '' }}</td>
                             @if (! $nonJudging)
-                                <td>{{ isset($location->judgingDateEnd) && $location->judgingDateEnd !== null ? (\App\Support\Tenant\DateFmt::dateTime($location->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', withZone: false) ?? '') : 'N/A' }}</td>
+                                <td>{{ isset($location->judgingDateEnd) && $location->judgingDateEnd !== null ? (\App\Support\Tenant\DateFmt::dateTime($location->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', $ctx->showTimezone()) ?? '') : 'N/A' }}</td>
                             @endif
                             <td>{{ $location->judgingLocation }}</td>
                             @if (! $nonJudging)

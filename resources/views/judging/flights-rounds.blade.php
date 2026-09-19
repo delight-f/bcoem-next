@@ -14,6 +14,7 @@
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
                 'long',
+                $ctx->showTimezone(),
             );
 
             // Legacy judging_flights.admin.php:346-347: the location line

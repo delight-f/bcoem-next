@@ -281,8 +281,8 @@ final class BrewerForm2Controller extends Controller
                 $rows[] = [
                     'available' => substr($item, 0, 1) === 'Y',
                     'name' => (string) $loc->judgingLocName,
-                    'date' => DateFmt::dateTime((int) $loc->judgingDate, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short')
-                        .(($loc->judgingDateEnd ?? 0) ? ' - '.DateFmt::dateTime((int) $loc->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short') : ''),
+                    'date' => DateFmt::dateTime((int) $loc->judgingDate, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', $ctx->showTimezone())
+                        .(($loc->judgingDateEnd ?? 0) ? ' - '.DateFmt::dateTime((int) $loc->judgingDateEnd, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', $ctx->showTimezone()) : ''),
                     'location' => (string) $loc->judgingLocation,
                     'notes' => (string) $loc->judgingLocNotes,
                     'type' => (int) $loc->judgingLocType,
@@ -337,14 +337,16 @@ final class BrewerForm2Controller extends Controller
             'email' => (string) ($user['user_name'] ?? ''),
             // pub/brewer_info.pub.php lead: getTimeZoneDateTime(..., "long",
             // "date-time-no-gmt") — tz offset first, then date/time prefs,
-            // then the long style ("Friday 14 August, 2026 00:47").
+            // then the long style ("Friday 14 August, 2026 00:47"). The zone
+            // suffix follows the Show Time Zone switch rather than the legacy
+            // hard-coded no-gmt variant, so every read-only date agrees.
             'updated' => DateFmt::dateTime(
                 strtotime((string) ($user['userCreated'] ?? '')) ?: null,
                 $ctx->prefsStr('prefsTimeZone'),
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
                 'long',
-                withZone: false,
+                $ctx->showTimezone(),
             ),
             'phone2' => (string) ($brewer->brewerPhone2 ?? ''),
             'address' => $brewer->brewerAddress !== '' && $brewer->brewerAddress !== null ? $brewer->brewerAddress : __('site.none_entered'),

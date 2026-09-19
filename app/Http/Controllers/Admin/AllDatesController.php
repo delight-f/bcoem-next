@@ -59,9 +59,12 @@ final class AllDatesController extends Controller
             ->orderBy('judgingDate')->orderBy('judgingLocName')->get();
 
         // Legacy placeholder "current_date current_time" (getTimeZoneDateTime
-        // 'system' date + 'time-gmt') — e.g. "2026-08-27 09:20, AEST".
+        // 'system' date + 'time-gmt'), but with the zone suffix dropped: these
+        // are editable picker fields whose values never carry one, and
+        // flatpickr cannot parse ", AEST" back, so the grey hint must match the
+        // format the field actually accepts and saves.
         $now = time();
-        $currentDateTime = DateFmt::dateTime($now, $tz, $df, $tf, 'system', true) ?? '';
+        $currentDateTime = DateFmt::dateTime($now, $tz, $df, $tf, 'system', false) ?? '';
         [$currentDate, $currentTime] = $currentDateTime !== '' ? explode(' ', $currentDateTime, 2) : ['', ''];
 
         $prefsEval = (int) ($ctx->prefsStr('prefsEval') ?: 0) === 1;

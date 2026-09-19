@@ -386,7 +386,7 @@
                             @endif
                             <td class="d-print-none">
                                 @if ($p->userCreated)
-                                    {{ \App\Support\Tenant\DateFmt::dateTime(strtotime((string) $p->userCreated) ?: null, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', false) }}
+                                    {{ \App\Support\Tenant\DateFmt::dateTime(strtotime((string) $p->userCreated) ?: null, $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'short', $ctx->showTimezone()) }}
                                 @endif
                             </td>
                             <td class="d-print-none">

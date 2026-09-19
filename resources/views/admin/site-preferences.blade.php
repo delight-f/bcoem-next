@@ -276,6 +276,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="mb-4 row">
+                    <label for="tzY" class="col-md-4 col-form-label">Show Time Zone</label>
+                    <div class="col-md-8">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsShowTimezone" value="Y" id="tzY" @checked(($p('prefsShowTimezone') ?: 'Y') === 'Y')><label class="form-check-label" for="tzY">Enable</label></div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="prefsShowTimezone" value="N" id="tzN" @checked(($p('prefsShowTimezone') ?: 'Y') !== 'Y')><label class="form-check-label" for="tzN">Disable</label></div>
+                        <span class="form-text">Append the time zone (e.g. <em>AEST</em>) to displayed dates and times. Editable date and time fields never show it, since the picker cannot read the suffix back.</span>
+                    </div>
+                </div>
 
                 <h4>Sponsors Display</h4>
                 <div class="mb-4 row">
@@ -632,7 +642,7 @@
                                 <select class="form-select" id="user-entry-limit-expire-days-{{ $i }}" name="user-entry-limit-expire-days-{{ $i }}" style="width:auto;">
                                     <option value=""></option>
                                     @foreach (range(1, 30) as $b)
-                                        <option value="{{ $b }}" @selected((string) ($incrementalLimits[$i]['limit-days'] ?? '') === (string) $b)>{{ $b }}@if ($entryOpenEpoch > 0) - {{ \App\Support\Tenant\DateFmt::dateTime($entryOpenEpoch + $b * 86400, $tz, $ctx->prefsStr('prefsDateFormat'), $tf) }}@endif</option>
+                                        <option value="{{ $b }}" @selected((string) ($incrementalLimits[$i]['limit-days'] ?? '') === (string) $b)>{{ $b }}@if ($entryOpenEpoch > 0) - {{ \App\Support\Tenant\DateFmt::dateTime($entryOpenEpoch + $b * 86400, $tz, $ctx->prefsStr('prefsDateFormat'), $tf, 'short', $ctx->showTimezone()) }}@endif</option>
                                     @endforeach
                                 </select>
                                 <span class="form-text">Number of days AFTER the entry window opening date that the #{{ $i }} per participant limit will EXPIRE.</span>

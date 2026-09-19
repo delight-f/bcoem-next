@@ -101,7 +101,7 @@ final class PublicController extends Controller
             $tz = $ctx->prefsStr('prefsTimeZone');
             $df = $ctx->prefsStr('prefsDateFormat');
             $tf = $ctx->prefsStr('prefsTimeFormat');
-            $long = fn (?int $epoch): string => (string) DateFmt::dateTime($epoch, $tz, $df, $tf, 'long');
+            $long = fn (?int $epoch): string => (string) DateFmt::dateTime($epoch, $tz, $df, $tf, 'long', $ctx->showTimezone());
             $reg = $windows->registration;
             $entry = $windows->entry;
             $judge = $windows->judge;
@@ -147,7 +147,7 @@ final class PublicController extends Controller
 
             if ($reg === WindowState::Open && $entry === WindowState::Open && (int) $ctx->prefsStr('prefsEntryLimit') > 0) {
                 $fyiAlerts[] = '<strong>'.self::t('site.fyi_entry_open').'</strong> '
-                    .__('site.fyi_total_added', ['count' => (int) DB::table('brewing')->count(), 'time' => DateFmt::dateTime($now, $tz, $df, $tf, 'short')])
+                    .__('site.fyi_total_added', ['count' => (int) DB::table('brewing')->count(), 'time' => DateFmt::dateTime($now, $tz, $df, $tf, 'short', $ctx->showTimezone())])
                     .' '.self::t('site.fyi_reg_will_close').' '.$long($ctx->contestEpoch('contestRegistrationDeadline')).'.';
             }
             if (in_array($reg, [WindowState::Before, WindowState::After], true) && $judge === WindowState::Open) {
@@ -269,7 +269,7 @@ final class PublicController extends Controller
             ->get(['judgingLocName', 'judgingDate'])
             ->map(static fn (object $loc): array => [
                 'name' => (string) $loc->judgingLocName,
-                'when' => DateFmt::dateTime($loc->judgingDate, $tz, $df, $tf, 'long') ?? '',
+                'when' => DateFmt::dateTime($loc->judgingDate, $tz, $df, $tf, 'long', $ctx->showTimezone()) ?? '',
             ])
             ->all();
 
@@ -286,7 +286,7 @@ final class PublicController extends Controller
             'judgeOpen' => $windows->judge !== WindowState::Before,
             // Legacy: registration_open < 2 gates the staff block.
             'registrationClosed' => $windows->registration === WindowState::After,
-            'judgeOpenWhen' => DateFmt::dateTime($ctx->contestEpoch('contestJudgeOpen'), $tz, $df, $tf, 'long') ?? null,
+            'judgeOpenWhen' => DateFmt::dateTime($ctx->contestEpoch('contestJudgeOpen'), $tz, $df, $tf, 'long', $ctx->showTimezone()) ?? null,
             'salutation' => $this->publicSalutation($request, $ctx),
             'staffLocations' => $staffLocations,
         ]);
@@ -520,6 +520,7 @@ final class PublicController extends Controller
                 'editDeadline' => DateFmt::dateTime(
                     Windows::entryEditDeadline($ctx), $ctx->prefsStr('prefsTimeZone'),
                     $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'),
+                    'short', $ctx->showTimezone(),
                 ) ?? self::t('site.not_set'),
                 'confirmed' => $confirmed,
                 'unconfirmed' => max(0, count($rows) - $confirmed),
@@ -552,7 +553,7 @@ final class PublicController extends Controller
             $tz = $ctx->prefsStr('prefsTimeZone');
             $df = $ctx->prefsStr('prefsDateFormat');
             $tf = $ctx->prefsStr('prefsTimeFormat');
-            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $longDates ? 'long' : 'short') ?? self::t('site.not_set');
+            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $longDates ? 'long' : 'short', $ctx->showTimezone()) ?? self::t('site.not_set');
 
             $body = '<p class="glance-date mb-0">'.self::t('site.start').' '.$fmt($w->firstJudgingDate).'</p>';
             if ($w->lastJudgingDate !== null) {
@@ -597,7 +598,7 @@ final class PublicController extends Controller
             $df = $ctx->prefsStr('prefsDateFormat');
             $tf = $ctx->prefsStr('prefsTimeFormat');
             $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
-            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
+            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style, $ctx->showTimezone()) ?? self::t('site.not_set');
 
             $cards[] = $windowCard('entry-registration', self::t('site.entries_registration'), 'blue', $w->entry,
                 $fmt($ctx->contestEpoch('contestEntryOpen')), $fmt($ctx->contestEpoch('contestEntryDeadline')));
@@ -695,7 +696,7 @@ final class PublicController extends Controller
         $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
         $now = time();
 
-        $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style) ?? self::t('site.not_set');
+        $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style, $ctx->showTimezone()) ?? self::t('site.not_set');
 
         // Two independent axes. The DOMAIN ACCENT gives each card its identity
         // (entries / account / volunteering / logistics / judging / awards) and

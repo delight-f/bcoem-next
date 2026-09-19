@@ -82,6 +82,8 @@ final class AssignmentsController extends Controller
                     $ctx->prefs['prefsTimeZone'] ?? null,
                     $ctx->prefsStr('prefsDateFormat'),
                     $ctx->prefsStr('prefsTimeFormat'),
+                    'short',
+                    $ctx->showTimezone(),
                 ));
             }
         }
@@ -262,14 +264,14 @@ final class AssignmentsController extends Controller
                     'name' => trim(($person->brewerLastName ?? '').', '.($person->brewerFirstName ?? '')),
                     'email' => (string) $person->brewerEmail,
                     // Legacy table_location(..., "known-id"): name + long
-                    // date-time without the zone suffix.
+                    // date-time, zone suffix per the Show Time Zone switch.
                     'session' => $loc->judgingLocName.', '.(string) DateFmt::dateTime(
                         (int) $loc->judgingDate,
                         $tz,
                         $dateFormat,
                         $timeFormat,
                         'long',
-                        false,
+                        $ctx->showTimezone(),
                     ),
                 ];
             }

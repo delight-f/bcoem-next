@@ -50,6 +50,19 @@ final class TenantContext
         return self::str($this->prefs, $key);
     }
 
+    /**
+     * Whether rendered times carry a zone suffix (", AEST"). The Localization
+     * "Show Time Zone" switch; NULL — an install that has never saved the tab,
+     * or a tenant schema without the column — keeps the historical always-show
+     * behaviour. Read-only displays honour this; editable date/time pickers
+     * never append a zone, because the suffix is not parseable by flatpickr or
+     * the save path's toUtcEpoch().
+     */
+    public function showTimezone(): bool
+    {
+        return ($this->prefsStr('prefsShowTimezone') ?? 'Y') !== 'N';
+    }
+
     public function judgingStr(string $key): ?string
     {
         return self::str($this->judging, $key);

@@ -432,6 +432,29 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     }
 
     /**
+     * Show Time Zone switch (Localization): stored as the legacy Y/N, and an
+     * install that has never saved the tab (NULL) keeps the historical
+     * always-show behaviour rather than silently losing its time zones.
+     */
+    public function test_site_preferences_show_timezone_persists_and_defaults_to_showing(): void
+    {
+        $this->remember('preferences');
+
+        DB::table('preferences')->where('id', 1)->update(['prefsShowTimezone' => null]);
+        self::assertTrue(TenantContext::load()->showTimezone());
+        $this->get('/admin/site-preferences')->assertOk()
+            ->assertSee('name="prefsShowTimezone"', false)
+            ->assertSee('id="tzY" checked', false);
+
+        $this->put('/admin/site-preferences/default', $this->defaultTabPayload(['prefsShowTimezone' => 'N']))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+
+        self::assertSame('N', (string) DB::table('preferences')->where('id', 1)->value('prefsShowTimezone'));
+        self::assertFalse(TenantContext::load()->showTimezone());
+        $this->get('/admin/site-preferences')->assertOk()->assertSee('id="tzN" checked', false);
+    }
+
+    /**
      * Full default-tab payload (the tab validates ~21 required columns), with
      * the session timeout left blank — i.e. "use the installation default".
      *
@@ -457,6 +480,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsDateFormat' => '1',
             'prefsTimeFormat' => '0',
             'prefsTimeZone' => '-7',
+            'prefsShowTimezone' => 'Y',
             'prefsSponsors' => 'Y',
             'prefsSponsorLogos' => 'Y',
             'prefsRecordPaging' => '150',

@@ -296,6 +296,11 @@ final class SitePreferencesController extends Controller
             'prefsDateFormat' => ['required', 'in:0,1,2,999'],
             'prefsTimeFormat' => ['required', 'in:0,1'],
             'prefsTimeZone' => ['required', 'string', 'max:10'],
+            // Show Time Zone switch (TenantContext::showTimezone). Nullable so
+            // payloads from before the column existed stay valid; the column
+            // itself stays NULL when neither radio was posted, which means
+            // "show" — the behaviour that predates the switch.
+            'prefsShowTimezone' => ['nullable', 'in:Y,N'],
             'prefsSponsors' => ['required', 'in:Y,N'],
             'prefsSponsorLogos' => ['required', 'in:Y,N'],
             // Session (auto-logout) timeout, upstream 3.1.0. Blank or
@@ -357,6 +362,7 @@ final class SitePreferencesController extends Controller
             'prefsDateFormat' => (string) $data['prefsDateFormat'],
             'prefsTimeZone' => (string) $data['prefsTimeZone'],
             'prefsTimeFormat' => (string) $data['prefsTimeFormat'],
+            'prefsShowTimezone' => self::blankToNull((string) ($data['prefsShowTimezone'] ?? '')),
             'prefsSponsors' => (string) $data['prefsSponsors'],
             'prefsSponsorLogos' => (string) $data['prefsSponsorLogos'],
             'prefsSessionTimeout' => $this->sessionTimeout($data['prefsSessionTimeout'] ?? null),

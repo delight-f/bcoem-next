@@ -145,7 +145,7 @@ final class PaymentsController extends Controller
             $ctx->prefsStr('prefsDateFormat'),
             $ctx->prefsStr('prefsTimeFormat'),
             'short',
-            false,
+            $ctx->showTimezone(),
         ) ?? '';
     }
 }

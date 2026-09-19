@@ -412,6 +412,8 @@ final class AjaxController extends Controller
             $ctx->prefsStr('prefsTimeZone'),
             $ctx->prefsStr('prefsDateFormat'),
             $ctx->prefsStr('prefsTimeFormat'),
+            'short',
+            $ctx->showTimezone(),
         );
     }
 

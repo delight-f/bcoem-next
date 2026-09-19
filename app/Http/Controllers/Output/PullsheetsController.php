@@ -352,7 +352,7 @@ final class PullsheetsController extends Controller
             $ctx->prefsStr('prefsDateFormat'),
             $ctx->prefsStr('prefsTimeFormat'),
             'long',
-            withZone: false,
+            $ctx->showTimezone(),
         );
 
         return $when === null ? $location->judgingLocName : $location->judgingLocName.', '.$when;

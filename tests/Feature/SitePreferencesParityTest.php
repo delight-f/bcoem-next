@@ -420,6 +420,7 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             ->assertSee('By Sub-Style')
             ->assertSee('name="prefsLanguage"', false)
             ->assertSee('name="prefsTimeZone"', false)
+            ->assertSee('name="prefsShowTimezone"', false)
             ->assertSee('Available Languages')
             ->assertSee('name="prefsLanguageOptions[]"', false);
     }
@@ -703,6 +704,41 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
     }
 
     /**
+     * Show Time Zone switch: the landing deck renders the entry window through
+     * DateFmt, so it is the probe. Off drops the zone suffix from every
+     * read-only date; on restores it.
+     */
+    public function test_show_timezone_switch_controls_the_zone_suffix(): void
+    {
+        $this->login();
+
+        // 2030-01-15 15:30 UTC — London is GMT in January.
+        $instant = 1894721400;
+        $now = time();
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => (string) ($now - 86400),
+            'contestEntryDeadline' => (string) $instant,
+        ]);
+
+        $payload = fn (string $show): array => $this->defaultPrefsPayload([
+            'prefsDateFormat' => '1',
+            'prefsTimeFormat' => '0',
+            'prefsTimeZone' => '0.000',
+            'prefsShowTimezone' => $show,
+        ]);
+
+        $this->put('/admin/site-preferences/default', $payload('N'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()
+            ->assertSee('01/15/2030 3:30 PM', false)
+            ->assertDontSee('3:30 PM, GMT', false);
+
+        $this->put('/admin/site-preferences/default', $payload('Y'))
+            ->assertRedirect('/admin/site-preferences/default?msg=2');
+        $this->get('/')->assertOk()->assertSee('01/15/2030 3:30 PM, GMT', false);
+    }
+
+    /**
      * Full General-tab payload (the tab validates ~14 required columns), so a
      * test can flip one switch through the real form.
      *
@@ -730,6 +766,7 @@ final class SitePreferencesParityTest extends PublicSurfaceTestCase
             'prefsDateFormat' => '1',
             'prefsTimeFormat' => '0',
             'prefsTimeZone' => '0.000',
+            'prefsShowTimezone' => 'Y',
             'prefsSponsors' => 'Y',
             'prefsSponsorLogos' => 'Y',
             'prefsDropOff' => 'N',

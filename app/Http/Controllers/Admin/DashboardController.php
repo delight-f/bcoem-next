@@ -192,6 +192,8 @@ final class DashboardController extends Controller
                 $ctx->prefs['prefsTimeZone'] ?? null,
                 $ctx->prefsStr('prefsDateFormat'),
                 $ctx->prefsStr('prefsTimeFormat'),
+                'short',
+                $ctx->showTimezone(),
             ),
             'currencySymbol' => $ctx->currencySymbol(),
             // default.admin.php action-row gates

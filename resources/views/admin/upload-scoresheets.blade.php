@@ -63,7 +63,7 @@
                         <tr>
                             <td>{{ $file }}</td>
                             <td>{{ number_format(filesize(\App\Support\Entries\UserDocs::path($file)) / 1000000, 4) }} MB</td>
-                            <td>{{ \App\Support\Tenant\DateFmt::dateTime(filemtime(\App\Support\Entries\UserDocs::path($file)), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long') }}</td>
+                            <td>{{ \App\Support\Tenant\DateFmt::dateTime(filemtime(\App\Support\Entries\UserDocs::path($file)), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long', $ctx->showTimezone()) }}</td>
                             <td>
                                 <form method="POST" action="{{ route('admin.upload_scoresheets.destroy', ['file' => $file]) }}"
                                       onsubmit="return confirm('Are you sure? This will remove the file named {{ $file }} from the server.');">

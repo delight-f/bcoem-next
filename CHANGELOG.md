@@ -8,6 +8,27 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Added
+
+- **A "Show Time Zone" switch under Site Preferences → Localization.** Every
+  rendered date goes through one helper whose zone suffix (`, AEST`) was a
+  per-call-site literal, so the same kind of timestamp showed a zone on one
+  screen and not on another. It is now a single site-wide preference
+  (`preferences.prefsShowTimezone`, `Y`/`N`), read through
+  `TenantContext::showTimezone()`. Read-only dates everywhere — public pages,
+  the dashboard, payments, entries, uploads, participant and judging lists,
+  the PDF/XML exports — follow it; editable date/time pickers never append a
+  zone, since flatpickr and the save path cannot parse the suffix back. An
+  install that has never saved the tab keeps showing zones, as before.
+
+### Fixed
+
+- **Admin date and time fields no longer show a time zone in their grey hint.**
+  On Competition Dates the placeholder carried `, AEST` while a filled field's
+  value never did, so a blank field and a populated one disagreed about the
+  format — and copying the hint into the field would have submitted a suffix
+  the picker cannot parse. The placeholder now matches the value format.
+
 ## [4.1.0-alpha.12] - 2026-09-19
 
 Closes out the [unwired-features audit](docs/unwired-features-audit.md): every
