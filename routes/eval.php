@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Eval\EvalDashboardController;
 use App\Http\Controllers\Eval\EvalImportController;
+use App\Http\Controllers\Eval\EvalMoveController;
 use App\Http\Controllers\Eval\EvalMyAccountController;
 use App\Http\Controllers\Eval\EvalProcessController;
 use App\Http\Controllers\Eval\EvalScoresheetController;
@@ -41,4 +42,7 @@ Route::middleware(['auth', 'eval.enabled'])->prefix('eval')->name('eval.')->grou
 
     Route::post('/process', [EvalProcessController::class, 'store'])->name('process');
     Route::post('/process/{evaluationId}', [EvalProcessController::class, 'update'])->whereNumber('evaluationId')->name('process.update');
+
+    // Admin correction for a scoresheet written against the wrong entry.
+    Route::post('/move', [EvalMoveController::class, 'move'])->name('move');
 });

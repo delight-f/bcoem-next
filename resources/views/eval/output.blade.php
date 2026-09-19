@@ -76,6 +76,59 @@
             </div>
         @endforeach
 
+        @if ($moveEntries !== [] && $evaluations !== [])
+            {{-- Admin correction (issue #1756): a judge who filled in the
+                 wrong entry. Only the entry-derived columns move; the
+                 official score rows for both entries are cleared, so the
+                 consensus import has to be re-run afterwards. --}}
+            <div class="card border-secondary mt-6">
+                <div class="card-header"><strong>Admin — Move an evaluation</strong></div>
+                <div class="card-body">
+                    <p>Use this when a judge completed a scoresheet against the wrong entry.
+                    The judges' scores and comments travel with the evaluation. The official
+                    score rows for both entries are cleared, so re-run
+                    <strong>Import Score Data</strong> afterwards.</p>
+
+                    @error('target')
+                        <div class="alert alert-danger">{{ $message }}</div>
+                    @enderror
+
+                    <form method="post"
+                          action="{{ route('eval.move', $archive ? ['archive' => $archive] : []) }}"
+                          onsubmit="return confirm('Move this evaluation to the chosen entry?');">
+                        @csrf
+                        <input type="hidden" name="confirm" value="yes">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label" for="move-evaluation">Evaluation to move</label>
+                                <select class="form-select" id="move-evaluation" name="evaluationId" required>
+                                    @foreach ($evaluations as $candidate)
+                                        <option value="{{ $candidate->id }}">
+                                            #{{ $candidate->id }} — judge uid {{ $candidate->evalJudgeInfo }} — final score {{ $candidate->evalFinalScore }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="move-target">Destination entry (id or judging number)</label>
+                                <input class="form-control" id="move-target" name="target" list="move-entries"
+                                       value="{{ old('target') }}" autocomplete="off" required>
+                                <datalist id="move-entries">
+                                    @foreach ($moveEntries as $candidate)
+                                        @continue((int) $candidate->id === (int) $entry->id)
+                                        <option value="{{ $candidate->id }}">{{ $candidate->id }} &middot; {{ filled($candidate->brewJudgingNumber) ? $candidate->brewJudgingNumber : 'no judging number' }} &middot; {{ $candidate->brewName }} &middot; {{ $candidate->brewCategorySort }}{{ $candidate->brewSubCategory }}</option>
+                                    @endforeach
+                                </datalist>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-warning">Move evaluation</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         <a class="btn btn-outline-secondary" href="{{ route('eval.dashboard') }}">Back to dashboard</a>
     </section>
 </x-public-layout>

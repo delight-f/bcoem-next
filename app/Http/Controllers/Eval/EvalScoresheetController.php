@@ -47,7 +47,7 @@ final class EvalScoresheetController extends Controller
             ->get()
             ->first(static fn ($row) => $row->evalJudgeInfo === $user->id || $user->isAdmin());
 
-        [$style, $styleType] = $this->styleFor($entry, $evaluation);
+        [$style, $styleType] = self::styleFor($entry, $evaluation);
         $variant = self::variantFor((int) $ctx->judgingStr('jPrefsScoresheet'), $styleType);
 
         return view('eval.scoresheet', [
@@ -105,13 +105,14 @@ final class EvalScoresheetController extends Controller
             ->values()
             ->all();
 
-        [$style, $styleType] = $this->styleFor($entry, $evaluations[0] ?? null);
+        [$style, $styleType] = self::styleFor($entry, $evaluations[0] ?? null);
 
         /** @var list<float|int|string|null> $finalScores */
         $finalScores = array_values(array_map(static fn ($row) => $row->evalFinalScore, $evaluations));
 
         return view('eval.output', [
             'ctx' => $ctx,
+            'archive' => $archive,
             'entry' => $entry,
             'evaluations' => $evaluations,
             'style' => $style,
@@ -119,7 +120,24 @@ final class EvalScoresheetController extends Controller
             'displayId' => self::displayId($entry, $ctx),
             'disagree' => EvalConsensus::scoresDisagree($finalScores),
             'dispersion' => EvalConsensus::scoreDispersion(),
+            // Candidate destinations for the admin's move action; empty for
+            // everyone else, which is also what hides the block (issue #1756).
+            'moveEntries' => $user->isAdmin() ? self::moveEntries($archive) : [],
         ]);
+    }
+
+    /**
+     * Every entry of the competition, for the admin move picker.
+     *
+     * @return array<int, \stdClass>
+     */
+    private static function moveEntries(string $archive): array
+    {
+        return DB::table('brewing'.$archive)
+            ->orderBy('brewJudgingNumber')
+            ->orderBy('id')
+            ->get(['id', 'brewJudgingNumber', 'brewName', 'brewCategorySort', 'brewSubCategory', 'brewStyle'])
+            ->all();
     }
 
     /**
@@ -141,10 +159,12 @@ final class EvalScoresheetController extends Controller
 
     /**
      * Style row + numeric style type for the entry (db.eval.php shape).
+     * Public because the admin move action (issue #1756) repoints
+     * evalStyle with the same rule.
      *
-     * @return array{0: object|null, 1: int}
+     * @return array{0: \stdClass|null, 1: int}
      */
-    private function styleFor(\stdClass $entry, ?\stdClass $evaluation): array
+    public static function styleFor(\stdClass $entry, ?\stdClass $evaluation = null): array
     {
         $style = null;
 
