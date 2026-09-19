@@ -89,6 +89,10 @@ to a single line.
   on the same line as the interest sentence; giving it its own paragraph so a
   long club name could not orphan a word made the homepage read as two stacked
   banners rather than one lead. The wrap-balancing CSS it needed is gone.
+- **Outgoing mail is sent as "BCOE&M", not "Laravel".** `APP_NAME` defaults to
+  `BCOE&M` in `.env.example`, so the mail "From" name and anything else reading
+  the application name match the site instead of the framework default. An
+  install that sets its own `APP_NAME` is unaffected.
 
 ### Fixed
 
@@ -128,6 +132,15 @@ to a single line.
   value never did, so a blank field and a populated one disagreed about the
   format — and copying the hint into the field would have submitted a suffix the
   picker cannot parse. The hint now matches the value format.
+- **The contact form stops showing an error before anything is wrong.** The
+  legacy "Not all required fields have been filled out or selected" text was
+  rendered on every visit, so a visitor who filled in every field still read it
+  as a failure. It is a validation message, not a note: the form now relies on
+  the per-field error list alone, and the required fields carry the star the
+  instruction line already promised. The README gains a section on email
+  deliverability (SPF/DMARC alignment, the `p=reject` trap, HTTPS-provider and
+  host-domain alternatives) so a "sent but never delivered" report has an
+  obvious first place to look.
 
 ### Removed
 
