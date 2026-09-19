@@ -15,8 +15,9 @@ control on the site now reaches a real consumer, or has been retired. The
 prominent additions are that report and export options finally produce the
 document they name, and that several settings which were saved but ignored —
 or promised a refusal the server never made — now take effect. It also adds a
-Show Time Zone switch under Localization, and returns the landing salutation
-to a single line.
+Show Time Zone switch under Localization, sets the landing salutation's
+organising club on its own centred line, and stops an at-a-glance card title
+splitting a word in two.
 
 ### Added
 
@@ -85,10 +86,12 @@ to a single line.
   and archive page now require top-level admin, and the entries admin actions
   and judging-number regeneration refuse a direct POST that did not carry the
   confirmation the UI shows.
-- **The landing salutation is one sentence again.** The organising club is back
-  on the same line as the interest sentence; giving it its own paragraph so a
-  long club name could not orphan a word made the homepage read as two stacked
-  banners rather than one lead. The wrap-balancing CSS it needed is gone.
+- **The landing salutation sets the organising club on its own line.** The club
+  name breaks after "organized by" and is centred under the interest sentence,
+  in line with the contest name in the hero, instead of trailing the end of a
+  long line. It is still the same sentence and the same paragraph — a line
+  break, not the second banner an earlier attempt introduced — and the
+  logged-in "Welcome {name}!" greeting is centred with it.
 - **Outgoing mail is sent as "BCOE&M", not "Laravel".** `APP_NAME` defaults to
   `BCOE&M` in `.env.example`, so the mail "From" name and anything else reading
   the application name match the site instead of the framework default. An
@@ -141,6 +144,12 @@ to a single line.
   deliverability (SPF/DMARC alignment, the `p=reject` trap, HTTPS-provider and
   host-domain alternatives) so a "sent but never delivered" report has an
   obvious first place to look.
+- **An at-a-glance card title no longer splits a word.** In a four-up deck the
+  title column is narrower than its longest word, and the card inherits
+  `word-wrap: break-word` from Bootstrap's `.card`, so "Entry Registration"
+  rendered as "registratio" with a hanging "n". The header lets the status pill
+  drop to its own line when the title's words do not fit beside it, so titles
+  wrap between words and nothing is pushed out of the card.
 
 ### Removed
 
