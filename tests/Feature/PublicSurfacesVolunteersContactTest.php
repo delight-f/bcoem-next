@@ -134,7 +134,11 @@ final class PublicSurfacesVolunteersContactTest extends PublicSurfaceTestCase
         $this->get('/contact')
             ->assertOk()
             ->assertSee('Use the form below to contact a competition official. All fields with a star are required.')
-            ->assertSee('Send Message');
+            ->assertSee('Send Message')
+            // The "not all required fields" text is a validation message, not a
+            // permanent note: on a clean GET the form must not carry it, or a
+            // visitor who filled everything in still reads it as an error.
+            ->assertDontSee('Not all required fields have been filled out or selected');
     }
 
     public function test_contact_page_renders_empty_when_mode_x(): void

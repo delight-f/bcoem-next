@@ -249,6 +249,61 @@ without cron self-heals. On SSH, `php artisan app:upgrade` followed by
 `php artisan clubs:sync` does the same; **Admin → Clubs List** shows the
 last-synced version, a **Sync now** button, and any dropped clubs.
 
+## Email deliverability
+
+The site sends mail — registration confirmations, receipts and contact-form
+messages — as the **Originating Email Address** set under *Site Preferences →
+Email* (or `MAIL_FROM_ADDRESS` before a transport is chosen there). Receiving
+mail servers do not take that address on trust: they check the sender domain's
+SPF and DMARC records against the machine that actually sent the message. When
+those checks fail, a strict receiving server rejects the mail, while the sender
+still reports success — because the message was accepted for delivery, not
+delivered.
+
+This is the one failure that looks like nothing is wrong: the logs say the mail
+was sent, and it never arrives.
+
+### Sending as your own domain
+
+Authorise the server that sends for you in your domain's SPF record. For a
+domain whose mail is normally handled elsewhere but is also sent from a web
+host's mail server:
+
+```
+v=spf1 include:_spf.your-mail-provider.example include:sites.your-host.example ~all
+```
+
+The sender domain in the SPF record must be the domain in the Originating Email
+Address — that alignment is what DMARC checks. A common trap is a domain whose
+mail is hosted elsewhere (Google Workspace, Fastmail, …) under a strict
+`p=reject` DMARC policy: without the host's sending servers in SPF, the site's
+own contact-form mail to an address at that same domain is rejected by the very
+mailbox meant to receive it.
+
+NearlyFreeSpeech.NET is a concrete example. It sends member-site mail from a
+dedicated set of servers, so its sites need `include:sites.nearlyfreespeech.net`
+added to their domain's SPF record. Do **not** use
+`include:nearlyfreespeech.net`, which is a different, unrelated set of servers.
+
+### Alternatives
+
+- **An HTTPS provider (Resend, Postmark).** Mail leaves over port 443, so a
+  blocked outgoing SMTP port is irrelevant. Add the DKIM records the provider
+  gives you for the sending domain, then pick the provider under *Site
+  Preferences → Email*. DKIM passing satisfies DMARC without touching SPF.
+- **The host's own domain as the sender** (for example
+  `noreply@your-site.example`). No mailbox needs to exist: the contact form
+  copies the visitor's own address into the message body, so the official can
+  still reply by hand. Bounces to that address simply go nowhere.
+
+### Checking it
+
+**Send test email** under *Site Preferences → Email* reports the transport
+actually in use and refuses to promise a delivery the host cannot make (for
+example, a named mail program the server does not have). If the test reports
+success but nothing arrives, the message is being accepted and then rejected
+downstream — check the SPF and DMARC records of the sender domain first.
+
 ## Development
 
 Requires PHP 8.4+, Composer, Node 22+ and MySQL 8.
