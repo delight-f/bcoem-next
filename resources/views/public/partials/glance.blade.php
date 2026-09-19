@@ -19,12 +19,10 @@
                  state (open / not yet open / closed). --}}
             <div class="card h-100 glance-card glance-card--{{ $accent }} {{ $reveal ? 'reveal-element' : '' }}">
                 <div class="card-body glance-card-body d-flex flex-column">
-                    {{-- No flex-wrap here: wrapping dropped the status pill onto
-                         its own line for whichever cards had the longer title,
-                         so the pills and the bodies beneath them staggered
-                         across the deck. The title shrinks and wraps instead,
-                         keeping every pill on the header's first line at the
-                         right edge (see .glance-card-head in app.css). --}}
+                    {{-- The head wraps when it must: the title's words stay whole
+                         and the status pill drops to its own line rather than the
+                         title splitting mid-word beside a pinned pill (see
+                         .glance-card-head in app.css). --}}
                     <div class="glance-card-head d-flex align-items-start justify-content-between gap-2">
                         <h5 class="card-title glance-header glance-header--{{ $accent }} mb-0">{{ $card['title'] }}</h5>
                         <span class="glance-status-pill glance-status-pill--{{ $card['color'] }}"><i class="{{ $iconClass }} me-1"></i>{{ $card['pill'] }}</span>
