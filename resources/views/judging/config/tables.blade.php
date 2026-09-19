@@ -1,3 +1,5 @@
+@php($unassignFlag = (int) ($unassignFlag ?? 0))
+@php($unassignList = (array) ($unassignList ?? []))
 <x-public-layout :ctx="$ctx" :show-hero="false">
     <p class="lead">{{ $ctx->contestStr('contestName') }} Judging Tables</p>
     <section class="landing-page-section mt-6 mb-4">
@@ -146,6 +148,15 @@
                 if (confirmYes) {
                     confirmYes.addEventListener('click', () => switchMode('enable-competition'));
                 }
+
+                // The switch wrote judge_unassign_flag; open the caution modal
+                // once on the reload so the admin sees who was removed.
+                @if ($unassignFlag)
+                    const unassignedModal = document.getElementById('unassigned-modal');
+                    if (unassignedModal && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(unassignedModal).show();
+                    }
+                @endif
             });
         </script>
         {{-- Legacy #unassigned-modal (judging_tables.admin.php:726-743): shown
@@ -160,6 +171,19 @@
                     <div class="modal-body">
                         <p>Upon switching to Tables Competition Mode, one or more judges/stewards were un-assigned from tables due to entry style conflicts. This can happen if the participant added or edited an entry's style that is designated at a table where they are assigned as a judge or steward.</p>
                         <p>Review the list below for any changes in judge or steward counts and make adjustments accordingly.</p>
+                        @if ($unassignList !== [])
+                            <table class="table table-bordered mb-0">
+                                <thead><tr><th>Name</th><th>Role</th></tr></thead>
+                                <tbody>
+                                    @foreach ($unassignList as $removed)
+                                        <tr>
+                                            <td class="small">{{ $removed['name'] }}</td>
+                                            <td class="small">{{ $removed['role'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-success" data-bs-dismiss="modal">I Understand</button>
@@ -168,69 +192,8 @@
             </div>
         </div>
 
-        {{-- Legacy #availJudgeModal / #availStewardModal
-             (judging_tables.admin.php:852-884): lib/admin.lib.php not_assigned(). --}}
-        <div class="modal fade" id="availJudgeModal" tabindex="-1" role="dialog" aria-labelledby="availJudgeModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title fw-bold" id="availJudgeModalLabel">Judges Not Assigned to a Table</h4>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        @if ($unassignedJudges->isEmpty())
-                            <p>No judges are currently not assigned to a table.</p>
-                        @else
-                            <table class="table table-bordered">
-                                <thead><tr><th>Name</th><th>Judge Rank</th></tr></thead>
-                                <tbody>
-                                    @foreach ($unassignedJudges as $judge)
-                                        <tr>
-                                            <td class="small">{{ $judge['name'] }}</td>
-                                            <td class="small">{{ $judge['rank'] }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @include('judging.partials.unassigned-roster-modals')
 
-        <div class="modal fade" id="availStewardModal" tabindex="-1" role="dialog" aria-labelledby="availStewardModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h4 class="modal-title fw-bold" id="availStewardModalLabel">Stewards Not Assigned to a Table</h4>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        @if ($unassignedStewards->isEmpty())
-                            <p>No stewards are currently not assigned to a table.</p>
-                        @else
-                            <table class="table table-bordered">
-                                <thead><tr><th>Name</th><th>Judge Rank</th></tr></thead>
-                                <tbody>
-                                    @foreach ($unassignedStewards as $steward)
-                                        <tr>
-                                            <td class="small">{{ $steward['name'] }}</td>
-                                            <td class="small">{{ $steward['rank'] }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
         @if ($tables->isEmpty())
             <div class="alert alert-info" role="alert">No tables have been defined.</div>
         @else

@@ -19,8 +19,14 @@ use Illuminate\Support\Facades\DB;
  * entries (legacy output/participant_summary.output.php +
  * includes/db/output_participant_summary.db.php).
  *
- * Brewers come from the brewer⋈users join on brewerEmail = user_name
- * ordered by last name; only brewers with ≥1 received entry get a page.
+ * Brewers come from the brewer⋈users join on brewerEmail = user_name;
+ * only brewers with ≥1 received entry get a page. The "Print Current View"
+ * dropdown and the dashboard links pass `psort`/`filter` (D1-02):
+ *  - `filter=judges|stewards` restricts the list to participants flagged
+ *    `brewerJudge`/`brewerSteward` = 'Y' (the same flags the Participants
+ *    screen uses), otherwise every participant is listed;
+ *  - `psort=brewer_name|club|organization|judge_id|judge_rank` orders the
+ *    list by that column (default: last name, then first name).
  * Place display follows prefsWinnerMethod (0 table / 1 category /
  * 2 subcategory), mirroring winner_check() (common.lib.php:2751) for the
  * methods it actually renders — methods 3-5 fall through empty there too.
@@ -31,6 +37,11 @@ final class ParticipantSummaryController extends Controller
     {
         $ctx = TenantContext::load();
         $baSet = $ctx->prefsStr('prefsStyleSet') === 'BA';
+
+        $filterQuery = $request->query('filter');
+        $filter = is_string($filterQuery) ? $filterQuery : 'default';
+        $psortQuery = $request->query('psort');
+        $psort = is_string($psortQuery) ? $psortQuery : 'brewer_name';
 
         $scores = DB::table('judging_scores')->get([
             'eid', 'scoreEntry', 'scorePlace', 'scoreMiniBOS', 'scoreTable',
@@ -48,9 +59,25 @@ final class ParticipantSummaryController extends Controller
 
         $participants = [];
 
-        $brewers = DB::table('brewer as br')
+        $brewersQuery = DB::table('brewer as br')
             ->join('users as u', 'br.brewerEmail', '=', 'u.user_name')
+            ->when($filter === 'judges', fn ($q) => $q->where('br.brewerJudge', 'Y'))
+            ->when($filter === 'stewards', fn ($q) => $q->where('br.brewerSteward', 'Y'));
+
+        $orderColumn = match ($psort) {
+            'club' => 'br.brewerClubs',
+            'organization' => 'br.brewerBreweryName',
+            'judge_id' => 'br.brewerJudgeID',
+            'judge_rank' => 'br.brewerJudgeRank',
+            default => null,
+        };
+        if ($orderColumn !== null) {
+            $brewersQuery->orderBy($orderColumn);
+        }
+
+        $brewers = $brewersQuery
             ->orderBy('br.brewerLastName')
+            ->orderBy('br.brewerFirstName')
             ->get(['br.uid', 'br.brewerFirstName', 'br.brewerLastName']);
 
         foreach ($brewers as $brewer) {

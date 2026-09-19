@@ -178,6 +178,12 @@ Route::post('/brew/{entry}/edit', [BrewController::class, 'storeEdit'])->name('b
 // restores that surface here, session-scoped to the caller's own entries.
 Route::get('/list/labels', EntrantLabelController::class)->name('labels.own')->middleware('auth');
 
+// A judge's own scoresheet labels (D2-03). The admin outputs.labels route is
+// admin-gated, so a judge bounced to /?msg=99; this scopes the sheet to the
+// caller's own record, mirroring /list/labels.
+Route::get('/list/scoresheet-labels', [EntrantLabelController::class, 'scoresheet'])
+    ->name('labels.scoresheet')->middleware('auth');
+
 // Public pay page (P3.5d). Legacy served ?section=pay behind a login gate.
 // Success lands back on the page with the legacy confirmation alert
 // (msg=13); cancel renders msg=14 — legacy used section=list&msg=13/14,
@@ -232,6 +238,10 @@ Route::post('/admin/payments/setup/paypal', [PaymentSetupController::class, 'sav
     ->name('admin.payments.setup.paypal')->middleware('auth');
 Route::post('/admin/payments/setup/paypal/remove', [PaymentSetupController::class, 'removePayPal'])
     ->name('admin.payments.setup.paypal.remove')->middleware('auth');
+Route::post('/admin/payments/setup/stripe/currency', [PaymentSetupController::class, 'saveStripeCurrency'])
+    ->name('admin.payments.setup.stripe.currency')->middleware('auth');
+Route::post('/admin/payments/setup/stripe/remove', [PaymentSetupController::class, 'removeStripe'])
+    ->name('admin.payments.setup.stripe.remove')->middleware('auth');
 
 // AJAX endpoints (P3.7). Port the legacy ajax/*.ajax.php files; response
 // envelopes carry the legacy HTML fragments verbatim (see AjaxController).

@@ -71,7 +71,9 @@ final class ArchiveFlowsTest extends PublicSurfaceTestCase
         DB::purge('p56');
 
         self::seedConfigRows();
-        self::seedUser(self::ADMIN_ID, self::ADMIN_EMAIL, '1');
+        // Archive/purge is top-level-admin only (admin.top), like the
+        // narrower entries purge.
+        self::seedUser(self::ADMIN_ID, self::ADMIN_EMAIL, '0');
         $this->loginWithEmail(self::ADMIN_EMAIL);
     }
 
@@ -355,5 +357,21 @@ final class ArchiveFlowsTest extends PublicSurfaceTestCase
 
         self::assertSame(1, DB::table('brewing')->count());
         self::assertTrue(DB::table('brewing')->where('id', 910)->exists());
+    }
+
+    public function test_mid_level_admin_is_rejected_from_archive_and_purge(): void
+    {
+        self::seedEntry(920, '2030-06-01 00:00:00');
+        $midEmail = 'archive.mid@brewingcompetitions.com';
+        self::seedUser(9403, $midEmail, '1');
+
+        $this->post('/logout');
+        $this->loginWithEmail($midEmail);
+
+        $this->get('/admin/archive')->assertRedirect('/?msg=99');
+        $this->get('/admin/purge')->assertRedirect('/?msg=99');
+        $this->post('/admin/purge/unpaid', ['confirm' => 'yes'])->assertRedirect('/?msg=99');
+
+        self::assertTrue(DB::table('brewing')->where('id', 920)->exists());
     }
 }

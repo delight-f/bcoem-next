@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace BCOEM\Tests\Characterization;
 
-use App\Domain\BrewingRow;
 use BCOEM\Tests\Integration\MySqlTestCase;
 use Illuminate\Support\Facades\DB;
 
@@ -68,10 +67,10 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         return $id;
     }
 
-    private function entry(int $id): BrewingRow
+    private function entry(int $id): \stdClass
     {
-        $row = BrewingRow::fromArray((array) DB::table('brewing')->where('id', $id)->first());
-        self::assertInstanceOf(BrewingRow::class, $row);
+        $row = DB::table('brewing')->where('id', $id)->first();
+        self::assertInstanceOf(\stdClass::class, $row);
 
         return $row;
     }
@@ -102,12 +101,10 @@ final class EntryLifecycleDbTest extends MySqlTestCase
         self::assertSame('0', (string) $this->entry($zeroId)->brewConfirmed);
         self::assertSame('2', (string) $this->entry($twoId)->brewConfirmed);
 
-        foreach (DB::table('brewing')->where('brewConfirmed', '0')->get() as $raw) {
-            $row = BrewingRow::fromArray((array) $raw);
+        foreach (DB::table('brewing')->where('brewConfirmed', '0')->get() as $row) {
             self::assertSame('Unconfirmed Check Zero', $row->brewName);
         }
-        foreach (DB::table('brewing')->where('brewConfirmed', '2')->get() as $raw) {
-            $row = BrewingRow::fromArray((array) $raw);
+        foreach (DB::table('brewing')->where('brewConfirmed', '2')->get() as $row) {
             self::assertSame('Unconfirmed Check Two', $row->brewName);
         }
     }

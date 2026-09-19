@@ -82,6 +82,7 @@ final class PaymentWiringTest extends PublicSurfaceTestCase
         DB::table('brewing')->whereIn('id', $this->entries !== [] ? $this->entries : [0])->delete();
         DB::table('payments')->whereIn('entrant_uid', [self::ADMIN_ID, self::ENTRANT_ID, self::OTHER_ID])->delete();
         DB::table('users')->whereIn('id', [self::ADMIN_ID, self::ENTRANT_ID, self::OTHER_ID])->delete();
+        DB::table('staff')->whereIn('uid', [self::ENTRANT_ID, self::OTHER_ID])->delete();
         DB::table('brewer')->whereIn('uid', [self::ENTRANT_ID, self::OTHER_ID])->delete();
 
         if ($this->origPrefs !== []) {
@@ -241,5 +242,36 @@ final class PaymentWiringTest extends PublicSurfaceTestCase
         $this->makeEntry(self::ENTRANT_ID);
         $this->get('/list/labels')->assertOk();
         $this->get('/list/labels?ids='.$otherId)->assertRedirect('/list');
+    }
+
+    // ---- 4e: judge scoresheet labels (D2-03) ----
+
+    public function test_judge_scoresheet_labels_are_login_only_and_scoped_to_the_caller(): void
+    {
+        $this->get('/list/scoresheet-labels')->assertRedirect('/login');
+
+        // A non-judge has no scoresheet labels to print.
+        $this->loginAs(self::OTHER);
+        $this->get('/list/scoresheet-labels')->assertRedirect('/list');
+
+        DB::table('brewer')->where('uid', self::ENTRANT_ID)->update(['brewerJudge' => 'Y']);
+        DB::table('staff')->where('uid', self::ENTRANT_ID)->delete();
+        DB::table('staff')->insert([
+            'uid' => self::ENTRANT_ID,
+            'staff_judge' => 1,
+            'staff_steward' => 0,
+            'staff_staff' => 0,
+            'staff_organizer' => 0,
+        ]);
+
+        $this->loginAs(self::ENTRANT);
+
+        // The account page points a judge at the public route, not the admin one.
+        $this->get('/list')->assertOk()
+            ->assertSee(route('labels.scoresheet', ['psort' => 5160]), false);
+
+        $response = $this->get('/list/scoresheet-labels?psort=5160');
+        $response->assertOk();
+        $this->assertStringStartsWith('%PDF', (string) $response->getContent());
     }
 }

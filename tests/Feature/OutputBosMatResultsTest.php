@@ -23,8 +23,6 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
 
     private const ADMIN_ID = 9701;
 
-    private const ADMIN_PASS = 'bcoem';
-
     private const HASH = '$2a$08$2qgODWiSaYfLTVhu.2qVSer30aG7cLQZX0To01CqinyFyUbwdO64C';
 
     /** @var list<int> */
@@ -299,6 +297,74 @@ final class OutputBosMatResultsTest extends PublicSurfaceTestCase
         // BOS table only when a judging_scores_bos row exists.
         $this->assertStringContainsString('BMR Entry One', $html);
         $this->assertStringContainsString('BMR Irish Red Ale', $html);
+    }
+
+    /** D1-01: view=html bypasses the PDF pipeline. */
+    public function test_results_html_variant_is_html_not_pdf(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        $response = $this->get('/admin/output/results?go=judging_scores&action=default&tb=none&view=html');
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'text/html; charset=utf-8');
+        $body = (string) $response->getContent();
+        $this->assertStringNotContainsString('%PDF', substr($body, 0, 4));
+        $this->assertStringContainsString('<html', $body);
+    }
+
+    /** D1-01: action=download streams the document as an attachment. */
+    public function test_results_download_action_is_attachment(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        $pdf = $this->get('/admin/output/results?go=judging_scores_bos&action=download&view=pdf');
+        $pdf->assertOk();
+        $pdf->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('attachment; filename="results.pdf"', (string) $pdf->headers->get('Content-Disposition'));
+
+        $html = $this->get('/admin/output/results?go=judging_scores_bos&action=download&view=html');
+        $html->assertOk();
+        $html->assertHeader('Content-Type', 'text/html; charset=utf-8');
+        $this->assertStringStartsWith('attachment; filename="results.html"', (string) $html->headers->get('Content-Disposition'));
+    }
+
+    /** D1-01: view=default lists every received entry; view=winners omits unplaced ones. */
+    public function test_results_view_default_includes_unplaced_entries_winners_does_not(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        $this->entryIds[] = (int) DB::table('brewing')->insertGetId([
+            'brewName' => 'BMR Unjudged Entry',
+            'brewStyle' => 'BMR Irish Red Ale',
+            'brewCategory' => '17',
+            'brewCategorySort' => '17',
+            'brewSubCategory' => 'A',
+            'brewBrewerID' => 1,
+            'brewReceived' => '1',
+            'brewConfirmed' => '1',
+        ]);
+
+        $all = $this->decodePdfText($this->get('/admin/output/results?go=judging_scores&action=print&view=default'));
+        $this->assertStringContainsString('BMR Unjudged Entry', $all);
+
+        $winners = $this->decodePdfText($this->get('/admin/output/results?go=judging_scores&action=print&view=winners'));
+        $this->assertStringNotContainsString('BMR Unjudged Entry', $winners);
+    }
+
+    /** D1-01: tb=scores adds the score column, its absence omits it. */
+    public function test_results_tb_scores_toggles_the_score_column(): void
+    {
+        $this->seedBosMat();
+        $this->login();
+
+        $withScores = $this->decodePdfText($this->get('/admin/output/results?go=judging_scores&action=print&tb=scores&view=winners'));
+        $this->assertStringContainsString('Score', $withScores);
+
+        $withoutScores = $this->decodePdfText($this->get('/admin/output/results?go=judging_scores&action=print&view=winners'));
+        $this->assertStringNotContainsString('Score', $withoutScores);
     }
 
     public function test_bos_mat_and_results_require_admin(): void

@@ -37,6 +37,24 @@ final class StreamPdf
     }
 
     /**
+     * Render a Blade view to an HTML response instead of a PDF.
+     *
+     * The `?view=html` variants (results matrix, D1-01) bypass the dompdf
+     * pipeline entirely: the same document template is served as
+     * text/html, inline for a browser or as an attachment for download.
+     *
+     * @param  view-string  $view
+     * @param  array<string, mixed>  $data
+     */
+    public static function html(string $view, array $data, string $filename, bool $download = false): Response
+    {
+        return new Response(view($view, $data)->render(), 200, [
+            'Content-Type' => 'text/html; charset=utf-8',
+            'Content-Disposition' => ($download ? 'attachment' : 'inline').'; filename="'.$filename.'"',
+        ]);
+    }
+
+    /**
      * Render a Blade view straight to raw PDF bytes (tests).
      *
      * @param  view-string  $view

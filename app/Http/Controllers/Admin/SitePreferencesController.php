@@ -15,6 +15,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -40,7 +41,9 @@ use Illuminate\Validation\ValidationException;
  * Documented divergences:
  *  - legacy encrypts SMTP and entry-fee passwords with simpleEncrypt() over
  *    install-secret key material that does not exist in the standalone
- *    build; both are stored as-is (never rendered as HTML anywhere);
+ *    build. The SMTP password and provider API key are encrypted at rest
+ *    with Laravel Crypt (APP_KEY); the entry-fee password is stored as-is
+ *    (never rendered as HTML anywhere);
  *  - legacy runs BJCP2015→2021→2025 / AABC2022→2025 brewing-row conversion
  *    passes on style-set change; those migration converters are out of scope
  *    (ledger/styles.md — converters are migration paths, not lookups);
@@ -273,9 +276,6 @@ final class SitePreferencesController extends Controller
             // The port ships two palettes (default public + brux); the legacy
             // Bootswatch names no longer exist, so reject anything else.
             'prefsTheme' => ['required', Rule::in(['default', 'bcoem-brux'])],
-            // No longer offered (Laravel routes clean URLs unconditionally);
-            // nullable so older payloads that still post it stay valid.
-            'prefsSEF' => ['nullable', 'in:Y,N'],
             // Custom Modules: legacy stores Y/N in a char(1) column and both
             // the dashboard and the public mods gate test for 'Y'.
             'prefsUseMods' => ['required', 'in:Y,N'],
@@ -290,10 +290,6 @@ final class SitePreferencesController extends Controller
             'prefsRecordLimit' => ['nullable', 'integer', 'min:1'],
             'prefsDropOff' => ['required', 'in:0,1,Y,N'],
             'prefsShipping' => ['required', 'in:0,1,Y,N'],
-            // Replaced by the "Purge now" action in the same section (the
-            // legacy auto-purge ran from a cron path the port doesn't have);
-            // nullable so older payloads that still post it stay valid.
-            'prefsAutoPurge' => ['nullable', 'in:0,1'],
             'prefsLanguage' => ['required', 'string', 'max:10'],
             'prefsLanguageToggle' => ['required', 'in:Y,N'],
             'prefsLanguageOptions' => ['nullable', 'array'],
@@ -330,8 +326,7 @@ final class SitePreferencesController extends Controller
             }
         }
 
-        // Pro edition suppresses the MHP display (legacy quirk).
-        $mhp = $data['prefsProEdition'] == 1 ? '0' : (string) ($data['prefsMHPDisplay'] ?? '0');
+        $mhp = (string) ($data['prefsMHPDisplay'] ?? '0');
 
         $languageOptions = array_values(array_filter(
             is_array($data['prefsLanguageOptions'] ?? null) ? $data['prefsLanguageOptions'] : [],
@@ -402,7 +397,7 @@ final class SitePreferencesController extends Controller
             'contestEntryFeeDiscountNum' => ['nullable', 'integer', 'min:1'],
             'contestEntryFeePassword' => ['nullable', 'string', 'max:255'],
             'contestEntryFeePasswordNum' => ['nullable', 'numeric', 'min:0'],
-            'contestEntryCap' => ['nullable', 'integer', 'min:1'],
+            'contestEntryCap' => ['nullable', 'numeric', 'min:0'],
             'prefsStyleSet' => ['required', Rule::in(StyleSets::names())],
             'prefsEntryForm' => ['required', 'integer'],
             'prefsSpecific' => ['required', 'in:0,1'],
@@ -477,11 +472,6 @@ final class SitePreferencesController extends Controller
         $previousSet = $ctx->prefsStr('prefsStyleSet');
         if ((string) $data['prefsStyleSet'] !== (string) $previousSet) {
             $this->rebuildSelectedStyles((string) $data['prefsStyleSet']);
-        }
-
-        // Not limiting per-style/table → clear every at-limit flag.
-        if ($data['choose-style-entry-limits'] != 1) {
-            DB::table('styles')->update(['brewStyleAtLimit' => null]);
         }
 
         // Per-style-type entry limits live on style_types, and only the BOS
@@ -569,9 +559,10 @@ final class SitePreferencesController extends Controller
             'prefsEmailEncrypt' => ['nullable', 'string', 'max:10'],
             'prefsEmailPort' => ['nullable', 'integer'],
             'prefsEmailCC' => ['nullable', 'in:0,1'],
-            // Transport selection (MailSettings). Optional so a form posted
-            // without the field — or an older install — keeps working.
-            'prefsEmailTransport' => ['nullable', 'in:'.implode(',', MailSettings::TRANSPORTS)],
+            // Transport selection (MailSettings). 'default' is the explicit
+            // "Application default (from .env)" sentinel; nullable so a form
+            // posted without the field — or an older install — keeps working.
+            'prefsEmailTransport' => ['nullable', 'in:'.MailSettings::DEFAULT_TRANSPORT.','.implode(',', MailSettings::TRANSPORTS)],
             'prefsEmailApiKey' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -580,27 +571,28 @@ final class SitePreferencesController extends Controller
         $host = (string) ($data['prefsEmailHost'] ?? '');
         $encrypt = (string) ($data['prefsEmailEncrypt'] ?? '');
         $port = (string) ($data['prefsEmailPort'] ?? '');
-        $password = trim((string) ($data['prefsEmailPassword'] ?? ''));
+        $postedPassword = trim((string) ($data['prefsEmailPassword'] ?? ''));
         $confirm = (string) $data['prefsEmailRegConfirm'];
         $cc = (string) ($data['prefsEmailCC'] ?? '0');
         $transport = strtolower(trim((string) ($data['prefsEmailTransport'] ?? '')));
-        $apiKey = trim((string) ($data['prefsEmailApiKey'] ?? ''));
+        $postedApiKey = trim((string) ($data['prefsEmailApiKey'] ?? ''));
 
+        // Secrets are encrypted at rest (Laravel Crypt / APP_KEY); a value
+        // that is kept rather than re-entered stays in its stored form.
         $storedPassword = (string) ($stored['prefsEmailPassword'] ?? '');
+        $storedApiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
         $passwordChoice = (string) $data['change-email-password-choice'];
+        $password = $storedPassword;
         if ($passwordChoice === '1') {
             // "Set new password" with the field left blank keeps the stored
             // password rather than silently wiping it (the same keep-blank
             // rule the provider API key uses below).
-            if ($password === '') {
-                $password = $storedPassword;
+            if ($postedPassword !== '') {
+                $password = Crypt::encryptString($postedPassword);
             }
-            // Divergence: stored as-is (see class docblock re simpleEncrypt).
         } elseif ($passwordChoice === '2') {
             // "Remove stored password": explicit clear (blank → NULL below).
             $password = '';
-        } elseif ($storedPassword !== '') {
-            $password = $storedPassword;
         }
 
         if ($data['prefsEmailSMTP'] == 0) {
@@ -613,13 +605,17 @@ final class SitePreferencesController extends Controller
             $encrypt = (string) ($stored['prefsEmailEncrypt'] ?? '');
             $port = (string) ($stored['prefsEmailPort'] ?? '');
             $transport = strtolower(trim((string) ($stored['prefsEmailTransport'] ?? '')));
-            $apiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
+            $apiKey = $storedApiKey;
+        } else {
+            // An API key left blank on an unchanged provider must not wipe
+            // the stored secret (the field is never pre-filled with it).
+            $apiKey = $postedApiKey !== '' ? Crypt::encryptString($postedApiKey) : $storedApiKey;
         }
 
-        // An API key left blank on an unchanged provider must not wipe the
-        // stored secret (the field is never pre-filled with it).
-        if ($apiKey === '') {
-            $apiKey = trim((string) ($stored['prefsEmailApiKey'] ?? ''));
+        // The select posts 'default' for "Application default (from .env)";
+        // an empty post from an older payload means the same thing.
+        if ($transport === '') {
+            $transport = MailSettings::DEFAULT_TRANSPORT;
         }
 
         return [

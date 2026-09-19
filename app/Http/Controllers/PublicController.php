@@ -58,6 +58,16 @@ final class PublicController extends Controller
         $sponsorsVisible = $ctx->prefsStr('prefsSponsors') === 'Y'
             && (int) DB::table('sponsors')->count() > 0;
 
+        // Public drop-off listing (B3-11): the Entry Info rules surface shows
+        // the configured locations with map/directions links. Gated on the
+        // Drop-Off display switch; the window gate lives in the partial.
+        $dropOffLocations = (int) $ctx->prefsStr('prefsDropOff') === 1
+            ? DB::table('drop_off')->orderBy('dropLocationName')->get([
+                'id', 'dropLocation', 'dropLocationName', 'dropLocationPhone',
+                'dropLocationWebsite', 'dropLocationNotes',
+            ])
+            : collect();
+
         // index.pub.php: "Welcome {name}!" lead when logged in, then the
         // fw-light interest line with <small> wrapper. The organising club
         // link is rendered as a second line (issue #57).
@@ -180,6 +190,7 @@ final class PublicController extends Controller
             'glance' => $this->glanceCards($ctx, $windows, $langLong, $request->user() !== null),
             'heroImage' => self::heroImage($ctx),
             'salutation' => $salutation,
+            'dropOffLocations' => $dropOffLocations,
             'archives' => ResultsRepository::archives(),
         ]);
     }

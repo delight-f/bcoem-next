@@ -29,7 +29,8 @@ use Illuminate\Support\Facades\DB;
  *   - process_judging_scores_bos.inc.php: place+existing → update,
  *     place+none → insert, cleared place → delete.
  *   - process_special_best_info/data.inc.php: blank_to_null storage,
- *     judging-number→entry resolution, sbi_display_places never written.
+ *     judging-number→entry resolution; sbi_display_places written only
+ *     when the form posts it (B3-10).
  */
 final class JudgingScoresBosTest extends PublicSurfaceTestCase
 {
@@ -349,7 +350,7 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
         // Render the entries form (blank slots, sbi_places=2).
         $this->get('/admin/judging/special-best/'.((int) $sbi->id).'/entries')->assertOk();
         $this->assertSame('Best pro-am entry', (string) $sbi->sbi_description, 'strip_tags like the legacy purifier pass');
-        $this->assertNull($sbi->sbi_display_places, 'legacy process never writes sbi_display_places');
+        $this->assertNull($sbi->sbi_display_places, 'omitting the field stores NULL');
 
         // Two slots: one resolves, one unknown → skipped.
         $this->put('/admin/judging/special-best/'.((int) $sbi->id).'/entries', [
@@ -392,6 +393,43 @@ final class JudgingScoresBosTest extends PublicSurfaceTestCase
         $this->assertSame(0, DB::table('special_best_data')->where('sid', (int) $sbi->id)->count());
 
         $this->get('/admin/judging/special-best-data')->assertOk();
+    }
+
+    /**
+     * B3-10: the form offers sbi_display_places (show places on the awards
+     * deck) and the controller persists it, in both directions.
+     */
+    public function test_special_best_saves_display_places_control(): void
+    {
+        $this->post('/admin/judging/special-best', [
+            'sbi_name' => 'Display Places Category',
+            'sbi_places' => '3',
+            'sbi_rank' => '1',
+            'sbi_display_places' => '1',
+        ])->assertRedirect('/admin/judging/special-best');
+
+        $sbi = DB::table('special_best_info')->where('sbi_name', 'Display Places Category')->sole();
+        $this->specialBestIds[] = (int) $sbi->id;
+        self::assertSame(1, (int) $sbi->sbi_display_places);
+
+        // The form renders the control with the stored value checked.
+        $this->get('/admin/judging/special-best/'.((int) $sbi->id).'/edit')
+            ->assertOk()
+            ->assertSee('name="sbi_display_places"', false)
+            ->assertSee('id="sbi_display_places"', false);
+
+        // The unchecked box posts 0 (hidden + checkbox pair) and updates.
+        $this->put('/admin/judging/special-best/'.((int) $sbi->id), [
+            'sbi_name' => 'Display Places Category',
+            'sbi_places' => '3',
+            'sbi_rank' => '1',
+            'sbi_display_places' => '0',
+        ])->assertRedirect('/admin/judging/special-best');
+
+        self::assertSame(
+            0,
+            (int) DB::table('special_best_info')->where('id', (int) $sbi->id)->value('sbi_display_places'),
+        );
     }
 
     public function test_guest_is_rejected(): void

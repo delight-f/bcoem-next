@@ -9,7 +9,9 @@ use App\Http\Controllers\Output\LabelsController;
 use App\Http\Controllers\Output\SortingController;
 use App\Http\Controllers\Output\TableCardsController;
 use App\Support\Tenant\TenantContext;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Testing\TestResponse;
 
 /**
  * Slice D output pair A (spec §7 P5.2, ticket 02): labels, bottle_label,
@@ -280,6 +282,36 @@ final class OutputPairsATest extends PublicSurfaceTestCase
         $this->assertSame([], $empty);
     }
 
+    /** D1-03: go=judging_locations&location filters the cards to one session. */
+    public function test_table_cards_for_session_filters_by_location(): void
+    {
+        $locA = (int) DB::table('judging_locations')->insertGetId([
+            'judgingLocName' => 'P52a Session A', 'judgingLocType' => 0, 'judgingRounds' => 1,
+        ]);
+        $locB = (int) DB::table('judging_locations')->insertGetId([
+            'judgingLocName' => 'P52a Session B', 'judgingLocType' => 0, 'judgingRounds' => 1,
+        ]);
+        $tableA = (int) DB::table('judging_tables')->insertGetId([
+            'tableName' => 'P52a Session A Table', 'tableNumber' => 961, 'tableLocation' => $locA,
+        ]);
+        $tableB = (int) DB::table('judging_tables')->insertGetId([
+            'tableName' => 'P52a Session B Table', 'tableNumber' => 962, 'tableLocation' => $locB,
+        ]);
+
+        $this->login();
+
+        try {
+            $sessionA = $this->decodePdfText($this->get(
+                '/admin/output/table_cards?go=judging_locations&location='.$locA.'&round=1',
+            ));
+            $this->assertStringContainsString('P52a Session A Table', $sessionA);
+            $this->assertStringNotContainsString('P52a Session B Table', $sessionA);
+        } finally {
+            DB::table('judging_tables')->whereIn('id', [$tableA, $tableB])->delete();
+            DB::table('judging_locations')->whereIn('id', [$locA, $locB])->delete();
+        }
+    }
+
     public function test_sorting_sheets_and_cheat_stream_pdf(): void
     {
         $this->seedEntries();
@@ -311,5 +343,19 @@ final class OutputPairsATest extends PublicSurfaceTestCase
         $contact = explode("\n", $cat28['rows'][0]['contact']);
         $this->assertSame(self::PREFIX.'.entrant@brewingcompetitions.com', $contact[0]);
         $this->assertSame('(512) 555-1234', $contact[1]);
+    }
+
+    /**
+     * @param  TestResponse<Response>  $response
+     */
+    private function decodePdfText(TestResponse $response): string
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'pdf');
+        file_put_contents($tmp, (string) $response->getContent());
+        $text = shell_exec('pdftotext '.escapeshellarg($tmp).' - 2>/dev/null') ?: '';
+
+        @unlink($tmp);
+
+        return $text;
     }
 }

@@ -231,6 +231,55 @@ final class PaymentSetupTest extends PublicSurfaceTestCase
         self::assertSame('ca_platform_id', $raw['client_id']);
     }
 
+    public function test_stripe_currency_is_saved_validated_and_cleared(): void
+    {
+        $this->login(self::ADMIN);
+
+        $this->post('/admin/payments/setup/stripe/currency', ['currency' => 'EUR'])
+            ->assertRedirect(route('admin.payments.setup'))
+            ->assertSessionHasNoErrors();
+        self::assertSame('EUR', StripeSettings::currency());
+
+        $this->post('/admin/payments/setup/stripe/currency', ['currency' => 'XX'])
+            ->assertSessionHasErrors('currency');
+        self::assertSame('EUR', StripeSettings::currency(), 'an invalid code must not overwrite the saved one');
+
+        $this->post('/admin/payments/setup/stripe/currency', ['currency' => ''])
+            ->assertRedirect(route('admin.payments.setup'))
+            ->assertSessionHasNoErrors();
+        self::assertSame('', StripeSettings::currency());
+    }
+
+    public function test_disconnect_stripe_clears_the_connected_account(): void
+    {
+        DB::table('preferences')->where('id', 1)->update([
+            'prefsStripe' => json_encode([
+                'account_id' => 'acct_1',
+                'webhook_secret' => 'whsec_1',
+                'currency' => 'EUR',
+                'client_id' => 'ca_platform_id',
+            ]),
+        ]);
+
+        self::assertContains(
+            PaymentService::METHOD_STRIPE,
+            array_keys(app(PaymentProviderRegistry::class)->enabled()),
+        );
+
+        $this->login(self::ADMIN);
+        $this->get('/admin/payments/setup')->assertOk()->assertSee('Disconnect Stripe');
+        $this->post('/admin/payments/setup/stripe/remove')->assertRedirect(route('admin.payments.setup'));
+
+        $cfg = StripeSettings::config();
+        self::assertSame('', $cfg['account_id']);
+        self::assertSame('', $cfg['webhook_secret']);
+        self::assertSame('ca_platform_id', $cfg['client_id'], 'platform keys must survive a disconnect');
+        self::assertNotContains(
+            PaymentService::METHOD_STRIPE,
+            array_keys(app(PaymentProviderRegistry::class)->enabled()),
+        );
+    }
+
     public function test_stripe_keys_fall_back_to_env_when_nothing_is_saved(): void
     {
         config(['services.stripe.client_id' => 'ca_env', 'services.stripe.secret' => 'sk_env']);

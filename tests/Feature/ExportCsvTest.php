@@ -454,6 +454,95 @@ final class ExportCsvTest extends PublicSurfaceTestCase
         self::fail("entry $id not found in the exported CSV");
     }
 
+    /** D1-04: tb=winners vs the plain limited export carry different row sets. */
+    public function test_winners_tab_exports_only_placed_entries(): void
+    {
+        DB::table('brewing')->insert($this->entryRow(530001, ['brewName' => 'P53 Placed', 'brewJudgingNumber' => 'C101']));
+        DB::table('judging_flights')->insert([
+            'flightTable' => self::TABLE_ID,
+            'flightNumber' => 4,
+            'flightEntryID' => '530001',
+            'flightRound' => 1,
+        ]);
+        DB::table('judging_scores')->insert([
+            'eid' => 530001, 'bid' => self::BREWER_IDS[0], 'scoreTable' => self::TABLE_ID,
+            'scoreEntry' => 5, 'scorePlace' => 1, 'scoreType' => 3,
+        ]);
+        DB::table('brewing')->insert($this->entryRow(530002, ['brewName' => 'P53 Unplaced', 'brewJudgingNumber' => 'C102']));
+
+        $winners = $this->streamedCsv('/admin/output/export?go=csv&tb=winners');
+        $this->assertStringContainsString('P53 Placed', $winners);
+        $this->assertStringNotContainsString('P53 Unplaced', $winners);
+        // The winners dataset is a limited data set (contact + entry + place).
+        $this->assertStringContainsString('Place', $this->csvHeaderLine($winners));
+        $this->assertStringNotContainsString('Admin Notes', $this->csvHeaderLine($winners));
+
+        // The plain limited export is the full entry list.
+        $limited = $this->streamedCsv('/admin/output/export?go=csv');
+        $this->assertStringContainsString('P53 Placed', $limited);
+        $this->assertStringContainsString('P53 Unplaced', $limited);
+        $this->assertStringNotContainsString('Admin Notes', $this->csvHeaderLine($limited));
+    }
+
+    /** D1-04: tb=paid&view=all|not_received honour the receipt filter. */
+    public function test_paid_tab_view_filters_by_received_flag(): void
+    {
+        DB::table('brewing')->insert($this->entryRow(530001, ['brewName' => 'P53 Paid Received', 'brewPaid' => 1, 'brewReceived' => 1]));
+        DB::table('brewing')->insert($this->entryRow(530002, ['brewName' => 'P53 Paid Not Received', 'brewPaid' => 1, 'brewReceived' => 0]));
+        DB::table('brewing')->insert($this->entryRow(530003, ['brewName' => 'P53 Unpaid', 'brewPaid' => 0, 'brewReceived' => 0]));
+
+        $notReceived = $this->streamedCsv('/admin/output/export?go=csv&tb=paid&view=not_received');
+        $this->assertStringContainsString('P53 Paid Not Received', $notReceived);
+        $this->assertStringNotContainsString('P53 Paid Received', $notReceived);
+        $this->assertStringNotContainsString('P53 Unpaid', $notReceived);
+
+        $received = $this->streamedCsv('/admin/output/export?go=csv&tb=paid');
+        $this->assertStringContainsString('P53 Paid Received', $received);
+        $this->assertStringNotContainsString('P53 Paid Not Received', $received);
+    }
+
+    /** D1-04: action=email&filter=avail_judges streams the judge contact list. */
+    public function test_email_export_filters_by_availability_flag(): void
+    {
+        DB::table('brewer')->where('id', self::BREWER_IDS[0])->update(['brewerJudge' => 'Y']);
+
+        $body = $this->streamedCsv('/admin/output/export?go=csv&filter=avail_judges&action=email');
+
+        $header = $this->csvHeaderLine($body);
+        $this->assertStringContainsString('Email Address', $header);
+        $this->assertStringContainsString('p53.brewer1@example.com', $body);
+        $this->assertStringNotContainsString('p53.brewer2@example.com', $body, 'a non-judge must not be in the available-judges list');
+    }
+
+    /** D1-04: action=required&tb=required keeps only the required/optional info columns. */
+    public function test_required_export_has_required_info_columns_only(): void
+    {
+        DB::table('brewing')->insert($this->entryRow(530001, [
+            'brewInfo' => 'needs head, please',
+            'brewInfoOptional' => 'oak aged',
+        ]));
+
+        $body = $this->streamedCsv('/admin/output/export?go=csv&action=required&tb=required');
+
+        $header = $this->csvHeaderLine($body);
+        $this->assertStringContainsString('Required Info', $header);
+        $this->assertStringContainsString('Optional Info', $header);
+        $this->assertStringNotContainsString('Admin Notes', $header);
+        $this->assertStringContainsString('needs head, please', $body);
+        $this->assertStringContainsString('oak aged', $body);
+    }
+
+    /** First physical line of the body (BOM + header row). */
+    private function csvHeaderLine(string $body): string
+    {
+        return (string) strtok($body, "\n");
+    }
+
+    private function streamedCsv(string $url): string
+    {
+        return (string) $this->get($url)->assertOk()->streamedContent();
+    }
+
     public function test_non_admin_is_redirected(): void
     {
         DB::table('users')->insert([

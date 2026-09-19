@@ -70,6 +70,33 @@
                     </div>
                 </form>
 
+                <form method="post" action="{{ route('admin.payments.setup.stripe.currency') }}" class="row g-3 mt-3">
+                    @csrf
+                    <div class="col-md-6">
+                        <label class="form-label" for="stripe_currency">Currency</label>
+                        <select class="form-select" id="stripe_currency" name="currency">
+                            <option value="">Default (US dollars)</option>
+                            @foreach ($stripeCurrencies as $code)
+                                <option value="{{ $code }}" @selected($stripe['currency'] === $code)>{{ $code }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">
+                            ISO 4217 code the payment providers charge in. Leave on the default
+                            when your provider account settles in US dollars.
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Save currency</button>
+                    </div>
+                </form>
+
+                @if ($stripe['accountId'] !== '')
+                    <form method="post" action="{{ route('admin.payments.setup.stripe.remove') }}" class="mt-3">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Disconnect Stripe</button>
+                    </form>
+                @endif
+
                 <p class="text-muted mt-3 mb-0">
                     These are the platform's Connect keys, used to run the Connect flow — not a
                     connected competition's keys. The secret key is stored encrypted. Leaving the

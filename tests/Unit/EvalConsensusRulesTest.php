@@ -76,4 +76,16 @@ final class EvalConsensusRulesTest extends TestCase
         yield 'no flags' => [[0, 0], 0];
         yield 'nulls only' => [[null, null], 0];
     }
+
+    public function test_scores_disagree_uses_the_supplied_dispersion(): void
+    {
+        // Fewer than two scores: nothing to compare.
+        self::assertFalse(EvalConsensus::scoresDisagree([38.0], 5));
+
+        // Spread within the tolerance.
+        self::assertFalse(EvalConsensus::scoresDisagree([38.0, 43.0], 5));
+
+        // Spread beyond the tolerance.
+        self::assertTrue(EvalConsensus::scoresDisagree([38.0, 44.0], 5));
+    }
 }

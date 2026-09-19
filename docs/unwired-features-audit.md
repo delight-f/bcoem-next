@@ -25,6 +25,8 @@ Two rows are deliberately split or need care:
 
 Coding-team items are grouped by area in §2; each states the agreed approach and the files to touch. Dead-code/column deletion tasks are called out explicitly (A1-05, A1-06, A2-04, B1-04).
 
+**Implementation update (2026-09-19, post-audit).** All 30 coding-team rows have since been implemented, reviewed and covered by tests — see the `4.1.0-alpha.12` changelog section. The per-row `Decision` cells above remain the historical record of the agreed approach; the retired columns they name (`prefsSEF`, `prefsAutoPurge`, `prefsPaypal*`, `styles.brewStyleAtLimit`) are now dropped by migration, and the decoy `app/Domain/*Row.php` / `app/Session/Prefs.php` families are deleted. The disposition table above (42 closed / 30 coding team) is the state at audit time, not now.
+
 ## 1. Summary
 
 | Verdict | Count |

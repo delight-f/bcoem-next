@@ -69,7 +69,11 @@
                         <span class="form-text">Indicate whether the participants in the competition will be individual amateur brewers or licensed breweries with designated points of contact.</span>
                     </div>
                 </div>
-                <div class="mb-4 row" id="mhp-display">
+                {{-- Professional Edition suppresses MHP: hide the block with
+                     display:none (not a conditional render) so the stored
+                     choice still submits and is preserved across saves. The
+                     consumers also gate on prefsProEdition. --}}
+                <div class="mb-4 row" id="mhp-display"{!! $p('prefsProEdition') === '1' ? ' style="display:none;"' : '' !!}>
                     <label for="mhpYes" class="col-md-4 col-form-label">Master Homebrewer Program (MHP) Fields and Display</label>
                     <div class="col-md-8">
                         <div class="form-check form-check-inline">
@@ -122,10 +126,6 @@
                     </div>
                 </div>
 
-                {{-- Search Engine Friendly URLs: the legacy toggle drove
-                     build_public_url()'s rewrite mode. Laravel routing always
-                     serves clean URLs, so the switch could never have an
-                     effect and was removed (prefsSEF column kept). --}}
                 <div class="mb-4 row">
                     <label for="modsYes" class="col-md-4 col-form-label">Custom Modules</label>
                     <div class="col-md-8">
@@ -202,12 +202,8 @@
                 <div class="mb-4 row">
                     <label class="col-md-4 col-form-label">Purge Unconfirmed and Special-Ingredient Entries</label>
                     <div class="col-md-8">
-                        {{-- The legacy auto-purge ran from a cron path this port
-                             does not have, so the Enable/Disable switch could
-                             never do anything. Replaced with a manual action
-                             that runs the same 24-hour rule on demand. The
-                             button targets the standalone form after this one
-                             (a nested form would be invalid HTML). --}}
+                        {{-- Targets the standalone form after this one: a
+                             nested form would be invalid HTML. --}}
                         <button type="submit" form="purge-stale-form" class="btn btn-danger btn-sm"
                                 onclick="return confirm('Delete unconfirmed entries and entries missing required special-ingredient info that have not been updated for 24 hours?');">
                             Purge stale entries now
@@ -578,7 +574,7 @@
                             </label>
                         </div>
                         <div class="alert alert-info py-2 px-3 mt-2 mb-0 small">
-                            <strong>Please note:</strong> changing the method deletes any limits set under the previous one and re-enables every style they had disabled.
+                            <strong>Please note:</strong> changing the method deletes any limits set under the previous one.
                         </div>
                     </div>
                 </div>
@@ -887,11 +883,11 @@
                     <label for="prefsEmailTransport" class="col-md-4 col-form-label">How Emails Are Sent</label>
                     <div class="col-md-8">
                         <select class="form-select" id="prefsEmailTransport" name="prefsEmailTransport" style="max-width:32rem;">
-                            <option value="" @selected(\App\Support\Mail\MailSettings::transport($ctx) === null)>
+                            <option value="default" @selected(\App\Support\Mail\MailSettings::transport($ctx) === null)>
                                 Application default (from .env)
                             </option>
                             @foreach (\App\Support\Mail\MailSettings::TRANSPORTS as $t)
-                                <option value="{{ $t }}" @selected((string) $p('prefsEmailTransport') === $t)>
+                                <option value="{{ $t }}" @selected(\App\Support\Mail\MailSettings::transport($ctx) === $t)>
                                     {{ \App\Support\Mail\MailSettings::label($t) }}
                                 </option>
                             @endforeach

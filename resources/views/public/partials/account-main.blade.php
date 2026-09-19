@@ -63,8 +63,8 @@
             @if (($info['brewer']->brewerJudge ?? '') === 'Y')
                 <div class="bcoem-account-info d-print-none"><strong>&nbsp;</strong>
                     <div>Print your judging scoresheet labels
-                        <a class="hide-loader" href="{{ route('outputs.labels', ['action' => 'judging_labels', 'go' => 'participants', 'id' => $info['brewer']->id, 'psort' => 5160]) }}" data-toggle="tooltip" title="Avery 5160">Letter</a>
-                        <a class="hide-loader" href="{{ route('outputs.labels', ['action' => 'judging_labels', 'go' => 'participants', 'id' => $info['brewer']->id, 'psort' => 3422]) }}" data-toggle="tooltip" title="Avery 3422">A4</a>
+                        <a class="hide-loader" href="{{ route('labels.scoresheet', ['psort' => 5160]) }}" data-toggle="tooltip" title="Avery 5160">Letter</a>
+                        <a class="hide-loader" href="{{ route('labels.scoresheet', ['psort' => 3422]) }}" data-toggle="tooltip" title="Avery 3422">A4</a>
                     </div>
                 </div>
             @endif

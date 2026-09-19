@@ -61,6 +61,48 @@ final class ResultsRepository
             ->orderBy('js.scorePlace')
             ->get([
                 'js.scorePlace',
+                'js.scoreEntry',
+                'js.scoreTable',
+                'b.id as entryId',
+                'b.brewName',
+                'b.brewStyle',
+                'b.brewCategorySort',
+                'b.brewSubCategory',
+                'br.brewerFirstName',
+                'br.brewerLastName',
+                'br.brewerClubs',
+            ]);
+
+        /** @var list<object> */
+        return array_values($rows->all());
+    }
+
+    /**
+     * Every received entry with its score/place when judged — the "All
+     * with/without Scores" half of the results matrix (D1-01), where
+     * winners() is the "Winners Only" half. Unjudged entries carry a null
+     * scorePlace/scoreEntry. Ordered category sort → subcategory → place,
+     * matching winners() so the two reports read consistently.
+     *
+     * @return list<object>
+     */
+    public function entries(): array
+    {
+        if (! self::tableExists($this->name('brewing'))) {
+            return [];
+        }
+
+        $rows = DB::table($this->name('brewing').' as b')
+            ->leftJoin($this->name('judging_scores').' as js', 'js.eid', '=', 'b.id')
+            ->leftJoin($this->name('brewer').' as br', 'b.brewBrewerID', '=', 'br.uid')
+            ->where('b.brewReceived', 1)
+            ->orderBy('b.brewCategorySort')
+            ->orderBy('b.brewSubCategory')
+            ->orderBy('js.scorePlace')
+            ->get([
+                'js.scorePlace',
+                'js.scoreEntry',
+                'js.scoreTable',
                 'b.id as entryId',
                 'b.brewName',
                 'b.brewStyle',

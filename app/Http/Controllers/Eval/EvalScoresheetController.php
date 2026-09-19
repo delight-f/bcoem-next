@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Eval;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Eval\Descriptors;
+use App\Support\Eval\EvalConsensus;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -106,6 +107,9 @@ final class EvalScoresheetController extends Controller
 
         [$style, $styleType] = $this->styleFor($entry, $evaluations[0] ?? null);
 
+        /** @var list<float|int|string|null> $finalScores */
+        $finalScores = array_values(array_map(static fn ($row) => $row->evalFinalScore, $evaluations));
+
         return view('eval.output', [
             'ctx' => $ctx,
             'entry' => $entry,
@@ -113,6 +117,8 @@ final class EvalScoresheetController extends Controller
             'style' => $style,
             'points' => Descriptors::points($styleType),
             'displayId' => self::displayId($entry, $ctx),
+            'disagree' => EvalConsensus::scoresDisagree($finalScores),
+            'dispersion' => EvalConsensus::scoreDispersion(),
         ]);
     }
 

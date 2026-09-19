@@ -8,7 +8,9 @@ use App\Http\Controllers\Output\AssignmentsController;
 use App\Http\Controllers\Output\StaffPointsController;
 use App\Support\Outputs\OutputFormat;
 use App\Support\Tenant\TenantContext;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -301,6 +303,45 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
         self::assertSame($a, $b, 'both orderings must carry the identical staff/session pairs');
     }
 
+    /** D1-02: filter=judges|stewards restricts the participant list by role flag. */
+    public function test_participant_summary_filter_selects_judges_or_stewards(): void
+    {
+        $judgeId = 95310;
+        $stewardId = 95311;
+        $judgeEmail = 'p52c.judgeonly@brewingcompetitions.com';
+        $stewardEmail = 'p52c.stewardonly@brewingcompetitions.com';
+        $entryIds = [];
+
+        try {
+            foreach ([[$judgeId, $judgeEmail, 'brewerJudge'], [$stewardId, $stewardEmail, 'brewerSteward']] as [$uid, $email, $flag]) {
+                DB::table('users')->insert([
+                    'id' => $uid, 'user_name' => $email, 'password' => self::HASH,
+                    'userLevel' => '2', 'userCreated' => '2024-01-01 00:00:01', 'userAdminObfuscate' => 0,
+                ]);
+                DB::table('brewer')->insert([
+                    'uid' => $uid, 'brewerFirstName' => 'P52c', 'brewerLastName' => $flag === 'brewerJudge' ? 'JudgeOnly' : 'StewardOnly',
+                    'brewerEmail' => $email, $flag => 'Y',
+                ]);
+                $entryIds[] = (int) DB::table('brewing')->insertGetId([
+                    'brewName' => 'P52c Role Entry', 'brewBrewerID' => (string) $uid,
+                    'brewReceived' => 1, 'brewConfirmed' => 1, 'brewPaid' => 1,
+                ]);
+            }
+
+            $judges = $this->decodePdfText($this->get('/admin/output/participant_summary?filter=judges&psort=judge_id'));
+            $this->assertStringContainsString('JudgeOnly', $judges);
+            $this->assertStringNotContainsString('StewardOnly', $judges);
+
+            $stewards = $this->decodePdfText($this->get('/admin/output/participant_summary?filter=stewards&psort=brewer_name'));
+            $this->assertStringContainsString('StewardOnly', $stewards);
+            $this->assertStringNotContainsString('JudgeOnly', $stewards);
+        } finally {
+            DB::table('brewing')->whereIn('id', $entryIds ?: [0])->delete();
+            DB::table('brewer')->whereIn('uid', [$judgeId, $stewardId])->delete();
+            DB::table('users')->whereIn('id', [$judgeId, $stewardId])->delete();
+        }
+    }
+
     /** @param 0|1|2 $type */
     private function location(string $name, int $type): int
     {
@@ -312,6 +353,20 @@ final class OutputPairsCTest extends PublicSurfaceTestCase
         $this->locationIds[] = $id;
 
         return $id;
+    }
+
+    /**
+     * @param  TestResponse<Response>  $response
+     */
+    private function decodePdfText(TestResponse $response): string
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'pdf');
+        file_put_contents($tmp, (string) $response->getContent());
+        $text = shell_exec('pdftotext '.escapeshellarg($tmp).' - 2>/dev/null') ?: '';
+
+        @unlink($tmp);
+
+        return $text;
     }
 
     /**

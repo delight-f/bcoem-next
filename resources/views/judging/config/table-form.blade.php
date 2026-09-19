@@ -6,8 +6,7 @@
 
         {{-- Legacy control set (judging_tables.admin.php:778-792): View...
             dropdown — assignment views by name/table plus the
-            not-assigned modals (edit view carries unassignedJudges/
-            unassignedStewards; add falls back to the empty roster). --}}
+            not-assigned modals, whose markup is rendered below. --}}
         <div class="bcoem-admin-element d-print-none mb-3">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -220,5 +219,7 @@
             <button type="submit" class="btn btn-primary">{{ $isEdit ? 'Edit' : 'Add' }} Table</button>
             <a class="btn btn-secondary" href="{{ route('admin.judging.tables.index') }}">Back</a>
         </form>
+
+        @include('judging.partials.unassigned-roster-modals')
     </section>
 </x-public-layout>

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Support\Mail;
 
 use App\Support\Tenant\TenantContext;
+use Illuminate\Support\Facades\Crypt;
+use Throwable;
 
 /**
  * Applies the site-preferences email settings to the runtime mailer.
@@ -25,13 +27,22 @@ use App\Support\Tenant\TenantContext;
  *   postmark  — HTTPS API, same reasoning.
  *   log       — write messages to the log, deliver nothing (diagnostics).
  *
- * Unset (NULL) transport leaves `.env` in charge, so an existing install
- * that never opened the email tab keeps its current behaviour.
+ * Unset (NULL) or 'default' transport leaves `.env` in charge, so an
+ * existing install that never opened the email tab keeps its current
+ * behaviour — and "Application default (from .env)" is a real, sticky
+ * choice rather than a blank that a saved host overrode.
  */
 final class MailSettings
 {
     /** Last-resort mail program path, and the shape most hosts expect. */
     public const SENDMAIL_FALLBACK = '/usr/sbin/sendmail -t -i';
+
+    /**
+     * Stored when the admin picks "Application default (from .env)". An
+     * explicit sentinel so the choice survives a saved SMTP host, which the
+     * legacy fallback below would otherwise turn into the smtp transport.
+     */
+    public const DEFAULT_TRANSPORT = 'default';
 
     /** Selectable transports, in display order. */
     public const TRANSPORTS = ['smtp', 'sendmail', 'resend', 'postmark', 'log'];
@@ -94,11 +105,35 @@ final class MailSettings
     {
         $stored = strtolower(trim((string) $ctx->prefsStr('prefsEmailTransport')));
 
+        if ($stored === self::DEFAULT_TRANSPORT) {
+            return null;
+        }
+
         if (in_array($stored, self::TRANSPORTS, true)) {
             return $stored;
         }
 
         return trim((string) $ctx->prefsStr('prefsEmailHost')) !== '' ? 'smtp' : null;
+    }
+
+    /**
+     * Decrypt a stored credential. A value that does not decrypt is legacy
+     * plaintext (written before the encrypt-at-rest migration) or a rotated
+     * APP_KEY, so it is used as-is rather than silently emptying the field.
+     */
+    private static function secret(?string $stored): string
+    {
+        $value = (string) $stored;
+
+        if ($value === '') {
+            return '';
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (Throwable) {
+            return $value;
+        }
     }
 
     /**
@@ -203,7 +238,7 @@ final class MailSettings
         $encrypt = strtolower(trim((string) $ctx->prefsStr('prefsEmailEncrypt')));
         $port = (int) (string) $ctx->prefsStr('prefsEmailPort');
         $username = trim((string) $ctx->prefsStr('prefsEmailUsername'));
-        $password = (string) $ctx->prefsStr('prefsEmailPassword');
+        $password = self::secret($ctx->prefsStr('prefsEmailPassword'));
 
         // Symfony picks the scheme itself only for port 465; an explicit
         // "ssl" selection must force implicit TLS (smtps), while tls/none
@@ -225,7 +260,7 @@ final class MailSettings
 
     private static function configureApiKey(string $provider, TenantContext $ctx): void
     {
-        $key = trim((string) $ctx->prefsStr('prefsEmailApiKey'));
+        $key = trim(self::secret($ctx->prefsStr('prefsEmailApiKey')));
 
         if ($key !== '') {
             config(['services.'.$provider.'.key' => $key]);

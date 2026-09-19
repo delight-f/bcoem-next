@@ -79,6 +79,7 @@ final class TableAssignment
     {
         DB::table('judging_assignments')
             ->where('bid', $bid)
+            ->where('assignment', $code)
             ->where('assignTable', $tableId)
             ->where('assignRound', $round)
             ->delete();

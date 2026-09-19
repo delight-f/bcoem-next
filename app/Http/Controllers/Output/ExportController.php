@@ -13,8 +13,27 @@ use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * "All Entries: All Data" CSV export (spec §7 P5.3) — byte-for-byte
- * compatible with the legacy export.
+ * CSV data exports (spec §7 P5.3) — legacy output/export.output.php.
+ *
+ * Three legacy sections share this route and are dispatched by their
+ * query-string params (D1-04):
+ *
+ *  - export-emails: `action=email` with `filter=avail_judges|avail_stewards|
+ *    judges|stewards|staff` streams the participant contact/email list for
+ *    that audience. The bare `/admin/output/export` link is the unfiltered
+ *    "All Participants" list.
+ *  - export-participants: `action=participants` streams the participant
+ *    roster (same columns as the unfiltered email list).
+ *  - export-entries: everything else — a filtered entry dataset. `tb` picks
+ *    the shape (winners / circuit / paid / nopay / brewer_contact_info /
+ *    required / limited) and `view` refines paid/nopay
+ *    (`all` = ignore receipt, `not_received` = paid-but-not-received).
+ *    `action=required&tb=required` and `action=all&tb=all` are the named
+ *    required-info and full-data flavors.
+ *
+ * `action=all&tb=all` remains the byte-for-byte "All Entries: All Data"
+ * artifact described below — its header order, fputcsv quoting and
+ * variable-length rows are the frozen parity contract (ExportCsvTest).
  *
  * Legacy: output/export.output.php ($section=export-entries, $go=csv,
  * $action=all, $tb=all) + includes/db/output_entries_export*.db.php.
@@ -45,44 +64,273 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  *    ($judging_past==0 && $registration_open==2 && $entry_window_open==2);
  *    the pre-wired route sits behind auth, so that anonymous leg is dropped.
  *  - data_integrity_check() is not run before export.
- *  - archive flavors ($filter=<suffix> against *_<suffix> tables), the
- *    tab/winners/circuit/mhp/email/required/paid/nopay variants and the
- *    other export sections are not ported under this ticket; only the
- *    byte-compared csv/all/all artifact answers here.
+ *  - archive flavors ($filter=<suffix> against *_<suffix> tables) are not
+ *    ported under this ticket.
  */
 final class ExportController extends Controller
 {
+    private const PLACES = ['1', '2', '3', '4', '5'];
+
     public function __invoke(Request $request): StreamedResponse
     {
         $ctx = TenantContext::load();
 
+        $tb = self::param($request, 'tb', 'default');
+        $action = self::param($request, 'action', 'default');
+        $filter = self::param($request, 'filter', 'default');
+        $view = self::param($request, 'view', 'default');
+        $go = self::param($request, 'go', 'default');
+
         // Download filename mirrors export.output.php:246-251. The trailing
         // date segment is today in the tenant's timezone (legacy's
-        // $date_downloaded; the ?sort override has no clean-URL equivalent).
+        // $date_downloaded).
         $contest = str_replace(' ', '_', (string) $ctx->contestStr('contestName'));
-        $tbQuery = $request->query('tb', 'default');
-        $filterFilename = is_string($tbQuery) && $tbQuery !== 'default'
-            ? $tbQuery
-            : 'default'; // filter param stays "default" on this route
         $dateDownloaded = DateFmt::date(
             time(),
             $ctx->prefsStr('prefsTimeZone'),
             $ctx->prefsStr('prefsDateFormat'),
             'system',
         ) ?? '';
-        $actionQuery = $request->query('action', 'all');
-        $viewQuery = $request->query('view', 'default');
         $filename = ltrim(
             self::filenameSegment($contest)
             .'_Entries'
-            .self::filenameSegment($filterFilename)
-            .self::filenameSegment(is_string($actionQuery) ? $actionQuery : 'all')
-            .self::filenameSegment(is_string($viewQuery) ? $viewQuery : 'default')
+            .self::filenameSegment($tb)
+            .self::filenameSegment($action)
+            .self::filenameSegment($filter)
+            .self::filenameSegment($view)
             .self::filenameSegment($dateDownloaded)
             .'.csv',
             '_',
         );
 
+        // section=export-emails: the action=email audience lists, plus the
+        // bare "All Participants" link (no params at all).
+        if ($action === 'email' || ($action === 'default' && $tb === 'default'
+            && $filter === 'default' && $view === 'default' && $go === 'default')) {
+            return $this->participantContactExport($filter, $filename);
+        }
+
+        // section=export-participants: the whole roster.
+        if ($action === 'participants') {
+            return $this->participantContactExport('default', $filename);
+        }
+
+        // section=export-entries.
+        if ($action === 'all' && $tb === 'all') {
+            return $this->fullEntriesExport($filename, $ctx);
+        }
+
+        return $this->entriesExport($tb, $filter, $view, $action, $filename);
+    }
+
+    /** A scalar query param, or $default when absent/non-scalar. */
+    private static function param(Request $request, string $key, string $default): string
+    {
+        $value = $request->query($key, $default);
+
+        return is_string($value) ? $value : $default;
+    }
+
+    /**
+     * Participant contact/email list (legacy export-emails +
+     * export-participants). `filter` selects an audience by the real
+     * brewer/staff role flags — the same flags the Participants screen and
+     * the dashboard counters use.
+     */
+    private function participantContactExport(string $filter, string $filename): StreamedResponse
+    {
+        $query = DB::table('brewer as br');
+
+        switch ($filter) {
+            case 'avail_judges':
+                $query->where('br.brewerJudge', 'Y');
+                break;
+            case 'avail_stewards':
+                $query->where('br.brewerSteward', 'Y');
+                break;
+            case 'judges':
+                $query->whereIn('br.uid', DB::table('staff')->where('staff_judge', 1)->select('uid'));
+                break;
+            case 'stewards':
+                $query->whereIn('br.uid', DB::table('staff')->where('staff_steward', 1)->select('uid'));
+                break;
+            case 'staff':
+                $query->where(function ($q): void {
+                    $q->where('br.brewerStaff', 'Y')
+                        ->orWhereIn('br.uid', DB::table('staff')->where('staff_staff', 1)->select('uid'));
+                });
+                break;
+            default:
+                break;
+        }
+
+        $rows = $query
+            ->orderBy('br.brewerLastName')
+            ->orderBy('br.brewerFirstName')
+            ->get([
+                'br.brewerFirstName', 'br.brewerLastName', 'br.brewerEmail',
+                'br.brewerAddress', 'br.brewerCity', 'br.brewerState',
+                'br.brewerZip', 'br.brewerCountry', 'br.brewerClubs',
+            ]);
+
+        $headers = ['First Name', 'Last Name', 'Email Address', 'Address', 'City', 'State/Province', 'Zip/Postal Code', 'Country', 'Club'];
+
+        return $this->streamCsv($filename, $headers, $rows->map(fn ($r): array => [
+            self::csvText($r->brewerFirstName),
+            self::csvText($r->brewerLastName),
+            self::csvText($r->brewerEmail),
+            self::csvText($r->brewerAddress),
+            self::csvText($r->brewerCity),
+            self::csvText($r->brewerState),
+            self::csvText($r->brewerZip),
+            self::csvText($r->brewerCountry),
+            self::csvText($r->brewerClubs),
+        ]));
+    }
+
+    /**
+     * Filtered entry dataset (legacy export-entries). Rows are filtered by
+     * `tb`/`filter`/`view`; the column set depends on `tb`/`action`.
+     */
+    private function entriesExport(string $tb, string $filter, string $view, string $action, string $filename): StreamedResponse
+    {
+        $winners = in_array($tb, ['winners', 'circuit'], true) || $filter === 'mhp';
+
+        $query = DB::table('brewing as b')
+            ->leftJoin('brewer as br', 'b.brewBrewerID', '=', 'br.uid')
+            ->leftJoin('judging_scores as js', 'js.eid', '=', 'b.id');
+
+        if ($winners) {
+            $query->whereIn('js.scorePlace', self::PLACES);
+        }
+        if ($filter === 'mhp') {
+            // brewerMHP is an int; treat NULL and 0 as "not a member".
+            $query->whereNotNull('br.brewerMHP')->where('br.brewerMHP', '!=', 0);
+        }
+        if ($tb === 'paid') {
+            $query->where('b.brewPaid', 1);
+            if ($view === 'not_received') {
+                $query->where('b.brewReceived', 0);
+            } elseif ($view !== 'all') {
+                $query->where('b.brewReceived', 1);
+            }
+        }
+        if ($tb === 'nopay') {
+            $query->where('b.brewPaid', 0);
+            if ($view !== 'all') {
+                $query->where('b.brewReceived', 1);
+            }
+        }
+
+        $rows = $query
+            ->orderBy('b.brewCategorySort')
+            ->orderBy('b.brewSubCategory')
+            ->orderBy('js.scorePlace')
+            ->orderBy('b.id')
+            ->get([
+                'b.id', 'b.brewName', 'b.brewStyle', 'b.brewCategory', 'b.brewCategorySort',
+                'b.brewSubCategory', 'b.brewDate', 'b.brewYield', 'b.brewInfo', 'b.brewInfoOptional',
+                'b.brewBrewerID', 'b.brewBrewerFirstName', 'b.brewBrewerLastName',
+                'b.brewPaid', 'b.brewReceived', 'b.brewConfirmed', 'b.brewJudgingNumber',
+                'br.brewerFirstName', 'br.brewerLastName', 'br.brewerEmail', 'br.brewerAddress',
+                'br.brewerCity', 'br.brewerState', 'br.brewerZip', 'br.brewerCountry',
+                'br.brewerClubs', 'js.scorePlace',
+            ]);
+
+        [$headers, $map] = $this->entryColumns($tb, $action);
+
+        return $this->streamCsv($filename, $headers, $rows->map($map));
+    }
+
+    /**
+     * Headers + row mapper for a filtered entry export.
+     *
+     * @return array{0: list<string>, 1: \Closure(\stdClass): list<string>}
+     */
+    private function entryColumns(string $tb, string $action): array
+    {
+        $limitedHeaders = ['Entry Number', 'Entry Name', 'Style', 'Category', 'Category Sort', 'Sub Category', 'Date', 'Yield', 'Brewer ID', 'Brewer First Name', 'Brewer Last Name', 'Paid', 'Received', 'Confirmed', 'Judging Number'];
+        $contactHeaders = ['First Name', 'Last Name', 'Email Address', 'Address', 'City', 'State/Province', 'Zip/Postal Code', 'Country', 'Club'];
+
+        $limited = static fn (\stdClass $r): array => [
+            self::csvText($r->id),
+            self::csvText($r->brewName),
+            self::csvText($r->brewStyle),
+            self::csvText($r->brewCategory),
+            self::csvText($r->brewCategorySort),
+            self::csvText($r->brewSubCategory),
+            self::csvText($r->brewDate),
+            self::csvText($r->brewYield),
+            self::csvText($r->brewBrewerID),
+            self::csvText($r->brewBrewerFirstName),
+            self::csvText($r->brewBrewerLastName),
+            self::csvText($r->brewPaid),
+            self::csvText($r->brewReceived),
+            self::csvText($r->brewConfirmed),
+            self::csvText($r->brewJudgingNumber),
+        ];
+
+        $contact = static fn (\stdClass $r): array => [
+            self::csvText($r->brewerFirstName !== null && $r->brewerFirstName !== '' ? $r->brewerFirstName : $r->brewBrewerFirstName),
+            self::csvText($r->brewerLastName !== null && $r->brewerLastName !== '' ? $r->brewerLastName : $r->brewBrewerLastName),
+            self::csvText($r->brewerEmail),
+            self::csvText($r->brewerAddress),
+            self::csvText($r->brewerCity),
+            self::csvText($r->brewerState),
+            self::csvText($r->brewerZip),
+            self::csvText($r->brewerCountry),
+            self::csvText($r->brewerClubs),
+        ];
+
+        if ($action === 'required' || $tb === 'required') {
+            return [
+                ['First Name', 'Last Name', 'Entry Number', 'Entry Name', 'Style', 'Category', 'Required Info', 'Optional Info'],
+                static fn (\stdClass $r): array => [
+                    self::csvText($r->brewerFirstName !== null && $r->brewerFirstName !== '' ? $r->brewerFirstName : $r->brewBrewerFirstName),
+                    self::csvText($r->brewerLastName !== null && $r->brewerLastName !== '' ? $r->brewerLastName : $r->brewBrewerLastName),
+                    self::csvText($r->id),
+                    self::csvText($r->brewName),
+                    self::csvText($r->brewStyle),
+                    self::csvText($r->brewCategory),
+                    self::csvText($r->brewInfo),
+                    self::csvText($r->brewInfoOptional),
+                ],
+            ];
+        }
+
+        if ($tb === 'circuit') {
+            return [
+                [...$contactHeaders, 'Entry Number', 'Entry Name', 'Style', 'Category', 'Category Sort', 'Sub Category', 'Place'],
+                static fn (\stdClass $r): array => [
+                    ...$contact($r),
+                    self::csvText($r->id),
+                    self::csvText($r->brewName),
+                    self::csvText($r->brewStyle),
+                    self::csvText($r->brewCategory),
+                    self::csvText($r->brewCategorySort),
+                    self::csvText($r->brewSubCategory),
+                    self::csvText($r->scorePlace),
+                ],
+            ];
+        }
+
+        // winners (award labels), brewer_contact_info, paid, nopay → the
+        // limited entry rows plus participant contact.
+        if (in_array($tb, ['winners', 'brewer_contact_info', 'paid', 'nopay'], true)) {
+            return [
+                [...$contactHeaders, ...$limitedHeaders, 'Place'],
+                static fn (\stdClass $r): array => [...$contact($r), ...$limited($r), self::csvText($r->scorePlace)],
+            ];
+        }
+
+        return [$limitedHeaders, $limited];
+    }
+
+    /**
+     * The frozen "All Entries: All Data" artifact (see class docblock).
+     */
+    private function fullEntriesExport(string $filename, TenantContext $ctx): StreamedResponse
+    {
         $proEdition = (int) ($ctx->prefsStr('prefsProEdition') ?? 0);
         $styleSet = (string) ($ctx->prefsStr('prefsStyleSet') ?? '');
         $styleTypeNames = DB::table('style_types')->pluck('styleTypeName', 'id');
@@ -142,12 +390,45 @@ final class ExportController extends Controller
             }
 
             fclose($fp);
-        }, 200, [
+        }, 200, self::csvHeaders($filename));
+    }
+
+    /**
+     * Stream a fixed-header CSV with the legacy BOM + fputcsv dialect.
+     *
+     * @param  list<string>  $headers
+     * @param  iterable<list<string>>  $rows
+     */
+    private function streamCsv(string $filename, array $headers, iterable $rows): StreamedResponse
+    {
+        return response()->stream(function () use ($headers, $rows): void {
+            $fp = fopen('php://output', 'w');
+            if ($fp === false) {
+                return;
+            }
+
+            fwrite($fp, "\xEF\xBB\xBF");
+            fputcsv($fp, $headers, ',', '"', '\\');
+
+            foreach ($rows as $fields) {
+                fputcsv($fp, $fields, ',', '"', '\\');
+            }
+
+            fclose($fp);
+        }, 200, self::csvHeaders($filename));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function csvHeaders(string $filename): array
+    {
+        return [
             'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => 'attachment;filename="'.$filename.'"',
             'Pragma' => 'no-cache',
             'Expires' => '0',
-        ]);
+        ];
     }
 
     /**

@@ -207,4 +207,48 @@ final class BarcodeCheckinTest extends PublicSurfaceTestCase
         self::assertSame(0, (int) $this->entryRow($a)['brewReceived']);
         self::assertSame(0, (int) $this->entryRow($b)['brewReceived']);
     }
+
+    public function test_box_paid_filter_lists_entries_and_checks_in_with_box_and_paid(): void
+    {
+        $id = $this->makeEntry(['brewConfirmed' => '1', 'brewBoxNum' => 'A1']);
+        $jnum = (string) $this->entryRow($id)['brewJudgingNumber'];
+
+        $this->login(self::ADMIN);
+
+        // The switch link now reaches a real layout: the entry's row with
+        // its judging number, box and paid columns plus a per-row action.
+        $this->get('/admin/judging/checkin?filter=box-paid')
+            ->assertOk()
+            ->assertSee('Entry/Judging Numbers, Box, and Paid Entries')
+            ->assertSee($jnum)
+            ->assertSee('name="brewBoxNum"', false);
+
+        // The per-row form mirrors QR check-in: it sets the box and paid
+        // flag while writing brewReceived=1 (ledger #12).
+        $this->post('/admin/judging/checkin', [
+            'scan' => (string) $id,
+            'filter' => 'box-paid',
+            'brewBoxNum' => 'B7',
+            'brewPaid' => '1',
+        ])->assertRedirect('/admin/judging/checkin?filter=box-paid&ok='.$id);
+
+        $after = $this->entryRow($id);
+        self::assertSame(1, (int) $after['brewReceived']);
+        self::assertSame('B7', (string) $after['brewBoxNum']);
+        self::assertSame(1, (int) $after['brewPaid']);
+    }
+
+    public function test_plain_scan_leaves_box_and_paid_untouched(): void
+    {
+        $id = $this->makeEntry(['brewBoxNum' => 'KEEP', 'brewPaid' => 0]);
+        $before = $this->entryRow($id);
+
+        $this->login(self::ADMIN);
+        $this->post('/admin/judging/checkin', ['scan' => (string) $id])->assertRedirect();
+
+        $after = $this->entryRow($id);
+        self::assertSame(1, (int) $after['brewReceived']);
+        self::assertSame($before['brewBoxNum'], $after['brewBoxNum']);
+        self::assertSame($before['brewPaid'], $after['brewPaid']);
+    }
 }

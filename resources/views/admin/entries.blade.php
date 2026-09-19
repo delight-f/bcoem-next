@@ -27,6 +27,10 @@
         <div class="alert alert-success">{{ $msgTexts[(int) request('msg')] }}</div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
         <div class="bcoem-admin-element d-print-none row">
             <div class="col-md-12">
                 @if ($scoped)
@@ -132,6 +136,7 @@
                                 <form method="post" action="{{ route('backoffice.entries.mark_all') }}"
                                       onsubmit="return confirm('{{ $confirm }}');">
                                     @csrf
+                                    <input type="hidden" name="confirm" value="yes">
                                     <input type="hidden" name="action" value="{{ $action }}">
                                     <button type="submit" class="dropdown-item">{{ $label }}</button>
                                 </form>
@@ -145,6 +150,7 @@
                                 <form method="post" action="{{ route('backoffice.entries.purge') }}"
                                       onsubmit="return confirm('Are you sure? This will delete ALL unconfirmed entries and/or entries without special ingredients/classic style info that require them from the database - even those that are less than 24 hours old. This cannot be undone.');">
                                     @csrf
+                                    <input type="hidden" name="confirm" value="yes">
                                     <input type="hidden" name="go" value="unconfirmed">
                                     <button type="submit" class="dropdown-item">Purge All Unconfirmed Entries</button>
                                 </form>
@@ -153,6 +159,7 @@
                                 <form method="post" action="{{ route('backoffice.entries.purge') }}"
                                       onsubmit="return confirm('Are you sure? This will delete ALL unpaid entries from the database and cannot be undone.');">
                                     @csrf
+                                    <input type="hidden" name="confirm" value="yes">
                                     <input type="hidden" name="go" value="unpaid">
                                     <button type="submit" class="dropdown-item">Purge All Unpaid Entries</button>
                                 </form>
@@ -170,6 +177,7 @@
                                     <form method="post" action="{{ route('admin.judging.regenerate_numbers') }}"
                                           onsubmit="return confirm('{{ $confirm }}');">
                                         @csrf
+                                        <input type="hidden" name="confirm" value="yes">
                                         <input type="hidden" name="method" value="{{ $method }}">
                                         <input type="hidden" name="return_to" value="entries">
                                         <button type="submit" class="dropdown-item">{{ $label }}</button>
@@ -422,6 +430,7 @@
               onsubmit="return confirm('Are you sure you want to delete the entry called &ldquo;{{ $entry->brewName }}?&rdquo; This cannot be undone.');">
             @csrf
             @method('DELETE')
+            <input type="hidden" name="confirm" value="yes">
         </form>
     @endforeach
 </x-public-layout>

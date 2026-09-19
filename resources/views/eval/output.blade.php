@@ -4,6 +4,13 @@
 
         @include('eval.partials.scoresheet-head', ['style' => $style])
 
+        @if ($disagree)
+            <div class="alert alert-warning">
+                The judges' final scores differ by more than the configured maximum
+                difference for consensus scores ({{ $dispersion }}).
+            </div>
+        @endif
+
         @if ($evaluations === [])
             <p>No evaluations recorded for this entry yet.</p>
         @endif
@@ -22,6 +29,8 @@
                 <div class="card-body">
                     @if ((int) $evaluation->evalScoresheet === 2)
                         @include('eval.partials.checklist-output')
+                    @elseif ((int) $evaluation->evalScoresheet === 3)
+                        @include('eval.partials.structured-output')
                     @elseif ((int) $evaluation->evalScoresheet === 4)
                         @include('eval.partials.nw-cider-output')
                     @else

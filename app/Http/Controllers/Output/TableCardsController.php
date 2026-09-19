@@ -45,6 +45,12 @@ use Illuminate\Support\Facades\DB;
  *    assignRound,assignFlight).
  *  - Judge rank "Novice" displays as "Non-BJCP" (:192); role codes HJ/LJ/
  *    MBOS display as Head Judge/Lead Judge/Mini-BOS Judge (:149-150).
+ *
+ * Session selection (D1-03): the "For Session…" dropdown links with
+ * `?go=judging_locations&location=<id>&round=<n>`; `location` restricts the
+ * table list to that session's tables (judging_tables.tableLocation) and
+ * `round` restricts each table's roster (cardRows). The other `go` values
+ * (`judging_tables`) keep the all-tables / id-selected behavior.
  */
 final class TableCardsController extends Controller
 {
@@ -54,11 +60,23 @@ final class TableCardsController extends Controller
         $psortQuery = $request->query('psort', 'default');
         $psort = is_string($psortQuery) ? $psortQuery : 'default';
 
+        // 'judging_locations' carries a session id in `location`; other
+        // values (judging_tables) ignore it.
+        $goQuery = $request->query('go', 'default');
+        $go = is_string($goQuery) ? $goQuery : 'default';
+
         $roundQuery = $request->query('round', 'default');
-        // admin_common.db.php — all tables by tableNumber ASC; id selects one.
+
+        $locationQuery = $request->query('location');
+        $location = is_string($locationQuery) && $locationQuery !== '' ? (int) $locationQuery : null;
+
+        // admin_common.db.php — all tables by tableNumber ASC; id selects one;
+        // location (go=judging_locations) selects one session's tables.
         $tables = DB::table('judging_tables')->orderBy('tableNumber')->get()
             ->filter(fn ($t) => $request->query('id', 'default') === 'default'
-                || (int) $request->query('id') === (int) $t->id);
+                || (int) $request->query('id') === (int) $t->id)
+            ->filter(fn ($t) => $location === null || $go !== 'judging_locations'
+                || $location === (int) $t->tableLocation);
 
         if ($tables->isEmpty()) {
             return StreamPdf::response('outputs.table_cards', ['empty' => true], 'table_cards.pdf');

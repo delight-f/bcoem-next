@@ -330,6 +330,48 @@ final class HomePageTest extends PublicSurfaceTestCase
         }
     }
 
+    /**
+     * C1-03 + B3-11: the four Competition Info text areas and the drop-off
+     * listing render on the public rules/info surface beside Competition Rules.
+     */
+    public function test_competition_info_areas_and_dropoff_render_on_the_rules_surface(): void
+    {
+        $snap = $this->snapshotFixture();
+
+        try {
+            $now = time();
+            DB::table('contest_info')->where('id', 1)->update([
+                'contestDropoffOpen' => (string) ($now - 86400),
+                'contestDropoffDeadline' => (string) ($now + 864000),
+                'contestBottles' => 'Three bottles per entry.',
+                'contestBOSAward' => 'BOS winner gets a trophy.',
+                'contestAwards' => 'Gold, silver, bronze.',
+                'contestCircuit' => 'Qualifies for the circuit.',
+            ]);
+            DB::table('preferences')->where('id', 1)->update(['prefsDropOff' => '1']);
+            // The rules surface renders while a future judging session remains.
+            DB::table('judging_locations')->insert([
+                'judgingLocType' => 1,
+                'judgingDate' => (string) ($now + 864000),
+            ]);
+
+            $response = $this->get('/');
+            $response->assertOk()
+                ->assertSee('Entry Acceptance Rules')
+                ->assertSee('Three bottles per entry.')
+                ->assertSee('Drop-Off Locations')
+                ->assertSee('Baseline Dropoff Location')
+                ->assertSee('Best of Show')
+                ->assertSee('BOS winner gets a trophy.')
+                ->assertSee('Awards Structure')
+                ->assertSee('Gold, silver, bronze.')
+                ->assertSee('Circuit Qualifying Events')
+                ->assertSee('Qualifies for the circuit.');
+        } finally {
+            $this->restoreFixture($snap);
+        }
+    }
+
     /** Card titles in the #at-a-glance section, in render order.
      * @return list<string>
      */

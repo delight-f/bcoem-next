@@ -134,6 +134,10 @@ final class TableController extends Controller
             // lib/admin.lib.php not_assigned()).
             'unassignedJudges' => $this->unassigned('J', 'staff_judge'),
             'unassignedStewards' => $this->unassigned('S', 'staff_steward'),
+            // Who the mode switch removed, read once after the reload
+            // (TablesModeController::enableCompetition writes both).
+            'unassignFlag' => (int) $request->session()->pull('judge_unassign_flag', 0),
+            'unassignList' => (array) $request->session()->pull('judge_unassign_list', []),
         ]);
     }
 
@@ -147,6 +151,10 @@ final class TableController extends Controller
             'stylesByGroup' => $this->stylesByGroup(),
             'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => $this->nextTableNumber(),
+            // The form's "View... → Not Assigned to a Table" menu items open
+            // the same rosters as the tables list page.
+            'unassignedJudges' => $this->unassigned('J', 'staff_judge'),
+            'unassignedStewards' => $this->unassigned('S', 'staff_steward'),
         ]);
     }
 
@@ -192,6 +200,8 @@ final class TableController extends Controller
             'stylesByGroup' => $this->stylesByGroup(),
             'styleAssignments' => $this->styleAssignments(),
             'nextTableNumber' => null,
+            'unassignedJudges' => $this->unassigned('J', 'staff_judge'),
+            'unassignedStewards' => $this->unassigned('S', 'staff_steward'),
         ]);
     }
 

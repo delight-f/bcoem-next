@@ -22,12 +22,24 @@ use Throwable;
  * old way keeps working unchanged.
  *
  * On-disk shape (shared with the Connect keys):
- *   {"account_id":"acct_…","webhook_secret":"whsec_…","currency":"usd",
+ *   {"account_id":"acct_…","webhook_secret":"whsec_…","currency":"USD",
  *    "client_id":"ca_…","secret":"<ciphertext>"}
  */
 final class StripeSettings
 {
     public const COLUMN = 'prefsStripe';
+
+    /**
+     * ISO 4217 codes offered for the gateway currency (C2-02): the union of
+     * the PayPal-supported set in PayPalGateway::CURRENCIES and the legacy
+     * token→code map in common.lib.php currency_code(). Stored separately
+     * from the display token prefsCurrency — see PaymentService::tenantCurrency().
+     */
+    public const CURRENCIES = [
+        'AUD', 'BRL', 'CAD', 'CHF', 'CNY', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD',
+        'HUF', 'ILS', 'INR', 'JPY', 'KRW', 'MXN', 'MYR', 'NOK', 'NZD', 'PHP',
+        'PLN', 'RUB', 'SEK', 'SGD', 'THB', 'TRY', 'TWD', 'USD', 'ZAR',
+    ];
 
     /**
      * Resolved platform keys: the saved row when present, otherwise env.
@@ -76,10 +88,28 @@ final class StripeSettings
         ]);
     }
 
-    /** Remove the saved platform keys (reverts to env, or disables Connect). */
+    /**
+     * Disconnect the competition's Stripe account (C2-03): clears the
+     * connected account id and webhook secret, so checkout stops offering
+     * Stripe (PaymentProviderRegistry::stripeConnected). The platform Connect
+     * keys are left in place so the organizer can reconnect without
+     * re-entering them.
+     */
     public static function forget(): void
     {
-        self::merge(['client_id' => '', 'secret' => '']);
+        self::merge(['account_id' => '', 'webhook_secret' => '']);
+    }
+
+    /** ISO 4217 gateway currency, or '' when unset (falls back to USD). */
+    public static function currency(): string
+    {
+        return strtoupper((string) (self::column()['currency'] ?? ''));
+    }
+
+    /** Persist the ISO 4217 gateway currency; '' clears it (C2-02). */
+    public static function saveCurrency(string $code): void
+    {
+        self::merge(['currency' => $code === '' ? '' : strtoupper($code)]);
     }
 
     /**

@@ -27,7 +27,6 @@
                             <th>#</th>
                             <th>Style Type</th>
                             <th>Requirements</th>
-                            <th>Restrict Entries</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -56,7 +55,6 @@
                                         <span class="fa fa-circle-check text-gold" data-tooltip="true" title="To ensure proper judging, the entrant must provide the sweetness level of the beverage."></span>
                                     @endif
                                 </td>
-                                <td><input type="checkbox" name="brewStyleAtLimit{{ $style->id }}" value="1" @checked(((int) $style->brewStyleAtLimit) === 1)></td>
                                 <td>
                                     @if ($style->brewStyleOwn !== 'bcoe')
                                         <a class="btn btn-sm btn-outline btn-secondary" href="{{ url('/admin/styles/'.$style->id.'/edit') }}">Edit</a>

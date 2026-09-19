@@ -83,27 +83,31 @@
 @endif
 
 @if ($showWinners)
-    <h2>Winning Entries</h2>
-    @if ($winners === [])
-        <p>No winning entries yet.</p>
-    @elseif ($winnerMethod === '1' || $winnerMethod === '2')
-        @php($grouped = collect($winners)->groupBy($winnerMethod === '1'
+    <h2>{{ $winnersOnly ? 'Winning Entries' : 'Results' }}</h2>
+    @if ($rows === [])
+        <p>{{ $winnersOnly ? 'No winning entries yet.' : 'No results yet.' }}</p>
+    @elseif ($winnersOnly && ($winnerMethod === '1' || $winnerMethod === '2'))
+        @php($grouped = collect($rows)->groupBy($winnerMethod === '1'
             ? fn ($r) => $r->brewCategorySort
             : fn ($r) => $r->brewCategorySort.$r->brewSubCategory))
-        @foreach ($grouped->all() as $group => $rows)
+        @foreach ($grouped->all() as $group => $groupRows)
             <h3>Category {{ $group }}</h3>
             <table>
                 <thead>
-                    <tr><th style="width: 10%;">Place</th><th>Entry Name</th><th>Style</th><th>Brewer</th><th>Club</th></tr>
+                    <tr>
+                        <th style="width: 10%;">Place</th><th>Entry Name</th><th>Style</th><th>Brewer</th><th>Club</th>
+                        @if ($showScores)<th style="width: 8%;">Score</th>@endif
+                    </tr>
                 </thead>
                 <tbody>
-                    @foreach ($rows as $row)
+                    @foreach ($groupRows as $row)
                         <tr>
                             <td>{{ \App\Support\Results\Place::label($row->scorePlace) }}</td>
                             <td>{{ $row->brewName }}</td>
                             <td>{{ $row->brewCategorySort }}{{ $row->brewSubCategory }} {{ $row->brewStyle }}</td>
                             <td>{{ $row->brewerFirstName }} {{ $row->brewerLastName }}</td>
                             <td>{{ $row->brewerClubs }}</td>
+                            @if ($showScores)<td>{{ $row->scoreEntry === null ? '' : rtrim(rtrim(number_format((float) $row->scoreEntry, 4, '.', ''), '0'), '.') }}</td>@endif
                         </tr>
                     @endforeach
                 </tbody>
@@ -112,16 +116,20 @@
     @else
         <table>
             <thead>
-                <tr><th style="width: 10%;">Place</th><th>Entry Name</th><th>Style</th><th>Brewer</th><th>Club</th></tr>
+                <tr>
+                    <th style="width: 10%;">Place</th><th>Entry Name</th><th>Style</th><th>Brewer</th><th>Club</th>
+                    @if ($showScores)<th style="width: 8%;">Score</th>@endif
+                </tr>
             </thead>
             <tbody>
-                @foreach ($winners as $row)
+                @foreach ($rows as $row)
                     <tr>
-                        <td>{{ \App\Support\Results\Place::label($row->scorePlace) }}</td>
+                        <td>{{ $row->scorePlace === null ? '' : \App\Support\Results\Place::label($row->scorePlace) }}</td>
                         <td>{{ $row->brewName }}</td>
                         <td>{{ $row->brewCategorySort }}{{ $row->brewSubCategory }} {{ $row->brewStyle }}</td>
                         <td>{{ $row->brewerFirstName }} {{ $row->brewerLastName }}</td>
                         <td>{{ $row->brewerClubs }}</td>
+                        @if ($showScores)<td>{{ $row->scoreEntry === null ? '' : rtrim(rtrim(number_format((float) $row->scoreEntry, 4, '.', ''), '0'), '.') }}</td>@endif
                     </tr>
                 @endforeach
             </tbody>

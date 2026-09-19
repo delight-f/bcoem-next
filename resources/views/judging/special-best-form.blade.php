@@ -46,6 +46,21 @@
             </div>
 
             <div class="mb-4 row">
+                <span class="col-md-3 col-form-label">Awards Deck</span>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{-- Hidden 0 so an unchecked box posts explicitly. --}}
+                        <input type="hidden" name="sbi_display_places" value="0">
+                        <input class="form-check-input" type="checkbox" name="sbi_display_places"
+                               id="sbi_display_places" value="1"
+                               @checked((string) old('sbi_display_places', $category->sbi_display_places ?? '') === '1')>
+                        <label class="form-check-label" for="sbi_display_places">Show each entry's place on the awards deck.</label>
+                    </div>
+                    <div class="form-text">When off, winners are listed without place numbers.</div>
+                </div>
+            </div>
+
+            <div class="mb-4 row">
                 <label for="sbi_rank" class="col-md-3 col-form-label">Rank</label>
                 <div class="col-md-6">
                     <select class="form-select" id="sbi_rank" name="sbi_rank">

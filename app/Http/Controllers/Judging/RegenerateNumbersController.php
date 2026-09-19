@@ -34,6 +34,11 @@ final class RegenerateNumbersController extends Controller
             return redirect('/?msg=99');
         }
 
+        $target = $request->input('return_to') === 'entries' ? '/backoffice/entries' : '/admin';
+        if ($request->input('confirm') !== 'yes') {
+            return redirect($target)->with('error', 'Action not run — confirm the action first.');
+        }
+
         $method = (string) $request->input('method', $request->query('method', ''));
         if (! in_array($method, ['default', 'legacy', 'identical'], true)) {
             return redirect('/admin')->with('error', 'Unknown judging-number method.');
@@ -61,8 +66,6 @@ final class RegenerateNumbersController extends Controller
         // Legacy process.inc.php redirects back to the calling surface:
         // go=entries lands on the entries list, anything else on the admin
         // dashboard. The entries Admin Actions toolbar posts return_to=entries.
-        $target = $request->input('return_to') === 'entries' ? '/backoffice/entries' : '/admin';
-
         return redirect($target)->with('status', "Judging numbers regenerated ({$label}).");
     }
 }

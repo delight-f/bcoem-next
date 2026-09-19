@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Eval;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Tenant\TenantContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -72,7 +73,7 @@ final class EvalProcessController extends Controller
      */
     private function validated(Request $request): array
     {
-        $validated = $request->validate([
+        $rules = [
             'eid' => ['required', 'integer'],
             'uid' => ['nullable', 'integer'],
             'evalStyle' => ['nullable', 'integer'],
@@ -180,7 +181,27 @@ final class EvalProcessController extends Controller
             'evalMouthfeelBalanceInappr' => ['nullable', 'in:1'],
             'evalMouthfeelLength' => ['nullable', 'string', 'max:10'],
             'evalMouthfeelLengthInappr' => ['nullable', 'in:1'],
-        ]);
+        ];
+
+        // "Minimum Words for Scoresheet Comment/Feedback Fields"
+        // (judging_preferences.jPrefsMinWords): non-empty comments on the
+        // submitted sheet variant must meet the admin's minimum.
+        $minWords = self::minWords();
+        if ($minWords > 0) {
+            foreach (self::commentFields((int) $request->input('evalScoresheet', 0)) as $field) {
+                $rules[$field] = [...($rules[$field] ?? ['nullable', 'string']), function (string $attribute, mixed $value, \Closure $fail) use ($minWords): void {
+                    if (! is_string($value) || trim($value) === '') {
+                        return;
+                    }
+
+                    if (str_word_count($value) < $minWords) {
+                        $fail("The {$attribute} field must contain at least {$minWords} words.");
+                    }
+                }];
+            }
+        }
+
+        $validated = $request->validate($rules);
 
         $joined = static fn (string $key): ?string => isset($validated[$key])
             ? implode(', ', array_map(strval(...), $validated[$key]))
@@ -309,5 +330,36 @@ final class EvalProcessController extends Controller
         }
 
         return $out;
+    }
+
+    /**
+     * Free-text comment/feedback fields per posted sheet variant — a field
+     * only counts when the sheet the judge submitted actually shows it.
+     * (The NW Cider sheet's free-text inputs are structured descriptors, not
+     * comments, so only its shared overall-comments field counts.)
+     *
+     * @var array<int, list<string>>
+     */
+    private const COMMENT_FIELDS = [
+        1 => ['evalAromaComments', 'evalAppearanceComments', 'evalFlavorComments', 'evalMouthfeelComments', 'evalOverallComments'],
+        2 => ['evalAromaComments', 'evalAppearanceComments', 'evalFlavorComments', 'evalMouthfeelComments', 'evalOverallComments'],
+        3 => ['evalAromaComments', 'evalAppearanceComments', 'evalFlavorComments', 'evalMouthfeelComments', 'evalOverallComments'],
+        4 => ['evalOverallComments'],
+    ];
+
+    /**
+     * @return list<string>
+     */
+    private static function commentFields(int $variant): array
+    {
+        return self::COMMENT_FIELDS[$variant] ?? [];
+    }
+
+    /** Configured minimum, or 0 when unset (NULL/0 = no minimum). */
+    private static function minWords(): int
+    {
+        $value = TenantContext::load()->judgingStr('jPrefsMinWords');
+
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : 0;
     }
 }

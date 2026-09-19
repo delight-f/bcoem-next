@@ -9,6 +9,7 @@ use App\Support\Payments\FeeCalculator;
 use App\Support\Styles\StyleSets;
 use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -19,13 +20,6 @@ use Illuminate\Support\Facades\Mail;
  */
 final class AdminScreensSettingsTest extends AdminScreensTestCase
 {
-    /**
-     * Entries-tab writes clear every brewStyleAtLimit flag globally; restore them.
-     *
-     * @var array<int, int|string|null>|null
-     */
-    private ?array $origAtLimit = null;
-
     public function test_competition_info_round_trip_stores_epochs_json_and_check_http(): void
     {
         $this->remember('contest_info');
@@ -344,18 +338,16 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
         $this->put('/admin/site-preferences/default', [
             'prefsProEdition' => '1',
-            'prefsMHPDisplay' => '1', // forced to 0 by Pro edition (legacy quirk)
+            'prefsMHPDisplay' => '1',
             'prefsDisplayWinners' => 'Y',
             'prefsWinnerDelay' => '',
             'prefsWinnerMethod' => '1',
             'prefsTheme' => 'default',
-            'prefsSEF' => 'N',
             'prefsUseMods' => 'N',
             'prefsCAPTCHA' => '0',
             'prefsGoogleAccount' => 'site|6LeKEY|secret',
             'prefsDropOff' => 'Y',
             'prefsShipping' => 'N',
-            'prefsAutoPurge' => '0',
             'prefsLanguage' => 'en-US',
             'prefsLanguageToggle' => 'N',
             'prefsDateFormat' => '1',
@@ -367,7 +359,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
         $p = $this->prefs();
         self::assertSame('1', (string) $p['prefsProEdition']);
-        self::assertSame('0', (string) $p['prefsMHPDisplay']); // suppressed by pro edition
+        self::assertSame('1', (string) $p['prefsMHPDisplay']); // Pro keeps the stored choice (A1-04)
         // Empty winner delay stores the legacy far-future sentinel.
         self::assertSame(2145916800, (int) $p['prefsWinnerDelay']);
         // reCAPTCHA account stores the pipe-joined value verbatim.
@@ -453,13 +445,11 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'prefsWinnerDelay' => '',
             'prefsWinnerMethod' => '0',
             'prefsTheme' => 'default',
-            'prefsSEF' => 'N',
             'prefsUseMods' => 'N',
             'prefsCAPTCHA' => '0',
             'prefsGoogleAccount' => '',
             'prefsDropOff' => 'N',
             'prefsShipping' => 'N',
-            'prefsAutoPurge' => '0',
             'prefsLanguage' => 'en-US',
             'prefsLanguageToggle' => 'N',
             'prefsDateFormat' => '1',
@@ -621,7 +611,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     {
         $this->remember('preferences');
         $this->remember('contest_info');
-        $this->rememberStyleLimits();
 
         $set = (string) DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
 
@@ -647,7 +636,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     public function test_style_set_change_rebuilds_selected_styles_for_aabc_dual_version(): void
     {
         $this->remember('preferences');
-        $this->rememberStyleLimits();
 
         $styleIds = [];
         foreach ([
@@ -745,7 +733,8 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
 
         $p = $this->prefs();
         self::assertSame('resend', (string) $p['prefsEmailTransport']);
-        self::assertSame('re_saved_key', (string) $p['prefsEmailApiKey']);
+        // The provider key is encrypted at rest (A3-03).
+        self::assertSame('re_saved_key', Crypt::decryptString((string) $p['prefsEmailApiKey']));
     }
 
     public function test_email_tab_keeps_stored_api_key_when_field_left_blank(): void
@@ -839,7 +828,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     public function test_style_set_change_to_bjcp2025_rebuilds_the_dual_version_union(): void
     {
         $this->remember('preferences');
-        $this->rememberStyleLimits();
 
         // A different starting set so the rebuild branch actually runs.
         DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'BJCP2021']);
@@ -879,7 +867,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     public function test_style_set_change_to_ba2026_rebuilds_the_imported_rows(): void
     {
         $this->remember('preferences');
-        $this->rememberStyleLimits();
 
         $imported = DB::table('styles')->where('brewStyleVersion', 'BA2026')->count();
         self::assertSame(169, $imported, 'seed migration ships the upstream BA 2026 guidelines');
@@ -915,7 +902,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     public function test_style_set_change_to_aabc2022_rebuilds_its_own_version_rows(): void
     {
         $this->remember('preferences');
-        $this->rememberStyleLimits();
 
         DB::table('preferences')->where('id', 1)->update(['prefsStyleSet' => 'BJCP2021']);
 
@@ -942,7 +928,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     public function test_entries_tab_rejects_a_set_outside_the_definition(): void
     {
         $this->remember('preferences');
-        $this->rememberStyleLimits();
 
         $before = DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
 
@@ -984,7 +969,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
     {
         $this->remember('preferences');
         $this->remember('contest_info');
-        $this->rememberStyleLimits();
 
         $set = (string) DB::table('preferences')->where('id', 1)->value('prefsStyleSet');
 
@@ -1114,29 +1098,9 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         }
     }
 
-    /** Snapshot every non-null at-limit flag for restore. */
-    protected function rememberStyleLimits(): void
-    {
-        if ($this->origAtLimit !== null) {
-            return;
-        }
-        $this->origAtLimit = DB::table('styles')
-            ->whereNotNull('brewStyleAtLimit')
-            ->pluck('brewStyleAtLimit', 'id')
-            ->all();
-    }
-
     protected function tearDown(): void
     {
         DB::table('judging_locations')->where('judgingLocName', 'like', 'P54%')->delete();
-
-        if ($this->origAtLimit !== null) {
-            foreach ($this->origAtLimit as $id => $flag) {
-                DB::table('styles')->where('id', $id)->update(['brewStyleAtLimit' => $flag]);
-            }
-            // Rows cleared during the test but not present in the snapshot:
-            DB::table('styles')->whereNotNull('brewStyleAtLimit')->whereNotIn('id', array_keys($this->origAtLimit) ?: [0])->update(['brewStyleAtLimit' => null]);
-        }
 
         parent::tearDown();
     }

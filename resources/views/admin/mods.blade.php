@@ -99,25 +99,6 @@
                             <option value="1" @selected(($row->mod_extend_function ?? '') === '1')>Public Home Page Only</option>
                             <option value="6" @selected(($row->mod_extend_function ?? '') === '6')>Public Registration Page Only</option>
                             <option value="8" @selected(($row->mod_extend_function ?? '') === '8')>Public User's Account Page Only</option>
-                            <option value="9" @selected(($row->mod_extend_function ?? '') === '9')>Administration</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mb-4 row">
-                    <label for="mod_extend_function_admin" class="col-md-4 col-form-label">Extends Admin Function</label>
-                    <div class="col-md-9">
-                        <select class="form-select" id="mod_extend_function_admin" name="mod_extend_function_admin" style="width:auto;">
-                            <option value=""></option>
-                            <option value="default" @selected(($row->mod_extend_function_admin ?? '') === 'default')>Administration Dashboard</option>
-                            <option value="archives" @selected(($row->mod_extend_function_admin ?? '') === 'archives')>Archives</option>
-                            <option value="entries" @selected(($row->mod_extend_function_admin ?? '') === 'entries')>Entry Administration</option>
-                            <option value="judging_scores" @selected(($row->mod_extend_function_admin ?? '') === 'judging_scores')>Scoring</option>
-                            <option value="judging_scores_bos" @selected(($row->mod_extend_function_admin ?? '') === 'judging_scores_bos')>Scoring - Best of Show</option>
-                            <option value="special_best" @selected(($row->mod_extend_function_admin ?? '') === 'special_best')>Scoring - Special Best of Show Categories</option>
-                            <option value="styles" @selected(($row->mod_extend_function_admin ?? '') === 'styles')>Styles</option>
-                            <option value="style_types" @selected(($row->mod_extend_function_admin ?? '') === 'style_types')>Style Types</option>
-                            <option value="judging_tables" @selected(($row->mod_extend_function_admin ?? '') === 'judging_tables')>Table Administration</option>
-                            <option value="participants" @selected(($row->mod_extend_function_admin ?? '') === 'participants')>Users (Participants)</option>
                         </select>
                     </div>
                 </div>

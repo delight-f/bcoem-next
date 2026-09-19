@@ -18,8 +18,9 @@ use Illuminate\Support\Facades\DB;
  *
  * Storage parity: name/description are strip_tags + trim (the port's
  * replacement for legacy's HTMLPurifier pass); places/rank blank_to_null'd
- * ints. sbi_display_places is posted by the legacy form but its process
- * script never writes it — mirrored, not fixed, until a ledger pins intent.
+ * ints. sbi_display_places (show each place on the awards deck,
+ * AwardDeckBuilder) is now offered by the form and written here; an omitted
+ * field stores NULL.
  */
 final class SpecialBestController extends Controller
 {
@@ -122,6 +123,7 @@ final class SpecialBestController extends Controller
             'sbi_places' => ['required', 'integer', 'min:1'],
             'sbi_rank' => ['nullable', 'integer', 'min:1', 'max:20'],
             'sbi_description' => ['nullable', 'string'],
+            'sbi_display_places' => ['nullable', 'boolean'],
         ]);
 
         return [
@@ -131,6 +133,9 @@ final class SpecialBestController extends Controller
             'sbi_description' => self::blankToNull(strip_tags(trim((string) ($data['sbi_description'] ?? '')))),
             'sbi_places' => (int) $data['sbi_places'],
             'sbi_rank' => self::blankToNull(isset($data['sbi_rank']) ? (string) ((int) $data['sbi_rank']) : null),
+            // Only written when the form posts it (0/1); a request without
+            // the field leaves the imported legacy value alone.
+            'sbi_display_places' => array_key_exists('sbi_display_places', $data) ? (int) $data['sbi_display_places'] : null,
         ];
     }
 

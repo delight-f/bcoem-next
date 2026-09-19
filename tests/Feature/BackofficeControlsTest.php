@@ -215,14 +215,14 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
         $unpaidId = $this->makeEntry(['brewPaid' => 0]);
         $this->login();
 
-        $response = $this->post('/backoffice/entries/mark-all', ['action' => 'unpaid']);
+        $response = $this->post('/backoffice/entries/mark-all', ['action' => 'unpaid', 'confirm' => 'yes']);
 
         // Legacy process_brewing.inc.php:1013: msg=34, WHOLE table reset.
         $response->assertRedirect('/backoffice/entries?msg=34');
         $this->assertSame(0, (int) DB::table('brewing')->where('id', $paidId)->value('brewPaid'));
         $this->assertSame(0, (int) DB::table('brewing')->where('id', $unpaidId)->value('brewPaid'));
 
-        $paid = $this->post('/backoffice/entries/mark-all', ['action' => 'paid']);
+        $paid = $this->post('/backoffice/entries/mark-all', ['action' => 'paid', 'confirm' => 'yes']);
         $paid->assertRedirect('/backoffice/entries?msg=20');
         $this->assertSame(1, (int) DB::table('brewing')->where('id', $unpaidId)->value('brewPaid'));
 
@@ -232,12 +232,27 @@ final class BackofficeControlsTest extends PublicSurfaceTestCase
             ->assertSee('All entries have been marked as paid.');
     }
 
+    public function test_mark_all_requires_server_side_confirmation(): void
+    {
+        $id = $this->makeEntry(['brewPaid' => 0]);
+        $this->login();
+
+        // Direct POST without the confirmation field mutates nothing.
+        $this->post('/backoffice/entries/mark-all', ['action' => 'paid'])
+            ->assertRedirect('/backoffice/entries');
+        $this->assertSame(0, (int) DB::table('brewing')->where('id', $id)->value('brewPaid'));
+
+        $this->post('/backoffice/entries/mark-all', ['action' => 'paid', 'confirm' => 'yes'])
+            ->assertRedirect('/backoffice/entries?msg=20');
+        $this->assertSame(1, (int) DB::table('brewing')->where('id', $id)->value('brewPaid'));
+    }
+
     public function test_mark_all_rejects_unknown_action_and_non_admin(): void
     {
         $this->makeEntry();
         $this->login();
 
-        $this->post('/backoffice/entries/mark-all', ['action' => 'nuke'])
+        $this->post('/backoffice/entries/mark-all', ['action' => 'nuke', 'confirm' => 'yes'])
             ->assertRedirect('/backoffice/entries');
         $this->assertSame(0, (int) DB::table('brewing')->where('id', $this->entries[0])->value('brewPaid'));
 

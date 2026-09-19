@@ -66,7 +66,7 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
             ['uid' => 9203, 'brewerFirstName' => 'Second', 'brewerLastName' => 'Judge', 'brewerEmail' => self::OTHER_JUDGE, 'brewerJudge' => 'Y'],
         ]);
 
-        foreach (['jPrefsScoresheet', 'jPrefsJudgingOpen', 'jPrefsJudgingClosed'] as $key) {
+        foreach (['jPrefsScoresheet', 'jPrefsJudgingOpen', 'jPrefsJudgingClosed', 'jPrefsMinWords', 'jPrefsScoreDispMax'] as $key) {
             $this->origJudgingPrefs[$key] = (string) DB::table('judging_preferences')->where('id', 1)->value($key);
         }
     }
@@ -323,6 +323,101 @@ final class EvalSubAppTest extends PublicSurfaceTestCase
             ->assertOk()
             ->assertSee('Gold')
             ->assertSee('Apple, floral');
+    }
+
+    public function test_min_words_enforced_on_comment_fields_by_variant(): void
+    {
+        $entryId = $this->makeEntry();
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsMinWords' => 5]);
+
+        $this->login(self::JUDGE);
+
+        // Structured sheet: a too-short section comment is rejected.
+        $this->from("/eval/scoresheet/{$entryId}")
+            ->post('/eval/process', [
+                'eid' => $entryId,
+                'evalScoresheet' => 3,
+                'evalFinalScore' => 40,
+                'evalOverallScore' => 8,
+                'evalAromaComments' => 'too short',
+            ])
+            ->assertSessionHasErrors('evalAromaComments');
+        self::assertNull(DB::table('evaluation')->where('eid', $entryId)->first());
+
+        // A comment meeting the minimum is stored.
+        $this->from("/eval/scoresheet/{$entryId}")
+            ->post('/eval/process', [
+                'eid' => $entryId,
+                'evalScoresheet' => 3,
+                'evalFinalScore' => 40,
+                'evalOverallScore' => 8,
+                'evalAromaComments' => 'this comment now has enough words',
+            ])
+            ->assertRedirect('/eval?msg=3');
+        self::assertSame(
+            'this comment now has enough words',
+            DB::table('evaluation')->where('eid', $entryId)->value('evalAromaComments'),
+        );
+
+        // NW Cider sheet enforces its shared overall-comments field; its
+        // structured Characteristics inputs are not comment fields.
+        $this->from("/eval/scoresheet/{$entryId}")
+            ->post('/eval/process', [
+                'eid' => $entryId,
+                'evalScoresheet' => 4,
+                'evalFinalScore' => 40,
+                'evalOverallScore' => 8,
+                'evalAromaCharacteristics' => 'short',
+                'evalOverallComments' => 'too short',
+            ])
+            ->assertSessionHasErrors('evalOverallComments');
+    }
+
+    public function test_structured_submission_renders_ticks_on_output(): void
+    {
+        $entryId = $this->makeEntry();
+
+        $this->login(self::JUDGE);
+        $this->post('/eval/process', [
+            'eid' => $entryId,
+            'evalScoresheet' => 3,
+            'evalFinalScore' => 40,
+            'evalOverallScore' => 8,
+            'evalAromaScore' => 10,
+            'evalFlavorScore' => 20,
+            'aromaTicks' => ['Fermentation characteristics', 'Hoppy'],
+            'flavorTicks' => ['Malty'],
+        ])->assertRedirect('/eval?msg=3');
+
+        self::assertSame(
+            'Fermentation characteristics, Hoppy',
+            DB::table('evaluation')->where('eid', $entryId)->value('evalAromaChecklist'),
+        );
+
+        // The structured tick grid renders on read-back (variant 3 dispatch).
+        $this->get("/eval/scoresheet/{$entryId}/output")
+            ->assertOk()
+            ->assertSee('Fermentation characteristics')
+            ->assertSee('Malty');
+    }
+
+    public function test_output_warns_when_scores_exceed_consensus_dispersion(): void
+    {
+        $entryId = $this->makeEntry();
+        $this->makeEvaluation($entryId, 9202, ['evalFinalScore' => 30]);
+        $this->makeEvaluation($entryId, 9203, ['evalFinalScore' => 45]);
+
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsScoreDispMax' => 10]);
+
+        $this->login(self::ADMIN);
+        $this->get("/eval/scoresheet/{$entryId}/output")
+            ->assertOk()
+            ->assertSee('differ by more than the configured maximum');
+
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsScoreDispMax' => 20]);
+        $this->get("/eval/scoresheet/{$entryId}/output")
+            ->assertOk()
+            ->assertDontSee('differ by more than the configured maximum');
     }
 
     public function test_process_round_trip_binds_evaluation_to_submitting_judge(): void

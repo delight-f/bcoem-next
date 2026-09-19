@@ -11,6 +11,7 @@ use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Payment provider setup (issue #24 follow-up). One plain-language screen
@@ -45,7 +46,9 @@ final class PaymentSetupController extends Controller
                 'clientIdSet' => $platform['client_id'] !== '',
                 'secretKeySet' => $platform['secret'] !== '',
                 'fromEnv' => $platform['source'] === 'env',
+                'currency' => StripeSettings::currency(),
             ],
+            'stripeCurrencies' => StripeSettings::CURRENCIES,
             'paypal' => [
                 'mode' => $paypal['mode'],
                 'clientId' => $paypal['client_id'],
@@ -79,6 +82,33 @@ final class PaymentSetupController extends Controller
         );
 
         return redirect()->route('admin.payments.setup')->with('status', 'Stripe platform keys saved.');
+    }
+
+    /**
+     * Save the ISO 4217 gateway currency (C2-02) — the missing write half of
+     * B1-01. Blank clears it, so the gateway falls back to USD.
+     */
+    public function saveStripeCurrency(Request $request): RedirectResponse
+    {
+        $this->guard($request);
+
+        $data = $request->validate([
+            'currency' => ['nullable', 'string', Rule::in(StripeSettings::CURRENCIES)],
+        ]);
+
+        StripeSettings::saveCurrency((string) ($data['currency'] ?? ''));
+
+        return redirect()->route('admin.payments.setup')->with('status', 'Stripe currency saved.');
+    }
+
+    /** Disconnect the connected Stripe account (C2-03). */
+    public function removeStripe(Request $request): RedirectResponse
+    {
+        $this->guard($request);
+
+        StripeSettings::forget();
+
+        return redirect()->route('admin.payments.setup')->with('status', 'Stripe disconnected.');
     }
 
     public function savePayPal(Request $request): RedirectResponse

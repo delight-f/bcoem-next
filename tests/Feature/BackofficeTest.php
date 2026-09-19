@@ -330,13 +330,34 @@ final class BackofficeTest extends PublicSurfaceTestCase
         DB::table('judging_scores')->insert(['eid' => $entryId, 'bid' => self::ENTRANT_ID, 'scoreTable' => 1, 'scoreEntry' => $entryId]);
 
         $this->login(self::ADMIN_EMAIL);
-        $this->delete('/backoffice/entries/'.$entryId)->assertRedirect('/backoffice/entries?msg=deleted');
+        $this->delete('/backoffice/entries/'.$entryId, ['confirm' => 'yes'])->assertRedirect('/backoffice/entries?msg=deleted');
 
         self::assertSame(0, (int) DB::table('brewing')->where('id', $entryId)->count());
         self::assertSame(0, (int) DB::table('judging_scores')->where('eid', $entryId)->count());
 
         // The participant itself is untouched (entries delete ≠ brewer delete).
         self::assertSame(1, (int) DB::table('brewer')->where('uid', self::ENTRANT_ID)->count());
+    }
+
+    public function test_participants_assigned_as_shows_role_not_affiliations_json(): void
+    {
+        // brewerAssignment now stores the entrant's affiliations JSON, so the
+        // "Assigned As" cell must derive the role from the real flags instead
+        // of rendering (and ucwords()-mangling) that JSON.
+        DB::table('brewer')->where('uid', self::ENTRANT_ID)->update([
+            'brewerAssignment' => json_encode(['affilliated' => ['Brewers Guild']]),
+            'brewerJudge' => 'Y',
+            'brewerSteward' => 'N',
+        ]);
+        DB::table('staff')->where('uid', self::ENTRANT_ID)->delete();
+        DB::table('staff')->insert(['uid' => self::ENTRANT_ID, 'staff_judge' => 1]);
+
+        $this->login(self::ADMIN_EMAIL);
+        $html = (string) $this->get('/backoffice/participants')->assertOk()->getContent();
+
+        self::assertStringNotContainsString('Brewers Guild', $html);
+        self::assertStringNotContainsString('Affilliated', $html);
+        self::assertStringContainsString('>Judge</button>', $html);
     }
 
     public function test_count_by_style_aggregates_seeded_fixture(): void

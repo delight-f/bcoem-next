@@ -137,7 +137,7 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
             'judgingDate' => '2030-06-16 10:00 AM',
             'judgingDateEnd' => '2030-06-20 05:00 PM',
             'judgingLocation' => 'Distributed',
-            'judgingRounds' => '3',
+            'judgingRounds' => '2',
             'judgingLocNotes' => 'ship entries',
         ]);
         $response->assertRedirect('/admin/judging/locations');
@@ -146,6 +146,57 @@ final class JudgingConfigTest extends PublicSurfaceTestCase
         self::assertSame('Session 1 Renamed', $updated['judgingLocName']);
         self::assertSame(strtotime('2030-06-20 23:00 UTC'), (int) $updated['judgingDateEnd']);
         self::assertSame('ship entries', $updated['judgingLocNotes']);
+    }
+
+    public function test_session_rounds_capped_by_preference(): void
+    {
+        $this->rememberConfigRows();
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsRounds' => 2]);
+
+        $before = DB::table('judging_locations')->count();
+        $payload = [
+            'judgingLocName' => 'Capped Session',
+            'judgingLocType' => '0',
+            'judgingDate' => '2030-06-15 09:00 AM',
+            'judgingDateEnd' => '',
+            'judgingLocation' => 'Hall',
+            'judgingLocNotes' => '',
+        ];
+
+        // Above the configured maximum: rejected, nothing written.
+        $this->from('/admin/judging/locations/create')
+            ->post('/admin/judging/locations', $payload + ['judgingRounds' => '3'])
+            ->assertSessionHasErrors('judgingRounds');
+        self::assertSame($before, DB::table('judging_locations')->count());
+
+        // At the maximum: stored.
+        $this->post('/admin/judging/locations', $payload + ['judgingRounds' => '2'])
+            ->assertRedirect('/admin/judging/locations');
+        $row = $this->lastLocation();
+        self::assertNotNull($row);
+        $this->locationIds[] = (int) $row['id'];
+        self::assertSame(2, (int) $row['judgingRounds']);
+
+        // A pre-existing over-cap session keeps its rounds when edited…
+        DB::table('judging_locations')->where('id', $row['id'])->update(['judgingRounds' => 5]);
+        $this->put('/admin/judging/locations/'.((int) $row['id']), $payload + ['judgingRounds' => '5'])
+            ->assertRedirect('/admin/judging/locations');
+        self::assertSame(5, (int) DB::table('judging_locations')->where('id', $row['id'])->value('judgingRounds'));
+
+        // …but cannot be raised further beyond the cap.
+        $this->from('/admin/judging/locations/'.((int) $row['id']).'/edit')
+            ->put('/admin/judging/locations/'.((int) $row['id']), $payload + ['judgingRounds' => '6'])
+            ->assertSessionHasErrors('judgingRounds');
+        self::assertSame(5, (int) DB::table('judging_locations')->where('id', $row['id'])->value('judgingRounds'));
+
+        // An unset (NULL) pref imposes no cap.
+        DB::table('judging_preferences')->where('id', 1)->update(['jPrefsRounds' => null]);
+        $this->post('/admin/judging/locations', $payload + ['judgingRounds' => '5'])
+            ->assertRedirect('/admin/judging/locations');
+        $unset = $this->lastLocation();
+        self::assertNotNull($unset);
+        $this->locationIds[] = (int) $unset['id'];
+        self::assertSame(5, (int) $unset['judgingRounds']);
     }
 
     public function test_distributed_session_requires_end_date(): void

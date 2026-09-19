@@ -9,6 +9,7 @@ use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -33,6 +34,11 @@ use Illuminate\Support\Facades\DB;
  * keyboard-wedge scanner types the code and sends Enter, which submits.
  * Barcodes encode judging numbers, so lookup is exact brewJudgingNumber
  * first, bare numeric entry id second (legacy accepted both fields).
+ *
+ * `?filter=box-paid` (legacy go=checkin&filter=box-paid) swaps in a table
+ * of confirmed entries with their box/paid state and a per-row check-in
+ * that can also set the box number and paid flag, mirroring the QR
+ * check-in's per-entry form (QrCheckinController::store()).
  */
 final class BarcodeCheckinController extends Controller
 {
@@ -42,42 +48,89 @@ final class BarcodeCheckinController extends Controller
             session()->forget('checkin.list');
         }
 
+        // filter=box-paid switches to the box/paid layout (legacy
+        // go=checkin&filter=box-paid); the scan form stays available.
+        $boxPaid = $request->query('filter') === 'box-paid';
+
         return view('judging.checkin', [
             'ctx' => TenantContext::load(),
             'checkedIn' => array_values((array) session('checkin.list', [])),
+            'boxPaid' => $boxPaid,
+            'entries' => $boxPaid ? $this->boxPaidEntries() : collect(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $scan = trim((string) $request->validate([
+        $data = $request->validate([
             'scan' => ['required', 'string', 'max:32'],
-        ])['scan']);
+            'brewBoxNum' => ['nullable', 'string', 'max:10'],
+            'brewPaid' => ['nullable', 'boolean'],
+        ]);
+
+        $scan = trim((string) $data['scan']);
 
         $matches = DB::table('brewing')
             ->where('brewJudgingNumber', $scan)
-            ->get(['id', 'brewReceived']);
+            ->get(['id', 'brewReceived', 'brewPaid']);
         if ($matches->isEmpty() && ctype_digit($scan)) {
-            $row = DB::table('brewing')->where('id', (int) $scan)->first(['id', 'brewReceived']);
+            $row = DB::table('brewing')->where('id', (int) $scan)->first(['id', 'brewReceived', 'brewPaid']);
             $matches = collect($row === null ? [] : [$row]);
         }
 
         if ($matches->count() > 1) {
-            return redirect('/admin/judging/checkin?dup='.urlencode($scan));
+            return redirect($this->checkinUrl($request, 'dup', $scan));
         }
 
         $entry = $matches->first();
         if ($entry === null) {
-            return redirect('/admin/judging/checkin?bad='.urlencode($scan));
+            return redirect($this->checkinUrl($request, 'bad', $scan));
         }
 
-        DB::table('brewing')->where('id', (int) $entry->id)->update(['brewReceived' => 1]);
+        $update = ['brewReceived' => 1];
+
+        // The box-paid layout's per-row extras; the plain scan form posts
+        // neither, so those flags stay untouched (ledger #12).
+        if (array_key_exists('brewBoxNum', $data)) {
+            $box = trim((string) $data['brewBoxNum']);
+            if ($box !== '') {
+                $update['brewBoxNum'] = $box;
+            }
+        }
+        if (array_key_exists('brewPaid', $data)) {
+            $update['brewPaid'] = ((int) $entry->brewPaid === 1 || (bool) $data['brewPaid']) ? 1 : 0;
+        }
+
+        DB::table('brewing')->where('id', (int) $entry->id)->update($update);
 
         $again = (int) $entry->brewReceived === 1;
         if (! $again) {
             session()->push('checkin.list', $scan);
         }
 
-        return redirect('/admin/judging/checkin?'.($again ? 'again' : 'ok').'='.urlencode($scan));
+        return redirect($this->checkinUrl($request, $again ? 'again' : 'ok', $scan));
+    }
+
+    /**
+     * Confirmed entries for the box/paid check-in table, in judging-number
+     * order (the label sequence staff work from).
+     *
+     * @return Collection<int, \stdClass>
+     */
+    private function boxPaidEntries(): Collection
+    {
+        return DB::table('brewing')
+            ->where('brewConfirmed', '1')
+            ->orderBy('brewJudgingNumber')
+            ->orderBy('id')
+            ->get(['id', 'brewJudgingNumber', 'brewBoxNum', 'brewPaid', 'brewReceived']);
+    }
+
+    /** Post-check-in redirect, keeping the box/paid view when it posted. */
+    private function checkinUrl(Request $request, string $status, string $scan): string
+    {
+        $filter = $request->input('filter') === 'box-paid' ? 'filter=box-paid&' : '';
+
+        return '/admin/judging/checkin?'.$filter.$status.'='.urlencode($scan);
     }
 }

@@ -123,7 +123,7 @@
     $adminNavBarcode = $adminNavObfuscate === 0
         && in_array((string) $ctx->prefsStr('prefsEntryForm'), ['0', '2', 'N', 'C', '3', '4', '5', '6', '1'], true);
     // Payments plan W3: "Payments" nav presence keys off the tenant's Stripe
-    // connection, not the retired prefsPaypalIPN.
+    // connection.
     $stripeConnected = str_contains((string) $ctx->prefsStr('prefsStripe'), 'account_id');
     // Theme (prefsTheme): the port ships exactly two palettes — the default
     // public palette and the brux palette. Only those are offered in Site

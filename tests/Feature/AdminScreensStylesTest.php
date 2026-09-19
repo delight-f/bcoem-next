@@ -84,11 +84,11 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
         self::assertContains($custom, $listed); // (version = ? OR brewStyleOwn='custom')
     }
 
-    public function test_bulk_update_writes_at_limit_and_selected_styles_json(): void
+    public function test_bulk_update_writes_selected_styles_json(): void
     {
         $this->remember('preferences');
 
-        $a = $this->insertStyle(['brewStyleVersion' => 'BJCP2021', 'brewStyleType' => 1, 'brewStyleAtLimit' => null]);
+        $a = $this->insertStyle(['brewStyleVersion' => 'BJCP2021', 'brewStyleType' => 1]);
         $b = $this->insertStyle(['brewStyleVersion' => 'BJCP2021', 'brewStyleType' => 1]);
 
         $rowA = (array) DB::table('styles')->find($a);
@@ -96,15 +96,8 @@ final class AdminScreensStylesTest extends AdminScreensTestCase
         $this->put('/admin/styles', [
             'id' => [$a, $b],
             'brewStyleActive'.$a => 'Y',
-            'brewStyleAtLimit'.$a => '1',
             // $b unchecked → dropped from the selection map entirely.
         ])->assertRedirect('/admin/styles?msg=2');
-        $styleA = (array) DB::table('styles')->find($a);
-        $styleB = (array) DB::table('styles')->find($b);
-        self::assertNotEmpty($styleA);
-        self::assertNotEmpty($styleB);
-        self::assertSame(1, (int) $styleA['brewStyleAtLimit']);
-        self::assertNull($styleB['brewStyleAtLimit']);
 
         $selected = json_decode((string) DB::table('preferences')->where('id', 1)->value('prefsSelectedStyles'), true);
         self::assertSame(

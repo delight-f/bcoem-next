@@ -570,7 +570,10 @@ final class PoolAssignTest extends PublicSurfaceTestCase
         // unallocated judge in the section with the inline picker. The shared
         // fixture may carry other judges, so assert per-section, not counts.
         $splitAt = strpos($body, 'Allocated to a Table');
-        $unallocated = substr($body, strpos($body, 'Unallocated to a Table'), $splitAt - strpos($body, 'Unallocated to a Table'));
+        $unallocatedAt = strpos($body, 'Unallocated to a Table');
+        self::assertIsInt($splitAt);
+        self::assertIsInt($unallocatedAt);
+        $unallocated = substr($body, $unallocatedAt, $splitAt - $unallocatedAt);
         $allocated = substr($body, $splitAt);
 
         self::assertStringContainsString('Alpha, Amy', $unallocated);

@@ -400,6 +400,17 @@ final class JudgingAjaxTest extends PublicSurfaceTestCase
         $this->assertNull(DB::table('judging_assignments')->where('id', $assignmentId)->first());
         $this->assertSame(1, (int) Session::get('judge_unassign_flag'));
 
+        // B3-05: the switch also records who was removed so the caution
+        // modal can list them after the reload.
+        self::assertSame(
+            [['name' => 'Judge, Ajax', 'role' => 'Judge']],
+            (array) Session::get('judge_unassign_list'),
+        );
+
+        // The tables list page reads that list into the modal and clears it.
+        $this->get('/admin/judging/tables')->assertOk()->assertSee('Judge, Ajax');
+        $this->assertNull(Session::get('judge_unassign_flag'));
+
         // Production mode flag cleared.
         $this->assertSame(0, (int) DB::table('judging_preferences')->where('id', 1)->value('jPrefsTablePlanning'));
     }

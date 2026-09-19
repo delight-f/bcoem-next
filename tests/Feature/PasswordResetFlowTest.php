@@ -47,10 +47,15 @@ final class PasswordResetFlowTest extends PublicSurfaceTestCase
         $this->get('/forgot-password')->assertOk()->assertSee('Forgot Password');
     }
 
-    public function test_forgot_unknown_email_shows_error(): void
+    public function test_forgot_unknown_email_is_indistinguishable_from_a_known_one(): void
     {
+        $this->post('/forgot-password', ['email' => 'user.baseline@brewingcompetitions.com'])
+            ->assertRedirect(route('password.verify', ['email' => 'user.baseline@brewingcompetitions.com']))
+            ->assertSessionHasNoErrors();
+
         $this->post('/forgot-password', ['email' => 'nobody@example.com'])
-            ->assertSessionHasErrors('email');
+            ->assertRedirect(route('password.verify', ['email' => 'nobody@example.com']))
+            ->assertSessionHasNoErrors();
     }
 
     public function test_forgot_known_email_redirects_to_security_question(): void
@@ -58,16 +63,31 @@ final class PasswordResetFlowTest extends PublicSurfaceTestCase
         $this->post('/forgot-password', ['email' => 'user.baseline@brewingcompetitions.com'])
             ->assertRedirect(route('password.verify', [
                 'email' => 'user.baseline@brewingcompetitions.com',
-                'question' => 'What is your favorite all-time beer to drink?',
             ]));
     }
 
-    public function test_verify_page_renders_question(): void
+    public function test_verify_page_resolves_the_stored_question_server_side(): void
     {
+        // The question is looked up against the account, never taken from the
+        // address, so a hand-made URL cannot display attacker-supplied text.
         $this->get(route('password.verify', [
             'email' => 'user.baseline@brewingcompetitions.com',
-            'question' => 'What is your favorite all-time beer to drink?',
-        ]))->assertOk()->assertSee('What is your favorite all-time beer to drink?');
+            'question' => 'Attacker supplied question',
+        ]))->assertOk()
+            ->assertSee('What is your favorite all-time beer to drink?')
+            ->assertDontSee('Attacker supplied question');
+    }
+
+    public function test_unknown_email_is_answered_like_a_wrong_answer(): void
+    {
+        Mail::fake();
+
+        $this->post(route('password.verify.post'), [
+            'email' => 'nobody@example.com',
+            'answer' => 'whatever',
+        ])->assertSessionHasErrors('answer');
+
+        Mail::assertNothingSent();
     }
 
     public function test_wrong_security_answer_is_rejected(): void

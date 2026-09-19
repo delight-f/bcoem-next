@@ -28,7 +28,7 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
         $unpaid = self::seedEntry('ETP-unpaid', ['brewPaid' => 0, 'brewConfirmed' => 1]);
         $nullPaid = self::seedEntry('ETP-null', ['brewPaid' => null, 'brewConfirmed' => 1]);
 
-        $this->post('/backoffice/entries/purge', ['go' => 'unpaid'])
+        $this->post('/backoffice/entries/purge', ['go' => 'unpaid', 'confirm' => 'yes'])
             ->assertRedirect('/backoffice/entries');
 
         self::assertNotNull(DB::table('brewing')->where('id', $paid)->value('id'));
@@ -66,7 +66,7 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
         ]);
         $confirmed = self::seedEntry('ETP-keep', ['brewConfirmed' => 1, 'brewPaid' => 1]);
 
-        $this->post('/backoffice/entries/purge', ['go' => 'unconfirmed'])
+        $this->post('/backoffice/entries/purge', ['go' => 'unconfirmed', 'confirm' => 'yes'])
             ->assertRedirect('/backoffice/entries');
 
         self::assertNull(DB::table('brewing')->where('id', $unconfirmed)->value('id'));
@@ -80,7 +80,12 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
         $keep = self::seedEntry('ETP-unknown', ['brewPaid' => 0, 'brewConfirmed' => 1]);
 
         // Unknown go: nothing deleted.
-        $this->post('/backoffice/entries/purge', ['go' => 'nope'])
+        $this->post('/backoffice/entries/purge', ['go' => 'nope', 'confirm' => 'yes'])
+            ->assertRedirect('/backoffice/entries');
+        self::assertNotNull(DB::table('brewing')->where('id', $keep)->value('id'));
+
+        // A direct POST without the confirmation field mutates nothing.
+        $this->post('/backoffice/entries/purge', ['go' => 'unpaid'])
             ->assertRedirect('/backoffice/entries');
         self::assertNotNull(DB::table('brewing')->where('id', $keep)->value('id'));
 
@@ -97,7 +102,7 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
             'userAdminObfuscate' => 0,
         ]);
         $this->loginWithEmail('etp.level1@brewingcompetitions.com');
-        $this->post('/backoffice/entries/purge', ['go' => 'unpaid'])
+        $this->post('/backoffice/entries/purge', ['go' => 'unpaid', 'confirm' => 'yes'])
             ->assertRedirect('/?msg=99');
         self::assertNotNull(DB::table('brewing')->where('id', $keep)->value('id'));
     }
@@ -106,7 +111,7 @@ final class EntriesToolbarPurgeRegenTest extends AdminScreensTestCase
     {
         $id = self::seedEntry('ETP-regen', ['brewCategory' => '21', 'brewCategorySort' => '21', 'brewSubCategory' => 'A']);
 
-        $this->post('/admin/judging/regenerate-numbers', ['method' => 'default', 'return_to' => 'entries'])
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'default', 'return_to' => 'entries', 'confirm' => 'yes'])
             ->assertRedirect('/backoffice/entries');
 
         self::assertMatchesRegularExpression(

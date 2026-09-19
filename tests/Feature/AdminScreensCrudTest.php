@@ -221,8 +221,7 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
             'mod_description' => 'test mod',
             'mod_type' => '0',
             'mod_permission' => '2',
-            'mod_extend_function' => '9',
-            // extend-function 9 without an admin target falls back to 'default'.
+            'mod_extend_function' => '1',
             'mod_rank' => '7',
             'mod_display_rank' => '2',
             'mod_enable' => '1',
@@ -231,7 +230,9 @@ final class AdminScreensCrudTest extends AdminScreensTestCase
         $row = (array) DB::table('mods')->where('mod_name', 'P54 Mod')->first();
         self::assertNotEmpty($row);
         $this->modIds[] = (int) $row['id'];
-        self::assertSame('default', $row['mod_extend_function_admin']);
+        // Administration (legacy 9) is no longer offered or written.
+        self::assertSame(1, (int) $row['mod_extend_function']);
+        self::assertNull($row['mod_extend_function_admin']);
         self::assertSame(7, (int) $row['mod_rank']);
 
         $this->put('/admin/mods', [

@@ -147,9 +147,9 @@
     {{-- Assignment modal(s): one per participant with judge/steward assignment. --}}
     @foreach ($participants as $p)
         @php
-            $assignment = trim((string) ($p->brewerAssignment ?? ''));
-            $hasJudge = str_contains($assignment, 'Judge');
-            $hasSteward = str_contains($assignment, 'Steward');
+            $flags = $staffFlags->get($p->uid);
+            $hasJudge = ($p->brewerJudge === 'Y') || (int) ($flags->staff_judge ?? 0) === 1 || (int) ($flags->staff_judge_bos ?? 0) === 1;
+            $hasSteward = ($p->brewerSteward === 'Y') || (int) ($flags->staff_steward ?? 0) === 1;
             $tableJudge = collect($tableAssignments[$p->uid.'|J'] ?? [])->pluck('label')->implode(', ');
             $tableSteward = collect($tableAssignments[$p->uid.'|S'] ?? [])->pluck('label')->implode(', ');
             $entriesIn = $judgeEntries[$p->uid] ?? collect();
@@ -289,9 +289,10 @@
                             : $p->brewerLastName.', '.$p->brewerFirstName;
                         $level = (int) ($p->userLevel ?? 2);
                         $levelLabel = $level === 0 ? 'Top-Level Admin' : ($level === 1 ? 'Admin' : 'Participant');
-                        $assignment = trim((string) ($p->brewerAssignment ?? ''));
-                        $hasJudge = str_contains($assignment, 'Judge');
-                        $hasSteward = str_contains($assignment, 'Steward');
+                        $flags = $staffFlags->get($p->uid);
+                        $assignment = $roleLabels[$p->uid] ?? '';
+                        $hasJudge = ($p->brewerJudge === 'Y') || (int) ($flags->staff_judge ?? 0) === 1 || (int) ($flags->staff_judge_bos ?? 0) === 1;
+                        $hasSteward = ($p->brewerSteward === 'Y') || (int) ($flags->staff_steward ?? 0) === 1;
                     @endphp
                     @if ($filter === 'with_entries')
                         <tr>
@@ -355,9 +356,9 @@
                             <td>
                                 @if ($assignment !== '')
                                     @if (($hasJudge || $hasSteward) && $filter !== 'judges' && $filter !== 'stewards')
-                                        <button type="button" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="modal" data-bs-target="#assignment-modal-{{ $p->uid }}">{{ ucwords($assignment) }}</button>
+                                        <button type="button" class="btn btn-link" style="margin:0; padding:0;" data-bs-toggle="modal" data-bs-target="#assignment-modal-{{ $p->uid }}">{{ $assignment }}</button>
                                     @else
-                                        {{ ucwords($assignment) }}
+                                        {{ $assignment }}
                                     @endif
                                 @endif
                             </td>

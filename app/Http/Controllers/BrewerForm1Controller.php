@@ -37,7 +37,8 @@ final class BrewerForm1Controller extends Controller
         return view('brewer.clubs', [
             'brewer' => $brewer,
             'ctx' => $ctx,
-            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1,
+            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1
+                && (int) $ctx->prefsStr('prefsProEdition') !== 1,
         ]);
     }
 

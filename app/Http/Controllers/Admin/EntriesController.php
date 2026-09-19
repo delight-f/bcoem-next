@@ -188,6 +188,12 @@ final class EntriesController extends Controller
      */
     public function markAll(Request $request): RedirectResponse
     {
+        // Server-enforced confirmation: the whole-table mark runs only when
+        // the request came through the Admin Actions warning UI.
+        if ($request->input('confirm') !== 'yes') {
+            return redirect('/backoffice/entries')->with('error', 'Action not run — confirm the action first.');
+        }
+
         $actions = [
             'paid' => ['column' => 'brewPaid', 'value' => '1', 'msg' => 20],
             'unpaid' => ['column' => 'brewPaid', 'value' => '0', 'msg' => 34],
@@ -224,6 +230,10 @@ final class EntriesController extends Controller
      */
     public function purge(Request $request): RedirectResponse
     {
+        if ($request->input('confirm') !== 'yes') {
+            return redirect('/backoffice/entries')->with('error', 'Action not run — confirm the action first.');
+        }
+
         $actor = $request->user();
         if ($actor === null || (int) $actor->userLevel !== 0) {
             return redirect('/?msg=99');
@@ -393,6 +403,10 @@ final class EntriesController extends Controller
 
     public function destroy(Request $request, int $id): RedirectResponse
     {
+        if ($request->input('confirm') !== 'yes') {
+            return redirect('/backoffice/entries')->with('error', 'Action not run — confirm the action first.');
+        }
+
         DB::transaction(function () use ($id): void {
             // Legacy quirk mirrored: process_delete go=entries removes ONE
             // judging_scores row per entry (getOne → first match), not all.

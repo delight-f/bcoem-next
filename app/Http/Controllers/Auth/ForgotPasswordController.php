@@ -42,12 +42,24 @@ final class ForgotPasswordController extends Controller
         return view('auth.passwords.forgot', $this->layout($request));
     }
 
-    /** Security-question challenge (GET after forgot-form POST). */
+    /**
+     * Security-question challenge (GET after forgot-form POST). The question
+     * is resolved from the stored account, never the query string (D3-05), so
+     * a hand-made URL cannot display attacker-supplied text. An unknown
+     * address gets the same neutral fallback a question-less account would.
+     */
     public function verifyForm(Request $request): View
     {
+        $email = CredentialNormalizer::username($request->string('email', '')->toString());
+        $user = $email === ''
+            ? null
+            : DB::table('users')->where('user_name', $email)->first();
+
+        $stored = $user !== null ? trim((string) $user->userQuestion) : '';
+
         return view('auth.passwords.verify', $this->layout($request) + [
-            'email' => $request->string('email', '')->toString(),
-            'question' => $request->string('question', '')->toString(),
+            'email' => $email,
+            'question' => $stored !== '' ? $stored : self::t('site.security_question'),
         ]);
     }
 
@@ -87,24 +99,19 @@ final class ForgotPasswordController extends Controller
         ];
     }
 
+    /**
+     * Forgot-form POST. Known and unknown addresses land on the same
+     * challenge page — the question is resolved server-side there, so this
+     * step no longer confirms whether an address exists (D3-02).
+     */
     public function forgot(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'email' => ['required', 'email'],
         ]);
 
-        $email = CredentialNormalizer::username($data['email']);
-        $user = DB::table('users')->where('user_name', $email)->first();
-
-        // Legacy AJAX: unknown email shows "not found" inline; here we
-        // redirect back with a message so the form can render it.
-        if ($user === null) {
-            return back()->withErrors(['email' => self::t('reset.email_unknown')]);
-        }
-
         return redirect()->route('password.verify', [
-            'email' => $email,
-            'question' => (string) $user->userQuestion,
+            'email' => CredentialNormalizer::username($data['email']),
         ]);
     }
 
@@ -119,11 +126,9 @@ final class ForgotPasswordController extends Controller
         $email = CredentialNormalizer::username($data['email']);
         $user = DB::table('users')->where('user_name', $email)->first();
 
-        if ($user === null) {
-            return back()->withErrors(['email' => self::t('reset.email_unknown')]);
-        }
-
-        if (! $this->securityAnswerMatches($data['answer'], (string) $user->userQuestionAnswer)) {
+        // An unknown address is answered exactly like a wrong answer, so this
+        // step cannot be used to probe which addresses are registered.
+        if ($user === null || ! $this->securityAnswerMatches($data['answer'], (string) $user->userQuestionAnswer)) {
             return back()->withErrors(['answer' => self::t('reset.answer_wrong')]);
         }
 

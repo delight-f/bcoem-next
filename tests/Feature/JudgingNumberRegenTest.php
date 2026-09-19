@@ -22,7 +22,7 @@ final class JudgingNumberRegenTest extends AdminScreensTestCase
     public function test_default_assigns_six_digit_random_to_every_entry(): void
     {
         $ids = $this->seedEntries(3);
-        $this->post('/admin/judging/regenerate-numbers', ['method' => 'default']);
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'default', 'confirm' => 'yes']);
 
         $nums = DB::table('brewing')->whereIn('id', $ids)->pluck('brewJudgingNumber');
         self::assertCount(3, $nums);
@@ -35,7 +35,7 @@ final class JudgingNumberRegenTest extends AdminScreensTestCase
     public function test_identical_sets_zero_padded_entry_id(): void
     {
         $ids = $this->seedEntries(2);
-        $this->post('/admin/judging/regenerate-numbers', ['method' => 'identical']);
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'identical', 'confirm' => 'yes']);
 
         foreach ($ids as $id) {
             self::assertSame(
@@ -48,7 +48,7 @@ final class JudgingNumberRegenTest extends AdminScreensTestCase
     public function test_legacy_assigns_per_category_sequence(): void
     {
         $ids = $this->seedEntries(2); // both category 21
-        $this->post('/admin/judging/regenerate-numbers', ['method' => 'legacy']);
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'legacy', 'confirm' => 'yes']);
 
         $nums = DB::table('brewing')->whereIn('id', $ids)->pluck('brewJudgingNumber');
         foreach ($nums as $n) {
@@ -72,8 +72,24 @@ final class JudgingNumberRegenTest extends AdminScreensTestCase
 
     public function test_unknown_method_rejected(): void
     {
-        $this->post('/admin/judging/regenerate-numbers', ['method' => 'nope'])
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'nope', 'confirm' => 'yes'])
             ->assertRedirect('/admin');
+    }
+
+    public function test_regenerate_requires_server_side_confirmation(): void
+    {
+        $ids = $this->seedEntries(1);
+        DB::table('brewing')->whereIn('id', $ids)->update(['brewJudgingNumber' => '111111']);
+
+        // No confirm flag: the destructive run must not happen.
+        $this->post('/admin/judging/regenerate-numbers', ['method' => 'identical'])
+            ->assertRedirect('/admin')
+            ->assertSessionHas('error');
+
+        self::assertSame(
+            '111111',
+            (string) DB::table('brewing')->where('id', $ids[0])->value('brewJudgingNumber'),
+        );
     }
 
     /** @return list<int> */

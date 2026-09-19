@@ -15,11 +15,13 @@ use Illuminate\Support\Facades\DB;
  * Custom modules admin (spec §7 P5.4) — port of admin/mods.admin.php +
  * process_mods.inc.php.
  *
- * Parity: add/edit writes the ten mods columns with the legacy
- * mod_extend_function_admin fallback (extend-function 9 without an admin
- * target defaults to 'default'); the inline list form bulk-updates only
- * mod_enable per posted id[]. The legacy $_SESSION['mods_display'] refresh
- * is dropped — the standalone build reads fresh rows per request.
+ * Parity: add/edit writes the mods columns for the public-side extend
+ * targets (0 All Public Pages, 1 Public Home, 6 Public Registration,
+ * 8 Public Account); the inline list form bulk-updates only mod_enable per
+ * posted id[]. Administration (legacy 9) is dropped — the render gate runs
+ * public-only, so an admin-extending module could never render. The legacy
+ * $_SESSION['mods_display'] refresh is dropped — the standalone build reads
+ * fresh rows per request.
  */
 final class ModsController extends Controller
 {
@@ -85,8 +87,8 @@ final class ModsController extends Controller
     }
 
     /**
-     * Exact process_mods.inc.php column map (incl. the extend-9 → 'default'
-     * admin-target fallback).
+     * Exact process_mods.inc.php column map, minus the admin extend targets
+     * (dropped with the "Administration" option).
      *
      * @return array<string, mixed>
      */
@@ -98,26 +100,18 @@ final class ModsController extends Controller
             'mod_description' => ['nullable', 'string'],
             'mod_type' => ['required', 'in:0,1,2,3'],
             'mod_permission' => ['required', 'in:0,1,2'],
-            'mod_extend_function' => ['required', 'in:0,1,6,8,9'],
-            'mod_extend_function_admin' => ['nullable', 'string', 'max:50'],
+            'mod_extend_function' => ['required', 'in:0,1,6,8'],
             'mod_rank' => ['required', 'integer', 'min:1', 'max:25'],
             'mod_display_rank' => ['required', 'in:0,1,2'],
             'mod_enable' => ['required', 'in:0,1'],
         ]);
 
         $extendFunction = (string) $data['mod_extend_function'];
-        $extendAdmin = array_key_exists('mod_extend_function_admin', $data)
-            ? (string) ($data['mod_extend_function_admin'] ?? '')
-            : '';
-        if ($extendAdmin === '' && $extendFunction === '9') {
-            $extendAdmin = 'default';
-        }
 
         return [
             'mod_name' => self::blankToNull((string) $data['mod_name']),
             'mod_type' => (string) $data['mod_type'],
             'mod_extend_function' => $extendFunction,
-            'mod_extend_function_admin' => self::blankToNull($extendAdmin),
             'mod_filename' => self::blankToNull((string) $data['mod_filename']),
             'mod_description' => self::blankToNull(trim((string) ($data['mod_description'] ?? ''))),
             'mod_permission' => (string) $data['mod_permission'],

@@ -355,7 +355,8 @@ final class BrewerForm2Controller extends Controller
             'club' => $brewer->brewerClubs !== '' && $brewer->brewerClubs !== null ? $brewer->brewerClubs : __('site.none_entered'),
             'aha' => $brewer->brewerAHA !== '' && $brewer->brewerAHA !== null ? $brewer->brewerAHA : __('site.none_entered'),
             'mhp' => $brewer->brewerMHP !== '' && $brewer->brewerMHP !== null ? $brewer->brewerMHP : __('site.none_entered'),
-            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1,
+            'mhpDisplay' => (int) $ctx->prefsStr('prefsMHPDisplay') === 1
+                && (int) $ctx->prefsStr('prefsProEdition') !== 1,
             'proAm' => (string) ($brewer->brewerProAm ?? ''),
             'dropoffName' => $dropoff->dropoffLocation ?? null,
             'judgeId' => (string) ($brewer->brewerJudgeID ?? ''),

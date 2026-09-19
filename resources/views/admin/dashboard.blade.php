@@ -7,6 +7,20 @@
                 <h1>Administration Dashboard</h1>
             </div>
 
+            {{-- A1-04: the General tab's Competition Type switch changes a lot
+                 of behaviour without saying so on this screen. Spell it out. --}}
+            @if (! empty($proEdition))
+                <div class="alert alert-info" role="alert">
+                    <strong>Professional Edition is enabled.</strong> The site is set up for licensed
+                    breweries rather than individual brewers: entries are identified by Organization
+                    instead of Brewer/Club, there is no Best Club award, brewery, TTB and Production
+                    data are used in exports and labels, and Master Homebrewer Program (MHP) fields
+                    are suppressed. Change any of this under
+                    <a href="{{ url('/admin/site-preferences/default') }}" class="alert-link">Site
+                    Preferences &rarr; Competition Type</a>.
+                </div>
+            @endif
+
             {{-- Flash feedback (the manual "check for updates" result and every
                  other admin write) is rendered globally by the layout. --}}
 
@@ -810,6 +824,7 @@
                     <form method="POST" action="{{ route('admin.judging.regenerate_numbers') }}">
                         @csrf
                         <input type="hidden" name="method" value="{{ $method }}">
+                        <input type="hidden" name="confirm" value="yes">
                         <button type="submit" class="btn btn-danger">Regenerate Now</button>
                     </form>
                 </div>

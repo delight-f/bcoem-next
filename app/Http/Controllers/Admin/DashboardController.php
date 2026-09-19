@@ -79,7 +79,8 @@ final class DashboardController extends Controller
             'useMods' => (string) $ctx->prefsStr('prefsUseMods') === 'Y',
             'winnerMethod' => (int) $ctx->prefsStr('prefsWinnerMethod'),
             'proEdition' => (int) $ctx->prefsStr('prefsProEdition'),
-            'mhpDisplay' => (int) ($ctx->prefsStr('prefsMHPDisplay') ?? 0) === 1,
+            'mhpDisplay' => (int) ($ctx->prefsStr('prefsMHPDisplay') ?? 0) === 1
+                && (int) ($ctx->prefsStr('prefsProEdition') ?? 0) !== 1,
             'eval' => (string) $ctx->prefsStr('prefsEval') === '1',
             'showBestBrewer' => (int) ($ctx->prefsStr('prefsShowBestBrewer') ?? 0) !== 0,
             'showBestClub' => (int) ($ctx->prefsStr('prefsShowBestClub') ?? 0) !== 0,
@@ -108,6 +109,7 @@ final class DashboardController extends Controller
             'canSelfUpdate' => $canSelfUpdate,
             'installedVersion' => $installedVersion,
             'canCheckUpdates' => (int) $user->userLevel === 0,
+            'proEdition' => $prefs['proEdition'] === 1,
             'helpTopics' => config('dashboard-help'),
             'left' => $sections['left'],
             'right' => $sections['right'],
@@ -822,7 +824,7 @@ final class DashboardController extends Controller
         ]]];
         $dataExportItems[] = ['Participant Data (CSV)', ['blocks' => [
             $block(array_merge(
-                [$csv('/admin/output/export?go=csv', 'All Participants')],
+                [$csv('/admin/output/export?action=participants&go=csv', 'All Participants')],
                 [$csv('/admin/output/export?go=csv&tb=winners', 'Winners: Limited Data', 'for generating award labels, etc.')],
                 $prefs['proEdition'] === 0
                     ? [$csv('/admin/output/export?go=csv&tb=circuit', 'Winners: Circuit Data', 'suitable for local/regional circuits')]

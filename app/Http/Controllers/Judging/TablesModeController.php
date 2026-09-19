@@ -197,6 +197,7 @@ final class TablesModeController extends Controller
             ->all();
 
         $unassignFlag = 0;
+        $unassigned = [];
 
         // Derived flight data only. No flight rows is a valid state (there
         // is nothing to prune); table configuration is never touched here.
@@ -223,7 +224,7 @@ final class TablesModeController extends Controller
                 // Unassign judges/stewards holding their own entry in a
                 // style this table covers. The table's styles and every
                 // other assignment survive the switch untouched.
-                foreach (DB::table('judging_assignments')->where('assignTable', $table->id)->get(['id', 'bid']) as $assignment) {
+                foreach (DB::table('judging_assignments')->where('assignTable', $table->id)->get(['id', 'bid', 'assignment']) as $assignment) {
                     if ($this->entryConflict((string) $assignment->bid, (string) $table->tableStyles, $planningFlag)) {
                         try {
                             DB::table('judging_assignments')->where('id', $assignment->id)->delete();
@@ -231,6 +232,11 @@ final class TablesModeController extends Controller
                             report($e);
                             $errorCount += 1;
                         }
+
+                        $unassigned[] = [
+                            'name' => $this->participantName((string) $assignment->bid),
+                            'role' => (string) $assignment->assignment === 'S' ? 'Steward' : 'Judge',
+                        ];
 
                         $unassignFlag += 1;
                     }
@@ -247,7 +253,16 @@ final class TablesModeController extends Controller
 
         if ($unassignFlag > 0) {
             $request->session()->put('judge_unassign_flag', 1);
+            $request->session()->put('judge_unassign_list', $unassigned);
         }
+    }
+
+    /** Display name of an un-assigned judge/steward, for the caution modal. */
+    private function participantName(string $bid): string
+    {
+        $brewer = DB::table('brewer')->where('uid', $bid)->first(['brewerFirstName', 'brewerLastName']);
+
+        return trim(($brewer->brewerLastName ?? '').', '.($brewer->brewerFirstName ?? '')) ?: $bid;
     }
 
     /** Delete one judging_table plus its assignments and flights. */

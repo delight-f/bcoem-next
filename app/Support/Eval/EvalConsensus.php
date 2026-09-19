@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support\Eval;
 
+use App\Support\Tenant\TenantContext;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 
@@ -81,6 +82,41 @@ final class EvalConsensus
         $numeric = array_filter($flags, is_numeric(...));
 
         return ($numeric !== [] && max($numeric) > 0) ? 1 : 0;
+    }
+
+    /** Fallback tolerance when jPrefsScoreDispMax is NULL/unset. */
+    public const SCORE_DISPERSION_DEFAULT = 7;
+
+    /**
+     * "Maximum Difference for Consensus Scores" (judging_preferences
+     * .jPrefsScoreDispMax): the spread at which judges are treated as
+     * disagreeing. NULL/0/unset falls back to the baseline default.
+     */
+    public static function scoreDispersion(): int
+    {
+        $configured = TenantContext::load()->judgingStr('jPrefsScoreDispMax');
+
+        return is_numeric($configured) && (int) $configured > 0
+            ? (int) $configured
+            : self::SCORE_DISPERSION_DEFAULT;
+    }
+
+    /**
+     * True when two or more judges' final scores span more than the
+     * configured tolerance (max − min). Fewer than two scores never
+     * disagree — there is nothing to compare.
+     *
+     * @param  list<float|int|string|null>  $judgeScores
+     */
+    public static function scoresDisagree(array $judgeScores, ?int $dispersion = null): bool
+    {
+        $numeric = array_values(array_filter($judgeScores, is_numeric(...)));
+
+        if (count($numeric) < 2) {
+            return false;
+        }
+
+        return (max($numeric) - min($numeric)) > ($dispersion ?? self::scoreDispersion());
     }
 
     /**

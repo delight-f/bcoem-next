@@ -34,6 +34,13 @@
                 paid after a payment, so an entrant could be charged with their entries left unpaid.</p>
         @endif
 
+        @if ($accountId)
+            <form method="post" action="{{ route('admin.payments.setup.stripe.remove') }}" class="mt-3">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger btn-sm">Disconnect Stripe</button>
+            </form>
+        @endif
+
         <h2 class="mt-6">Webhook endpoint</h2>
         <p>
             Create a webhook endpoint in your Stripe dashboard pointing at

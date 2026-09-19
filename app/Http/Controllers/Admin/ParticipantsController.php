@@ -112,13 +112,43 @@ final class ParticipantsController extends Controller
 
         $uids = $participants->pluck('uid')->all();
 
-        // Judge scoresheet-label gate (legacy brewer_assignment(): staff.staff_judge).
-        $staffJudge = $uids === [] ? [] : DB::table('staff')
-            ->where('staff_judge', 1)
+        // Staff role flags for the "Assigned As" cell and its modal trigger
+        // (legacy brewer_assignment(uid, 1): Organizer, BOS, Judge, Steward,
+        // Staff in that order). brewerAssignment now holds the entrant's
+        // affiliations JSON, so the role must be derived from these flags
+        // plus the brewer judge/steward columns.
+        $staffFlags = $uids === [] ? collect() : DB::table('staff')
             ->whereIn('uid', $uids)
-            ->pluck('uid')
-            ->mapWithKeys(fn ($uid) => [$uid => true])
+            ->get(['uid', 'staff_organizer', 'staff_judge_bos', 'staff_judge', 'staff_steward', 'staff_staff'])
+            ->keyBy('uid');
+
+        // Judge scoresheet-label gate (legacy brewer_assignment(): staff.staff_judge).
+        $staffJudge = $staffFlags
+            ->filter(fn ($f) => (int) $f->staff_judge === 1)
+            ->mapWithKeys(fn ($f) => [(int) $f->uid => true])
             ->all();
+
+        $roleLabels = $participants->mapWithKeys(function ($p) use ($staffFlags): array {
+            $flags = $staffFlags->get($p->uid);
+            $roles = [];
+            if ((int) ($flags->staff_organizer ?? 0) === 1) {
+                $roles[] = 'Organizer';
+            }
+            if ((int) ($flags->staff_judge_bos ?? 0) === 1) {
+                $roles[] = 'BOS';
+            }
+            if ((int) ($flags->staff_judge ?? 0) === 1 || $p->brewerJudge === 'Y') {
+                $roles[] = 'Judge';
+            }
+            if ((int) ($flags->staff_steward ?? 0) === 1 || $p->brewerSteward === 'Y') {
+                $roles[] = 'Steward';
+            }
+            if ((int) ($flags->staff_staff ?? 0) === 1) {
+                $roles[] = 'Staff';
+            }
+
+            return [$p->uid => implode(', ', $roles)];
+        });
 
         // "Assigned to Table(s)" (legacy table_assignments method 2=1):
         // judging_assignments ⋈ judging_tables per uid/role, "N - Name".
@@ -195,6 +225,8 @@ final class ParticipantsController extends Controller
             'locationDisplay' => $locationDisplay,
             'tableAssignments' => $tableAssignments,
             'staffJudge' => $staffJudge,
+            'staffFlags' => $staffFlags,
+            'roleLabels' => $roleLabels,
             'judgeEntries' => $judgeEntries,
             'statusCounts' => $statusCounts,
         ]);

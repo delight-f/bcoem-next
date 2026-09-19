@@ -71,10 +71,6 @@ final class StylesAdminController extends Controller
                 continue;
             }
 
-            DB::table('styles')->where('id', $id)->update([
-                'brewStyleAtLimit' => $request->boolean('brewStyleAtLimit'.$id) ? 1 : null,
-            ]);
-
             $row = DB::table('styles')->where('id', $id)->first();
             if ($row !== null) {
                 $selected[$row->id] = [
