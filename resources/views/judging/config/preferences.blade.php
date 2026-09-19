@@ -24,7 +24,7 @@
             </div>
         @endif
 
-        <form data-time-24hr="{{ (int) $ctx->prefsStr('prefsTimeFormat') === 1 ? '1' : '0' }}" method="post" action="{{ route('admin.judging.preferences.store') }}">
+        <form data-time-24hr="{{ (int) $ctx->prefsStr('prefsTimeFormat') === 1 ? '1' : '0' }}" data-date-format="{{ (string) $ctx->prefsStr('prefsDateFormat') }}" method="post" action="{{ route('admin.judging.preferences.store') }}">
             @csrf
 
             <div class="mb-4 row">

@@ -31,7 +31,7 @@
             </div>
         @endif
 
-        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ $isEdit
+        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" data-date-format="{{ (string) $ctx->prefsStr('prefsDateFormat') }}" method="post" action="{{ $isEdit
             ? route($nonJudging ? 'admin.judging.non_judging.update' : 'admin.judging.locations.update', ['id' => $location->id])
             : route($nonJudging ? 'admin.judging.non_judging.store' : 'admin.judging.locations.store') }}">
             @csrf

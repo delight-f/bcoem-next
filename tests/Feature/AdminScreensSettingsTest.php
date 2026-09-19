@@ -249,6 +249,8 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         $response->assertSee('class="form-control date-time-picker-system"', false);
         $response->assertSee('name="submit" type="submit" class="btn btn-primary" value="Update Competition Dates"', false);
         $response->assertSee('<form data-time-24hr=', false);
+        // Issue 59: the picker form tells app.js which date order to display.
+        $response->assertSee('data-date-format="', false);
 
         // Baseline has no judging/non-judging sessions → empty-state links.
         $response->assertSee('No judging sessions have been defined.');

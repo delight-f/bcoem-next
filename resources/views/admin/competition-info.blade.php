@@ -93,7 +93,7 @@
             <div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
         @endif
 
-        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/competition-info') }}" name="form1">
+        <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" data-date-format="{{ (string) $ctx->prefsStr('prefsDateFormat') }}" method="post" action="{{ url('/admin/competition-info') }}" name="form1">
             @csrf
             @method('put')
 

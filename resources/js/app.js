@@ -232,22 +232,40 @@ const sessionHeartbeat = (url) => {
 // the value the controller pre-renders (AllDatesController::edit -> DateFmt):
 // prefsTimeFormat 1 => 24h "Y-m-d H:i"; otherwise 12h "Y-m-d h:i K". Both are
 // parsed by AllDatesController::toUtcEpoch (PHP DateTimeImmutable). allowInput
-// keeps legacy type-to-edit; altInput stays OFF so the posted value IS the input.
+// keeps legacy type-to-edit.
+//
+// Issue 59: the admin's Date Format preference must show through the pickers,
+// so the field DISPLAYS (and accepts) the configured order via flatpickr's
+// altInput/altFormat. altInput keeps the canonical "Y-m-d H:i" value on the
+// hidden original input, so the posted value — and therefore toUtcEpoch's
+// parsing — is unchanged. The display order comes from the form's
+// data-date-format (prefsDateFormat: 0/1/2/999), mirroring DateFmt::date()'s
+// 'short' mapping (999 = legacy "system" = Y-m-d).
 const dateTimeInputs = document.querySelectorAll('.date-time-picker-system');
 if (dateTimeInputs.length > 0 && window.flatpickr) {
     const pickerForm = dateTimeInputs[0].closest('form');
     // data-time-24hr (dashed) => dataset["time-24hr"], not .time24hr.
     const time24hr = pickerForm?.dataset['time-24hr'] === '1';
     const dateFormat = time24hr ? 'Y-m-d H:i' : 'Y-m-d h:i K';
-    dateTimeInputs.forEach((el) =>
+    const shownDate = { '0': 'Y/m/d', '1': 'm/d/Y', '2': 'd/m/Y' }[pickerForm?.dataset.dateFormat] ?? 'Y-m-d';
+    const altFormat = shownDate + (time24hr ? ' H:i' : ' h:i K');
+    dateTimeInputs.forEach((el) => {
         window.flatpickr(el, {
             enableTime: true,
             dateFormat,
+            altInput: true,
+            altFormat,
             time_24hr: time24hr,
             allowInput: true,
-            altInput: false,
-        }),
-    );
+        });
+        // flatpickr leaves the id on the now-hidden original input; move it to
+        // the visible one so <label for> and any #id hooks still hit what the
+        // user sees.
+        if (el.id && el.altInput) {
+            el.altInput.id = el.id;
+            el.removeAttribute('id');
+        }
+    });
 }
 
 // Admin session-expiry modals + auto-logout. Port of legacy

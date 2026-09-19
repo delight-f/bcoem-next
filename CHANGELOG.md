@@ -101,6 +101,13 @@ or promised a refusal the server never made — now take effect.
 - **The un-assigned judges are shown after switching to tables mode.** The
   switch had always deleted conflicting assignments silently; the caution modal
   now lists who was removed.
+- **The admin's Date Format preference reaches the date pickers.** Site
+  Preferences → Localization could be set to MM/DD/YYYY or DD/MM/YYYY, but the
+  admin date/time fields kept showing `Y-m-d` — so the setting appeared to do
+  nothing, most visibly on the Competition Preparation screens (All Competition
+  Dates, Competition Info, the judging session form and the judging window) and
+  the Results Display Date/Time preference. The fields now display and accept
+  the configured order while still storing the same value.
 
 ### Removed
 

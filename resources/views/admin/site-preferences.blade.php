@@ -55,7 +55,7 @@
 
         @if ($go === 'default')
             <h3>General</h3>
-            <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" method="post" action="{{ url('/admin/site-preferences/default') }}">
+            <form data-time-24hr="{{ $tf24 ? '1' : '0' }}" data-date-format="{{ (string) $ctx->prefsStr('prefsDateFormat') }}" method="post" action="{{ url('/admin/site-preferences/default') }}">
                 @csrf
                 @method('put')
                 <h4>General Settings</h4>
