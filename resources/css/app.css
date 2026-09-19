@@ -271,15 +271,6 @@ html {
 }
 
 /* Landing page */
-/* Issue #57: balance wrap so a long organising-club name does not leave a
-   single orphaned word; pretty avoids a lone trailing word in the sentence. */
-.landing-page-salutation {
-    text-wrap: pretty;
-}
-.landing-page-host {
-    text-wrap: balance;
-}
-
 @media screen and (max-width: 768px) {
     .landing-page-salutation {
         font-size: 2em;

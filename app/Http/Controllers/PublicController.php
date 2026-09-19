@@ -69,8 +69,7 @@ final class PublicController extends Controller
             : collect();
 
         // index.pub.php: "Welcome {name}!" lead when logged in, then the
-        // fw-light interest line with <small> wrapper. The organising club
-        // link is rendered as a second line (issue #57).
+        // fw-light interest line with <small> wrapper and host website link.
         $salutation = '';
         if ($request->user() !== null) {
             $firstName = DB::table('brewer')->where('uid', (int) $request->user()->id)->value('brewerFirstName') ?? '';
@@ -83,16 +82,9 @@ final class PublicController extends Controller
             : $host;
         $salutation .= '<p class="lead landing-page-salutation fw-light"><small>'
             .self::t('site.salutation_interest').' '.e($ctx->contestStr('contestName'))
-            .'</small></p>';
-
-        // The organising club gets its own line (issue #57) so a long host
-        // name cannot orphan a single word of the interest sentence above.
-        if ($host !== '') {
-            $salutation .= '<p class="lead landing-page-salutation landing-page-host fw-light"><small>'
-                .self::t('site.organized_by').' '.$hostHtml
-                .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
-                .'.</small></p>';
-        }
+            .' '.self::t('site.organized_by').' '.$hostHtml
+            .($ctx->contestStr('contestHostLocation') ? ', '.e($ctx->contestStr('contestHostLocation')) : '')
+            .'.</small></p>';
 
         // alerts.pub.php stacked info alerts ("For Your Information"):
         // logged-out visitors on the landing page with no msg param.
