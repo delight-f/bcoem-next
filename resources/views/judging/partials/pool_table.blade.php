@@ -10,7 +10,7 @@
 @if (empty($rows))
     <div class="error">No participants in this group.</div>
 @else
-    <table class="table table-responsive table-bordered {{ $filter !== 'bos' ? 'table-striped' : '' }}" data-dt data-dt-page="25" data-pool-table>
+    <table class="table table-responsive table-bordered {{ $filter !== 'bos' ? 'table-striped' : '' }}" data-dt data-dt-page="{{ (int) $ctx->prefsStr('prefsRecordPaging') ?: 25 }}" data-pool-table>
         <thead>
             <tr>
                 <th style="width:1%" nowrap>

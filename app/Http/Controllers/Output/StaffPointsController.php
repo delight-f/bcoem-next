@@ -839,7 +839,7 @@ final class StaffPointsController extends Controller
             $output .= "\t\tNote: ".self::xmlEscape($bosAlert)."\n";
         }
         $output .= "\t</Comments>\n";
-        $output .= "\t<SubmissionDate>".now()->format('l j F Y h:i A')."</SubmissionDate>\n";
+        $output .= "\t<SubmissionDate>".(string) DateFmt::dateTime(time(), $ctx->prefsStr('prefsTimeZone'), $ctx->prefsStr('prefsDateFormat'), $ctx->prefsStr('prefsTimeFormat'), 'long')."</SubmissionDate>\n";
         $output .= '</OrgReport>';
 
         return self::xmlResponse($filename, $output);
