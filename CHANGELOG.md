@@ -8,34 +8,15 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
-### Added
-
-- **A "Show Time Zone" switch under Site Preferences → Localization.** Every
-  rendered date goes through one helper whose zone suffix (`, AEST`) was a
-  per-call-site literal, so the same kind of timestamp showed a zone on one
-  screen and not on another. It is now a single site-wide preference
-  (`preferences.prefsShowTimezone`, `Y`/`N`), read through
-  `TenantContext::showTimezone()`. Read-only dates everywhere — public pages,
-  the dashboard, payments, entries, uploads, participant and judging lists,
-  the PDF/XML exports — follow it; editable date/time pickers never append a
-  zone, since flatpickr and the save path cannot parse the suffix back. An
-  install that has never saved the tab keeps showing zones, as before.
-
-### Fixed
-
-- **Admin date and time fields no longer show a time zone in their grey hint.**
-  On Competition Dates the placeholder carried `, AEST` while a filled field's
-  value never did, so a blank field and a populated one disagreed about the
-  format — and copying the hint into the field would have submitted a suffix
-  the picker cannot parse. The placeholder now matches the value format.
-
 ## [4.1.0-alpha.12] - 2026-09-19
 
 Closes out the [unwired-features audit](docs/unwired-features-audit.md): every
 control on the site now reaches a real consumer, or has been retired. The
 prominent additions are that report and export options finally produce the
 document they name, and that several settings which were saved but ignored —
-or promised a refusal the server never made — now take effect.
+or promised a refusal the server never made — now take effect. It also adds a
+Show Time Zone switch under Localization, and returns the landing salutation
+to a single line.
 
 ### Added
 
@@ -67,6 +48,15 @@ or promised a refusal the server never made — now take effect.
 - **Structured (variant 3) evaluations render on read-back.** The tick grid that
   the form captured is now shown on the saved evaluation instead of falling
   through to the generic view.
+- **A "Show Time Zone" switch under Localization.** Every date renders through
+  one helper whose zone suffix (`, AEST`) was a per-call-site literal, so the
+  same kind of timestamp showed a zone on one screen and not on another. It is
+  now a single site-wide preference (`preferences.prefsShowTimezone`, `Y`/`N`,
+  NULL = show) read through `TenantContext::showTimezone()`, and every read-only
+  date follows it: the public pages, the dashboard, payments, entries, uploads,
+  the participant and judging lists, and the PDF/XML exports. Editable date/time
+  fields never append a zone, because the picker and the save path cannot parse
+  the suffix back.
 
 ### Changed
 
@@ -95,6 +85,10 @@ or promised a refusal the server never made — now take effect.
   and archive page now require top-level admin, and the entries admin actions
   and judging-number regeneration refuse a direct POST that did not carry the
   confirmation the UI shows.
+- **The landing salutation is one sentence again.** The organising club is back
+  on the same line as the interest sentence; giving it its own paragraph so a
+  long club name could not orphan a word made the homepage read as two stacked
+  banners rather than one lead. The wrap-balancing CSS it needed is gone.
 
 ### Fixed
 
@@ -129,6 +123,11 @@ or promised a refusal the server never made — now take effect.
   Dates, Competition Info, the judging session form and the judging window) and
   the Results Display Date/Time preference. The fields now display and accept
   the configured order while still storing the same value.
+- **Admin date and time fields no longer show a time zone in their grey hint.**
+  On Competition Dates the placeholder carried `, AEST` while a filled field's
+  value never did, so a blank field and a populated one disagreed about the
+  format — and copying the hint into the field would have submitted a suffix the
+  picker cannot parse. The hint now matches the value format.
 
 ### Removed
 
