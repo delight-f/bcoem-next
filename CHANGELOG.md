@@ -8,6 +8,19 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
+### Added
+
+- **An entry filed under the wrong style can be moved by hand.**
+  `php artisan bcoem:assign-entry-style <code> <entry ids…> --apply` writes the
+  style columns the entry form writes (`brewStyle`, `brewCategory`,
+  `brewCategorySort`, `brewSubCategory`, `brewStyleType`). It exists because
+  the shared-code bug below cannot be repaired by rule: an entry written while
+  two styles shared `06-182` carries the same code and the same stored name
+  whichever style it really was, so only the organiser can say. Dry run
+  unless `--apply` is passed; `--set=` names a style set other than the site's
+  own; entries already received are flagged, since their category grouping
+  moves with them.
+
 ### Fixed
 
 - **"New Zealand-Style India Pale Ale" no longer shares a style code with
