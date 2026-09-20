@@ -111,7 +111,7 @@
                 </div>
             @endif
 
-            <p class="lead">Hello, {{ $firstName }}. <span class="small">Select the headings or icons below to view the options available to you in each category. Help is available for each overall section by selecting the question mark icon.</span></p>
+            <p>Hello, {{ $firstName }}. Select the headings or icons below to view the options available to you in each category. Help is available for each overall section by selecting the question mark icon.</p>
 
             {{-- default.admin.php:473-490 action row. Reset Competition Info is
                 the non-hosted variant; Publish Results / Launch Awards
