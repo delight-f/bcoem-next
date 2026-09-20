@@ -10,7 +10,10 @@ use Illuminate\Support\Facades\DB;
  * Derives every date/cap gate the public surface renders, faithful to the
  * characterization ledgers:
  *
- * - W2: drop-off/shipping windows default OPEN when either date is blank.
+ * - W2: a window with a missing date (open or close) is CLOSED, not open —
+ *   entry, drop-off and shipping all report WindowState::After when either
+ *   date is unset, so the public deck never promises an open window with
+ *   blank dates.
  * - Once any judging session has started (now > earliest session date),
  *   entry + registration windows report closed regardless of their dates.
  * - Comp-wide entry/paid caps close the entry window while open
@@ -67,25 +70,27 @@ final class Windows
         $registration = WindowStates::openOrClosed(
             $now, $ctx->contestEpoch('contestRegistrationOpen'), $ctx->contestEpoch('contestRegistrationDeadline'),
         );
-        $entry = WindowStates::openOrClosed(
-            $now, $ctx->contestEpoch('contestEntryOpen'), $ctx->contestEpoch('contestEntryDeadline'),
-        );
+        $entryOpen = $ctx->contestEpoch('contestEntryOpen');
+        $entryClose = $ctx->contestEpoch('contestEntryDeadline');
+        $entry = ($entryOpen !== null && $entryClose !== null)
+            ? WindowStates::openOrClosed($now, $entryOpen, $entryClose)
+            : WindowState::After;
         $judge = WindowStates::openOrClosed(
             $now, $ctx->contestEpoch('contestJudgeOpen'), $ctx->contestEpoch('contestJudgeDeadline'),
         );
 
-        // W2: blank windows default OPEN.
+        // W2: a blank window is CLOSED, not open.
         $dropoffOpen = $ctx->contestEpoch('contestDropoffOpen');
         $dropoffClose = $ctx->contestEpoch('contestDropoffDeadline');
         $dropoff = ($dropoffOpen !== null && $dropoffClose !== null)
             ? WindowStates::openOrClosed($now, $dropoffOpen, $dropoffClose)
-            : WindowState::Open;
+            : WindowState::After;
 
         $shippingOpen = $ctx->contestEpoch('contestShippingOpen');
         $shippingClose = $ctx->contestEpoch('contestShippingDeadline');
         $shipping = ($shippingOpen !== null && $shippingClose !== null)
             ? WindowStates::openOrClosed($now, $shippingOpen, $shippingClose)
-            : WindowState::Open;
+            : WindowState::After;
 
         // Judging schedule drives the started-override, pay window, and the
         // "judging past" result gate.

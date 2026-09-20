@@ -591,7 +591,9 @@ final class PublicController extends Controller
             $df = $ctx->prefsStr('prefsDateFormat');
             $tf = $ctx->prefsStr('prefsTimeFormat');
             $style = 'short'; // at-a-glance.pub.php always renders numeric short dates
-            $fmt = fn (?int $epoch): string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style, $ctx->showTimezone()) ?? self::t('site.not_set');
+            // Preserve null so windowBody() can tell "no dates at all" from a
+            // genuinely unset epoch (a literal "not set" defeats its null check).
+            $fmt = fn (?int $epoch): ?string => DateFmt::dateTime($epoch, $tz, $df, $tf, $style, $ctx->showTimezone());
 
             $cards[] = $windowCard('entry-registration', self::t('site.entries_registration'), 'blue', $w->entry,
                 $fmt($ctx->contestEpoch('contestEntryOpen')), $fmt($ctx->contestEpoch('contestEntryDeadline')));
