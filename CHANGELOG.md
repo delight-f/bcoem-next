@@ -8,32 +8,7 @@ Release notes for a tag are taken from the matching `## [version]` section below
 
 ## [Unreleased]
 
-### Added
-
-- **An entry filed under the wrong style can be moved by hand.**
-  `php artisan bcoem:assign-entry-style <code> <entry ids…> --apply` writes the
-  style columns the entry form writes (`brewStyle`, `brewCategory`,
-  `brewCategorySort`, `brewSubCategory`, `brewStyleType`). It exists because
-  the shared-code bug below cannot be repaired by rule: an entry written while
-  two styles shared `06-182` carries the same code and the same stored name
-  whichever style it really was, so only the organiser can say. Dry run
-  unless `--apply` is passed; `--set=` names a style set other than the site's
-  own; entries already received are flagged, since their category grouping
-  moves with them.
-
-### Fixed
-
-- **"New Zealand-Style India Pale Ale" no longer shares a style code with
-  "New Zealand-Style Pale Ale."** The baseline dump seeded the India Pale Ale
-  as `06-182`, the same code as the Pale Ale, and `StyleSets::findStyle()` —
-  group + number + version, no ORDER BY — resolves such a pair to whichever
-  row sorts first. An entry saved as the India Pale Ale could therefore be
-  stored and printed as the Pale Ale: the entry form writes the resolved
-  style's *name* onto the entry. The dump gives the India Pale Ale its own
-  code (`183`) and a migration repairs installs seeded from the old data
-  (upstream 25686a8).
-
-## [4.1.0-alpha.12] - 2026-09-19
+## [4.1.0-alpha.12] - 2026-09-20
 
 Closes out the [unwired-features audit](docs/unwired-features-audit.md): every
 control on the site now reaches a real consumer, or has been retired. The
@@ -41,8 +16,8 @@ prominent additions are that report and export options finally produce the
 document they name, and that several settings which were saved but ignored —
 or promised a refusal the server never made — now take effect. It also adds a
 Show Time Zone switch under Localization, sets the landing salutation's
-organising club on its own centred line, and stops an at-a-glance card title
-splitting a word in two.
+organising club on its own centred line, stops an at-a-glance card title
+splitting a word in two, and gives the competition dates a single editor.
 
 ### Added
 
@@ -83,6 +58,21 @@ splitting a word in two.
   the participant and judging lists, and the PDF/XML exports. Editable date/time
   fields never append a zone, because the picker and the save path cannot parse
   the suffix back.
+- **An entry filed under the wrong style can be moved by hand.**
+  `php artisan bcoem:assign-entry-style <code> <entry ids…> --apply` writes the
+  style columns the entry form writes (`brewStyle`, `brewCategory`,
+  `brewCategorySort`, `brewSubCategory`, `brewStyleType`). It exists because
+  the shared-code bug below cannot be repaired by rule: an entry written while
+  two styles shared `06-182` carries the same code and the same stored name
+  whichever style it really was, so only the organiser can say. Dry run
+  unless `--apply` is passed; `--set=` names a style set other than the site's
+  own; entries already received are flagged, since their category grouping
+  moves with them.
+- **Drop-off and shipping windows are optional on All Competition Dates.** Each
+  window now carries an Enable/Disable switch beside its dates; a disabled
+  window hides its fields, keeps any dates already stored, and drops its
+  at-a-glance card, so a competition without drop-off or shipping no longer
+  advertises a window it does not run.
 
 ### Changed
 
@@ -121,6 +111,12 @@ splitting a word in two.
   `BCOE&M` in `.env.example`, so the mail "From" name and anything else reading
   the application name match the site instead of the framework default. An
   install that sets its own `APP_NAME` is unaffected.
+- **All Competition Dates is the single source of truth for competition
+  dates.** Competition Info edited the same entry, drop-off, shipping,
+  registration, judging and awards date columns as All Competition Dates, so
+  saving one screen silently overwrote the other. The Competition Info form no
+  longer offers any date field; its non-date settings (shipping address, awards
+  venue, rules) are unchanged.
 
 ### Fixed
 
@@ -175,6 +171,20 @@ splitting a word in two.
   rendered as "registratio" with a hanging "n". The header lets the status pill
   drop to its own line when the title's words do not fit beside it, so titles
   wrap between words and nothing is pushed out of the card.
+- **"New Zealand-Style India Pale Ale" no longer shares a style code with
+  "New Zealand-Style Pale Ale."** The baseline dump seeded the India Pale Ale
+  as `06-182`, the same code as the Pale Ale, and `StyleSets::findStyle()` —
+  group + number + version, no ORDER BY — resolves such a pair to whichever
+  row sorts first. An entry saved as the India Pale Ale could therefore be
+  stored and printed as the Pale Ale: the entry form writes the resolved
+  style's *name* onto the entry. The dump gives the India Pale Ale its own
+  code (`183`) and a migration repairs installs seeded from the old data
+  (upstream 25686a8).
+- **At-a-glance cards read "Closed" when a window has no dates.** The account
+  deck's drop-off and shipping cards defaulted to Open whenever a date was
+  blank and printed "Closes not set / Opens not set". The entry, drop-off and
+  shipping windows now report Closed when either date is unset, and a window
+  with no dates says "Dates to be announced." instead of a blank one.
 
 ### Removed
 
