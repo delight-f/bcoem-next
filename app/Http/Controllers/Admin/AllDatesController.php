@@ -18,13 +18,20 @@ use Illuminate\Support\Facades\DB;
  *
  * One form writes three tables (legacy order):
  *  1. contest_info id=1 — the thirteen date columns as UTC epochs parsed in
- *     the tenant's tz; contestAwardsLocTime mirrors contestAwardsLocDate;
+ *     the tenant's tz; contestAwardsLocTime mirrors contestAwardsLocDate.
+ *     Issue #61: the drop-off and shipping windows are only written when
+ *     their prefsDropOff / prefsShipping toggle is enabled, so disabling a
+ *     window (whose fields are then not posted) preserves the stored dates;
  *  2. judging_preferences id=1 — jPrefsJudgingOpen/Closed, with the legacy
  *     fallbacks: an empty open date takes the earliest judging-session
  *     date; an empty close date takes the latest session date, else the
  *     earliest + 14 days;
  *  3. preferences id=1 — prefsWinnerDelay epoch (non-empty ⇒ 'Y') +
- *     prefsDisplayWinners.
+ *     prefsDisplayWinners, plus the prefsDropOff / prefsShipping toggles
+ *     when the form posts them.
+ *
+ * Issue #62: this screen is the single source of truth for competition
+ * dates; CompetitionInfoController no longer writes any of them.
  *
  * The inline per-session date editors (POST id[] + judgingDate{id}) are part
  * of the same form in legacy; they update judging_locations rows here too.
@@ -104,11 +111,42 @@ final class AllDatesController extends Controller
             }];
         }
 
-        $data = $request->validate($rules);
+        $data = $request->validate([
+            ...$rules,
+            'prefsDropOff' => ['nullable', 'in:0,1,Y,N'],
+            'prefsShipping' => ['nullable', 'in:0,1,Y,N'],
+        ]);
+
+        // Drop-Off / Shipping display toggles (issue #61): the same
+        // preferences the at-a-glance cards and public sidebar read, so
+        // enabling/disabling here decides whether those windows surface at
+        // all. Normalised to the tinyint 1/0 the column stores, and written
+        // only when posted — the inline session-date re-post omits them and
+        // must not clobber the stored value.
+        $toggles = [];
+        foreach (['prefsDropOff', 'prefsShipping'] as $key) {
+            if (array_key_exists($key, $data)) {
+                $toggles[$key] = in_array($data[$key], ['Y', '1'], true) ? 1 : 0;
+            }
+        }
+
+        $dropOffEnabled = array_key_exists('prefsDropOff', $data)
+            && in_array($data['prefsDropOff'], ['Y', '1'], true);
+        $shippingEnabled = array_key_exists('prefsShipping', $data)
+            && in_array($data['prefsShipping'], ['Y', '1'], true);
 
         // 1. contest_info dates (awards time mirrors the awards date).
+        // The drop-off/shipping windows are skipped when their toggle is
+        // disabled or absent: their hidden fields are not posted, so writing
+        // them would null out the preserved dates.
         $contestUpdate = [];
         foreach (self::CONTEST_DATES as $key) {
+            if (! $dropOffEnabled && in_array($key, ['contestDropoffOpen', 'contestDropoffDeadline'], true)) {
+                continue;
+            }
+            if (! $shippingEnabled && in_array($key, ['contestShippingOpen', 'contestShippingDeadline'], true)) {
+                continue;
+            }
             $epoch = $this->toUtcEpoch((string) ($data[$key] ?? ''), $tz);
             $contestUpdate[$key] = $epoch;
             if ($key === 'contestAwardsLocDate') {
@@ -136,11 +174,12 @@ final class AllDatesController extends Controller
             'jPrefsJudgingClosed' => $closed,
         ]);
 
-        // 3. Winners publish delay.
+        // 3. Winners publish delay + the drop-off/shipping display toggles.
         $winnerDelayRaw = (string) ($data['prefsWinnerDelay'] ?? '');
         DB::table('preferences')->where('id', 1)->update([
             'prefsWinnerDelay' => $winnerDelayRaw !== '' ? $this->toUtcEpoch($winnerDelayRaw, $tz) : null,
             'prefsDisplayWinners' => $winnerDelayRaw !== '' ? 'Y' : 'N',
+            ...$toggles,
         ]);
 
         // 4. Inline session date edits (id[] + judgingDate{id}/judgingDateEnd{id}).

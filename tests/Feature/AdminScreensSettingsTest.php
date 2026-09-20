@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Mail;
  */
 final class AdminScreensSettingsTest extends AdminScreensTestCase
 {
-    public function test_competition_info_round_trip_stores_epochs_json_and_check_http(): void
+    public function test_competition_info_round_trip_stores_json_and_check_http(): void
     {
         $this->remember('contest_info');
 
@@ -36,8 +36,6 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             'contestShippingName' => 'P54 Receiver',
             'contestClubs' => 'Club A; Club B;',
             'contestWinnerLink' => 'https://winners.example.org',
-            'contestEntryOpen' => '2030-06-01 09:00 AM',
-            'contestEntryDeadline' => '2030-06-30 05:00 PM',
         ]);
         $response->assertRedirect('/admin/competition-info?msg=2');
 
@@ -54,9 +52,37 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             json_decode((string) $row['contestRules'], true),
         );
         self::assertSame(['Club A', 'Club B'], json_decode((string) $row['contestClubs'], true));
-        // Dates stored as UTC epochs parsed in the tenant tz (to_utc_epoch()).
-        self::assertSame($this->epoch('2030-06-01 09:00 AM'), (int) $row['contestEntryOpen']);
-        self::assertSame($this->epoch('2030-06-30 05:00 PM'), (int) $row['contestEntryDeadline']);
+    }
+
+    /**
+     * Issue #62: all competition dates moved to All Competition Dates, so the
+     * competition-info form must not touch any contest_info date column — even
+     * when a date key is posted to it.
+     */
+    public function test_competition_info_no_longer_writes_competition_dates(): void
+    {
+        $this->remember('contest_info');
+
+        DB::table('contest_info')->where('id', 1)->update([
+            'contestEntryOpen' => 1893456000,
+            'contestEntryDeadline' => 1893542400,
+            'contestAwardsLocDate' => 1893628800,
+            'contestAwardsLocTime' => 1893628800,
+        ]);
+
+        $this->put('/admin/competition-info', [
+            'contestName' => 'P54 Cup',
+            'contestHost' => 'P54 Host',
+            'contestEntryOpen' => '2031-06-01 09:00 AM',
+            'contestEntryDeadline' => '2031-06-30 05:00 PM',
+            'contestAwardsLocDate' => '2031-06-01 09:00 AM',
+        ])->assertRedirect('/admin/competition-info?msg=2');
+
+        $row = (array) DB::table('contest_info')->where('id', 1)->first();
+        self::assertSame(1893456000, (int) $row['contestEntryOpen']);
+        self::assertSame(1893542400, (int) $row['contestEntryDeadline']);
+        self::assertSame(1893628800, (int) $row['contestAwardsLocDate']);
+        self::assertSame(1893628800, (int) $row['contestAwardsLocTime']);
     }
 
     /**
@@ -73,7 +99,7 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         $response->assertSee('bcoem-comp-info-section', false);
         $response->assertDontSee('<details class="bcoem-comp-info-section" open', false);
 
-        foreach (['General', 'Entry Window', 'Awards Ceremony'] as $title) {
+        foreach (['General', 'Shipping Location', 'Awards Ceremony'] as $title) {
             $response->assertSee('<summary><h3>'.$title.'</h3></summary>', false);
         }
 
@@ -179,8 +205,86 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         }
     }
 
+    /**
+     * Issue #61: Drop-Off and Shipping have functional Enable/Disable toggles
+     * on All Competition Dates, reusing the prefsDropOff / prefsShipping
+     * preferences the at-a-glance cards and public sidebar already read.
+     * Disabling a window hides its (unposted) fields without nulling the
+     * stored dates.
+     */
+    public function test_all_dates_toggles_gate_and_preserve_the_logistics_windows(): void
+    {
+        $this->remember('contest_info');
+        $this->remember('preferences');
+
+        // Enable both and store their windows.
+        $this->put('/admin/dates', [
+            'prefsDropOff' => '1',
+            'prefsShipping' => 'Y',
+            'contestDropoffOpen' => '2030-06-01 09:00 AM',
+            'contestDropoffDeadline' => '2030-06-02 05:00 PM',
+            'contestShippingOpen' => '2030-06-03 09:00 AM',
+            'contestShippingDeadline' => '2030-06-04 05:00 PM',
+            'jPrefsJudgingOpen' => '',
+            'jPrefsJudgingClosed' => '',
+        ])->assertRedirect('/admin/dates?msg=2');
+
+        $prefs = $this->prefs();
+        self::assertSame(1, (int) $prefs['prefsDropOff']);
+        self::assertSame(1, (int) $prefs['prefsShipping']);
+
+        $contest = (array) DB::table('contest_info')->where('id', 1)->first();
+        $dropoffOpen = (int) $contest['contestDropoffOpen'];
+        $dropoffDeadline = (int) $contest['contestDropoffDeadline'];
+        $shippingOpen = (int) $contest['contestShippingOpen'];
+        $shippingDeadline = (int) $contest['contestShippingDeadline'];
+        self::assertSame($this->epoch('2030-06-01 09:00 AM'), $dropoffOpen);
+        self::assertSame($this->epoch('2030-06-04 05:00 PM'), $shippingDeadline);
+
+        // Enabled windows render their date fields.
+        $this->get('/admin/dates')
+            ->assertSee('name="contestDropoffOpen"', false)
+            ->assertSee('name="contestDropoffDeadline"', false)
+            ->assertSee('name="contestShippingOpen"', false)
+            ->assertSee('name="contestShippingDeadline"', false);
+
+        // Disable both — their (now hidden) fields are not posted.
+        $this->put('/admin/dates', [
+            'prefsDropOff' => '0',
+            'prefsShipping' => 'N',
+            'jPrefsJudgingOpen' => '',
+            'jPrefsJudgingClosed' => '',
+        ])->assertRedirect('/admin/dates?msg=2');
+
+        $prefs = $this->prefs();
+        self::assertSame(0, (int) $prefs['prefsDropOff']);
+        self::assertSame(0, (int) $prefs['prefsShipping']);
+
+        // Stored dates survive the disabled save instead of being nulled.
+        $contest = (array) DB::table('contest_info')->where('id', 1)->first();
+        self::assertSame($dropoffOpen, (int) $contest['contestDropoffOpen']);
+        self::assertSame($dropoffDeadline, (int) $contest['contestDropoffDeadline']);
+        self::assertSame($shippingOpen, (int) $contest['contestShippingOpen']);
+        self::assertSame($shippingDeadline, (int) $contest['contestShippingDeadline']);
+
+        // The window fields are gone; their toggles remain.
+        $this->get('/admin/dates')
+            ->assertDontSee('name="contestDropoffOpen"', false)
+            ->assertDontSee('name="contestDropoffDeadline"', false)
+            ->assertDontSee('name="contestShippingOpen"', false)
+            ->assertDontSee('name="contestShippingDeadline"', false)
+            ->assertSee('name="prefsDropOff"', false)
+            ->assertSee('name="prefsShipping"', false);
+    }
+
     public function test_all_dates_view_presents_legacy_transliteration(): void
     {
+        // Issue #61: the Drop-Off / Shipping window labels only render while
+        // their toggles are enabled, so turn both on for this view check and
+        // restore the stored row afterwards.
+        $before = (array) DB::table('preferences')->where('id', 1)->first(['prefsDropOff', 'prefsShipping']);
+        DB::table('preferences')->where('id', 1)->update(['prefsDropOff' => 1, 'prefsShipping' => 1]);
+
         $response = $this->get('/admin/dates');
 
         $response->assertOk();
@@ -226,6 +330,10 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
             $response->assertSee($label);
         }
 
+        // Issue #61: the window toggles render with the windows they gate.
+        $response->assertSee('name="prefsDropOff"', false);
+        $response->assertSee('name="prefsShipping"', false);
+
         // Help blocks (all_dates.admin.php:178,188,239,253,266,279,431,442).
         $response->assertSee(
             'This date is only for restriction of adding <strong>new</strong> entries. Existing entries will be able to be edited beyond this date &ndash; until the drop-off/shipping deadlines &ndash; unless a specific entry editing close date is provided below.',
@@ -261,6 +369,8 @@ final class AdminScreensSettingsTest extends AdminScreensTestCase
         // prefsEval=1 baseline → judging open/close info trigger + modal.
         $response->assertSee('Judging Open/Close Dates and Times Info');
         $response->assertSee('id="judgingWindowModal"', false);
+
+        DB::table('preferences')->where('id', 1)->update($before);
     }
 
     public function test_all_dates_view_renders_non_judging_session_start_only(): void

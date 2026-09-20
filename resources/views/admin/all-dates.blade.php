@@ -61,6 +61,18 @@
             </div>
         </div>
 
+        <div class="row mb-3">
+            <label class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Drop-Off Window</label>
+            <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prefsDropOff" value="1" id="datesDropOffYes" @checked((int) $ctx->prefsStr('prefsDropOff') === 1)><label class="form-check-label" for="datesDropOffYes">Enable</label></div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prefsDropOff" value="0" id="datesDropOffNo" @checked((int) $ctx->prefsStr('prefsDropOff') !== 1)><label class="form-check-label" for="datesDropOffNo">Disable</label></div>
+                <span class="form-text">Disabling hides the drop-off window and its at-a-glance card.</span>
+            </div>
+        </div>
+
+        @if ((int) $ctx->prefsStr('prefsDropOff') === 1)
         <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->
             <label for="contestDropoffOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Drop-Off Window Open</label>
             <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -76,7 +88,20 @@
                 <input class="form-control date-time-picker-system" id="contestDropoffDeadline" name="contestDropoffDeadline" type="text" value="{{ $cdt('contestDropoffDeadline') }}" placeholder="{{ $currentDate }} {{ $currentTime }}">
             </div>
         </div><!-- ./Form Group -->
+        @endif
 
+        <div class="row mb-3">
+            <label class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Shipping Window</label>
+            <div class="col-12 col-md-8 col-lg-6 col-xl-6">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prefsShipping" value="1" id="datesShippingYes" @checked((int) $ctx->prefsStr('prefsShipping') === 1)><label class="form-check-label" for="datesShippingYes">Enable</label></div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="prefsShipping" value="0" id="datesShippingNo" @checked((int) $ctx->prefsStr('prefsShipping') !== 1)><label class="form-check-label" for="datesShippingNo">Disable</label></div>
+                <span class="form-text">Disabling hides the shipping window and its at-a-glance card.</span>
+            </div>
+        </div>
+
+        @if ((int) $ctx->prefsStr('prefsShipping') === 1)
         <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->
             <label for="contestShippingOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Shipping Window Open</label>
             <div class="col-12 col-md-8 col-lg-6 col-xl-6">
@@ -92,6 +117,7 @@
                 <input class="form-control date-time-picker-system" id="contestShippingDeadline" name="contestShippingDeadline" type="text" value="{{ $cdt('contestShippingDeadline') }}" placeholder="{{ $currentDate }} {{ $currentTime }}" >
             </div>
         </div><!-- ./Form Group -->
+        @endif
 
         <h3>Account Registration</h3>
         <div class="row mb-3"><!-- Form Group REQUIRED Text Input -->

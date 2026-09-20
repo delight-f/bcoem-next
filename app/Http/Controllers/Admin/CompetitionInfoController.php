@@ -6,7 +6,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\Brewer\Clubs;
-use App\Support\Tenant\DateFmt;
 use App\Support\Tenant\TenantContext;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -18,14 +17,19 @@ use Illuminate\Support\Facades\DB;
  * + process_comp_info.inc.php (action=edit, go=default; the setup "add" and
  * go=qr check-in-password branches are setup-only, not ported).
  *
- * Storage parity with process_comp_info.inc.php:
- *  - dates stored as UTC epochs parsed in the tenant's configured UTC offset
- *    (to_utc_epoch());
+ * Storage parity with process_comp_info.inc.php (non-date fields):
  *  - contestRules is JSON {competition_rules, competition_packing_shipping};
  *  - contestClubs is a JSON array from the semicolon-separated input
  *    (trimmed, trailing ";" stripped, "; " → ";");
  *  - URLs through check_http() (http:// prefixed when no scheme present);
  *  - text columns blank_to_null ('' → NULL).
+ *
+ * Issue #62: this screen no longer edits any competition date/time. The
+ * contest_info date columns (entry, entry-edit, drop-off, shipping,
+ * registration, judge, and the awards date/time mirror) are owned solely by
+ * All Competition Dates (/admin/dates, AllDatesController). The two screens
+ * previously wrote the same columns, so saving one could silently overwrite
+ * the other's values.
  *
  * Divergence: legacy hashed the posted check-in password unconditionally — an
  * empty submit replaced the hash with bcrypt(''). The port only rehashes a
@@ -68,15 +72,6 @@ final class CompetitionInfoController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $tz = TenantContext::load()->prefsStr('prefsTimeZone');
-        $datetime = [
-            function (string $attribute, mixed $value, \Closure $fail) use ($tz): void {
-                if (is_string($value) && $value !== '' && self::toUtcEpoch($value, $tz) === null) {
-                    $fail("The {$attribute} field is not a valid date/time.");
-                }
-            },
-        ];
-
         $data = $request->validate([
             'contestName' => ['required', 'string', 'max:255'],
             'contestHost' => ['nullable', 'string', 'max:255'],
@@ -87,20 +82,8 @@ final class CompetitionInfoController extends Controller
             'contestAwards' => ['nullable', 'string'],
             'contestAwardsLocation' => ['nullable', 'string', 'max:255'],
             'contestAwardsLocName' => ['nullable', 'string', 'max:255'],
-            'contestAwardsLocDate' => ['nullable', ...$datetime],
-            'contestShippingOpen' => ['nullable', ...$datetime],
-            'contestShippingDeadline' => ['nullable', ...$datetime],
             'contestShippingName' => ['nullable', 'string', 'max:255'],
             'contestShippingAddress' => ['nullable', 'string', 'max:1000'],
-            'contestDropoffOpen' => ['nullable', ...$datetime],
-            'contestDropoffDeadline' => ['nullable', ...$datetime],
-            'contestRegistrationOpen' => ['nullable', ...$datetime],
-            'contestRegistrationDeadline' => ['nullable', ...$datetime],
-            'contestEntryOpen' => ['nullable', ...$datetime],
-            'contestEntryDeadline' => ['nullable', ...$datetime],
-            'contestEntryEditDeadline' => ['nullable', ...$datetime],
-            'contestJudgeOpen' => ['nullable', ...$datetime],
-            'contestJudgeDeadline' => ['nullable', ...$datetime],
             'contestBottles' => ['nullable', 'string'],
             'contestBOSAward' => ['nullable', 'string'],
             'contestCircuit' => ['nullable', 'string'],
@@ -149,8 +132,6 @@ final class CompetitionInfoController extends Controller
      */
     private function storageRow(array $data): array
     {
-        $tz = TenantContext::load()->prefsStr('prefsTimeZone');
-
         // Legacy contestRules: both free-text rule blocks as one JSON blob.
         $rules = json_encode([
             'competition_rules' => (string) ($data['competition_rules'] ?? ''),
@@ -171,25 +152,12 @@ final class CompetitionInfoController extends Controller
             'contestHost' => self::blankToNull((string) ($data['contestHost'] ?? '')),
             'contestHostWebsite' => self::checkHttp((string) ($data['contestHostWebsite'] ?? '')), // null on empty
             'contestHostLocation' => self::blankToNull((string) ($data['contestHostLocation'] ?? '')),
-            'contestRegistrationOpen' => self::toUtcEpoch((string) ($data['contestRegistrationOpen'] ?? ''), $tz),
-            'contestRegistrationDeadline' => self::toUtcEpoch((string) ($data['contestRegistrationDeadline'] ?? ''), $tz),
-            'contestEntryOpen' => self::toUtcEpoch((string) ($data['contestEntryOpen'] ?? ''), $tz),
-            'contestEntryDeadline' => self::toUtcEpoch((string) ($data['contestEntryDeadline'] ?? ''), $tz),
-            'contestEntryEditDeadline' => self::toUtcEpoch((string) ($data['contestEntryEditDeadline'] ?? ''), $tz),
-            'contestJudgeOpen' => self::toUtcEpoch((string) ($data['contestJudgeOpen'] ?? ''), $tz),
-            'contestJudgeDeadline' => self::toUtcEpoch((string) ($data['contestJudgeDeadline'] ?? ''), $tz),
             'contestRules' => $rules,
             'contestAwards' => self::blankToNull((string) ($data['contestAwards'] ?? '')),
             'contestAwardsLocation' => self::blankToNull((string) ($data['contestAwardsLocation'] ?? '')),
             'contestAwardsLocName' => self::blankToNull((string) ($data['contestAwardsLocName'] ?? '')),
-            'contestAwardsLocDate' => self::toUtcEpoch((string) ($data['contestAwardsLocDate'] ?? ''), $tz),
-            'contestAwardsLocTime' => self::toUtcEpoch((string) ($data['contestAwardsLocDate'] ?? ''), $tz),
-            'contestShippingOpen' => self::toUtcEpoch((string) ($data['contestShippingOpen'] ?? ''), $tz),
-            'contestShippingDeadline' => self::toUtcEpoch((string) ($data['contestShippingDeadline'] ?? ''), $tz),
             'contestShippingName' => self::blankToNull((string) ($data['contestShippingName'] ?? '')),
             'contestShippingAddress' => self::blankToNull((string) ($data['contestShippingAddress'] ?? '')),
-            'contestDropoffOpen' => self::toUtcEpoch((string) ($data['contestDropoffOpen'] ?? ''), $tz),
-            'contestDropoffDeadline' => self::toUtcEpoch((string) ($data['contestDropoffDeadline'] ?? ''), $tz),
             'contestBottles' => self::blankToNull((string) ($data['contestBottles'] ?? '')),
             'contestBOSAward' => self::blankToNull((string) ($data['contestBOSAward'] ?? '')),
             'contestCircuit' => self::blankToNull((string) ($data['contestCircuit'] ?? '')),
@@ -232,19 +200,5 @@ final class CompetitionInfoController extends Controller
     private static function blankToNull(string $value): ?string
     {
         return $value === '' ? null : $value;
-    }
-
-    /** Port of to_utc_epoch(): wall time in the tenant tz → UTC epoch, null on blank/bad. */
-    private static function toUtcEpoch(?string $value, ?string $tzOffset): ?int
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        try {
-            return new \DateTimeImmutable($value, new \DateTimeZone(DateFmt::tz($tzOffset)))->getTimestamp();
-        } catch (\Exception) {
-            return null;
-        }
     }
 }

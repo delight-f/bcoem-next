@@ -1,14 +1,8 @@
 @php
-    $tz = $ctx->prefsStr('prefsTimeZone');
     $tf = $ctx->prefsStr('prefsTimeFormat');
-    // D1: the date fields below are flatpickr .date-time-picker-system
-    // inputs (legacy competition_info.admin.php carried the same class);
-    // prefill matches the picker dateFormat so the open calendar
-    // highlights the stored wall time.
+    // All competition dates moved to All Competition Dates (issue #62); this
+    // screen no longer renders a date picker.
     $tf24 = ((int) $tf) === 1;
-    $dt = fn (?string $key) => \App\Support\Tenant\DateFmt::dateTimeInput(
-        $contest[$key] ?? null, $tz, $tf24,
-    ) ?? '';
     $et = fn (?string $key) => \App\Support\Tenant\ContestRules::editText($contest[$key] ?? null);
     $rules = json_decode((string) ($contest['contestRules'] ?? ''), true) ?: [];
     $rulesText = fn (string $key) => \App\Support\Tenant\ContestRules::editText($rules[$key] ?? null);
@@ -211,64 +205,6 @@
                 </div>
             </div>
 
-            {{-- ============================ Entry Window ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Entry Window</h3></summary>
-            <div class="row mb-3">
-                <label for="contestEntryOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestEntryOpen" name="contestEntryOpen" type="text" value="{{ $dt('contestEntryOpen') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestEntryDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestEntryDeadline" name="contestEntryDeadline" type="text" size="20" value="{{ $dt('contestEntryDeadline') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
-                    <span id="helpBlock" class="form-text">This date is only for restriction of adding <strong>new</strong> entries. Existing entries will be able to be edited beyond this date &ndash; until the drop-off/shipping deadlines &ndash; unless a specific entry editing close date is provided below.</span>
-                </div>
-            </div>
-
-            {{-- ============================ Entry Editing ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Entry Editing</h3></summary>
-            <div class="row mb-3">
-                <label for="contestEntryEditDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestEntryEditDeadline" name="contestEntryEditDeadline" type="text" size="20" value="{{ $dt('contestEntryEditDeadline') }}" placeholder="">
-                        <span id="helpBlock" class="form-text">If you wish to restrict editing of any exisiting entry's information by non-admin participants, provide a close date here. For example, this could allow competition staff to prepare for sorting prior to the entry drop-off/shipment closure dates.</span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ============================ Drop-Off Window ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Drop-Off Window</h3></summary>
-            <div class="row mb-3">
-                <label for="contestDropoffOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input class="form-control date-time-picker-system" id="contestDropoffOpen" name="contestDropoffOpen" type="text" value="{{ $dt('contestDropoffOpen') }}" placeholder="">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestDropoffDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input class="form-control date-time-picker-system" id="contestDropoffDeadline" name="contestDropoffDeadline" type="text" value="{{ $dt('contestDropoffDeadline') }}" placeholder="">
-                </div>
-            </div>
-
             {{-- ============================ Shipping Location ============================ --}}
             </details>
 
@@ -284,73 +220,6 @@
                 <label for="contestShippingAddress" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Address</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
                     <input class="form-control" id="contestShippingAddress" name="contestShippingAddress" type="text" value="{{ $contest['contestShippingAddress'] ?? '' }}" placeholder="">
-                </div>
-            </div>
-
-            {{-- ============================ Shipping Window ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Shipping Window</h3></summary>
-            <div class="row mb-3">
-                <label for="contestShippingOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input class="form-control date-time-picker-system" id="contestShippingOpen" name="contestShippingOpen" type="text" value="{{ $dt('contestShippingOpen') }}" placeholder="">
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestShippingDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input class="form-control date-time-picker-system" id="contestShippingDeadline" name="contestShippingDeadline" type="text" value="{{ $dt('contestShippingDeadline') }}" placeholder="">
-                    <span id="helpBlock" class="form-text">This window only applies to the Shipping Location above.</span>
-                </div>
-            </div>
-
-            {{-- ============================ Account Registration ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Account Registration</h3></summary>
-            <div class="row mb-3">
-                <label for="contestRegistrationOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestRegistrationOpen" name="contestRegistrationOpen" type="text" value="{{ $dt('contestRegistrationOpen') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestRegistrationDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestRegistrationDeadline" name="contestRegistrationDeadline" type="text" size="20" value="{{ $dt('contestRegistrationDeadline') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ============================ Judge or Steward Account Registration ============================ --}}
-            </details>
-
-            <details class="bcoem-comp-info-section">
-                <summary><h3>Judge or Steward Account Registration</h3></summary>
-            <div class="row mb-3">
-                <label for="contestJudgeOpen" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Open Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestJudgeOpen" name="contestJudgeOpen" type="text" value="{{ $dt('contestJudgeOpen') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <label for="contestJudgeDeadline" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Close Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <div class="input-group">
-                        <input class="form-control date-time-picker-system" id="contestJudgeDeadline" name="contestJudgeDeadline" type="text" size="20" value="{{ $dt('contestJudgeDeadline') }}" placeholder="" required>
-                        <span class="input-group-text" data-tooltip="true" title="{{ $required }}"><span class="fa fa-star text-warning"></span></span>
-                    </div>
                 </div>
             </div>
 
@@ -402,13 +271,6 @@
 
             <details class="bcoem-comp-info-section">
                 <summary><h3>Awards Ceremony</h3></summary>
-            <div class="row mb-3">
-                <label for="contestAwardsLocDate" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Date</label>
-                <div class="col-12 col-md-8 col-lg-6 col-xl-6">
-                    <input class="form-control date-time-picker-system" id="contestAwardsLocDate" name="contestAwardsLocDate" type="text" value="{{ $dt('contestAwardsLocDate') }}" placeholder="">
-                    <span id="helpBlock" class="form-text">Provide even if the date of judging is the same.</span>
-                </div>
-            </div>
             <div class="row mb-3">
                 <label for="contestAwardsLocName" class="col-12 col-md-4 col-lg-3 col-xl-2 col-form-label">Location Name</label>
                 <div class="col-12 col-md-8 col-lg-6 col-xl-6">
