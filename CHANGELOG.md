@@ -17,7 +17,8 @@ document they name, and that several settings which were saved but ignored —
 or promised a refusal the server never made — now take effect. It also adds a
 Show Time Zone switch under Localization, sets the landing salutation's
 organising club on its own centred line, stops an at-a-glance card title
-splitting a word in two, and gives the competition dates a single editor.
+splitting a word in two, gives the competition dates a single editor, and
+repairs the account page's own shipping-label link and its mismatched text.
 
 ### Added
 
@@ -185,6 +186,17 @@ splitting a word in two, and gives the competition dates a single editor.
   blank and printed "Closes not set / Opens not set". The entry, drop-off and
   shipping windows now report Closed when either date is unset, and a window
   with no dates says "Dates to be announced." instead of a blank one.
+- **A brewer can print their own shipping labels from their account page.** The
+  "Print Shipping Labels" link opened the admin-gated batch output, which
+  bounced a logged-in brewer to the "Please log in" notice with nothing to
+  print. It now targets a login-only route scoped to the caller's own brewer
+  row, mirroring the entrant entry-label and judge scoresheet-label routes, so
+  no other brewer's details can leave the server.
+- **The dashboard greeting and the account page's "last updated" line render as
+  body text.** Each sat in a Bootstrap `lead` paragraph (1.25rem, weight 300)
+  with the trailing detail in a nested `small` span (0.875em), so a single
+  sentence looked like two different fonts and sizes. Both are plain body text
+  now.
 
 ### Removed
 
