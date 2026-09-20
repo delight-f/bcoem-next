@@ -20,6 +20,7 @@ use App\Http\Controllers\EntrantLabelController;
 use App\Http\Controllers\EntriesController;
 use App\Http\Controllers\LegacyRedirectController;
 use App\Http\Controllers\ManualPaymentController;
+use App\Http\Controllers\Output\ShippingLabelController;
 use App\Http\Controllers\PayController;
 use App\Http\Controllers\PayPalWebhookController;
 use App\Http\Controllers\PublicController;
@@ -183,6 +184,14 @@ Route::get('/list/labels', EntrantLabelController::class)->name('labels.own')->m
 // caller's own record, mirroring /list/labels.
 Route::get('/list/scoresheet-labels', [EntrantLabelController::class, 'scoresheet'])
     ->name('labels.scoresheet')->middleware('auth');
+
+// A brewer's own shipping labels (issue #63). The admin outputs.shipping_label
+// route is admin-gated and renders EVERY brewer's label; the info page's
+// "Print Shipping Labels" link pointed there, so a logged-in brewer was bounced
+// to the /?msg=99 notice. This scopes the sheet to the caller's own brewer row,
+// mirroring /list/labels and /list/scoresheet-labels.
+Route::get('/list/shipping-labels', [ShippingLabelController::class, 'own'])
+    ->name('labels.shipping')->middleware('auth');
 
 // Public pay page (P3.5d). Legacy served ?section=pay behind a login gate.
 // Success lands back on the page with the legacy confirmation alert

@@ -333,6 +333,44 @@ final class BrewerForm2Test extends PublicSurfaceTestCase
         $this->assertStringContainsString('Pref User', $partial);
     }
 
+    public function test_account_info_uses_body_text_and_links_shipping_labels_to_the_entrant_route(): void
+    {
+        // Issue #63.1: the `lead` paragraph and nested `small` rendered the
+        // thank-you line at 1.25rem/300 and the "last updated" line at 0.875em,
+        // so the two read as different fonts/sizes. Both are gone — ordinary
+        // body text, matching the dashboard greeting fix.
+        $uid = $this->seedUser('ship.user@example.com', ['brewerDropOff' => 0]);
+        $this->actingAs($this->user($uid));
+
+        $partial = view('brewer.info', BrewerForm2Controller::infoData(TenantContext::load()))->render();
+        $this->assertStringContainsString('Thank you for participating in the', $partial);
+        $this->assertStringNotContainsString('class="lead"', $partial);
+        $this->assertStringNotContainsString('<small', $partial);
+
+        // Issue #63.2: the shipping-label link must hit the entrant route, not
+        // the admin-gated batch route that bounced a brewer to /?msg=99.
+        $this->get('/list')
+            ->assertOk()
+            ->assertSee(route('labels.shipping'), false)
+            ->assertDontSee('/admin/output/shipping_label', false);
+    }
+
+    public function test_entrant_shipping_label_is_login_only_and_scoped_to_the_caller(): void
+    {
+        $this->get('/list/shipping-labels')->assertRedirect('/login');
+
+        $uid = $this->seedUser('ship.user@example.com', ['brewerDropOff' => 0]);
+        $this->actingAs($this->user($uid));
+
+        $response = $this->get('/list/shipping-labels');
+        $response->assertOk();
+        $this->assertStringStartsWith('%PDF', (string) $response->getContent());
+
+        // No brewer row → nothing to print, and no 500.
+        DB::table('brewer')->where('uid', $uid)->delete();
+        $this->get('/list/shipping-labels')->assertRedirect('/list');
+    }
+
     public function test_anonymous_user_cannot_reach_the_form(): void
     {
         $this->get('/list/edit-judging')->assertRedirect('/login');

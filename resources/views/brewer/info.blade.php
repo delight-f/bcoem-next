@@ -8,9 +8,9 @@
     @if ($brewer === null)
         <p class="fs-5 fw-light">{{ __('site.no_profile_yet') }}</p>
     @else
-        <p class="lead">
+        <p>
             {{ __('site.thanks_for_participating') }} {{ App\Support\Tenant\TenantContext::load()->contestStr('contestName') }}, {{ $brewer->brewerFirstName }}.
-            <small class="text-muted">{{ __('site.account_last_updated') }} {{ $updated ?? '—' }}.</small>
+            <span class="text-muted">{{ __('site.account_last_updated') }} {{ $updated ?? '—' }}.</span>
         </p>
 
         @php($row = function (string $label, $value) {
@@ -39,7 +39,7 @@
         @endif
         @php($dropoffCell = e($dropoffName ?? __('site.none_entered')))
         @if ((int) $brewer->brewerDropOff === 0)
-            @php($dropoffCell .= '<br><a class="hide-loader" href="'.url('/admin/output/shipping_label').'" title="'.__('site.shipping_labels_note').'">'.__('site.print_shipping_labels').'</a>')
+            @php($dropoffCell .= '<br><a class="hide-loader" href="'.route('labels.shipping').'" title="'.__('site.shipping_labels_note').'">'.__('site.print_shipping_labels').'</a>')
         @endif
         @php($row(__('site.entry_delivery'), $dropoffCell))
         @php($row(__('site.club'), e($club)))
